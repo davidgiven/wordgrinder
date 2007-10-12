@@ -1,0 +1,37 @@
+-- © 2007 David Given.
+-- WordGrinder is licensed under the BSD open source license. See the COPYING
+-- file in this distribution for the full text.
+--
+-- $Id$
+-- $URL: $
+
+include "c.pm"
+
+local function exec(s, pattern)
+	local f = io.popen(s)
+	local s = {}
+	for l in string.gfind(f:read("*a"), pattern) do
+		table.insert(s, l)
+	end
+	f:close()
+	
+	return s
+end
+
+CBUILDFLAGS = {"-g", "-Wall"}
+CLIBRARIES = {"lua5.1", "ncursesw"}
+CDEFINES = {"_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE"}
+CINCLUDES = {"/usr/include/ncursesw"}
+
+wordgrinder = cprogram {
+	cfile "src/c/utils.c",
+	cfile "src/c/main.c",
+	cfile "src/c/lua.c",
+	cfile "src/c/screen.c",
+	cfile "src/c/word.c",
+	cfile "src/c/bit.c",
+	
+	install = pm.install("wordgrinder")
+}
+
+default = wordgrinder
