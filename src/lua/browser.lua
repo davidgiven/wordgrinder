@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $Url: $
+-- $HeadURL: $
 
 local min = min
 local max = max
