@@ -55,6 +55,7 @@ static int parseword_cb(lua_State* L)
 	int dstyle = luaL_checkint(L, 2);
 	/* pos 3 contains the callback function */
 	
+	int oldattr = 0;
 	int attr = 0;
 	const char* w = s;
 	const char* wend;
@@ -73,9 +74,10 @@ static int parseword_cb(lua_State* L)
 			if (w != wend)
 			{
 				lua_pushvalue(L, 3);
-				lua_pushnumber(L, attr | dstyle);
+				lua_pushnumber(L, oldattr | dstyle);
 				lua_pushlstring(L, w, wend - w); 
 				lua_call(L, 2, 0);
+				oldattr = attr;
 			}
 			w = s;
 			flush = false;
@@ -88,7 +90,8 @@ static int parseword_cb(lua_State* L)
 			
 		if (iswcntrl(c))
 		{
-			attr = c;
+			oldattr = attr;
+			attr = c & STYLE_ALL;
 			flush = true;
 			wend = s - 1;
 		}
