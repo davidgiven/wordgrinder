@@ -16,7 +16,7 @@ local bit = wg.bit
 function Cmd.ExportHTMLFile(filename)
 	if not filename then
 		filename = FileBrowser("Export HTML File", "Export as:", true,
-			DocumentSet.name:gsub("%..-$", ".html"))
+			(DocumentSet.name or "(unnamed)"):gsub("%..-$", ".html"))
 		if not filename then
 			return false
 		end
@@ -32,8 +32,9 @@ function Cmd.ExportHTMLFile(filename)
 	
 	fp:write('<html><head>\n')
 	fp:write('<meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n')
-	fp:write('<title>', Document.name, '/title>')
+	fp:write('<title>', Document.name, '</title>')
 	
+	local listmode = false
 	local italic, underline
 	local olditalic, oldunderline
 	local firstword
@@ -48,12 +49,6 @@ function Cmd.ExportHTMLFile(filename)
 		if not underline and oldunderline then
 			fp:write('</u>')
 		end
-		
-		if not firstword then
-			fp:write(' ')
-		end
-		firstword = false
-		
 		if underline and not oldunderline then
 			fp:write('<u>')
 		end
@@ -69,15 +64,28 @@ function Cmd.ExportHTMLFile(filename)
 	fp:write('<body>\n')
 	for _, paragraph in ipairs(Document) do
 		local style = paragraph.style.html
+		if (style == "LI") then
+			if not listmode then
+				fp:write("<UL>")
+				listmode = true
+			end
+		elseif listmode then
+			fp:write("</UL>")
+		end
+			
 		fp:write('<', style, '>')
 		
-		italic = false
-		underline = false
+		firstword = true		
 		olditalic = false
 		oldunderline = false
-		firstword = true
-		
 		for wn, word in ipairs(paragraph) do
+			if not firstword then
+				fp:write(' ')
+			end
+			firstword = false
+		
+			italic = false
+			underline = false
 			ParseWord(word.text, style.cstyle or 0, wordwriter) -- FIXME
 		end
 		if italic then
@@ -87,6 +95,9 @@ function Cmd.ExportHTMLFile(filename)
 			fp:write('</u>')
 		end
 		fp:write('</', style, '>\n')
+	end
+	if listmode then
+		fp:write('</UL>')
 	end
 	fp:write('</body>\n')
 	
@@ -100,7 +111,7 @@ end
 function Cmd.ExportTextFile(filename)
 	if not filename then
 		filename = FileBrowser("Export Text File", "Export as:", true,
-			DocumentSet.name:gsub("%..-$", ".txt"))
+			(DocumentSet.name or "(unnamed)"):gsub("%..-$", ".txt"))
 		if not filename then
 			return false
 		end
@@ -117,11 +128,6 @@ function Cmd.ExportTextFile(filename)
 	local firstword
 	
 	local wordwriter = function (style, text)
-		if not firstword then
-			fp:write(' ')
-		end
-		firstword = false
-		
 		fp:write(text)
 	end
 		
@@ -129,6 +135,11 @@ function Cmd.ExportTextFile(filename)
 		firstword = true
 		
 		for wn, word in ipairs(paragraph) do
+			if not firstword then
+				fp:write(' ')
+			end
+			firstword = false
+		
 			ParseWord(word.text, 0, wordwriter)
 		end
 		fp:write('\n')

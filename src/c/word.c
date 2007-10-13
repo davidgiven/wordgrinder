@@ -77,9 +77,9 @@ static int parseword_cb(lua_State* L)
 				lua_pushnumber(L, oldattr | dstyle);
 				lua_pushlstring(L, w, wend - w); 
 				lua_call(L, 2, 0);
-				oldattr = attr;
 			}
 			w = s;
+			oldattr = attr;
 			flush = false;
 		}
 		
