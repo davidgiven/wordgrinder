@@ -58,7 +58,7 @@ static int parseword_cb(lua_State* L)
 	int oldattr = 0;
 	int attr = 0;
 	const char* w = s;
-	const char* wend;
+	const char* wend = NULL;
 	bool flush = false;
 	
 	for (;;)
