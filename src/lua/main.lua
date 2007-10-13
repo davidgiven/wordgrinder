@@ -25,6 +25,7 @@ include "src/lua/ui.lua"
 include "src/lua/browser.lua"
 
 Cmd = {}
+include "src/lua/html.lua"
 include "src/lua/fileio.lua"
 include "src/lua/export.lua"
 include "src/lua/import.lua"
