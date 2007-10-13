@@ -14,6 +14,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/* --- Configuration options --------------------------------------------- */
+
+#define LUA_SRC_DIR PREFIX "/share/wordgrinder/"
+
 /* --- General utilities ------------------------------------------------- */
 
 extern int getu8bytes(char c);

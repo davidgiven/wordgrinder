@@ -20,7 +20,7 @@ int main(int argc, const char* argv[])
 	word_init();
 	bit_init();
 	
-	script_load("src/lua/main.lua", argv);
+	script_load(LUA_SRC_DIR "main.lua", argv);
 	
 	return 0;
 }
