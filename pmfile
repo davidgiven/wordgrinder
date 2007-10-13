@@ -6,22 +6,56 @@
 -- $URL: $
 
 include "c.pm"
+HOME = os.getenv("HOME")
 
-local function exec(s, pattern)
-	local f = io.popen(s)
-	local s = {}
-	for l in string.gfind(f:read("*a"), pattern) do
-		table.insert(s, l)
+-----------------------------------------------------------------------------
+-- User configurable settings start here!
+
+-- Where do you want WordGrinder installed? By default, it goes into your
+-- home directory.
+
+PREFIX = HOME
+-- PREFIX = "/usr/local"
+
+-- Do you want to use pkgconfig to find Lua? Set the following variable to
+-- true or false. If you set it to false, you'll need to add Lua's library
+-- and include paths in the next section.
+
+USE_PKGCONFIG_FOR_LUA = true
+
+-- Any other build options go here. Note the lack of -l, -D or -I.
+
+CBUILDFLAGS = {"-g", "-Os", "-Wall"}
+CLIBRARIES = {"ncursesw"}
+CDEFINES = {'PREFIX="%PREFIX%"', "_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE"}
+CINCLUDES = {"/usr/include/ncursesw"}
+
+-- There is nothing editable beyond this point.
+-----------------------------------------------------------------------------
+
+-- The staging area for the installation.
+
+BINDIR = ".staging"
+
+-- This next chunk of code makes pkgconfig work.
+
+if USE_PKGCONFIG_FOR_LUA then
+	local function exec(t, s, pattern)
+		local f = io.popen(s)
+		for l in string.gfind(f:read("*a"), pattern) do
+			table.insert(t, l)
+		end
+		f:close()
 	end
-	f:close()
 	
-	return s
+	CEXTRAFLAGS = {PARENT}
+	exec(CEXTRAFLAGS, "pkg-config --cflags lua5.1", "(%S+)")
+	
+	CLINKFLAGS = {PARENT}
+	exec(CLINKFLAGS, "pkg-config --libs lua5.1", "(%S+)")
 end
 
-CBUILDFLAGS = {"-g", "-Wall"}
-CLIBRARIES = {"lua5.1", "ncursesw"}
-CDEFINES = {"_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE"}
-CINCLUDES = {"/usr/include/ncursesw"}
+-- Build the main program.
 
 wordgrinder = cprogram {
 	cfile "src/c/utils.c",
@@ -31,7 +65,35 @@ wordgrinder = cprogram {
 	cfile "src/c/word.c",
 	cfile "src/c/bit.c",
 	
-	install = pm.install("wordgrinder")
+	install = {
+		pm.install("%BINDIR%/bin/wordgrinder"),
+		pm.install("src/lua/browser.lua",        "%BINDIR%/share/wordgrinder/browser.lua"),
+		pm.install("src/lua/document.lua",       "%BINDIR%/share/wordgrinder/document.lua"),
+		pm.install("src/lua/export.lua",         "%BINDIR%/share/wordgrinder/export.lua"),
+		pm.install("src/lua/fileio.lua",         "%BINDIR%/share/wordgrinder/fileio.lua"),
+		pm.install("src/lua/forms.lua",          "%BINDIR%/share/wordgrinder/forms.lua"),
+		pm.install("src/lua/html.lua",           "%BINDIR%/share/wordgrinder/html.lua"),
+		pm.install("src/lua/import.lua",         "%BINDIR%/share/wordgrinder/import.lua"),
+		pm.install("src/lua/main.lua",           "%BINDIR%/share/wordgrinder/main.lua"),
+		pm.install("src/lua/menu.lua",           "%BINDIR%/share/wordgrinder/menu.lua"),
+		pm.install("src/lua/navigate.lua",       "%BINDIR%/share/wordgrinder/navigate.lua"),
+		pm.install("src/lua/redraw.lua",         "%BINDIR%/share/wordgrinder/redraw.lua"),
+		pm.install("src/lua/ui.lua",             "%BINDIR%/share/wordgrinder/ui.lua"),
+		pm.install("src/lua/utils.lua",          "%BINDIR%/share/wordgrinder/utils.lua"),
+	}
+}
+
+-- Once built, do the installation, rather crudely. FIXME.
+
+install = simple {
+	outputs = {"dummy"},
+	command = "",
+	__dobuild = function(self, inputs, outputs)
+		os.execute("mkdir -p "..PREFIX)
+		os.execute("(cd "..BINDIR.." && tar chf - .) | (cd "..PREFIX.." && tar xvf -)")
+	end,
+	
+	wordgrinder
 }
 
 default = wordgrinder

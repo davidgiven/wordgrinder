@@ -81,6 +81,11 @@ void script_load(const char* filename, const char* argv[])
 {
 	int status = luaL_loadfile(L, filename);
 	
+	/* Set some global variables. */
+	
+	lua_pushstring(L, LUA_SRC_DIR);
+	lua_setglobal(L, "LUA_SRC_DIR");
+	
 	/* Push the arguments onto the stack. */
 	
 	int argc = 0;

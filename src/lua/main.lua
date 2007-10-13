@@ -10,28 +10,28 @@ VERSION = "0.1"
 require "lfs"
 
 function include(fn)
-	local c, e = loadfile(fn)
+	local c, e = loadfile(LUA_SRC_DIR .. fn)
 	if e then
 		error(e)
 	end
 	c()
 end
 
-include "src/lua/utils.lua"
-include "src/lua/redraw.lua"
-include "src/lua/document.lua"
-include "src/lua/forms.lua"
-include "src/lua/ui.lua"
-include "src/lua/browser.lua"
+include "utils.lua"
+include "redraw.lua"
+include "document.lua"
+include "forms.lua"
+include "ui.lua"
+include "browser.lua"
+include "html.lua"
 
 Cmd = {}
-include "src/lua/html.lua"
-include "src/lua/fileio.lua"
-include "src/lua/export.lua"
-include "src/lua/import.lua"
-include "src/lua/navigate.lua"
+include "fileio.lua"
+include "export.lua"
+include "import.lua"
+include "navigate.lua"
 
-include "src/lua/menu.lua"
+include "menu.lua"
 
 local int = math.floor
 local Write = wg.write
