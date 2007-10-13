@@ -1,0 +1,101 @@
+                               WORDGRINDER V0.1
+                               ================
+
+                            (C) 2007 David Given
+                                 2007-10-13
+
+
+INTRODUCTION
+============
+
+WordGrinder is a simple, Unicode-aware word processor that runs on the
+console. It's designed to get the hell out of your way and let you write;
+it does very little, but what it does it does well.
+
+It supports basic paragraph styles, basic character styles, basic screen
+markup, a menu interface that means you don't have to remember complex
+key sequences, HTML import and export, and some other useful features.
+
+WordGrinder does not require X. It runs in a terminal. 
+
+
+INSTALLATION
+============
+
+WordGrinder needs the following packages installed:
+
+ - ncursesw, the wide-character version of curses. This is supplied with
+   most systems.
+   
+ - Lua 5.1, the programming language. This is available from:
+     http://www.lua.org/
+     
+ - LuaFileSystem 1.2, the file system access extension to Lua. This is
+   available from:
+     http://www.keplerproject.org/luafilesystem/index.html
+
+ - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
+   and rxvt-unicode do. rxvt and the Linux console don't (unless you use
+   jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
+   will look funny.
+   
+If you have Debian, you've already got all these. Merely install these
+packages:
+
+  libncursesw5-dev liblua5.1-0-dev liblua5.1-filesystem0
+  
+
+WordGrinder uses Prime Mover (http://primemover.sf.net) as its build system.
+You do not need to install anything to make this work. You will, however, need
+to configure the pmfile. Load it into an editor and follow the instructions;
+there is very little that will need changing (nothing, if you're on Debian).  
+  
+Then, simply do:
+
+  ./pm install
+  
+WordGrinder will build and install to the location you specified in the
+pmfile. (If you specified a location that needs to be written to as root,
+you will need to use sudo. If you don't like building things as root, you can
+build and install in two stages by doing "./pm; ./pm install").
+
+It is now ready to use.
+
+
+USAGE
+=====
+
+Do this:
+
+  wordgrinder
+
+...to get a blank document. You can load an existing document with:
+
+  wordgrinder README.wg
+  
+Please read README.wg; it contains the manual.  
+
+
+If you use WordGrinder, please join the mailing list. This will allow you
+to ask questions, hopefully receive answers, and get news about any
+new releases. You can subscribe or view the archives at the following page:
+
+https://lists.sourceforge.net/lists/listinfo/wordgrinder-users
+
+
+LICENSE
+=======
+
+WordGrinder is available under the BSD license. Please see the COPYING file
+for the full text.
+
+
+THE AUTHOR
+==========
+
+Prime Mover was written by me, David Given. You may contact me at
+dg@cowlark.com, or visit my website at http://www.cowlark.com. There may or
+may not be anything interesting there.
+
+
+$Id$
