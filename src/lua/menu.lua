@@ -115,8 +115,9 @@ local EditMenu = addmenu("Edit",
 	{"EP",     "P", "Paste",                     "^V",        Cmd.Paste},
 	{"ED",     "D", "Delete",                    nil,         Cmd.Delete},
 	"-",
-	{"EF",     "F", "Find...",                   "^F",        Cmd.Find},
+	{"EF",     "F", "Find and replace...",       "^F",        Cmd.Find},
 	{"EN",     "N", "Find next",                 "^K",        Cmd.FindNext},
+	{"ER",     "R", "Replace then find",         "^R",        Cmd.ReplaceThenFind},
 })
 
 local MarginMenu = addmenu("Margin",

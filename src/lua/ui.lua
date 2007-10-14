@@ -179,3 +179,60 @@ function PromptForString(title, message, default)
 	end
 end
 
+function FindAndReplaceDialogue(defaultfind, defaultreplace)
+	defaultfind = defaultfind or ""
+	defaultreplace = defaultreplace or ""
+	
+	local findfield = Form.TextField {
+		value = defaultfind,
+		cursor = defaultfind:len() + 1,
+		x1 = 11, y1 = -6, x2 = -1, y2 = -5,
+	}
+
+	local replacefield = Form.TextField {
+		value = defaultreplace,
+		cursor = defaultreplace:len() + 1,
+		x1 = 11, y1 = -4, x2 = -1, y2 = -3,
+	}
+
+	local dialogue = 
+	{
+		title = "Find and Replace",
+		width = Form.Large,
+		height = 7,
+
+		["KEY_^C"] = "cancel",
+		["KEY_RETURN"] = "confirm",
+		["KEY_ENTER"] = "confirm",
+
+		Form.Label {
+			value = "Find:",
+			x1 = 1, y1 = -6, x2 = 10, y2 = -6,
+			align = Form.Left,
+		},
+		 		
+		Form.Label {
+			value = "Replace:",
+			x1 = 1, y1 = -4, x2 = 10, y2 = -4,
+			align = Form.Left,
+		},
+		 		
+		findfield,
+		replacefield,			
+		
+		Form.Label {
+		    value = "<enter string, or CTRL+C to cancel>",
+		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
+		},
+	}
+
+	local result = Form.Run(dialogue, RedrawScreen)		
+	
+	QueueRedraw()
+	if result then
+		return findfield.value, replacefield.value
+	else
+		return nil
+	end
+end
+
