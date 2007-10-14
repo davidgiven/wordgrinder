@@ -764,10 +764,10 @@ function Cmd.Delete()
 	       Cmd.UnsetMark()
 end
 
-function Cmd.Find(text)
-	if not text then
-		text = PromptForString("Find Text", "Please enter the text you want to search for:")
-		if not text then
+function Cmd.Find(findtext, replacetext)
+	if not findtext then
+		findtext, replacetext = FindAndReplaceDialogue()
+		if not findtext or (findtext == "") then
 			return false
 		end
 	end
@@ -775,7 +775,7 @@ function Cmd.Find(text)
 	-- Convert the search text into a pattern.
 	
 	local patterns = {}
-	for w in text:gmatch("%S+") do
+	for w in findtext:gmatch("%S+") do
 		-- w is a word from the pattern. We need to perform the following
 		-- changes:
 		--   - we need to insert %c* between all letters, to allow it to match
@@ -814,6 +814,7 @@ function Cmd.Find(text)
 	end
 	
 	DocumentSet.findtext = patterns
+	DocumentSet.replacetext = replacetext
 	return Cmd.FindNext()	
 end
 
@@ -896,4 +897,32 @@ function Cmd.FindNext()
 	QueueRedraw()
 	NonmodalMessage("Not found.")
 	return false
+end
+
+function Cmd.ReplaceThenFind()
+	if Document.mp then
+		local e = Cmd.Delete() and Cmd.UnsetMark()
+		if not e then
+			return false
+		end
+		
+		local text = DocumentSet.replacetext
+		local firstword = true
+		e = true
+		for w in text:gmatch("%S+") do
+			if not firstword then
+				e = Cmd.SplitCurrentWord()
+			end
+			firstword = false
+			
+			e = e and Cmd.InsertStringIntoWord(w)
+		end
+		 
+		if not e then
+			return false
+		end
+		NonmodalMessage("Replaced text.")
+	end
+	
+	return Cmd.FindNext()
 end
