@@ -212,7 +212,7 @@ function Cmd.JoinWithNextWord()
 	end
 
 	if (Document.cw ~= #paragraph) then
-		word.text = word.text .. paragraph[Document.cw+1].text
+		word.text = InsertIntoWord(paragraph[Document.cw+1].text, word.text, 1)
 		paragraph:deleteWordAt(Document.cw+1)
 	end
 	

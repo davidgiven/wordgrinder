@@ -312,7 +312,7 @@ static int insertintoword_cb(lua_State* L)
 		if ((p - dest) == offset)
 		{
 			int ss = 0;
-			while (copy(&p, &dstate, &ins, &ss, 0, sstate))
+			while (copy(&p, &dstate, &ins, &ss, 0, STYLE_ALL))
 				;
 			
 			insend = p - dest;
