@@ -116,6 +116,7 @@ local EditMenu = addmenu("Edit",
 	{"ED",     "D", "Delete",                    nil,         Cmd.Delete},
 	"-",
 	{"EF",     "F", "Find...",                   "^F",        Cmd.Find},
+	{"EN",     "N", "Find next",                 "^K",        Cmd.FindNext},
 })
 
 local MarginMenu = addmenu("Margin",
@@ -302,7 +303,10 @@ MenuClass = {
 				if not f then
 					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
 				else
-					f()
+					local _, msg = f()
+					if msg then
+						NonmodalMessage(msg)
+					end
 				end
 				menu_stack = {}
 				return true

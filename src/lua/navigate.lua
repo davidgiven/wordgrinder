@@ -13,6 +13,9 @@ local PrevCharInWord = wg.prevcharinword
 local InsertIntoWord = wg.insertintoword
 local DeleteFromWord = wg.deletefromword
 local ApplyStyleToWord = wg.applystyletoword
+local ReadU8 = wg.readu8
+local WriteU8 = wg.writeu8
+local table_concat = table.concat
 
 function Cmd.GotoBeginningOfWord()
 	Document.co = 1
@@ -768,12 +771,129 @@ function Cmd.Find(text)
 			return false
 		end
 	end
+
+	-- Convert the search text into a pattern.
 	
-	-- Convert the text into a valid pattern.
-	
-	local pattern = {}
-	for i = 1, text:len() do
+	local patterns = {}
+	for w in text:gmatch("%S+") do
+		-- w is a word from the pattern. We need to perform the following
+		-- changes:
+		--   - we need to insert %c* between all letters, to allow it to match
+		--     control codes;
+		--   - we want to  convert single letters like 'q' into '[qQ]' to make
+		--     the pattern case insensitive;
+		--   - we want to anchor internal word boundaries with ^ and $ to make
+		--     them match whole words.
+		-- This is done in several stages, for simplicity.
+		
+		local wp = {}
+		local i = 1
+		local len = w:len()
+		while (i <= len) do
+			local c = WriteU8(ReadU8(w, i)) 
+			i = i + GetBytesOfCharacter(w:byte(i))
+
+			if ((c >= "A") and (c <= "Z")) or
+			    ((c >= "a") and (c <= "z")) then
+				c = "["..c:upper()..c:lower().."]"
+			end
+			
+			wp[#wp+1] = c
+		end
+		
+		patterns[#patterns + 1] = table_concat(wp, "%c*")
 	end
 	
+	for i = 2, (#patterns - 1) do
+		patterns[i] = "^"..patterns[i].."$"
+	end
+	
+	if (#patterns > 1) then
+		patterns[1] = patterns[1].."$"
+		patterns[#patterns] = "^"..patterns[#patterns]
+	end
+	
+	DocumentSet.findtext = patterns
+	return Cmd.FindNext()	
+end
+
+function Cmd.FindNext()
+	if not DocumentSet.findtext then
+		return false
+	end
+
+	ImmediateMessage("Searching...")
+	
+	-- Start at the current cursor position.
+	
+	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local patterns = DocumentSet.findtext
+	local pattern = patterns[1]
+
+	-- Keep looping until we reach the starting point again.
+	
+	while true do
+		local word = Document[cp][cw]
+		local s, e = word.text:find(pattern, co)
+		
+		if s then
+			-- We got a match! First, though, check to see if the remaining
+			-- words in the pattern match.
+	
+			local endword = cw
+			local pi = 2
+			local found = true
+			while (pi <= #patterns) do
+				endword = endword + 1
+				
+				word = Document[cp][endword]
+				if not word then
+					found = false
+					break
+				end
+				
+				_, e = word.text:find(patterns[pi])
+				if not e then
+					found = false
+					break
+				end
+				
+				pi = pi + 1
+			end
+			 
+			if found then
+				Document.cp = cp
+				Document.cw = endword
+				Document.co = e + 1
+				Document.mp = Document.cp
+				Document.mw = cw
+				Document.mo = s
+				NonmodalMessage("Found.")
+				QueueRedraw()
+				return true
+			end
+		end
+	
+		-- Nothing. Move on to the next word.
+		
+		co = 1
+		cw = cw + 1
+		if (cw > #Document[cp]) then
+			cw = 1
+			cp = cp + 1
+			if (cp > #Document) then
+				cp = 1
+			end
+		end
+		
+		-- Check to see if we've scanned everything.
+		
+		if (cp == Document.cp) and (cw == Document.cw) and (co == 1) then
+			break
+		end
+	end
+	
+	QueueRedraw()
+	NonmodalMessage("Not found.")
 	return false
 end
