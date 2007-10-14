@@ -6,6 +6,7 @@
 -- $URL: $
 
 local table_remove = table.remove
+local table_concat = table.concat
 local Write = wg.write
 local WriteStyled = wg.writestyled
 local ClearToEOL = wg.cleartoeol
@@ -246,7 +247,6 @@ ParagraphClass =
 		local cstyle = self.style.cstyle
 		local ostyle = 0
 		for wn, w in ipairs(line) do
-			local style = w.style
 			local text = w.text
 			
 			ostyle = WriteStyled(x+w.x, y, text, ostyle, nil, nil, cstyle)

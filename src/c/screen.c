@@ -339,7 +339,13 @@ static int getchar_cb(lua_State* L)
 static int readu8_cb(lua_State* L)
 {
 	const char* s = luaL_checkstring(L, 1);
-	wint_t c = readu8(&s);
+	int offset = lua_tointeger(L, 2);
+	wint_t c;
+	
+	if (offset > 0)
+		offset--;
+	s = s + offset;
+	c = readu8(&s);
 	
 	lua_pushnumber(L, c);
 	return 1;
