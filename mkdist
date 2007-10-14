@@ -1,0 +1,29 @@
+#!/bin/sh
+# $Id$
+# $HeadURL$
+# $LastChangedDate: 2007-10-05 00:12:15 +0100 (Fri, 05 Oct 2007) $
+#
+# Script to build a distribution package.
+
+set -e
+	
+if [ "$1" = "" ]; then
+	echo "Please specify a version number!"
+	exit 1
+fi
+
+if [ -d ../wordgrinder-$1 ]; then
+	echo "I think you've already generated version $1."
+	exit 1
+fi
+
+mkdir ../wordgrinder-$1
+
+tar cf - . --exclude="*/.*" | (cd ../wordgrinder-$1; tar xf -) 
+rm ../wordgrinder-$1/mkdist
+
+(cd .. && tar cvf wordgrinder-$1.tar.bz2 --bzip2 wordgrinder-$1)
+
+echo ""
+echo "Done --- but did you remember to update the version number in the README?"
+
