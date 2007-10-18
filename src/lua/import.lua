@@ -31,57 +31,62 @@ end
 
 -- Import helper functions. These functions build styled words and paragraphs.
 
-local pbuffer
-local wbuffer
-local oldattr
-local attr
-
-local function reset()
-	pbuffer = {}
-	wbuffer = {}
-	oldattr = 0
-	attr = 0
-end
-
-local function style_on(a)
-	attr = bitor(attr, a)
-end
-
-local function style_off(a)
-	attr = bitxor(bitor(attr, a), a)
-end
-
-local function text(t)
-	if (oldattr ~= attr) then
-		wbuffer[#wbuffer + 1] = string_char(16 + attr)
-		oldattr = attr
-	end
+function CreateImporter(document)
+	local pbuffer
+	local wbuffer
+	local oldattr
+	local attr
 	
-	wbuffer[#wbuffer + 1] = t
-end
- 
-local function flushword()
-	if (#wbuffer > 0) then
-		local s = table_concat(wbuffer)
-		pbuffer[#pbuffer + 1] = CreateWord(s)
-		wbuffer = {}
-		oldattr = 0
-	end
-end
+	return
+	{
+		reset = function(self)
+			pbuffer = {}
+			wbuffer = {}
+			oldattr = 0
+			attr = 0
+		end,
 
-local function flushparagraph(document, style)
-	style = style or "P"
+		style_on = function(self, a)
+			attr = bitor(attr, a)
+		end,
 	
-	if (#wbuffer > 0) then
-		flushword()
-	end
+		style_off = function(self, a)
+			attr = bitxor(bitor(attr, a), a)
+		end,
 	
-	if (#pbuffer > 0) then
-		local p = CreateParagraph(DocumentSet.styles[style], pbuffer)
-		document:appendParagraph(p)
+		text = function(self, t)
+			if (oldattr ~= attr) then
+				wbuffer[#wbuffer + 1] = string_char(16 + attr)
+				oldattr = attr
+			end
 		
-		pbuffer = {}
-	end
+			wbuffer[#wbuffer + 1] = t
+		end,
+	 
+		flushword = function(self)
+			if (#wbuffer > 0) then
+				local s = table_concat(wbuffer)
+				pbuffer[#pbuffer + 1] = CreateWord(s)
+				wbuffer = {}
+				oldattr = 0
+			end
+		end,
+	
+		flushparagraph = function(self, style)
+			style = style or "P"
+			
+			if (#wbuffer > 0) then
+				self:flushword()
+			end
+			
+			if (#pbuffer > 0) then
+				local p = CreateParagraph(DocumentSet.styles[style], pbuffer)
+				document:appendParagraph(p)
+				
+				pbuffer = {}
+			end
+		end
+	}
 end
 
 -- The importers themselves.
@@ -145,12 +150,16 @@ local function loadhtmlfile(fp)
 	-- Define the element look-up table.
 	
 	local document = CreateDocument()
+	local importer = CreateImporter(document)
 	local style = "P"
 	
 	local function flush()
-		flushparagraph(document, style)
-		
+		importer:flushparagraph(style)
 		style = "P"
+	end
+	
+	local function flushword()
+		importer:flushword()
 	end
 	
 	local elements =
@@ -168,15 +177,15 @@ local function loadhtmlfile(fp)
 		["<h3>"] = function() flush() style = "H3" end,
 		["<h4>"] = function() flush() style = "H4" end,
 		["<li>"] = function() flush() style = "LB" end,
-		["<i>"] = function() style_on(ITALIC) end,
-		["</i>"] = function() style_off(ITALIC) end,
-		["<u>"] = function() style_on(UNDERLINE) end,
-		["</u>"] = function() style_off(UNDERLINE) end,
+		["<i>"] = function() importer:style_on(ITALIC) end,
+		["</i>"] = function() importer:style_off(ITALIC) end,
+		["<u>"] = function() importer:style_on(UNDERLINE) end,
+		["</u>"] = function() importer:style_off(UNDERLINE) end,
 	}
 	
 	-- Actually do the parsing.
 	
-	reset()
+	importer:reset()
 	for t in tokens do
 		local e = elements[t]
 		if e then
@@ -186,10 +195,10 @@ local function loadhtmlfile(fp)
 		elseif string_find(t, "^&") then
 			e = DecodeHTMLEntity(t)
 			if e then
-				text(e)
+				importer:text(e)
 			end
 		else
-			text(t)
+			importer:text(t)
 		end
 	end
 	flush()
