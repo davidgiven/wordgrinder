@@ -13,23 +13,7 @@ local bitor = wg.bitor
 local bitxor = wg.bitxor
 local bit = wg.bit
 
-function Cmd.ExportHTMLFile(filename)
-	if not filename then
-		filename = FileBrowser("Export HTML File", "Export as:", true,
-			(DocumentSet.name or "(unnamed)"):gsub("%..-$", ".html"))
-		if not filename then
-			return false
-		end
-	end
-	
-	ImmediateMessage("Exporting...")
-	local fp = io.open(filename, "w")
-	if not fp then
-		ModalMessage(nil, "The export failed for some reason.")
-		QueueRedraw()
-		return false
-	end
-	
+local function savehtmlfile(fp, document)
 	fp:write('<html><head>\n')
 	fp:write('<meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n')
 	fp:write('<title>', Document.name, '</title>')
@@ -102,16 +86,45 @@ function Cmd.ExportHTMLFile(filename)
 	fp:write('</body>\n')
 	
 	fp:write('</html>\n')
-	fp:close()
-	
-	QueueRedraw()
-	return true
 end
 
-function Cmd.ExportTextFile(filename)
+local function savetextfile(fp, document)
+	local firstword
+	
+	local wordwriter = function (style, text)
+		fp:write(text)
+	end
+		
+	for _, paragraph in ipairs(document) do
+		firstword = true
+		
+		for wn, word in ipairs(paragraph) do
+			if not firstword then
+				fp:write(' ')
+			end
+			firstword = false
+		
+			ParseWord(word.text, 0, wordwriter)
+		end
+		fp:write('\n')
+	end
+end
+
+local function exportgenericfile(filename, title, extension, callback)
 	if not filename then
-		filename = FileBrowser("Export Text File", "Export as:", true,
-			(DocumentSet.name or "(unnamed)"):gsub("%..-$", ".txt"))
+		filename = Document.name
+		if filename then
+			if not filename:find("%..-$") then
+				filename = filename .. extension
+			else
+				filename = filename:gsub("%..-$", extension)
+			end
+		else
+			filename = "(unnamed)"
+		end
+			
+		filename = FileBrowser(title, "Export as:", true,
+			filename)
 		if not filename then
 			return false
 		end
@@ -125,27 +138,19 @@ function Cmd.ExportTextFile(filename)
 		return false
 	end
 	
-	local firstword
-	
-	local wordwriter = function (style, text)
-		fp:write(text)
-	end
-		
-	for _, paragraph in ipairs(Document) do
-		firstword = true
-		
-		for wn, word in ipairs(paragraph) do
-			if not firstword then
-				fp:write(' ')
-			end
-			firstword = false
-		
-			ParseWord(word.text, 0, wordwriter)
-		end
-		fp:write('\n')
-	end
+	callback(fp, Document)
 	fp:close()
 	
 	QueueRedraw()
 	return true
+end
+
+function Cmd.ExportHTMLFile(filename)
+	return exportgenericfile(filename, "Export HTML File", ".html",
+		savehtmlfile)
+end
+
+function Cmd.ExportTextFile(filename)
+	return exportgenericfile(filename, "Export Text File", ".txt",
+		savetextfile)
 end
