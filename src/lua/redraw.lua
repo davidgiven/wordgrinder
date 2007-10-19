@@ -45,7 +45,15 @@ local drawmargin_tab = {
 		SetDim()
 		Write(Document.margin - w - 1, y, n)
 		SetNormal()
-	end
+	end,
+	
+	[4] = function(y, pn, p)
+		local n = tostring(#p)
+		local w = GetStringWidth(n)
+		SetDim()
+		Write(Document.margin - w - 1, y, n)
+		SetNormal()
+	end,
 }
 	
 local function drawmargin(y, pn, p)

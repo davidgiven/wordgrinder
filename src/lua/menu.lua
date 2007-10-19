@@ -125,6 +125,7 @@ local MarginMenu = addmenu("Margin",
 	{"SM1",    "H", "Hide margin",               "",          function() Cmd.SetViewMode(1) end},
 	{"SM2",    "S", "Show paragraph styles",     "",          function() Cmd.SetViewMode(2) end},
 	{"SM3",    "N", "Show paragraph numbers",    "",          function() Cmd.SetViewMode(3) end},
+	{"SM4",    "W", "Show paragraph word counts", "",         function() Cmd.SetViewMode(4) end},
 })
 	
 local StyleMenu = addmenu("Style",
