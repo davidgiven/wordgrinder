@@ -5,8 +5,6 @@
 -- $Id$
 -- $URL: $
 
-VERSION = "0.1"
-
 require "lfs"
 
 function include(fn)
