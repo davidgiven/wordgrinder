@@ -24,6 +24,7 @@ include "forms.lua"
 include "ui.lua"
 include "browser.lua"
 include "html.lua"
+include "events.lua"
 
 Cmd = {}
 include "fileio.lua"
@@ -99,6 +100,7 @@ function WordProcessor(filename)
 			redrawpending = false
 		end
 		
+		FireEvent(Event.WaitingForUser)
 		local c = wg.getchar()
 		if c then
 			-- Anything in masterkeymap overrides everything else.

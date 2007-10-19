@@ -32,34 +32,26 @@ local drawmargin_tab = {
 	[1] = nil,
 	
 	[2] = function(y, pn, p)
-		local style = p.style
-		local w = GetStringWidth(style.name)
-		SetDim()
-		Write(Document.margin - w - 1, y, style.name)
-		SetNormal()
+		return p.style.name
 	end,
 	
 	[3] = function(y, pn, p)
-		local n = tostring(pn)
-		local w = GetStringWidth(n)
-		SetDim()
-		Write(Document.margin - w - 1, y, n)
-		SetNormal()
+		return tostring(pn)
 	end,
 	
 	[4] = function(y, pn, p)
-		local n = tostring(#p)
-		local w = GetStringWidth(n)
-		SetDim()
-		Write(Document.margin - w - 1, y, n)
-		SetNormal()
+		return tostring(#p)
 	end,
 }
 	
 local function drawmargin(y, pn, p)
 	local f = drawmargin_tab[Document.viewmode]
 	if f then
-		f(y, pn, p)
+		local s = f(y, pn, p)
+
+		SetDim()
+		RAlignInField(0, y, Document.margin - 1, s)
+		SetNormal()
 	end
 	
 	local bullet = p.style.bullet
@@ -250,4 +242,6 @@ function RedrawScreen()
 	end
 	
 	redrawstatus()
+	
+	FireEvent(Event.Redraw)
 end
