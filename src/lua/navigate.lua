@@ -438,6 +438,9 @@ function Cmd.SetViewMode(mode)
 	elseif (mode == 3) then -- view paragraph numbers
 		Document.margin = int(math.log10(#Document)) + 3
 		NonmodalMessage("Margin now displays paragraph numbers.")
+	elseif (mode == 4) then -- view word counts
+		Document.margin = 5
+		NonmodalMessage("Margin now displays word counts.")
 	end
 	
 	DocumentSet:touch()
