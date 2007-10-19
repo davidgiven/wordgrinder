@@ -48,6 +48,11 @@ function CentreInField(x, y, w, s)
 	Write(x+xo, y, s)
 end
 
+function RAlignInField(x, y, w, s)
+	local xo = w - GetStringWidth(s)
+	Write(x+xo, y, s)
+end
+
 function DrawTitledBox(x, y, w, h, title)
 	DrawBox(x, y, w, h)
 	CentreInField(x+1, y, w, title)
