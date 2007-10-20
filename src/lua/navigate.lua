@@ -418,37 +418,6 @@ function Cmd.ToggleStyle(s)
 	return true
 end
 
-function Cmd.SetViewMode(mode)
-	Document.viewmode = mode
-	if (mode == 1) then -- off
-		Document.margin = 0
-		NonmodalMessage("Hiding margin.")
-	elseif (mode == 2) then -- view paragraph styles
-		local m = 0
-		
-		for _, style in pairs(DocumentSet.styles) do
-			local mm = GetStringWidth(style.name)
-			if (mm > m) then
-				m = mm
-			end
-		end
-		
-		Document.margin = m + 1
-		NonmodalMessage("Margin now displays paragraph styles.")
-	elseif (mode == 3) then -- view paragraph numbers
-		Document.margin = int(math.log10(#Document)) + 3
-		NonmodalMessage("Margin now displays paragraph numbers.")
-	elseif (mode == 4) then -- view word counts
-		Document.margin = 5
-		NonmodalMessage("Margin now displays word counts.")
-	end
-	
-	DocumentSet:touch()
-	ResizeScreen()
-	QueueRedraw()
-	return true
-end
-
 function Cmd.ActivateMenu(menu)
 	DocumentSet.menu:activate(menu)
 	ResizeScreen()

@@ -16,15 +16,16 @@ function include(fn)
 end
 
 include "utils.lua"
+include "events.lua"
 include "redraw.lua"
 include "document.lua"
 include "forms.lua"
 include "ui.lua"
 include "browser.lua"
 include "html.lua"
-include "events.lua"
 
 Cmd = {}
+include "margin.lua"
 include "fileio.lua"
 include "export.lua"
 include "import.lua"
@@ -83,16 +84,12 @@ function WordProcessor(filename)
 	}	
 		
 	local nl = string.char(13)
-	local oldnp = #Document
 	while true do
-		if (Document.viewmode == 3) and (oldnp ~= #Document) then
-			-- Fairly nasty hack to ensure that the left-hand margin gets resized
-			-- properly if the number of paragraphs changes, and we're in numbered-
-			-- paragraph mode.
-			Document.margin = int(math.log10(#Document)) + 3
+		if DocumentSet.justchanged then
+			FireEvent(Event.Changed)
+			DocumentSet.justchanged = false
 		end
-		oldnp = #Document
-	
+		
 		if redrawpending then
 			RedrawScreen()
 			redrawpending = false

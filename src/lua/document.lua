@@ -26,10 +26,12 @@ DocumentSetClass =
 			l:purge()
 		end
 		self.changed = nil
+		self.justchanged = nil
 	end,
 	
 	touch = function(self)
 		self.changed = true
+		self.justchanged = true
 	end,
 	
 	_findDocument = function(self, name)
@@ -500,6 +502,7 @@ end
 function CreateDocumentSet()
 	local ds =
 	{
+		version = VERSION,
 		documents = {},
 		styles = create_styles()
 	}
