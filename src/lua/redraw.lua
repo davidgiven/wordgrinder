@@ -74,11 +74,20 @@ local function redrawstatus()
 		Document.name or "",
 		"] ",
 		changed_tab[DocumentSet.changed] or "",
-		string.format(" P: %04d/%04d", Document.cp, #Document),
-		string.format("  %d word(s)", Document.wordcount or 0)
 	}
 	
-	DrawStatusLine(table.concat(s, ""))
+	SetBold()	
+	LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
+	ClearToEOL()
+	
+	local s = {
+		string.format("│ P: %d/%d ", Document.cp, #Document),
+		string.format("│ %d %s", Document.wordcount or 0,
+			pluralise(Document.wordcount or 0, "word ", "words "))
+	}
+	
+	RAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
+	SetNormal()
 end
 		
 local topmarker = {
