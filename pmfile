@@ -76,6 +76,7 @@ wordgrinder = cprogram {
 		pm.install("src/lua/forms.lua",          "%BINDIR%/share/wordgrinder/forms.lua"),
 		pm.install("src/lua/html.lua",           "%BINDIR%/share/wordgrinder/html.lua"),
 		pm.install("src/lua/events.lua",         "%BINDIR%/share/wordgrinder/events.lua"),
+		pm.install("src/lua/margin.lua",         "%BINDIR%/share/wordgrinder/margin.lua"),
 		pm.install("src/lua/import.lua",         "%BINDIR%/share/wordgrinder/import.lua"),
 		pm.install("src/lua/main.lua",           "%BINDIR%/share/wordgrinder/main.lua"),
 		pm.install("src/lua/menu.lua",           "%BINDIR%/share/wordgrinder/menu.lua"),

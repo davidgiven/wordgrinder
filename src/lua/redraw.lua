@@ -28,30 +28,16 @@ function ResizeScreen()
 	Document:wrap(ScreenWidth - Document.margin - 1)
 end
 
-local drawmargin_tab = {
-	[1] = nil,
-	
-	[2] = function(y, pn, p)
-		return p.style.name
-	end,
-	
-	[3] = function(y, pn, p)
-		return tostring(pn)
-	end,
-	
-	[4] = function(y, pn, p)
-		return tostring(#p)
-	end,
-}
-	
 local function drawmargin(y, pn, p)
-	local f = drawmargin_tab[Document.viewmode]
-	if f then
-		local s = f(y, pn, p)
+	local controller = MarginControllers[Document.viewmode]
+	if controller.getcontent then
+		local s = controller:getcontent(pn, p)
 
-		SetDim()
-		RAlignInField(0, y, Document.margin - 1, s)
-		SetNormal()
+		if s then
+			SetDim()
+			RAlignInField(0, y, Document.margin - 1, s)
+			SetNormal()
+		end
 	end
 	
 	local bullet = p.style.bullet
@@ -89,7 +75,7 @@ local function redrawstatus()
 		"] ",
 		changed_tab[DocumentSet.changed] or "",
 		string.format(" P: %04d/%04d", Document.cp, #Document),
-		string.format(" W: %d/%d", Document.cw, Document.co),
+		string.format("  %d word(s)", Document.wordcount or 0)
 	}
 	
 	DrawStatusLine(table.concat(s, ""))
@@ -244,4 +230,21 @@ function RedrawScreen()
 	redrawstatus()
 	
 	FireEvent(Event.Redraw)
+end
+
+-----------------------------------------------------------------------------
+-- Maintains the word count field in the current document.
+
+do
+	local function cb(event, token)
+		local wc = 0
+		
+		for _, p in ipairs(Document) do
+			wc = wc + #p
+		end
+		
+		Document.wordcount = wc
+	end
+	
+	AddEventListener(Event.Changed, cb)
 end
