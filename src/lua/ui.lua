@@ -16,6 +16,7 @@ local SetReverse = wg.setreverse
 local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
+local GetBoundedString = wg.getboundedstring
 
 function DrawStatusLine(s)
 	SetReverse()
@@ -44,11 +45,18 @@ function DrawBox(x, y, w, h)
 end
 
 function CentreInField(x, y, w, s)
+	s = GetBoundedString(s, w)
 	local xo = int((w - GetStringWidth(s)) / 2)
 	Write(x+xo, y, s)
 end
 
+function LAlignInField(x, y, w, s)
+	s = GetBoundedString(s, w)
+	Write(x, y, s)
+end
+
 function RAlignInField(x, y, w, s)
+	s = GetBoundedString(s, w)
 	local xo = w - GetStringWidth(s)
 	Write(x+xo, y, s)
 end

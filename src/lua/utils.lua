@@ -21,3 +21,10 @@ function min(a, b)
 	end
 end
 
+function pluralise(n, singular, plural)
+	if (n == 1) then
+		return singular
+	else
+		return plural
+	end
+end
