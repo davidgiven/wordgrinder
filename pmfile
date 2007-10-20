@@ -8,6 +8,7 @@
 include "c.pm"
 HOME = os.getenv("HOME")
 VERSION = "0.2"
+FILEFORMAT = 2
 
 -----------------------------------------------------------------------------
 -- User configurable settings start here!
@@ -28,8 +29,11 @@ USE_PKGCONFIG_FOR_LUA = true
 
 CBUILDFLAGS = {"-g", "-Os", "-Wall"}
 CLIBRARIES = {"ncursesw"}
-CDEFINES = {'VERSION="%VERSION%"', 'PREFIX="%PREFIX%"',
-	"_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE"}
+CDEFINES = {"_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE",
+		'VERSION="%VERSION%"',
+		'FILEFORMAT=%FILEFORMAT%',
+		'PREFIX="%PREFIX%"',
+	}
 CINCLUDES = {"/usr/include/ncursesw"}
 
 -- There is nothing editable beyond this point.

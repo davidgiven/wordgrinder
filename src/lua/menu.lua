@@ -210,7 +210,7 @@ local function drawmenu(x, y, menu, n)
 	end
 	Goto(ScreenWidth-1, ScreenHeight-1)
 	
-	DrawStatusLine("Press ^V, <key> to rebind a menu item; press ^X to unbind it.")
+	DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
 end
 
 function DrawMenuStack()
@@ -279,6 +279,16 @@ MenuClass = {
 							DrawMenuStack()
 						end
 					end
+				elseif (c == "KEY_^R") then
+					if PromptForYesNo("Reset menu keybindings?",
+						"Are you sure you want to reset all the menu "..
+						"keybindings back to their defaults?") then
+						DocumentSet.menu = CreateMenu()
+						DocumentSet:touch()
+						NonmodalMessage("All keybindings have been reset to their default settings.")
+						return false
+					end
+					DrawMenuStack()
 				elseif menu.mks[c] then
 					id = menu.mks[c].id
 					break
@@ -295,8 +305,10 @@ MenuClass = {
 				}
 				
 				local r = self:runmenu(x+4, y+2, f)
-				if r then
+				if (r == true) then
 					return true
+				elseif (r == false) then
+					return false
 				end
 				
 				DrawMenuStack()

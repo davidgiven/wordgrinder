@@ -502,7 +502,7 @@ end
 function CreateDocumentSet()
 	local ds =
 	{
-		version = VERSION,
+		fileformat = FILEFORMAT,
 		documents = {},
 		styles = create_styles()
 	}

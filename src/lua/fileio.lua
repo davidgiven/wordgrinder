@@ -226,25 +226,31 @@ local function loadfromstream(fp)
 end
 
 local function loaddocument(filename)
-	local fp = io.open(filename)
+	local fp, e = io.open(filename)
 	if not fp then
-		return nil, "file not found"
+		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
 	if (fp:read("*l") ~= MAGIC) then
 		fp:close()
-		return nil, "this is not a WordGrinder document set"
+		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 	
-	local d = loadfromstream(fp)
+	local d, e = loadfromstream(fp)
 	fp:close()
-	d.name = filename
-	-- FIXME
-	d.menu = CreateMenu()
 	
+	if not d then
+		return nil, e
+	end
+	
+	d.name = filename
 	return d
 end
 
 function Cmd.LoadDocumentSet(filename)
+	if not ConfirmDocumentErasure() then
+		return false
+	end
+	
 	if not filename then
 		filename = FileBrowser("Load Document Set", "Load file:", false)
 		if not filename then
@@ -253,9 +259,12 @@ function Cmd.LoadDocumentSet(filename)
 	end
 	
 	ImmediateMessage("Loading...")
-	local d = loaddocument(filename)
+	local d, e = loaddocument(filename)
 	if not d then
-		ModalMessage(nil, "The load failed, probably because the file could not be opened.")
+		if not e then
+			e = "The load failed, probably because the file could not be opened."
+		end
+		ModalMessage(nil, e)
 		QueueRedraw()
 		return false
 	end
@@ -263,8 +272,58 @@ function Cmd.LoadDocumentSet(filename)
 	DocumentSet = d
 	Document = d.current
 	
+	FireEvent(Event.DocumentLoaded)
+	
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	QueueRedraw()
 	return true
+end
+
+-----------------------------------------------------------------------------
+-- Cause the document to get upgraded, if necessary.
+
+do
+	local function cb(event, token)	
+		local fileformat = DocumentSet.fileformat or 1
+		
+		if (fileformat == FILEFORMAT) then
+			return
+		end
+		
+		ModalMessage(nil, "You are trying to open a file belonging to an earlier "..
+			"version of WordGrinder. I can do that, but if you save the file again "..
+			"it may not work on the old version. Also, all keybindings defined in "..
+			"this file will get reset to their default values.")
+		
+		ImmediateMessage("Upgrading...")
+		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
+			
+		DocumentSet.fileformat = FILEFORMAT
+		DocumentSet.menu = CreateMenu()
+		DocumentSet:touch()
+	end
+	
+	AddEventListener(Event.DocumentLoaded, cb)
+end
+
+-----------------------------------------------------------------------------
+-- Upgrade the document, if necessary.
+
+do
+	local function cb(event, token, oldversion, newversion)
+		if (oldversion < 2) then
+			for _, document in ipairs(DocumentSet) do
+				local wc = 0
+				
+				for _, p in ipairs(document) do
+					wc = wc + #p
+				end
+				
+				document.wordcount = wc
+			end
+		end
+	end
+	
+	AddEventListener(Event.DocumentUpgrade, cb)
 end

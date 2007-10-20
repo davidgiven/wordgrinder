@@ -425,7 +425,13 @@ function Cmd.ActivateMenu(menu)
 	return true
 end
 
-local function confirmerase()
+--- Checks that it's all right to erase the current document set.
+-- If the current document set has unsaved modifications, asks the user
+-- for permission to erase them.
+--
+-- @return                   true if it's all right to go ahead, false to cancel
+
+function ConfirmDocumentErasure()
 	if DocumentSet.changed then
 		if not PromptForYesNo("Document set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
 			return false
@@ -435,7 +441,7 @@ local function confirmerase()
 end
 
 function Cmd.TerminateProgram()
-	if confirmerase() then
+	if ConfirmDocumentErasure() then
 		os.exit()
 	end
 	
@@ -443,7 +449,7 @@ function Cmd.TerminateProgram()
 end
 
 function Cmd.CreateBlankDocumentSet()
-	if confirmerase() then
+	if ConfirmDocumentErasure() then
 		ResetDocumentSet()
 		QueueRedraw()
 		return true

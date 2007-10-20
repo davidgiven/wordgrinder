@@ -11,6 +11,8 @@ Event = {}
 Event.Redraw = {}            --- the screen has just been redrawn
 Event.WaitingForUser = {}    --- we're about to wait for a keypress
 Event.Changed = {}           --- the document's been changed
+Event.DocumentLoaded = {}    --- a new document has just been loaded
+Event.DocumentUpgrade = {}   --- (oldversion, newversion) the document is being upgraded
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.

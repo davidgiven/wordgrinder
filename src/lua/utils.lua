@@ -21,6 +21,13 @@ function min(a, b)
 	end
 end
 
+--- Chooses between a singular or a plural string.
+--
+-- @param n                  number
+-- @param singular           returned if number == 1
+-- @param plural             returned if number ~= 1
+-- @return                   either singular or plural
+
 function pluralise(n, singular, plural)
 	if (n == 1) then
 		return singular
