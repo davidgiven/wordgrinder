@@ -336,33 +336,6 @@ static int getchar_cb(lua_State* L)
 	return 1;
 }		
 
-static int readu8_cb(lua_State* L)
-{
-	const char* s = luaL_checkstring(L, 1);
-	int offset = lua_tointeger(L, 2);
-	wint_t c;
-	
-	if (offset > 0)
-		offset--;
-	s = s + offset;
-	c = readu8(&s);
-	
-	lua_pushnumber(L, c);
-	return 1;
-}
-
-static int writeu8_cb(lua_State* L)
-{
-	wint_t c = luaL_checkinteger(L, 1);
-	static char buffer[8];
-	char* s = buffer;
-	
-	writeu8(&s, c);
-	*s = '\0';
-	lua_pushstring(L, buffer);
-	return 1;
-}
-
 void screen_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -383,8 +356,6 @@ void screen_init(void)
 		{ "getboundedstring",          getboundedstring_cb },
 		{ "getbytesofcharacter",       getbytesofcharacter_cb },
 		{ "getchar",                   getchar_cb },
-		{ "readu8",                    readu8_cb },
-		{ "writeu8",                   writeu8_cb },
 		{ NULL,                        NULL }
 	};
 	

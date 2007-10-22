@@ -7,6 +7,7 @@
  */
 
 #include "globals.h"
+#include <iconv.h>
 
 static const uint32_t offsets[6] = {
     0x00000000UL, 0x00003080UL, 0x000E2080UL,
@@ -84,4 +85,94 @@ void writeu8(char** destp, wint_t ch)
     }
     
     *destp = dest;
+}
+
+static int readu8_cb(lua_State* L)
+{
+	const char* s = luaL_checkstring(L, 1);
+	int offset = lua_tointeger(L, 2);
+	wint_t c;
+	
+	if (offset > 0)
+		offset--;
+	s = s + offset;
+	c = readu8(&s);
+	
+	lua_pushnumber(L, c);
+	return 1;
+}
+
+static int writeu8_cb(lua_State* L)
+{
+	wint_t c = luaL_checkinteger(L, 1);
+	static char buffer[8];
+	char* s = buffer;
+	
+	writeu8(&s, c);
+	*s = '\0';
+	lua_pushstring(L, buffer);
+	return 1;
+}
+
+static iconv_t transcoder = NULL;
+
+static int setencodings_cb(lua_State* L)
+{
+	const char* from_encoding = luaL_checkstring(L, 1);
+	const char* to_encoding = luaL_checkstring(L, 2);
+	
+	if (transcoder)
+	{
+		iconv_close(transcoder);
+		transcoder = NULL;
+	}
+	
+	transcoder = iconv_open(to_encoding, from_encoding);
+	return 0;
+}
+
+static int transcode_cb(lua_State* L)
+{
+	size_t inputbuffersize;
+	const char* inputbuffer = luaL_checklstring(L, 1, &inputbuffersize);
+
+	size_t outputbuffersize = inputbuffersize*2 + 32;
+	char outputbuffer[outputbuffersize]; /* should fit everything */
+	
+	char* in = (char*) inputbuffer;
+	size_t inleft = inputbuffersize;
+	char* out = outputbuffer;
+	size_t outleft = outputbuffersize;
+	
+	while (inleft > 0)
+	{
+		size_t e = iconv(transcoder, &in, &inleft, &out, &outleft);
+		if (e == -1)
+		{
+			assert(errno != E2BIG);
+			if ((errno == EILSEQ) || (errno == EINVAL))
+			{
+				*out++ = '?';
+				outleft--;
+				in++;
+			}
+		}
+	}
+	
+	lua_pushlstring(L, outputbuffer, out - outputbuffer);
+	return 1;
+}
+
+void utils_init(void)
+{
+	const static luaL_Reg funcs[] =
+	{
+		{ "readu8",                    readu8_cb },
+		{ "writeu8",                   writeu8_cb },
+		{ "setencodings",              setencodings_cb },
+		{ "transcode",                 transcode_cb },
+		{ NULL,                        NULL }
+	};
+	
+	luaL_register(L, "wg", funcs);
 }

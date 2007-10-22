@@ -94,6 +94,7 @@ end
 local function loadtextfile(fp)
 	local document = CreateDocument()
 	for l in fp:lines() do
+		l = CanonicaliseString(l)
 		local p = CreateParagraph(DocumentSet.styles["P"], ParseStringIntoWords(l))
 		document:appendParagraph(p)
 	end
@@ -103,6 +104,8 @@ end
 
 local function loadhtmlfile(fp)
 	local data = fp:read("*a")
+	data:gsub("\n", " ")
+	data = CanonicaliseString(data)
 	local pos = 1
 	
 	-- Collapse whitespace; this makes things far easier to parse.
