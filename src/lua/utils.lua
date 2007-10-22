@@ -21,6 +21,33 @@ function min(a, b)
 	end
 end
 
+--- Transcodes a string.
+-- Converts the string to guaranteed valid UTF-8, and removes any
+-- control sequences.
+--
+-- @param s                  string to process
+-- @param encoding           input encoding; defaults to UTF-8
+-- @return                   canonicalised string
+
+do
+	local currentencoding = nil
+	
+	function CanonicaliseString(s, encoding)
+		if not encoding then
+			encoding = "utf-8"
+		else
+			encoding = encoding:lower()
+		end
+		if (encoding ~= currentencoding) then
+			currentencoding = encoding
+			wg.setencodings(currentencoding, "utf-8")
+		end
+		
+		s = wg.transcode(s)
+		return s:gsub("%c+", "")
+	end
+end
+
 --- Chooses between a singular or a plural string.
 --
 -- @param n                  number

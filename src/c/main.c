@@ -19,6 +19,7 @@ int main(int argc, const char* argv[])
 	screen_init();
 	word_init();
 	bit_init();
+	utils_init();
 	
 	script_load(LUA_SRC_DIR "main.lua", argv);
 	
