@@ -7,6 +7,7 @@
  */
 
 #include "globals.h"
+#include <lfs.h>
 
 lua_State* L;
 
@@ -73,6 +74,7 @@ void script_init(void)
 {
 	L = lua_open();
 	luaL_openlibs(L);
+	luaopen_lfs(L);
 	
 	atexit(script_deinit);
 }
