@@ -5,8 +5,6 @@
 -- $Id$
 -- $URL: $
 
-require "lfs"
-
 function include(fn)
 	local c, e = loadfile(LUA_SRC_DIR .. fn)
 	if e then

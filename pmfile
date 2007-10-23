@@ -19,22 +19,29 @@ FILEFORMAT = 2
 PREFIX = HOME
 -- PREFIX = "/usr/local"
 
--- Do you want to use pkgconfig to find Lua? Set the following variable to
--- true or false. If you set it to false, you'll need to add Lua's library
--- and include paths in the next section.
-
-USE_PKGCONFIG_FOR_LUA = true
-
 -- Any other build options go here. Note the lack of -l, -D or -I.
 
 CBUILDFLAGS = {"-g", "-Os", "-Wall"}
-CLIBRARIES = {"ncursesw"}
-CDEFINES = {"_XOPEN_SOURCE_EXTENDED", "_XOPEN_SOURCE",
-		'VERSION="%VERSION%"',
-		'FILEFORMAT=%FILEFORMAT%',
-		'PREFIX="%PREFIX%"',
-	}
-CINCLUDES = {"/usr/include/ncursesw"}
+
+CLIBRARIES = {
+	'ncursesw',
+	'm'
+}
+
+CDEFINES = {
+	'_XOPEN_SOURCE_EXTENDED',
+	'_XOPEN_SOURCE',
+	'LUA_USE_POSIX',
+	'VERSION="%VERSION%"',
+	'FILEFORMAT=%FILEFORMAT%',
+	'PREFIX="%PREFIX%"',
+}
+	
+CINCLUDES = {
+	"/usr/include/ncursesw",
+	"src/c/liblua",
+	"src/c/luax",
+}
 
 -- There is nothing editable beyond this point.
 -----------------------------------------------------------------------------
@@ -43,27 +50,52 @@ CINCLUDES = {"/usr/include/ncursesw"}
 
 BINDIR = ".staging"
 
--- This next chunk of code makes pkgconfig work.
+-- Our patched Lua library.
 
-if USE_PKGCONFIG_FOR_LUA then
-	local function exec(t, s, pattern)
-		local f = io.popen(s)
-		for l in string.gfind(f:read("*a"), pattern) do
-			table.insert(t, l)
-		end
-		f:close()
-	end
-	
-	CEXTRAFLAGS = {PARENT}
-	exec(CEXTRAFLAGS, "pkg-config --cflags lua5.1", "(%S+)")
-	
-	CLINKFLAGS = {PARENT}
-	exec(CLINKFLAGS, "pkg-config --libs lua5.1", "(%S+)")
-end
+liblua = group {
+	cfile "src/c/liblua/lapi.c",
+	cfile "src/c/liblua/lcode.c",
+	cfile "src/c/liblua/ldebug.c",
+	cfile "src/c/liblua/ldo.c",
+	cfile "src/c/liblua/ldump.c",
+	cfile "src/c/liblua/lfunc.c",
+	cfile "src/c/liblua/lgc.c",
+	cfile "src/c/liblua/llex.c",
+	cfile "src/c/liblua/lmem.c",
+	cfile "src/c/liblua/lobject.c",
+	cfile "src/c/liblua/lopcodes.c",
+	cfile "src/c/liblua/lparser.c",
+	cfile "src/c/liblua/lstate.c",
+	cfile "src/c/liblua/lstring.c",
+	cfile "src/c/liblua/ltable.c",
+	cfile "src/c/liblua/ltm.c",
+	cfile "src/c/liblua/lundump.c",
+	cfile "src/c/liblua/lvm.c",
+	cfile "src/c/liblua/lzio.c",
+	cfile "src/c/liblua/lauxlib.c",
+	cfile "src/c/liblua/lbaselib.c",
+	cfile "src/c/liblua/ldblib.c",
+	cfile "src/c/liblua/liolib.c",
+	cfile "src/c/liblua/lmathlib.c",
+	cfile "src/c/liblua/loslib.c",
+	cfile "src/c/liblua/ltablib.c",
+	cfile "src/c/liblua/lstrlib.c",
+	cfile "src/c/liblua/loadlib.c",
+	cfile "src/c/liblua/linit.c",
+}
+
+-- Lua extensions.
+
+luax = group {
+	cfile "src/c/luax/lfs.c"
+}
 
 -- Build the main program.
 
 wordgrinder = cprogram {
+	liblua,
+	luax,
+	
 	cfile "src/c/utils.c",
 	cfile "src/c/main.c",
 	cfile "src/c/lua.c",
