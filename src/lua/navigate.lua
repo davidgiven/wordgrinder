@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local int = math.floor
 local GetBytesOfCharacter = wg.getbytesofcharacter
@@ -904,3 +904,17 @@ function Cmd.ReplaceThenFind()
 	
 	return Cmd.FindNext()
 end
+
+function Cmd.ToggleStatusBar()
+	if DocumentSet.statusbar then
+		DocumentSet.statusbar = false
+		NonmodalMessage("Status bar disabled.")
+	else
+		DocumentSet.statusbar = true
+		NonmodalMessage("Status bar enabled.")
+	end
+
+	QueueRedraw()
+	return true
+end
+

@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
@@ -313,6 +313,8 @@ end
 do
 	local function cb(event, token, oldversion, newversion)
 		if (oldversion < 2) then
+			-- Update wordcount.
+
 			for _, document in ipairs(DocumentSet) do
 				local wc = 0
 				
@@ -322,6 +324,10 @@ do
 				
 				document.wordcount = wc
 			end
+	
+			-- Status bar defaults to on.
+
+			DocumentSet.statusbar = true
 		end
 	end
 	
