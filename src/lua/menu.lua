@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local Write = wg.write
 local ClearToEOL = wg.cleartoeol
@@ -136,6 +136,7 @@ local StyleMenu = addmenu("Style",
 	"-",
 	{"SP",     "P", "Change paragraph style ▷",  "^P",        ParagraphStylesMenu},
 	{"SM",     "M", "Set margin mode ▷",         "",          MarginMenu},
+	{"SS",     "S", "Toggle status bar",         "^W",        Cmd.ToggleStatusBar},
 })
 
 local NavigationMenu = addmenu("Navigation",

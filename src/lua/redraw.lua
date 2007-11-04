@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local int = math.floor
 local Write = wg.write
@@ -56,38 +56,46 @@ local changed_tab =
 }
 
 local function redrawstatus()
-	SetReverse()
-	
+	local y = ScreenHeight - 1
+
+	if DocumentSet.statusbar then
+		local s = {
+			DocumentSet.name or "(unnamed)",
+			"[",
+			Document.name or "",
+			"] ",
+			changed_tab[DocumentSet.changed] or "",
+		}
+		
+		SetReverse()
+		SetBold()	
+		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
+		ClearToEOL()
+		
+		local s = {
+			string.format("│ P: %d/%d ", Document.cp, #Document),
+			string.format("│ %d %s", Document.wordcount or 0,
+				pluralise(Document.wordcount or 0, "word ", "words "))
+		}
+		
+		RAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
+		SetNormal()
+
+		y = y - 1
+	end
+
 	if (#messages > 0) then
-		local y = ScreenHeight - 1 - #messages
-		for i = 1, #messages do
+		SetReverse()
+
+		for i = #messages, 1, -1 do
 			Write(0, y, messages[i])
 			ClearToEOL()
-			y = y + 1
+			y = y - 1
 		end
 		messages = {}
+
+		SetNormal()
 	end
-	
-	local s = {
-		DocumentSet.name or "(unnamed)",
-		"[",
-		Document.name or "",
-		"] ",
-		changed_tab[DocumentSet.changed] or "",
-	}
-	
-	SetBold()	
-	LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
-	ClearToEOL()
-	
-	local s = {
-		string.format("│ P: %d/%d ", Document.cp, #Document),
-		string.format("│ %d %s", Document.wordcount or 0,
-			pluralise(Document.wordcount or 0, "word ", "words "))
-	}
-	
-	RAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
-	SetNormal()
 end
 		
 local topmarker = {
@@ -120,7 +128,7 @@ local function drawbottommarker(y)
 	
 	SetBold()
 	for i = 1, #bottommarker do
-		if (y >= 0) then
+		if (y <= ScreenHeight) then
 			Write(x, y, bottommarker[i])
 		end
 		y = y + 1
@@ -224,7 +232,7 @@ function RedrawScreen()
 			Document.botw = l.wn
 			y = y + 1
 			
-			if (y >= ScreenHeight) then
+			if (y > ScreenHeight) then
 				break
 			end
 		end
@@ -232,7 +240,7 @@ function RedrawScreen()
 		pn = pn + 1
 	end
 	
-	if (y < ScreenHeight) then
+	if (y <= ScreenHeight) then
 		drawbottommarker(y)
 	end
 	

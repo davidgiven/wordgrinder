@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local table_remove = table.remove
 local table_concat = table.concat
@@ -503,6 +503,7 @@ function CreateDocumentSet()
 	local ds =
 	{
 		fileformat = FILEFORMAT,
+		statusbar = true,
 		documents = {},
 		styles = create_styles()
 	}
