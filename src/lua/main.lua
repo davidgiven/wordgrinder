@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 function include(fn)
 	local c, e = loadfile(LUA_SRC_DIR .. fn)
@@ -141,7 +141,11 @@ do
 	end
 	
 	local function do_help(opt)
-		message("WordGrinder version ", VERSION, " © 2007 David Given")
+		stdout:write("WordGrinder version ", VERSION, " © 2007 David Given\n")
+		if DEBUG then
+			stdout:write("(This version has been compiled with debugging enabled.)\n")
+		end
+		
 		stdout:write([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
@@ -150,7 +154,20 @@ Options:
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
 ]])
+		if DEBUG then
+			stdout:write([[
+
+Debugging options:
+   -p    --profile     Enable profiler
+]])
+		end
+		
 		os.exit(0)
+	end
+	
+	local function do_profile(opt)
+		profiler.start()
+		return 0
 	end
 	
 	local function needarg(opt)
@@ -164,6 +181,11 @@ file to load on startup. If not given, you get a blank document instead.
 		["help"]        = do_help,
 	}
 	
+	if DEBUG then
+		argmap["p"] = do_profile
+		argmap["profile"] = do_profile
+	end
+	 
 	-- Called on an unrecognised option.
 	
 	local function unrecognisedarg(arg)
