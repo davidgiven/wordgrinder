@@ -20,6 +20,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "llimits.h"
 
 
 /* prefix for open functions in C libraries */
@@ -116,7 +117,7 @@ static void pusherror (lua_State *L) {
       NULL, error, 0, buffer, sizeof(buffer), NULL))
     lua_pushstring(L, buffer);
   else
-    lua_pushfstring(L, "system error %d\n", error);
+    lua_pushfstring(L, "system error %d\n", (LUAI_UACINTEGER)error);
 }
 
 static void ll_unloadlib (void *lib) {
@@ -329,7 +330,7 @@ static int ll_loadlib (lua_State *L) {
 */
 
 
-static int readable (const char *filename) {
+static lu_bool readable (const char *filename) {
   FILE *f = fopen(filename, "r");  /* try to open file */
   if (f == NULL) return 0;  /* open failed */
   fclose(f);
@@ -411,7 +412,7 @@ static int loader_C (lua_State *L) {
 }
 
 
-static int loader_Croot (lua_State *L) {
+static lu_bool loader_Croot (lua_State *L) {
   const char *funcname;
   const char *filename;
   const char *name = luaL_checkstring(L, 1);

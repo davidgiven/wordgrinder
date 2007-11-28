@@ -45,7 +45,6 @@ typedef enum {
 
 LUAI_DATA const char *const luaT_typenames[];
 
-
 LUAI_FUNC const TValue *luaT_gettm (Table *events, TMS event, TString *ename);
 LUAI_FUNC const TValue *luaT_gettmbyobj (lua_State *L, const TValue *o,
                                                        TMS event);

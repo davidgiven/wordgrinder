@@ -23,7 +23,7 @@
 #include "lua.h"
 
 #include "lauxlib.h"
-
+#include "llimits.h"
 
 #define FREELIST_REF	0	/* free list of references */
 
@@ -43,7 +43,7 @@
 LUALIB_API int luaL_argerror (lua_State *L, int narg, const char *extramsg) {
   lua_Debug ar;
   if (!lua_getstack(L, 0, &ar))  /* no stack frame? */
-    return luaL_error(L, "bad argument #%d (%s)", narg, extramsg);
+    return luaL_error(L, "bad argument #%d (%s)", (LUAI_UACINTEGER) narg, extramsg);
   lua_getinfo(L, "n", &ar);
   if (strcmp(ar.namewhat, "method") == 0) {
     narg--;  /* do not count `self' */
@@ -54,7 +54,7 @@ LUALIB_API int luaL_argerror (lua_State *L, int narg, const char *extramsg) {
   if (ar.name == NULL)
     ar.name = "?";
   return luaL_error(L, "bad argument #%d to " LUA_QS " (%s)",
-                        narg, ar.name, extramsg);
+                        (LUAI_UACINTEGER) narg, ar.name, extramsg);
 }
 
 
@@ -75,7 +75,7 @@ LUALIB_API void luaL_where (lua_State *L, int level) {
   if (lua_getstack(L, level, &ar)) {  /* check function at level */
     lua_getinfo(L, "Sl", &ar);  /* get info about it */
     if (ar.currentline > 0) {  /* is there info? */
-      lua_pushfstring(L, "%s:%d: ", ar.short_src, ar.currentline);
+      lua_pushfstring(L, "%s:%d: ", ar.short_src, (LUAI_UACINTEGER) ar.currentline);
       return;
     }
   }
@@ -109,7 +109,7 @@ LUALIB_API int luaL_checkoption (lua_State *L, int narg, const char *def,
 }
 
 
-LUALIB_API int luaL_newmetatable (lua_State *L, const char *tname) {
+LUALIB_API int /*bool*/ luaL_newmetatable (lua_State *L, const char *tname) {
   lua_getfield(L, LUA_REGISTRYINDEX, tname);  /* get registry.name */
   if (!lua_isnil(L, -1))  /* name already in use? */
     return 0;  /* leave previous value on top, but return 0 */
@@ -187,10 +187,10 @@ LUALIB_API lua_Number luaL_optnumber (lua_State *L, int narg, lua_Number def) {
 
 
 LUALIB_API lua_Integer luaL_checkinteger (lua_State *L, int narg) {
-  lua_Integer d = lua_tointeger(L, narg);
-  if (d == 0 && !lua_isnumber(L, narg))  /* avoid extra test when d is not 0 */
-    tag_error(L, narg, LUA_TNUMBER);
-  return d;
+  lua_Integer v = lua_tointeger(L, narg);
+  if (v == 0 && !lua_isinteger(L, narg))  /* avoid extra test when v is not 0 */
+    tag_error(L, narg, LUA_TNUMBER);    /* use LUA_TNUMBER; that is the type for the user */
+  return v;
 }
 
 
@@ -200,7 +200,17 @@ LUALIB_API lua_Integer luaL_optinteger (lua_State *L, int narg,
 }
 
 
-LUALIB_API int luaL_getmetafield (lua_State *L, int obj, const char *event) {
+#ifdef LNUM_COMPLEX
+LUALIB_API lua_Complex luaL_checkcomplex (lua_State *L, int narg) {
+  lua_Complex c = lua_tocomplex(L, narg);
+  if (c == 0 && !lua_isnumber(L, narg))  /* avoid extra test when d is not 0 */
+    tag_error(L, narg, LUA_TNUMBER);
+  return c;
+}
+#endif
+
+
+LUALIB_API int /*bool*/ luaL_getmetafield (lua_State *L, int obj, const char *event) {
   if (!lua_getmetatable(L, obj))  /* no metatable? */
     return 0;
   lua_pushstring(L, event);
@@ -216,7 +226,7 @@ LUALIB_API int luaL_getmetafield (lua_State *L, int obj, const char *event) {
 }
 
 
-LUALIB_API int luaL_callmeta (lua_State *L, int obj, const char *event) {
+LUALIB_API int /*bool*/ luaL_callmeta (lua_State *L, int obj, const char *event) {
   obj = abs_index(L, obj);
   if (!luaL_getmetafield(L, obj, event))  /* no metafield? */
     return 0;
@@ -395,7 +405,7 @@ LUALIB_API const char *luaL_findtable (lua_State *L, int idx,
 #define LIMIT	(LUA_MINSTACK/2)
 
 
-static int emptybuffer (luaL_Buffer *B) {
+static lu_bool emptybuffer (luaL_Buffer *B) {
   size_t l = bufflen(B);
   if (l == 0) return 0;  /* put nothing on stack */
   else {

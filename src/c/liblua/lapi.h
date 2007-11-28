@@ -13,4 +13,6 @@
 
 LUAI_FUNC void luaA_pushobject (lua_State *L, const TValue *o);
 
+int lua_pushvalue_as_number (lua_State *L, int idx);
+
 #endif

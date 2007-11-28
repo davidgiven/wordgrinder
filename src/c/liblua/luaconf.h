@@ -47,7 +47,7 @@
 
 
 /*
-@@ LUA_USE_POSIX includes all functionallity listed as X/Open System
+@@ LUA_USE_POSIX includes all functionality listed as X/Open System
 @* Interfaces Extension (XSI).
 ** CHANGE it (define it) if your system is XSI compatible.
 */
@@ -136,12 +136,22 @@
 
 
 /*
-@@ LUA_INTEGER is the integral type used by lua_pushinteger/lua_tointeger.
-** CHANGE that if ptrdiff_t is not adequate on your machine. (On most
-** machines, ptrdiff_t gives a good choice between int or long.)
+@@ LNUM_DOUBLE (default) | LNUM_FLOAT | LNUM_LDOUBLE: Generic Lua number mode
+@@ LNUM_INT32 | LNUM_INT64: Integer type (optimized)
+@@ LNUM_COMPLEX: Define for using 'a+bi' numbers, built-in
+@@
+@@ You can combine LNUM_xxx but only one of each group. I.e. '-DLNUM_FLOAT
+@@ -DLNUM_INT32 -DLNUM_COMPLEX' gives float range complex numbers, with 
+@@ 32-bit scalar integer range optimized.
+**
+** Recommendations:
+**  - x86 and PowerPC desktops: (nothing) or LNUM_INT64
+**  - Embedded without an FPU: LNUM_INT32
+**
+** Limitations:
+**  - Precompiled bytecodes cannot be read into a Lua core with a different number format.
 */
-#define LUA_INTEGER	ptrdiff_t
-
+#include "lnum_config.h"
 
 /*
 @@ LUA_API is a mark for all core API functions.
@@ -425,6 +435,11 @@
 #define LUAI_MEM	long
 #endif
 
+/*
+@@ LUAI_BOOL carries 0 and nonzero (normally 1). It may be defined as
+** 'char' (to save memory) or 'int' (for speed)
+*/
+#define LUAI_BOOL int
 
 /*
 @@ LUAI_MAXCALLS limits the number of nested calls.
@@ -485,101 +500,6 @@
 @@ LUAL_BUFFERSIZE is the buffer size used by the lauxlib buffer system.
 */
 #define LUAL_BUFFERSIZE		BUFSIZ
-
-/* }================================================================== */
-
-
-
-
-/*
-** {==================================================================
-@@ LUA_NUMBER is the type of numbers in Lua.
-** CHANGE the following definitions only if you want to build Lua
-** with a number type different from double. You may also need to
-** change lua_number2int & lua_number2integer.
-** ===================================================================
-*/
-
-#define LUA_NUMBER_DOUBLE
-#define LUA_NUMBER	double
-
-/*
-@@ LUAI_UACNUMBER is the result of an 'usual argument conversion'
-@* over a number.
-*/
-#define LUAI_UACNUMBER	double
-
-
-/*
-@@ LUA_NUMBER_SCAN is the format for reading numbers.
-@@ LUA_NUMBER_FMT is the format for writing numbers.
-@@ lua_number2str converts a number to a string.
-@@ LUAI_MAXNUMBER2STR is maximum size of previous conversion.
-@@ lua_str2number converts a string to a number.
-*/
-#define LUA_NUMBER_SCAN		"%lf"
-#define LUA_NUMBER_FMT		"%.14g"
-#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
-#define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
-#define lua_str2number(s,p)	strtod((s), (p))
-
-
-/*
-@@ The luai_num* macros define the primitive operations over numbers.
-*/
-#if defined(LUA_CORE)
-#include <math.h>
-#define luai_numadd(a,b)	((a)+(b))
-#define luai_numsub(a,b)	((a)-(b))
-#define luai_nummul(a,b)	((a)*(b))
-#define luai_numdiv(a,b)	((a)/(b))
-#define luai_nummod(a,b)	((a) - floor((a)/(b))*(b))
-#define luai_numpow(a,b)	(pow(a,b))
-#define luai_numunm(a)		(-(a))
-#define luai_numeq(a,b)		((a)==(b))
-#define luai_numlt(a,b)		((a)<(b))
-#define luai_numle(a,b)		((a)<=(b))
-#define luai_numisnan(a)	(!luai_numeq((a), (a)))
-#endif
-
-
-/*
-@@ lua_number2int is a macro to convert lua_Number to int.
-@@ lua_number2integer is a macro to convert lua_Number to lua_Integer.
-** CHANGE them if you know a faster way to convert a lua_Number to
-** int (with any rounding method and without throwing errors) in your
-** system. In Pentium machines, a naive typecast from double to int
-** in C is extremely slow, so any alternative is worth trying.
-*/
-
-/* On a Pentium, resort to a trick */
-#if defined(LUA_NUMBER_DOUBLE) && !defined(LUA_ANSI) && !defined(__SSE2__) && \
-    (defined(__i386) || defined (_M_IX86) || defined(__i386__))
-
-/* On a Microsoft compiler, use assembler */
-#if defined(_MSC_VER)
-
-#define lua_number2int(i,d)   __asm fld d   __asm fistp i
-#define lua_number2integer(i,n)		lua_number2int(i, n)
-
-/* the next trick should work on any Pentium, but sometimes clashes
-   with a DirectX idiosyncrasy */
-#else
-
-union luai_Cast { double l_d; long l_l; };
-#define lua_number2int(i,d) \
-  { volatile union luai_Cast u; u.l_d = (d) + 6755399441055744.0; (i) = u.l_l; }
-#define lua_number2integer(i,n)		lua_number2int(i, n)
-
-#endif
-
-
-/* this option always works, but may be slow */
-#else
-#define lua_number2int(i,d)	((i)=(int)(d))
-#define lua_number2integer(i,d)	((i)=(lua_Integer)(d))
-
-#endif
 
 /* }================================================================== */
 
@@ -725,28 +645,6 @@ union luai_Cast { double l_d; long l_l; };
 #define luai_userstatefree(L)		((void)L)
 #define luai_userstateresume(L,n)	((void)L)
 #define luai_userstateyield(L,n)	((void)L)
-
-
-/*
-@@ LUA_INTFRMLEN is the length modifier for integer conversions
-@* in 'string.format'.
-@@ LUA_INTFRM_T is the integer type correspoding to the previous length
-@* modifier.
-** CHANGE them if your system supports long long or does not support long.
-*/
-
-#if defined(LUA_USELONGLONG)
-
-#define LUA_INTFRMLEN		"ll"
-#define LUA_INTFRM_T		long long
-
-#else
-
-#define LUA_INTFRMLEN		"l"
-#define LUA_INTFRM_T		long
-
-#endif
-
 
 
 /* =================================================================== */
