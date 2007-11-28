@@ -4,6 +4,8 @@
 ** See Copyright Notice in lua.h
 */
 
+/* Ref: <http://www.brics.dk/Projects/CoFI/Notes/M-7/index_23.html>
+*/
 
 #include <stdlib.h>
 #include <math.h>
@@ -21,79 +23,136 @@
 #define PI (3.14159265358979323846)
 #define RADIANS_PER_DEGREE (PI/180.0)
 
-
-
 static int math_abs (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushnumber(L, cabs(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, fabs(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_sin (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, csin(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, sin(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_sinh (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, csinh(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, sinh(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_cos (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, ccos(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, cos(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_cosh (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, ccosh(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, cosh(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_tan (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, ctan(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, tan(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_tanh (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, ctanh(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, tanh(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_asin (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, casin(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, asin(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_acos (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, cacos(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, acos(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_atan (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, catan(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, atan(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_atan2 (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  /* atan2() not available (meaningful?) for complex numbers */
+#endif
   lua_pushnumber(L, atan2(luaL_checknumber(L, 1), luaL_checknumber(L, 2)));
   return 1;
 }
 
 static int math_ceil (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_Complex v= luaL_checkcomplex(L, 1);
+  lua_pushcomplex(L, ceil(creal(v)) + ceil(cimag(v))*I);
+#else
   lua_pushnumber(L, ceil(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_floor (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_Complex v= luaL_checkcomplex(L, 1);
+  lua_pushcomplex(L, floor(creal(v)) + floor(cimag(v))*I);
+#else
   lua_pushnumber(L, floor(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_fmod (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  /* TBD: for real numbers only? */
+#endif
   lua_pushnumber(L, fmod(luaL_checknumber(L, 1), luaL_checknumber(L, 2)));
   return 1;
 }
 
 static int math_modf (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  /* TBD: for real numbers only? */
+#endif
   double ip;
   double fp = modf(luaL_checknumber(L, 1), &ip);
   lua_pushnumber(L, ip);
@@ -102,27 +161,48 @@ static int math_modf (lua_State *L) {
 }
 
 static int math_sqrt (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, csqrt(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, sqrt(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_pow (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, cpow(luaL_checkcomplex(L,1), luaL_checkcomplex(L,2)));
+#else
   lua_pushnumber(L, pow(luaL_checknumber(L, 1), luaL_checknumber(L, 2)));
+#endif
   return 1;
 }
 
 static int math_log (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, clog(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, log(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_log10 (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  /* Not in standard <complex.h> , but easy to calculate: log_a(x) = log_b(x) / log_b(a) */
+  lua_pushcomplex(L, clog(luaL_checkcomplex(L,1)) / log(10));
+#else
   lua_pushnumber(L, log10(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
 static int math_exp (lua_State *L) {
+#ifdef LNUM_COMPLEX
+  lua_pushcomplex(L, cexp(luaL_checkcomplex(L,1)));
+#else
   lua_pushnumber(L, exp(luaL_checknumber(L, 1)));
+#endif
   return 1;
 }
 
@@ -211,6 +291,38 @@ static int math_randomseed (lua_State *L) {
   return 0;
 }
 
+/* 
+ * C99 complex functions, not covered above.
+ *
+ * acosh, asinh, atanh not added, since also Lua main math lib could have those.
+*/
+#ifdef LNUM_COMPLEX
+static int math_arg (lua_State *L) {
+  lua_pushnumber(L, carg(luaL_checkcomplex(L,1)));
+  return 1;
+}
+
+static int math_imag (lua_State *L) {
+  lua_pushnumber(L, cimag(luaL_checkcomplex(L,1)));
+  return 1;
+}
+
+static int math_real (lua_State *L) {
+  lua_pushnumber(L, creal(luaL_checkcomplex(L,1)));
+  return 1;
+}
+
+static int math_conj (lua_State *L) {
+  lua_pushcomplex(L, conj(luaL_checkcomplex(L,1)));
+  return 1;
+}
+
+static int math_proj (lua_State *L) {
+  lua_pushcomplex(L, cproj(luaL_checkcomplex(L,1)));
+  return 1;
+}
+#endif
+
 
 static const luaL_Reg mathlib[] = {
   {"abs",   math_abs},
@@ -241,6 +353,13 @@ static const luaL_Reg mathlib[] = {
   {"sqrt",  math_sqrt},
   {"tanh",   math_tanh},
   {"tan",   math_tan},
+#ifdef LNUM_COMPLEX
+  {"arg",   math_arg},
+  {"imag",  math_imag},
+  {"real",  math_real},
+  {"conj",  math_conj},
+  {"proj",  math_proj},
+#endif
   {NULL, NULL}
 };
 

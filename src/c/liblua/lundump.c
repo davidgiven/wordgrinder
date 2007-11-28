@@ -72,6 +72,15 @@ static lua_Number LoadNumber(LoadState* S)
  return x;
 }
 
+#ifdef LUA_TINT
+static lua_Integer LoadInteger(LoadState* S)
+{
+ lua_Integer x;
+ LoadVar(S,x);
+ return x;
+}
+#endif
+
 static TString* LoadString(LoadState* S)
 {
  size_t size;
@@ -118,6 +127,11 @@ static void LoadConstants(LoadState* S, Proto* f)
    case LUA_TNUMBER:
 	setnvalue(o,LoadNumber(S));
 	break;
+#ifdef LUA_TINT
+   case LUA_TINT:   /* Integer type saved in bytecode (see lcode.c) */
+	setivalue(o,LoadInteger(S));
+	break;
+#endif
    case LUA_TSTRING:
 	setsvalue2n(S->L,o,LoadString(S));
 	break;
@@ -210,6 +224,7 @@ Proto* luaU_undump (lua_State* L, ZIO* Z, Mbuffer* buff, const char* name)
 void luaU_header (char* h)
 {
  int x=1;
+ char id;
  memcpy(h,LUA_SIGNATURE,sizeof(LUA_SIGNATURE)-1);
  h+=sizeof(LUA_SIGNATURE)-1;
  *h++=(char)LUAC_VERSION;
@@ -219,5 +234,52 @@ void luaU_header (char* h)
  *h++=(char)sizeof(size_t);
  *h++=(char)sizeof(Instruction);
  *h++=(char)sizeof(lua_Number);
- *h++=(char)(((lua_Number)0.5)==0);		/* is lua_Number integral? */
+
+ id= (char)(((lua_Number)0.5)==0);		/* is lua_Number integral? */
+
+ /* 
+  * Storing number type in header needs to be rethinked in next Lua version,
+  * should provide means to check:
+  *     - integer size matches (LNUM_INT32 / LNUM_INT64 / none)
+  *     - number size matches (LNUM_FLOAT / LNUM_DOUBLE / LNUM_LDOUBLE)
+  *     - complex mode (LNUM_COMPLEX)
+  *
+  * 0: lua_Number is float or double, lua_Integer not used. (used by 5.1 nonpatched)
+  * 1: lua_Number is integer (used by 5.1 nonpatched)
+  *
+  * +2: LNUM_INT32 (sizeof(lua_Integer) / 2)
+  * +4: LNUM_INT64 (sizeof(lua_Integer) / 2)
+  *
+  * +0x10: LNUM_FLOAT   (sizeof(lua_Number) == 4)
+  * +0x20: LNUM_DOUBLE  (sizeof(lua_Number) == 8)
+  * +0x30: LNUM_LDOUBLE (sizeof(lua_Number) == 12) *
+  *
+  *     *) at least on x86, may vary
+  *
+  * +0x80: LNUM_COMPLEX
+  *  ..
+  * +0xf0: other excluding special modes
+  */
+#ifdef LUA_TINT
+ id |= (char) sizeof(lua_Integer) / 2;
+#endif
+ /*
+  * Generic number type is NOT currently set, unless it is 'LNUM_LDOUBLE'.
+  * This in order to remain compatible with non-patched Lua 5.1.
+  */
+  id |=
+#ifdef LNUM_FLOAT
+    0x10 |
+#elif defined(LNUM_DOUBLE)
+    0x20 |
+#elif defined(LNUM_LDOUBLE)
+    0x30 |
+#endif
+#ifdef LNUM_COMPLEX
+    0x80 |
+#endif
+    0;
+ *h++= id;
 }
+
+

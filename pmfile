@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 include "c.pm"
 HOME = os.getenv("HOME")
@@ -19,9 +19,12 @@ FILEFORMAT = 2
 PREFIX = HOME
 -- PREFIX = "/usr/local"
 
--- Any other build options go here. Note the lack of -l, -D or -I.
+-- What build flags do you want to use? (Not including -g or -Os, which are
+-- added later.)
 
-CBUILDFLAGS = {"-g", "-Os", "-Wall"}
+CBUILDFLAGS = {"-Wall"}
+
+-- Any other build options go here. Note the lack of -l, -D or -I. 
 
 CLIBRARIES = {
 	'ncursesw',
@@ -32,9 +35,11 @@ CDEFINES = {
 	'_XOPEN_SOURCE_EXTENDED',
 	'_XOPEN_SOURCE',
 	'LUA_USE_POSIX',
+	'LNUM_DOUBLE',
+	'LNUM_INT32',
 	'VERSION="%VERSION%"',
 	'FILEFORMAT=%FILEFORMAT%',
-	'PREFIX="%PREFIX%"',
+	'PREFIX="%PREFIX%"'
 }
 	
 CINCLUDES = {
@@ -61,6 +66,7 @@ liblua = group {
 	cfile "src/c/liblua/lfunc.c",
 	cfile "src/c/liblua/lgc.c",
 	cfile "src/c/liblua/llex.c",
+	cfile "src/c/liblua/lnum.c",
 	cfile "src/c/liblua/lmem.c",
 	cfile "src/c/liblua/lobject.c",
 	cfile "src/c/liblua/lopcodes.c",
@@ -87,12 +93,18 @@ liblua = group {
 -- Lua extensions.
 
 luax = group {
-	cfile "src/c/luax/lfs.c"
+	cfile "src/c/luax/lfs.c",
+	
+	cfile "src/c/luax/profiler/clocks.c",
+	cfile "src/c/luax/profiler/core_profiler.c",
+	cfile "src/c/luax/profiler/function_meter.c",
+	cfile "src/c/luax/profiler/lua50_profiler.c",
+	cfile "src/c/luax/profiler/stack.c",
 }
 
 -- Build the main program.
 
-wordgrinder = cprogram {
+wordgrinder_exe = cprogram {
 	liblua,
 	luax,
 	
@@ -102,6 +114,12 @@ wordgrinder = cprogram {
 	cfile "src/c/screen.c",
 	cfile "src/c/word.c",
 	cfile "src/c/bit.c",
+}
+
+wordgrinder_release_exe = group {
+	wordgrinder_exe,
+	CBUILDFLAGS = {PARENT, '-Os'},
+	CDEFINES = {PARENT, 'NDEBUG'},
 	
 	install = {
 		pm.install("%BINDIR%/bin/wordgrinder"),
@@ -123,6 +141,20 @@ wordgrinder = cprogram {
 	}
 }
 
+wordgrinder_debug_exe = group {
+	wordgrinder_exe,
+	CBUILDFLAGS = {PARENT, '-g'},
+	
+	install = pm.install("wordgrinder-debug")
+}
+
+wordgrinder_both_exe = group {
+	wordgrinder_release_exe,
+	wordgrinder_debug_exe
+}
+
+default = wordgrinder_both_exe
+
 -- Once built, do the installation, rather crudely. FIXME.
 
 install = simple {
@@ -133,7 +165,5 @@ install = simple {
 		os.execute("(cd "..BINDIR.." && tar chf - .) | (cd "..PREFIX.." && tar xvf -)")
 	end,
 	
-	wordgrinder
+	wordgrinder_both_exe
 }
-
-default = wordgrinder

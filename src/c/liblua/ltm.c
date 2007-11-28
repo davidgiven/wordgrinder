@@ -19,11 +19,10 @@
 #include "ltm.h"
 
 
-
 const char *const luaT_typenames[] = {
-  "nil", "boolean", "userdata", "number",
-  "string", "table", "function", "userdata", "thread",
-  "proto", "upval"
+    "nil", "boolean", "userdata", "number",
+    "string", "table", "function", "userdata", "thread",
+    "proto", "upval"
 };
 
 

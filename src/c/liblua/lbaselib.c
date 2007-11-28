@@ -18,7 +18,9 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
-
+#include "llimits.h"
+#include "lobject.h"
+#include "lapi.h"
 
 
 
@@ -54,20 +56,38 @@ static int luaB_tonumber (lua_State *L) {
   int base = luaL_optint(L, 2, 10);
   if (base == 10) {  /* standard conversion */
     luaL_checkany(L, 1);
+#if 1
+    /* We can do "tonumber()" without losing accuracy, but only underneath
+	 * the Lua API (not here) by using a single string->number conversion.
+     * 
+     * Note: even the 5.1.1 code (below) would cause multiple
+     *       (unnecessary) string->number conversions, so using this
+     *       always.
+     */
+    if (lua_pushvalue_as_number(L,1))		/* API extension (hack) */
+        return 1;
+#else
+    /* 5.1.1 code */
     if (lua_isnumber(L, 1)) {
       lua_pushnumber(L, lua_tonumber(L, 1));
       return 1;
-    }
+	}
+#endif
   }
   else {
     const char *s1 = luaL_checkstring(L, 1);
     char *s2;
-    unsigned long n;
+    lua_str2ul_t n;
     luaL_argcheck(L, 2 <= base && base <= 36, 2, "base out of range");
-    n = strtoul(s1, &s2, base);
+    n = lua_str2ul(s1, &s2, base);
     if (s1 != s2) {  /* at least one valid digit? */
       while (isspace((unsigned char)(*s2))) s2++;  /* skip trailing spaces */
       if (*s2 == '\0') {  /* no invalid trailing characters? */
+	  
+		/* Push as number, there needs to be separate 'luaB_tointeger' for
+		 * when the caller wants to preserve the bits (matters if unsigned
+		 * values are used).
+		 */
         lua_pushnumber(L, (lua_Number)n);
         return 1;
       }
@@ -125,7 +145,7 @@ static void getfunc (lua_State *L, int opt) {
     lua_getinfo(L, "f", &ar);
     if (lua_isnil(L, -1))
       luaL_error(L, "no function environment for tail call at level %d",
-                    level);
+                    (LUAI_UACINTEGER)level);
   }
 }
 
@@ -140,11 +160,11 @@ static int luaB_getfenv (lua_State *L) {
 }
 
 
-static int luaB_setfenv (lua_State *L) {
+static lu_bool luaB_setfenv (lua_State *L) {
   luaL_checktype(L, 2, LUA_TTABLE);
   getfunc(L, 0);
   lua_pushvalue(L, 2);
-  if (lua_isnumber(L, 1) && lua_tonumber(L, 1) == 0) {
+  if (lua_isnumber(L, 1) && lua_tointeger(L, 1) == 0) {
     /* change environment of current thread */
     lua_pushthread(L);
     lua_insert(L, -2);
@@ -584,7 +604,7 @@ static int luaB_costatus (lua_State *L) {
 }
 
 
-static int luaB_corunning (lua_State *L) {
+static lu_bool luaB_corunning (lua_State *L) {
   if (lua_pushthread(L))
     return 0;  /* main thread is not a coroutine */
   else
@@ -621,6 +641,8 @@ static void base_open (lua_State *L) {
   luaL_register(L, "_G", base_funcs);
   lua_pushliteral(L, LUA_VERSION);
   lua_setglobal(L, "_VERSION");  /* set global _VERSION */
+  lua_pushliteral(L, LUA_LNUM);
+  lua_setglobal(L, "_LNUM");  /* "[complex] double|float|ldouble [int32|int64]" */
   /* `ipairs' and `pairs' need auxliliary functions as upvalues */
   auxopen(L, "ipairs", luaB_ipairs, ipairsaux);
   auxopen(L, "pairs", luaB_pairs, luaB_next);

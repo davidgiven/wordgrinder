@@ -287,7 +287,7 @@ static int precheck (const Proto *pt) {
 
 #define checkopenop(pt,pc)	luaG_checkopenop((pt)->code[(pc)+1])
 
-int luaG_checkopenop (Instruction i) {
+lu_bool luaG_checkopenop (Instruction i) {
   switch (GET_OPCODE(i)) {
     case OP_CALL:
     case OP_TAILCALL:
@@ -301,7 +301,7 @@ int luaG_checkopenop (Instruction i) {
 }
 
 
-static int checkArgMode (const Proto *pt, int r, enum OpArgMask mode) {
+static lu_bool checkArgMode (const Proto *pt, int r, enum OpArgMask mode) {
   switch (mode) {
     case OpArgN: check(r == 0); break;
     case OpArgU: break;
@@ -540,7 +540,7 @@ static const char *getfuncname (lua_State *L, CallInfo *ci, const char **name) {
 
 
 /* only ANSI way to check whether a pointer points to an array */
-static int isinstack (CallInfo *ci, const TValue *o) {
+static lu_bool isinstack (CallInfo *ci, const TValue *o) {
   StkId p;
   for (p = ci->base; p < ci->top; p++)
     if (o == p) return 1;
@@ -550,7 +550,7 @@ static int isinstack (CallInfo *ci, const TValue *o) {
 
 void luaG_typeerror (lua_State *L, const TValue *o, const char *op) {
   const char *name = NULL;
-  const char *t = luaT_typenames[ttype(o)];
+  const char *t = luaT_typenames[ttype2(o)];
   const char *kind = (isinstack(L->ci, o)) ?
                          getobjname(L, L->ci, cast_int(o - L->base), &name) :
                          NULL;
@@ -578,8 +578,8 @@ void luaG_aritherror (lua_State *L, const TValue *p1, const TValue *p2) {
 
 
 int luaG_ordererror (lua_State *L, const TValue *p1, const TValue *p2) {
-  const char *t1 = luaT_typenames[ttype(p1)];
-  const char *t2 = luaT_typenames[ttype(p2)];
+  const char *t1 = luaT_typenames[ttype2(p1)];
+  const char *t2 = luaT_typenames[ttype2(p2)];
   if (t1[2] == t2[2])
     luaG_runerror(L, "attempt to compare two %s values", t1);
   else
@@ -594,7 +594,7 @@ static void addinfo (lua_State *L, const char *msg) {
     char buff[LUA_IDSIZE];  /* add file:line information */
     int line = currentline(L, ci);
     luaO_chunkid(buff, getstr(getluaproto(ci)->source), LUA_IDSIZE);
-    luaO_pushfstring(L, "%s:%d: %s", buff, line, msg);
+    luaO_pushfstring(L, "%s:%d: %s", buff, (LUAI_UACINTEGER)line, msg);
   }
 }
 

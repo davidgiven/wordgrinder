@@ -22,13 +22,21 @@
 #include "lopcodes.h"
 #include "lparser.h"
 #include "ltable.h"
+#include "lnum.h"
 
 
 #define hasjumps(e)	((e)->t != (e)->f)
 
-
-static int isnumeral(expdesc *e) {
-  return (e->k == VKNUM && e->t == NO_JUMP && e->f == NO_JUMP);
+static lu_bool isnumeral(expdesc *e) {
+  lu_bool ek=
+#ifdef LUA_TINT
+    (e->k == VKINT) ||
+#endif 
+#ifdef LNUM_COMPLEX
+    (e->k == VKNUM2) ||
+#endif
+    (e->k == VKNUM);
+  return (ek && e->t == NO_JUMP && e->f == NO_JUMP);
 }
 
 
@@ -119,7 +127,7 @@ static Instruction *getjumpcontrol (FuncState *fs, int pc) {
 ** check whether list has any jump that do not produce a value
 ** (or produce an inverted value)
 */
-static int need_value (FuncState *fs, int list) {
+static lu_bool need_value (FuncState *fs, int list) {
   for (; list != NO_JUMP; list = getjump(fs, list)) {
     Instruction i = *getjumpcontrol(fs, list);
     if (GET_OPCODE(i) != OP_TESTSET) return 1;
@@ -128,7 +136,7 @@ static int need_value (FuncState *fs, int list) {
 }
 
 
-static int patchtestreg (FuncState *fs, int node, int reg) {
+static lu_bool patchtestreg (FuncState *fs, int node, int reg) {
   Instruction *i = getjumpcontrol(fs, node);
   if (GET_OPCODE(*i) != OP_TESTSET)
     return 0;  /* cannot patch other instructions */
@@ -231,12 +239,20 @@ static int addk (FuncState *fs, TValue *k, TValue *v) {
   TValue *idx = luaH_set(L, fs->h, k);
   Proto *f = fs->f;
   int oldsize = f->sizek;
+#ifdef LUA_TINT
+  lua_assert( !ttisnumber_raw(idx) );
+  if (ttisinteger(idx)) {
+    lua_assert(luaO_rawequalObj(&fs->f->k[ (int) ivalue(idx) ], v));
+    return ivalue(idx);
+  }
+#else
   if (ttisnumber(idx)) {
     lua_assert(luaO_rawequalObj(&fs->f->k[cast_int(nvalue(idx))], v));
     return cast_int(nvalue(idx));
   }
+#endif
   else {  /* constant not found; create a new entry */
-    setnvalue(idx, cast_num(fs->nk));
+    setivalue(idx, fs->nk);
     luaM_growvector(L, f->k, fs->nk, f->sizek, TValue,
                     MAXARG_Bx, "constant table overflow");
     while (oldsize < f->sizek) setnilvalue(&f->k[oldsize++]);
@@ -260,6 +276,23 @@ int luaK_numberK (FuncState *fs, lua_Number r) {
   return addk(fs, &o, &o);
 }
 
+
+#ifdef LUA_TINT
+int luaK_integerK (FuncState *fs, lua_Integer r) {
+  TValue o;
+  setivalue(&o, r);
+  return addk(fs, &o, &o);
+}
+#endif
+
+
+#ifdef LNUM_COMPLEX
+static int luaK_imagK (FuncState *fs, lua_Number r) {
+  TValue o;
+  setnvalue_complex(&o, r*I);
+  return addk(fs, &o, &o);
+}
+#endif
 
 static int boolK (FuncState *fs, int b) {
   TValue o;
@@ -359,6 +392,18 @@ static void discharge2reg (FuncState *fs, expdesc *e, int reg) {
       luaK_codeABx(fs, OP_LOADK, reg, luaK_numberK(fs, e->u.nval));
       break;
     }
+#ifdef LUA_TINT
+    case VKINT: {
+      luaK_codeABx(fs, OP_LOADK, reg, luaK_integerK(fs, e->u.ival));
+      break;
+    }
+#endif
+#ifdef LNUM_COMPLEX
+    case VKNUM2: {
+      luaK_codeABx(fs, OP_LOADK, reg, luaK_imagK(fs, e->u.nval));
+      break;
+    }
+#endif
     case VRELOCABLE: {
       Instruction *pc = &getcode(fs, e);
       SETARG_A(*pc, reg);
@@ -444,6 +489,12 @@ void luaK_exp2val (FuncState *fs, expdesc *e) {
 int luaK_exp2RK (FuncState *fs, expdesc *e) {
   luaK_exp2val(fs, e);
   switch (e->k) {
+#ifdef LUA_TINT
+    case VKINT:
+#endif
+#ifdef LNUM_COMPLEX
+    case VKNUM2:
+#endif
     case VKNUM:
     case VTRUE:
     case VFALSE:
@@ -451,6 +502,12 @@ int luaK_exp2RK (FuncState *fs, expdesc *e) {
       if (fs->nk <= MAXINDEXRK) {  /* constant fit in RK operand? */
         e->u.s.info = (e->k == VNIL)  ? nilK(fs) :
                       (e->k == VKNUM) ? luaK_numberK(fs, e->u.nval) :
+#ifdef LUA_TINT
+                      (e->k == VKINT) ? luaK_integerK(fs, e->u.ival) :
+#endif
+#ifdef LNUM_COMPLEX
+                      (e->k == VKNUM2) ? luaK_imagK(fs, e->u.nval) :
+#endif
                                         boolK(fs, (e->k == VTRUE));
         e->k = VK;
         return RKASK(e->u.s.info);
@@ -540,6 +597,12 @@ void luaK_goiftrue (FuncState *fs, expdesc *e) {
   int pc;  /* pc of last jump */
   luaK_dischargevars(fs, e);
   switch (e->k) {
+#ifdef LNUM_COMPLEX
+    case VKNUM2:
+#endif
+#ifdef LUA_TINT
+    case VKINT:
+#endif
     case VK: case VKNUM: case VTRUE: {
       pc = NO_JUMP;  /* always true; do nothing */
       break;
@@ -598,6 +661,12 @@ static void codenot (FuncState *fs, expdesc *e) {
       e->k = VTRUE;
       break;
     }
+#ifdef LNUM_COMPLEX
+    case VKNUM2:
+#endif
+#ifdef LUA_TINT
+    case VKINT:
+#endif
     case VK: case VKNUM: case VTRUE: {
       e->k = VFALSE;
       break;
@@ -632,27 +701,76 @@ void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k) {
 }
 
 
-static int constfolding (OpCode op, expdesc *e1, expdesc *e2) {
+static lu_bool constfolding (OpCode op, expdesc *e1, expdesc *e2) {
   lua_Number v1, v2, r;
+  int vkres= VKNUM;
   if (!isnumeral(e1) || !isnumeral(e2)) return 0;
+
+  /* real and imaginary parts don't mix. */
+#ifdef LNUM_COMPLEX
+  if (e1->k == VKNUM2) {
+    if ((op != OP_UNM) && (e2->k != VKNUM2)) return 0; 
+    vkres= VKNUM2; }
+  else if (e2->k == VKNUM2) { return 0; }
+#endif
+#ifdef LUA_TINT
+  if ((e1->k == VKINT) && (e2->k == VKINT)) {
+    lua_Integer i1= e1->u.ival, i2= e2->u.ival;
+    lua_Integer rr;
+    lu_bool done= 0;
+    /* Integer/integer calculations (maybe end up producing floating point) */
+    switch (op) {
+      case OP_ADD: done= try_addint( &rr, i1, i2 ); break;
+      case OP_SUB: done= try_subint( &rr, i1, i2 ); break;
+      case OP_MUL: done= try_mulint( &rr, i1, i2 ); break;
+      case OP_DIV: done= try_divint( &rr, i1, i2 ); break;
+      case OP_MOD: done= try_modint( &rr, i1, i2 ); break;
+      case OP_POW: done= try_powint( &rr, i1, i2 ); break;
+      case OP_UNM: done= try_unmint( &rr, i1 ); break;
+      default:     done= 0; break;
+    }
+    if (done) {
+      e1->u.ival = rr;  /* We remained within integer range, and accuracy! */
+      return 1;
+    }
+  }
+  v1 = (e1->k == VKINT) ? ((lua_Number)e1->u.ival) : e1->u.nval;
+  v2 = (e2->k == VKINT) ? ((lua_Number)e2->u.ival) : e2->u.nval;
+#else
   v1 = e1->u.nval;
   v2 = e2->u.nval;
+#endif
   switch (op) {
     case OP_ADD: r = luai_numadd(v1, v2); break;
     case OP_SUB: r = luai_numsub(v1, v2); break;
-    case OP_MUL: r = luai_nummul(v1, v2); break;
+    case OP_MUL: 
+#ifdef LNUM_COMPLEX
+        if (vkres==VKNUM2) return 0;    /* leave to runtime (could do here, but not worth it?) */
+#endif
+        r = luai_nummul(v1, v2); break;
     case OP_DIV:
       if (v2 == 0) return 0;  /* do not attempt to divide by 0 */
-      r = luai_numdiv(v1, v2); break;
+#ifdef LNUM_COMPLEX
+        if (vkres==VKNUM2) return 0;    /* leave to runtime */
+#endif
+        r = luai_numdiv(v1, v2); break;
     case OP_MOD:
       if (v2 == 0) return 0;  /* do not attempt to divide by 0 */
+#ifdef LNUM_COMPLEX
+      if (vkres==VKNUM2) return 0;    /* leave to runtime */
+#endif
       r = luai_nummod(v1, v2); break;
-    case OP_POW: r = luai_numpow(v1, v2); break;
+    case OP_POW: 
+#ifdef LNUM_COMPLEX
+      if (vkres==VKNUM2) return 0;    /* leave to runtime */
+#endif
+      r = luai_numpow(v1, v2); break;
     case OP_UNM: r = luai_numunm(v1); break;
     case OP_LEN: return 0;  /* no constant folding for 'len' */
     default: lua_assert(0); r = 0; break;
   }
   if (luai_numisnan(r)) return 0;  /* do not attempt to produce NaN */
+  e1->k = (expkind) vkres;  // (Visual C++ 2005 needs the cast, on 64-bit ints) 
   e1->u.nval = r;
   return 1;
 }
@@ -695,8 +813,15 @@ static void codecomp (FuncState *fs, OpCode op, int cond, expdesc *e1,
 
 
 void luaK_prefix (FuncState *fs, UnOpr op, expdesc *e) {
+  /* Q: is the 'e2' really needed; couldn't we use 'e' for both params like
+   *    when calling 'Arith()' at lvm.c */
   expdesc e2;
-  e2.t = e2.f = NO_JUMP; e2.k = VKNUM; e2.u.nval = 0;
+  e2.t = e2.f = NO_JUMP; 
+#ifdef LUA_TINT
+  e2.k = VKINT; e2.u.ival = 0;
+#else
+  e2.k = VKNUM; e2.u.nval = 0;
+#endif
   switch (op) {
     case OPR_MINUS: {
       if (e->k == VK)
@@ -772,7 +897,8 @@ void luaK_posfix (FuncState *fs, BinOpr op, expdesc *e1, expdesc *e2) {
       }
       break;
     }
-    case OPR_ADD: codearith(fs, OP_ADD, e1, e2); break;
+    case OPR_ADD: 
+    codearith(fs, OP_ADD, e1, e2); break;
     case OPR_SUB: codearith(fs, OP_SUB, e1, e2); break;
     case OPR_MUL: codearith(fs, OP_MUL, e1, e2); break;
     case OPR_DIV: codearith(fs, OP_DIV, e1, e2); break;

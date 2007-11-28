@@ -352,7 +352,7 @@ static int db_errorfb (lua_State *L) {
     lua_getinfo(L1, "Snl", &ar);
     lua_pushfstring(L, "%s:", ar.short_src);
     if (ar.currentline > 0)
-      lua_pushfstring(L, "%d:", ar.currentline);
+      lua_pushfstring(L, "%d:", (LUAI_UACINTEGER) (ar.currentline));
     if (*ar.namewhat != '\0')  /* is there a name? */
         lua_pushfstring(L, " in function " LUA_QS, ar.name);
     else {

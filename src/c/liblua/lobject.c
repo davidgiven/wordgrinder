@@ -21,7 +21,8 @@
 #include "lstate.h"
 #include "lstring.h"
 #include "lvm.h"
-
+#include "llex.h"
+#include "lnum.h"
 
 
 const TValue luaO_nilobject_ = {{NULL}, LUA_TNIL};
@@ -69,13 +70,22 @@ int luaO_log2 (unsigned int x) {
 }
 
 
-int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
+lu_bool luaO_rawequalObj (const TValue *t1, const TValue *t2) {
   if (ttype(t1) != ttype(t2)) return 0;
   else switch (ttype(t1)) {
     case LUA_TNIL:
       return 1;
     case LUA_TNUMBER:
+#ifdef LUA_TINT
+# ifdef LNUM_COMPLEX
+      if (!luai_numeq( nvalue_img_fast(t1), nvalue_img_fast(t2) )) return 0;
+# endif
+      return luai_numeq(nvalue_fast(t1), nvalue_fast(t2));
+    case LUA_TINT:
+      return ivalue(t1) == ivalue(t2);
+#else
       return luai_numeq(nvalue(t1), nvalue(t2));
+#endif
     case LUA_TBOOLEAN:
       return bvalue(t1) == bvalue(t2);  /* boolean true must be 1 !! */
     case LUA_TLIGHTUSERDATA:
@@ -85,21 +95,6 @@ int luaO_rawequalObj (const TValue *t1, const TValue *t2) {
       return gcvalue(t1) == gcvalue(t2);
   }
 }
-
-
-int luaO_str2d (const char *s, lua_Number *result) {
-  char *endptr;
-  *result = lua_str2number(s, &endptr);
-  if (endptr == s) return 0;  /* conversion failed */
-  if (*endptr == 'x' || *endptr == 'X')  /* maybe an hexadecimal constant? */
-    *result = cast_num(strtoul(s, &endptr, 16));
-  if (*endptr == '\0') return 1;  /* most common case */
-  while (isspace(cast(unsigned char, *endptr))) endptr++;
-  if (*endptr != '\0') return 0;  /* invalid trailing characters? */
-  return 1;
-}
-
-
 
 static void pushstr (lua_State *L, const char *str) {
   setsvalue2s(L, L->top, luaS_new(L, str));
@@ -131,7 +126,12 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
         break;
       }
       case 'd': {
-        setnvalue(L->top, cast_num(va_arg(argp, int)));
+#if 1
+        //in 5.1.1: setivalue(L->top, va_arg(argp, int));
+        setivalue(L->top, (lua_Integer) va_arg(argp, l_uacInteger));
+#else
+        setivalue(L->top, va_arg(argp, int));
+#endif
         incr_top(L);
         break;
       }

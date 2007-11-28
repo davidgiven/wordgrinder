@@ -186,15 +186,32 @@ static int os_time (lua_State *L) {
   }
   if (t == (time_t)(-1))
     lua_pushnil(L);
-  else
-    lua_pushnumber(L, (lua_Number)t);
+  else {
+     /* On float systems the pushed value must be an integer, NOT a number.
+      * Otherwise, accuracy is lost in the time_t->float conversion.
+      *
+      * Note: there are some known processors, where 'time_t' is i.e. 'double',
+      *       in such cases the (original) way of pushing a number is better
+      *       (and is kept as the default) 
+      */
+#if defined(LNUM_FLOAT) && (defined(LNUM_INT32) || defined(LNUM_INT64))
+     lua_pushinteger(L, t);
+#else
+      lua_pushnumber(L, (lua_Number)t);
+#endif
+     }
   return 1;
 }
 
 
 static int os_difftime (lua_State *L) {
+#if defined(LNUM_FLOAT) && (defined(LNUM_INT32) || defined(LNUM_INT64))
+  lua_pushinteger(L, difftime((time_t)(luaL_checkinteger(L, 1)),
+                              (time_t)(luaL_optinteger(L, 2, 0))));
+#else
   lua_pushnumber(L, difftime((time_t)(luaL_checknumber(L, 1)),
                              (time_t)(luaL_optnumber(L, 2, 0))));
+#endif
   return 1;
 }
 

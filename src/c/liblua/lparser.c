@@ -33,7 +33,6 @@
 
 #define luaY_checklimit(fs,v,l,m)	if ((v)>(l)) errorlimit(fs,l,m)
 
-
 /*
 ** nodes for block list (list of active blocks)
 */
@@ -70,14 +69,14 @@ static void error_expected (LexState *ls, int token) {
 
 static void errorlimit (FuncState *fs, int limit, const char *what) {
   const char *msg = (fs->f->linedefined == 0) ?
-    luaO_pushfstring(fs->L, "main function has more than %d %s", limit, what) :
+    luaO_pushfstring(fs->L, "main function has more than %d %s", (LUAI_UACINTEGER)limit, what) :
     luaO_pushfstring(fs->L, "function at line %d has more than %d %s",
-                            fs->f->linedefined, limit, what);
+                            (LUAI_UACINTEGER) (fs->f->linedefined), (LUAI_UACINTEGER)limit, what);
   luaX_lexerror(fs->ls, msg, 0);
 }
 
 
-static int testnext (LexState *ls, int c) {
+static lu_bool testnext (LexState *ls, int c) {
   if (ls->t.token == c) {
     luaX_next(ls);
     return 1;
@@ -108,7 +107,7 @@ static void check_match (LexState *ls, int what, int who, int where) {
     else {
       luaX_syntaxerror(ls, luaO_pushfstring(ls->L,
              LUA_QS " expected (to close " LUA_QS " at line %d)",
-              luaX_token2str(ls, what), luaX_token2str(ls, who), where));
+              luaX_token2str(ls, what), luaX_token2str(ls, who), (LUAI_UACINTEGER)where));
     }
   }
 }
@@ -725,7 +724,7 @@ static void primaryexp (LexState *ls, expdesc *v) {
 
 
 static void simpleexp (LexState *ls, expdesc *v) {
-  /* simpleexp -> NUMBER | STRING | NIL | true | false | ... |
+  /* simpleexp -> NUMBER | INT | STRING | NIL | true | false | ... |
                   constructor | FUNCTION body | primaryexp */
   switch (ls->t.token) {
     case TK_NUMBER: {
@@ -733,6 +732,26 @@ static void simpleexp (LexState *ls, expdesc *v) {
       v->u.nval = ls->t.seminfo.r;
       break;
     }
+    case TK_INT: {
+    /* BUG: If _this_ is put to "if 0" then 9+1=10 even in float+int64 */
+#ifdef LUA_TINT
+      init_exp(v, VKINT, 0);
+      v->u.ival = ls->t.seminfo.i;
+#else
+    /* Integers come in the bytecode, but get passed into 'lua_Number'
+     * here (for non-LUA_INTxx modes) */
+      init_exp(v, VKNUM, 0);
+      v->u.nval = (lua_Number) ls->t.seminfo.i;
+#endif
+      break;
+    }
+#ifdef LNUM_COMPLEX
+    case TK_NUMBER2: {
+      init_exp(v, VKNUM2, 0);
+      v->u.nval = ls->t.seminfo.r;
+      break;
+    }
+#endif
     case TK_STRING: {
       codestring(ls, v, ls->t.seminfo.ts);
       break;
@@ -868,7 +887,7 @@ static void expr (LexState *ls, expdesc *v) {
 */
 
 
-static int block_follow (int token) {
+static lu_bool block_follow (int token) {
   switch (token) {
     case TK_ELSE: case TK_ELSEIF: case TK_END:
     case TK_UNTIL: case TK_EOS:
@@ -908,7 +927,7 @@ struct LHS_assign {
 static void check_conflict (LexState *ls, struct LHS_assign *lh, expdesc *v) {
   FuncState *fs = ls->fs;
   int extra = fs->freereg;  /* eventual position to save local variable */
-  int conflict = 0;
+  lu_bool conflict = 0;
   for (; lh; lh = lh->prev) {
     if (lh->v.k == VINDEXED) {
       if (lh->v.u.s.info == v->u.s.info) {  /* conflict? */
@@ -1077,7 +1096,11 @@ static void fornum (LexState *ls, TString *varname, int line) {
   if (testnext(ls, ','))
     exp1(ls);  /* optional step */
   else {  /* default step = 1 */
+#ifdef LUA_TINT
+    luaK_codeABx(fs, OP_LOADK, fs->freereg, luaK_integerK(fs, 1));
+#else
     luaK_codeABx(fs, OP_LOADK, fs->freereg, luaK_numberK(fs, 1));
+#endif
     luaK_reserveregs(fs, 1);
   }
   forbody(ls, base, line, 1, 1);
@@ -1266,7 +1289,7 @@ static void retstat (LexState *ls) {
 }
 
 
-static int statement (LexState *ls) {
+static lu_bool statement (LexState *ls) {
   int line = ls->linenumber;  /* may be needed for error messages */
   switch (ls->t.token) {
     case TK_IF: {  /* stat -> ifstat */

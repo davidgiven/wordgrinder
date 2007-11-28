@@ -21,6 +21,9 @@ typedef LUAI_UMEM lu_mem;
 
 typedef LUAI_MEM l_mem;
 
+/* Only for internal functions; for public ABI, use 'int' */
+typedef LUAI_BOOL lu_bool;
+
 
 
 /* chars used as small naturals (so that `char' is reserved for characters) */
@@ -49,6 +52,7 @@ typedef LUAI_USER_ALIGNMENT_T L_Umaxalign;
 
 /* result of a `usual argument conversion' over lua_Number */
 typedef LUAI_UACNUMBER l_uacNumber;
+typedef LUAI_UACINTEGER l_uacInteger;
 
 
 /* internal assertions for in-house debugging */
@@ -79,6 +83,9 @@ typedef LUAI_UACNUMBER l_uacNumber;
 #define cast_num(i)	cast(lua_Number, (i))
 #define cast_int(i)	cast(int, (i))
 
+#if LNUM_COMPLEX
+#define cast_complex(i) cast(lua_Complex, (i))
+#endif
 
 
 /*

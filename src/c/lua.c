@@ -3,11 +3,15 @@
  * file in this distribution for the full text.
  *
  * $Id$
- * $URL: $
+ * $URL$
  */
 
 #include "globals.h"
-#include <lfs.h>
+#include "lfs.h"
+
+#ifndef NDEBUG
+#include "profiler/luaprofiler.h"
+#endif
 
 lua_State* L;
 
@@ -75,6 +79,9 @@ void script_init(void)
 	L = lua_open();
 	luaL_openlibs(L);
 	luaopen_lfs(L);
+#ifndef NDEBUG
+	luaopen_profiler(L);
+#endif
 	
 	atexit(script_deinit);
 }
@@ -93,6 +100,15 @@ void script_load(const char* filename, const char* argv[])
 	
 	lua_pushnumber(L, FILEFORMAT);
 	lua_setglobal(L, "FILEFORMAT");
+	
+	lua_pushboolean(L,
+#ifndef NDEBUG
+			1
+#else
+			0
+#endif
+		);
+	lua_setglobal(L, "DEBUG");
 	
 	/* Push the arguments onto the stack. */
 	

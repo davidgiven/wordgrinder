@@ -19,7 +19,7 @@
 #define LUA_VERSION	"Lua 5.1"
 #define LUA_RELEASE	"Lua 5.1.2"
 #define LUA_VERSION_NUM	501
-#define LUA_COPYRIGHT	"Copyright (C) 1994-2007 Lua.org, PUC-Rio"
+#define LUA_COPYRIGHT	"Copyright (C) 1994-2007 Lua.org, PUC-Rio" " (" LUA_LNUM ")"
 #define LUA_AUTHORS 	"R. Ierusalimschy, L. H. de Figueiredo & W. Celes"
 
 
@@ -71,6 +71,23 @@ typedef void * (*lua_Alloc) (void *ud, void *ptr, size_t osize, size_t nsize);
 */
 #define LUA_TNONE		(-1)
 
+/* LUA_TINT is an internal type, not visible to applications. There are three
+ * potential values where it can be tweaked to (code autoadjusts to these):
+ *
+ * -2: not 'usual' type value
+ * LUA_TNUMBER+1: shifts other type values upwards, breaking binary compatibility
+ *     not acceptable for 5.1, maybe 5.2 onwards?
+ *  9: greater than existing (5.1) type values. Maybe the best?
+ *
+ * TBD: This selection should be fixed if/when LNUM patch is taken into main-
+ *      stream Lua. 'LUA_TNUMBER+1' would make code paths simplest, but any 
+ *      of the three choices has pros and cons. Once selected, and fixed,
+ *      code can be simplified at places (not much).
+*/
+#if defined(LNUM_INT32) || defined(LNUM_INT64)
+# define LUA_TINT (-2)
+#endif
+
 #define LUA_TNIL		0
 #define LUA_TBOOLEAN		1
 #define LUA_TLIGHTUSERDATA	2
@@ -80,7 +97,6 @@ typedef void * (*lua_Alloc) (void *ud, void *ptr, size_t osize, size_t nsize);
 #define LUA_TFUNCTION		6
 #define LUA_TUSERDATA		7
 #define LUA_TTHREAD		8
-
 
 
 /* minimum Lua stack available to a C function */
@@ -101,7 +117,6 @@ typedef LUA_NUMBER lua_Number;
 
 /* type for integer functions */
 typedef LUA_INTEGER lua_Integer;
-
 
 
 /*
@@ -138,6 +153,8 @@ LUA_API int             (lua_iscfunction) (lua_State *L, int idx);
 LUA_API int             (lua_isuserdata) (lua_State *L, int idx);
 LUA_API int             (lua_type) (lua_State *L, int idx);
 LUA_API const char     *(lua_typename) (lua_State *L, int tp);
+
+LUA_API int             (lua_isinteger) (lua_State *L, int idx);
 
 LUA_API int            (lua_equal) (lua_State *L, int idx1, int idx2);
 LUA_API int            (lua_rawequal) (lua_State *L, int idx1, int idx2);
@@ -244,6 +261,20 @@ LUA_API lua_Alloc (lua_getallocf) (lua_State *L, void **ud);
 LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
 
 
+/*
+* It is unnecessary to break Lua C API 'lua_tonumber()' compatibility, just
+* because the Lua number type is complex. Most C modules would use scalars
+* only. We'll introduce new 'lua_tocomplex' and 'lua_pushcomplex' for when
+* the module really wants to use them. This is in line with current integer/
+* number API's.
+*/
+#ifdef LNUM_COMPLEX
+  #include <complex.h>
+  typedef LUA_NUMBER complex lua_Complex;
+  LUA_API lua_Complex (lua_tocomplex) (lua_State *L, int idx);
+  LUA_API void (lua_pushcomplex) (lua_State *L, lua_Complex v);
+#endif
+
 
 /* 
 ** ===============================================================
@@ -268,7 +299,14 @@ LUA_API void lua_setallocf (lua_State *L, lua_Alloc f, void *ud);
 #define lua_isboolean(L,n)	(lua_type(L, (n)) == LUA_TBOOLEAN)
 #define lua_isthread(L,n)	(lua_type(L, (n)) == LUA_TTHREAD)
 #define lua_isnone(L,n)		(lua_type(L, (n)) == LUA_TNONE)
-#define lua_isnoneornil(L, n)	(lua_type(L, (n)) <= 0)
+
+/* Note: If 'LUA_TINT' is defined as 'LNUMBER+1', this part can be removed.
+*/
+#if (defined LUA_TINT) && (LUA_TINT < 0)
+# define lua_isnoneornil(L, n)	((lua_type(L,(n))==LUA_TNONE) || (lua_type(L,(n))==LUA_TNIL))
+#else
+# define lua_isnoneornil(L, n)	(lua_type(L, (n)) <= 0)   /*original*/
+#endif
 
 #define lua_pushliteral(L, s)	\
 	lua_pushlstring(L, "" s, (sizeof(s)/sizeof(char))-1)
@@ -383,3 +421,12 @@ struct lua_Debug {
 
 
 #endif
+
+/* remove when done! */
+/*
+#define DEBUG()   fprintf( stderr, "<<%s: %d>>\n", __FILE__, __LINE__ )
+#include <stdio.h>
+
+#define lua_assert assert
+#include <assert.h>
+*/

@@ -776,12 +776,22 @@ static int str_format (lua_State *L) {
         }
         case 'd':  case 'i': {
           addintlen(form);
+#ifdef LUA_TINT
+          sprintf(buff, form, (LUA_INTFRM_T)luaL_checkinteger(L, arg));
+#else
           sprintf(buff, form, (LUA_INTFRM_T)luaL_checknumber(L, arg));
+#endif
           break;
         }
+/* AK 22-Jul-06 -> Lua authors: 
+   The ouxX case is identical to di case; should they be merged? */
         case 'o':  case 'u':  case 'x':  case 'X': {
           addintlen(form);
+#ifdef LUA_TINT
+          sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checkinteger(L, arg));
+#else
           sprintf(buff, form, (unsigned LUA_INTFRM_T)luaL_checknumber(L, arg));
+#endif
           break;
         }
         case 'e':  case 'E': case 'f':

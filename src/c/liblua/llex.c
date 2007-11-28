@@ -22,6 +22,7 @@
 #include "lstring.h"
 #include "ltable.h"
 #include "lzio.h"
+#include "lnum.h"
 
 
 
@@ -34,13 +35,17 @@
 
 
 /* ORDER RESERVED */
-const char *const luaX_tokens [] = {
+static const char *const luaX_tokens [] = {
     "and", "break", "do", "else", "elseif",
     "end", "false", "for", "function", "if",
     "in", "local", "nil", "not", "or", "repeat",
     "return", "then", "true", "until", "while",
     "..", "...", "==", ">=", "<=", "~=",
-    "<number>", "<name>", "<string>", "<eof>",
+    "<number>", "<name>", "<string>", "<eof>",  /* ?? or: "<eos>" */
+    "<integer>",
+#ifdef LNUM_COMPLEX
+    "<number2>",
+#endif
     NULL
 };
 
@@ -78,7 +83,7 @@ void luaX_init (lua_State *L) {
 const char *luaX_token2str (LexState *ls, int token) {
   if (token < FIRST_RESERVED) {
     lua_assert(token == cast(unsigned char, token));
-    return (iscntrl(token)) ? luaO_pushfstring(ls->L, "char(%d)", token) :
+    return (iscntrl(token)) ? luaO_pushfstring(ls->L, "char(%d)", (LUAI_UACINTEGER)token) :
                               luaO_pushfstring(ls->L, "%c", token);
   }
   else
@@ -90,7 +95,11 @@ static const char *txtToken (LexState *ls, int token) {
   switch (token) {
     case TK_NAME:
     case TK_STRING:
+    case TK_INT:
     case TK_NUMBER:
+#ifdef LNUM_COMPLEX
+    case TK_NUMBER2:
+#endif
       save(ls, '\0');
       return luaZ_buffer(ls->buff);
     default:
@@ -102,7 +111,7 @@ static const char *txtToken (LexState *ls, int token) {
 void luaX_lexerror (LexState *ls, const char *msg, int token) {
   char buff[MAXSRC];
   luaO_chunkid(buff, getstr(ls->source), MAXSRC);
-  msg = luaO_pushfstring(ls->L, "%s:%d: %s", buff, ls->linenumber, msg);
+  msg = luaO_pushfstring(ls->L, "%s:%d: %s", buff, (LUAI_UACINTEGER) (ls->linenumber), msg);
   if (token)
     luaO_pushfstring(ls->L, "%s near " LUA_QS, msg, txtToken(ls, token));
   luaD_throw(ls->L, LUA_ERRSYNTAX);
@@ -158,7 +167,7 @@ void luaX_setinput (lua_State *L, LexState *ls, ZIO *z, TString *source) {
 
 
 
-static int check_next (LexState *ls, const char *set) {
+static lu_bool check_next (LexState *ls, const char *set) {
   if (!strchr(set, ls->current))
     return 0;
   save_and_next(ls);
@@ -173,23 +182,27 @@ static void buffreplace (LexState *ls, char from, char to) {
     if (p[n] == from) p[n] = to;
 }
 
-
-static void trydecpoint (LexState *ls, SemInfo *seminfo) {
+/* TK_NUMBER (/ TK_NUMBER2) */
+static int trydecpoint (LexState *ls, SemInfo *seminfo) {
   /* format error: try to update decimal point separator */
   struct lconv *cv = localeconv();
   char old = ls->decpoint;
+  int ret;
   ls->decpoint = (cv ? cv->decimal_point[0] : '.');
   buffreplace(ls, old, ls->decpoint);  /* try updated decimal separator */
-  if (!luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r)) {
+  ret= luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r, NULL);
+  if (!ret) {
     /* format error with correct decimal point: no more options */
     buffreplace(ls, ls->decpoint, '.');  /* undo change (for error message) */
     luaX_lexerror(ls, "malformed number", TK_NUMBER);
   }
+  return ret;
 }
 
 
-/* LUA_NUMBER */
-static void read_numeral (LexState *ls, SemInfo *seminfo) {
+/* TK_NUMBER / TK_INT (/TK_NUMBER2) */
+static int read_numeral (LexState *ls, SemInfo *seminfo) {
+  int ret;
   lua_assert(isdigit(ls->current));
   do {
     save_and_next(ls);
@@ -200,8 +213,9 @@ static void read_numeral (LexState *ls, SemInfo *seminfo) {
     save_and_next(ls);
   save(ls, '\0');
   buffreplace(ls, '.', ls->decpoint);  /* follow locale for decimal point */
-  if (!luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r))  /* format error? */
-    trydecpoint(ls, seminfo); /* try to update decimal point separator */
+  ret= luaO_str2d(luaZ_buffer(ls->buff), &seminfo->r, &seminfo->i );
+  if (!ret) return trydecpoint(ls, seminfo); /* try to update decimal point separator */
+  return ret;
 }
 
 
@@ -329,6 +343,7 @@ static void read_string (LexState *ls, int del, SemInfo *seminfo) {
 }
 
 
+/* char / TK_* */
 static int llex (LexState *ls, SemInfo *seminfo) {
   luaZ_resetbuffer(ls->buff);
   for (;;) {
@@ -400,8 +415,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         }
         else if (!isdigit(ls->current)) return '.';
         else {
-          read_numeral(ls, seminfo);
-          return TK_NUMBER;
+          return read_numeral(ls, seminfo);
         }
       }
       case EOZ: {
@@ -414,8 +428,7 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           continue;
         }
         else if (isdigit(ls->current)) {
-          read_numeral(ls, seminfo);
-          return TK_NUMBER;
+          return read_numeral(ls, seminfo);
         }
         else if (isalpha(ls->current) || ls->current == '_') {
           /* identifier or reserved word */
@@ -449,8 +462,9 @@ void luaX_next (LexState *ls) {
     ls->t = ls->lookahead;  /* use this one */
     ls->lookahead.token = TK_EOS;  /* and discharge it */
   }
-  else
+  else {
     ls->t.token = llex(ls, &ls->t.seminfo);  /* read next token */
+  }
 }
 
 

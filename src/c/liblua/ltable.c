@@ -33,6 +33,7 @@
 #include "lobject.h"
 #include "lstate.h"
 #include "ltable.h"
+#include "lnum.h"
 
 
 /*
@@ -92,6 +93,18 @@ static Node *hashnum (const Table *t, lua_Number n) {
 }
 
 
+/*
+** hash for lua_Integers
+*
+* Note: values are different than 'hashnum()' would have provided. It's okay.
+*/
+#ifdef LUA_TINT
+static Node *hashint (const Table *t, lua_Integer n) {
+  /* 32 bit: value is its own hash, 64 bit: hashed by the lowest 32 bits */
+  return hashmod(t, (unsigned int)n);
+}
+#endif
+
 
 /*
 ** returns the `main' position of an element in a table (that is, the index
@@ -100,7 +113,15 @@ static Node *hashnum (const Table *t, lua_Number n) {
 static Node *mainposition (const Table *t, const TValue *key) {
   switch (ttype(key)) {
     case LUA_TNUMBER:
+#ifdef LUA_TINT
+    /* Note: complex numbers are hashed simply by their real part
+     *       -> all pure imaginary (Ni) numbers end up in same hash. */
+      return hashnum(t, nvalue_fast(key));
+    case LUA_TINT:
+      return hashint(t, ivalue(key));
+#else
       return hashnum(t, nvalue(key));
+#endif
     case LUA_TSTRING:
       return hashstr(t, rawtsvalue(key));
     case LUA_TBOOLEAN:
@@ -118,13 +139,18 @@ static Node *mainposition (const Table *t, const TValue *key) {
 ** the array part of the table, -1 otherwise.
 */
 static int arrayindex (const TValue *key) {
-  if (ttisnumber(key)) {
-    lua_Number n = nvalue(key);
-    int k;
-    lua_number2int(k, n);
-    if (luai_numeq(cast_num(k), n))
-      return k;
-  }
+#ifdef LUA_TINT
+  if (ttisinteger(key))
+    return ivalue(key);
+#else
+   if (ttisnumber(key)) {
+     lua_Number n = nvalue(key);
+     int k;
+     lua_number2int(k, n);
+     if (luai_numeq(cast_num(k), n))
+       return k;
+   }
+#endif
   return -1;  /* `key' did not match some condition */
 }
 
@@ -159,11 +185,11 @@ static int findindex (lua_State *L, Table *t, StkId key) {
 }
 
 
-int luaH_next (lua_State *L, Table *t, StkId key) {
+lu_bool luaH_next (lua_State *L, Table *t, StkId key) {
   int i = findindex(L, t, key);  /* find original element */
   for (i++; i < t->sizearray; i++) {  /* try first array part */
     if (!ttisnil(&t->array[i])) {  /* a non-nil value? */
-      setnvalue(key, cast_num(i+1));
+      setivalue(key, i+1);
       setobj2s(L, key+1, &t->array[i]);
       return 1;
     }
@@ -208,7 +234,7 @@ static int computesizes (int nums[], int *narray) {
 }
 
 
-static int countint (const TValue *key, int *nums) {
+static lu_bool countint (const TValue *key, int *nums) {
   int k = arrayindex(key);
   if (0 < k && k <= MAXASIZE) {  /* is `key' an appropriate array index? */
     nums[ceillog2(k)]++;  /* count as such */
@@ -437,6 +463,16 @@ const TValue *luaH_getnum (Table *t, int key) {
   if (cast(unsigned int, key-1) < cast(unsigned int, t->sizearray))
     return &t->array[key-1];
   else {
+#ifdef LUA_TINT
+    Node *n = hashint(t, key);
+    do {  /* check whether `key' is somewhere in the chain */
+      if (ttisinteger(gkey(n)) && (ivalue(gkey(n)) == key)) {
+        return gval(n);  /* that's it */
+      } else { 
+      n = gnext(n);
+    }
+    } while (n);
+#else
     lua_Number nk = cast_num(key);
     Node *n = hashnum(t, nk);
     do {  /* check whether `key' is somewhere in the chain */
@@ -444,6 +480,7 @@ const TValue *luaH_getnum (Table *t, int key) {
         return gval(n);  /* that's it */
       else n = gnext(n);
     } while (n);
+#endif
     return luaO_nilobject;
   }
 }
@@ -470,6 +507,18 @@ const TValue *luaH_get (Table *t, const TValue *key) {
   switch (ttype(key)) {
     case LUA_TNIL: return luaO_nilobject;
     case LUA_TSTRING: return luaH_getstr(t, rawtsvalue(key));
+#ifdef LUA_TINT
+    case LUA_TINT: {
+      /* If index fits in an 'int', use it, otherwise go through 
+       * (same as original LUA_TNUMBER functionality below; we
+       * could also 'fix' lua_getnum() to have a broader parameter?)
+       */
+      int k= (int) ivalue(key);
+      if ( ((lua_Integer)k) == ivalue(key) )  /* no conversion loss (fits in int) */
+        return luaH_getnum(t, k);
+      /* else go through (including LUA_TNUMBER) */
+    }
+#else
     case LUA_TNUMBER: {
       int k;
       lua_Number n = nvalue(key);
@@ -478,6 +527,7 @@ const TValue *luaH_get (Table *t, const TValue *key) {
         return luaH_getnum(t, k);  /* use specialized version */
       /* else go through */
     }
+#endif
     default: {
       Node *n = mainposition(t, key);
       do {  /* check whether `key' is somewhere in the chain */
@@ -498,7 +548,12 @@ TValue *luaH_set (lua_State *L, Table *t, const TValue *key) {
     return cast(TValue *, p);
   else {
     if (ttisnil(key)) luaG_runerror(L, "table index is nil");
+#ifdef LUA_TINT
+    /* Check only LUA_TNUMBER, LUA_TINT never here */
+    else if (ttisnumber_raw(key) && luai_numisnan(nvalue(key)))
+#else
     else if (ttisnumber(key) && luai_numisnan(nvalue(key)))
+#endif
       luaG_runerror(L, "table index is NaN");
     return newkey(L, t, key);
   }
@@ -511,7 +566,7 @@ TValue *luaH_setnum (lua_State *L, Table *t, int key) {
     return cast(TValue *, p);
   else {
     TValue k;
-    setnvalue(&k, cast_num(key));
+    setivalue(&k, key);
     return newkey(L, t, &k);
   }
 }
