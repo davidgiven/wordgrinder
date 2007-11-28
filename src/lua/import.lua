@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
@@ -104,13 +104,14 @@ end
 
 local function loadhtmlfile(fp)
 	local data = fp:read("*a")
-	data:gsub("\n", " ")
-	data = CanonicaliseString(data)
-	local pos = 1
-	
+
 	-- Collapse whitespace; this makes things far easier to parse.
-	
+
 	data = data:gsub("[ \t\n\r]+", " ")
+
+	-- Canonicalise the string, making it valid UTF-8.
+
+	data = CanonicaliseString(data)
 	
 	-- Collapse complex elements.
 	
@@ -118,6 +119,7 @@ local function loadhtmlfile(fp)
 	
 	-- Helper function for reading tokens from the HTML stream.
 	
+	local pos = 1
 	local len = data:len()
 	local function tokens()
 		if (pos >= len) then
