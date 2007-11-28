@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local int = math.floor
 local GetStringWidth = wg.getstringwidth
