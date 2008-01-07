@@ -13,6 +13,8 @@ function include(fn)
 	c()
 end
 
+require "lfs"
+
 include "utils.lua"
 include "events.lua"
 include "redraw.lua"
@@ -43,6 +45,9 @@ local redrawpending = true
 
 function QueueRedraw()
 	redrawpending = true
+	if not Document.wrapwidth then
+		ResizeScreen()
+	end
 end
 
 function ResetDocumentSet()
@@ -155,11 +160,7 @@ Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
 ]])
 		if DEBUG then
-			stdout:write([[
-
-Debugging options:
-   -p    --profile     Enable profiler
-]])
+			-- List debugging options here.
 		end
 		
 		os.exit(0)
@@ -182,8 +183,8 @@ Debugging options:
 	}
 	
 	if DEBUG then
-		argmap["p"] = do_profile
-		argmap["profile"] = do_profile
+		-- argmap["p"] = do_profile
+		-- argmap["profile"] = do_profile
 	end
 	 
 	-- Called on an unrecognised option.

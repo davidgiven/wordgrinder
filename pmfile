@@ -28,15 +28,13 @@ CBUILDFLAGS = {"-Wall"}
 
 CLIBRARIES = {
 	'ncursesw',
-	'm'
+	'm',
+	'lua5.1',
 }
 
 CDEFINES = {
 	'_XOPEN_SOURCE_EXTENDED',
 	'_XOPEN_SOURCE',
-	'LUA_USE_POSIX',
-	'LNUM_DOUBLE',
-	'LNUM_INT32',
 	'VERSION="%VERSION%"',
 	'FILEFORMAT=%FILEFORMAT%',
 	'PREFIX="%PREFIX%"'
@@ -44,8 +42,8 @@ CDEFINES = {
 	
 CINCLUDES = {
 	"/usr/include/ncursesw",
+	"/usr/include/lua5.1",
 	"src/c/liblua",
-	"src/c/luax",
 }
 
 -- There is nothing editable beyond this point.
@@ -55,59 +53,9 @@ CINCLUDES = {
 
 BINDIR = ".staging"
 
--- Our patched Lua library.
-
-liblua = group {
-	cfile "src/c/liblua/lapi.c",
-	cfile "src/c/liblua/lcode.c",
-	cfile "src/c/liblua/ldebug.c",
-	cfile "src/c/liblua/ldo.c",
-	cfile "src/c/liblua/ldump.c",
-	cfile "src/c/liblua/lfunc.c",
-	cfile "src/c/liblua/lgc.c",
-	cfile "src/c/liblua/llex.c",
-	cfile "src/c/liblua/lnum.c",
-	cfile "src/c/liblua/lmem.c",
-	cfile "src/c/liblua/lobject.c",
-	cfile "src/c/liblua/lopcodes.c",
-	cfile "src/c/liblua/lparser.c",
-	cfile "src/c/liblua/lstate.c",
-	cfile "src/c/liblua/lstring.c",
-	cfile "src/c/liblua/ltable.c",
-	cfile "src/c/liblua/ltm.c",
-	cfile "src/c/liblua/lundump.c",
-	cfile "src/c/liblua/lvm.c",
-	cfile "src/c/liblua/lzio.c",
-	cfile "src/c/liblua/lauxlib.c",
-	cfile "src/c/liblua/lbaselib.c",
-	cfile "src/c/liblua/ldblib.c",
-	cfile "src/c/liblua/liolib.c",
-	cfile "src/c/liblua/lmathlib.c",
-	cfile "src/c/liblua/loslib.c",
-	cfile "src/c/liblua/ltablib.c",
-	cfile "src/c/liblua/lstrlib.c",
-	cfile "src/c/liblua/loadlib.c",
-	cfile "src/c/liblua/linit.c",
-}
-
--- Lua extensions.
-
-luax = group {
-	cfile "src/c/luax/lfs.c",
-	
-	cfile "src/c/luax/profiler/clocks.c",
-	cfile "src/c/luax/profiler/core_profiler.c",
-	cfile "src/c/luax/profiler/function_meter.c",
-	cfile "src/c/luax/profiler/lua50_profiler.c",
-	cfile "src/c/luax/profiler/stack.c",
-}
-
 -- Build the main program.
 
 wordgrinder_exe = cprogram {
-	liblua,
-	luax,
-	
 	cfile "src/c/utils.c",
 	cfile "src/c/main.c",
 	cfile "src/c/lua.c",

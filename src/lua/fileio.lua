@@ -47,7 +47,7 @@ local function writetostream(object, fp)
 				save(i)
 			end
 			for k, v in pairs(t) do
-				if not tonumber(k) then
+				if (type(k) ~= "number") then
 					save(k)
 					save(v)
 				end
@@ -210,6 +210,10 @@ local function loadfromstream(fp)
 	
 	load = function()
 		local s = fp:read("*l")
+		if not s then
+			error("unexpected EOF when reading file")
+		end
+		
 		local n = tonumber(s)
 		if n then
 			return cache[n]
@@ -241,6 +245,10 @@ local function loaddocument(filename)
 	if not d then
 		return nil, e
 	end
+	
+	-- This should not be necessary, but we do it anyway just to be sure.
+	
+	d:purge()
 	
 	d.name = filename
 	return d

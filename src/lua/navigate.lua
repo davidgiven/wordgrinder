@@ -523,7 +523,7 @@ function Cmd.UnsetMark()
 end
 
 function Cmd.ChangeDocument(name)
-	if not DocumentSet.documents[name] then
+	if not DocumentSet:findDocument(name) then
 		return false
 	end
 	
