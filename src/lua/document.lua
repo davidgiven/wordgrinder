@@ -44,7 +44,16 @@ DocumentSetClass =
 	end,
 	
 	findDocument = function(self, name)
-		return self.documents[name]
+		local document = self.documents[name]
+		if not document then
+			document = self.documents[self:_findDocument(name)]
+			if document then
+				ModalMessage("Document index inconsistency corrected",
+					"Something freaky happened to '"..name.."'.")
+				self.documents[name] = document
+			end
+		end
+		return document
 	end,
 	
 	addDocument = function(self, document, name)
@@ -154,6 +163,7 @@ DocumentClass =
 		self.topw = nil
 		self.botp = nil
 		self.botw = nil
+		self.wrapwidth = nil
 	end,
 	
 	-- calculate space above this paragraph
@@ -468,8 +478,8 @@ local function create_styles()
 			name = "Q",
 			html = "BLOCKQUOTE",
 			indent = 4,
-			above = 0,
-			below = 0,
+			above = 1,
+			below = 1,
 		},
 		{
 			desc = "List item with bullet",
@@ -489,6 +499,14 @@ local function create_styles()
 			above = 1,
 			below = 1,
 			indent = 4,
+		},
+		{
+			desc = "Indented text, run together",
+			name = "V",
+			html = "BLOCKQUOTE",
+			indent = 4,
+			above = 0,
+			below = 0
 		}
 	}
 	
