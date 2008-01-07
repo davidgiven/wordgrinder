@@ -393,7 +393,14 @@ function RebuildDocumentsMenu(documents)
 	local m = {}
 	for id, document in ipairs(documents) do
 		local ak = ak_tab[document.name]
-		m[#m+1] = {"D"..id, tostring(id-1), document.name, ak,
+		local shortcut
+		if (id <= 10) then
+			shortcut = tostring(id - 1)
+		else
+			shortcut = string.char(id + 54)
+		end
+		
+		m[#m+1] = {"D"..id, shortcut, document.name, ak,
 			function()
 				Cmd.ChangeDocument(document.name)
 			end}
