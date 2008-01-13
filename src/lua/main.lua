@@ -146,7 +146,7 @@ do
 	end
 	
 	local function do_help(opt)
-		stdout:write("WordGrinder version ", VERSION, " © 2007 David Given\n")
+		stdout:write("WordGrinder version ", VERSION, " © 2007-2008 David Given\n")
 		if DEBUG then
 			stdout:write("(This version has been compiled with debugging enabled.)\n")
 		end
