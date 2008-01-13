@@ -5,7 +5,7 @@
 # Prime Mover is licensed under the MIT open source license. To get the full
 # license text, run this file with the '--license' option.
 #
-# $Id: shell 99 2007-04-30 22:37:24Z dtrg $
+# $Id:shell.sh 115 2008-01-13 05:59:54Z dtrg $
 
 if [ -x "$(which arch 2>/dev/null)" ]; then
 	ARCH="$(arch)"
@@ -58,21 +58,21 @@ echo "pm: bootstrap failed."
 exit 1
 
 XXXXSTARTscript
-38644
+38825
 #!/usr/bin/lua
 -- Prime Mover
 --
--- © 2006 David Given.
+-- © 2006-2007 David Given.
 -- Prime Mover is licensed under the MIT open source license. Search
 -- for 'MIT' in this file to find the full license text.
 --
--- $Id: pm 103 2007-05-03 22:38:00Z dtrg $
+-- $Id: pm.lua 115 2008-01-13 05:59:54Z dtrg $
 
 -- ======================================================================= --
 --                                GLOBALS                                  --
 -- ======================================================================= --
 
-local VERSION = "0.1.1"
+local VERSION = "0.1.2.1"
 
 -- Fast versions of useful system variables.
 
@@ -795,12 +795,14 @@ function node:__build()
 	-- inputs. 
 	
 	local inputs = self:__buildchildren()
+ 	self["in"] = inputs
 	
 	-- Determine the node's outputs. This will usually be automatically
 	-- generated, in which case the name will depend on the overall environment ---
 	-- including the inputs.
 	
 	local outputs = self:__outputs(inputs)
+	self.out = outputs
 	
 	-- Get the current node's timestamp. If anything this node depends on is
 	-- newer than that, the node needs rebuilding.
@@ -1416,8 +1418,6 @@ simple = node {
  	-- Outputs are specified manually.
  	
  	__outputs = function(self, inputs)
- 		self["in"] = inputs
- 		
  		local input
  		if inputs then
  			input = inputs[1]
@@ -1431,6 +1431,9 @@ simple = node {
 
 		-- Construct an outputs array for use in the cache key. This mirrors
 		-- what the final array will be, but the unique ID is going to be 0.
+		-- Note that we're overriding %out% here; this is safe, because it
+		-- hasn't been set yet when __outputs is called, and is going to be
+		-- set to the correct value when this function exits.
 		
 		self.out = {}
 		self.U = 0
@@ -1468,8 +1471,6 @@ simple = node {
  	-- variable is set to the input files.
  	
  	__dobuild = function(self, inputs, outputs)
- 		self["in"] = inputs
- 		self.out = outputs
 		local r = self:__invoke(self.command, inputs, outputs)
 		if r then
 			if delete_output_files_on_error then
@@ -1501,7 +1502,7 @@ setfenv(1, _G)
 
 do
 	local function do_help(opt)
-		message("Prime Mover version ", VERSION, " © 2006 David Given")
+		message("Prime Mover version ", VERSION, " © 2006-2007 David Given")
 		stdout:write([[
 Syntax: pm [<options...>] [<targets>]
 Options:
