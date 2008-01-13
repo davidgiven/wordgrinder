@@ -105,6 +105,7 @@ local FileMenu = addmenu("File",
 	{"FR",     "R", "Rename document...",        nil,         Cmd.RenameDocument},
 	{"FD",     "D", "Delete document...",        nil,         Cmd.DeleteDocument},
 	"-",
+	{"Fabout", "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
 	{"FQ",     "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
 })
 
@@ -163,66 +164,6 @@ local MainMenu = addmenu("Main Menu",
 	{"Z",  "Z", "Navigation ▷",     nil,  NavigationMenu}
 })
 
-local function drawmenu(x, y, menu, n)
-	local akw = 0
-	for _, item in ipairs(menu) do
-		if item.ak then
-			local l = GetStringWidth(item.ak)
-			if (akw < l) then
-				akw = l
-			end
-		end
-	end
-	if (akw > 0) then
-		akw = akw + 1
-	end
-	
-	local w = menu.maxwidth + 4 + akw
-	SetBold()
-	DrawTitledBox(x, y, w, #menu, menu.label)
-	SetNormal()
-	
-	for i, item in ipairs(menu) do
-		if (item == "-") then
-			if (i == n) then
-				SetReverse()
-			end
-			Write(x+1, y+i, string.rep("─", w))
-		else
-			if (i == n) then
-				SetReverse()
-				Write(x+1, y+i, string.rep(" ", w))
-			end
-			
-			Write(x+4, y+i, item.label)
-			if item.ak then
-				local l = GetStringWidth(item.ak)
-				SetBold()
-				Write(x+w-l, y+i, item.ak)
-			end
-	
-			if item.mk then
-				SetBold()
-				Write(x+2, y+i, item.mk)
-			end
-		end
-		
-		SetNormal()
-	end
-	Goto(ScreenWidth-1, ScreenHeight-1)
-	
-	DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
-end
-
-function DrawMenuStack()
-	RedrawScreen()
-	local o = 0
-	for _, menu in ipairs(menu_stack) do
-		drawmenu(o*4, o*2, menu.menu, menu.n)
-		o = o + 1
-	end
-end
-
 --- MENU DRIVER CLASS ---
 
 MenuClass = {
@@ -233,6 +174,69 @@ MenuClass = {
 		SetNormal()
 	end,
 	
+	drawmenu = function(self, x, y, menu, n)
+		local akw = 0
+		for _, item in ipairs(menu) do
+			local ak = self.accelerators[item.id]
+			if ak then
+				local l = GetStringWidth(ak)
+				if (akw < l) then
+					akw = l
+				end
+			end
+		end
+		if (akw > 0) then
+			akw = akw + 1
+		end
+		
+		local w = menu.maxwidth + 4 + akw
+		SetBold()
+		DrawTitledBox(x, y, w, #menu, menu.label)
+		SetNormal()
+		
+		for i, item in ipairs(menu) do
+			local ak = self.accelerators[item.id]
+			
+			if (item == "-") then
+				if (i == n) then
+					SetReverse()
+				end
+				Write(x+1, y+i, string.rep("─", w))
+			else
+				if (i == n) then
+					SetReverse()
+					Write(x+1, y+i, string.rep(" ", w))
+				end
+				
+				Write(x+4, y+i, item.label)
+				if ak then
+					local l = GetStringWidth(ak)
+					SetBold()
+					Write(x+w-l, y+i, ak)
+				end
+		
+				if item.mk then
+					SetBold()
+					Write(x+2, y+i, item.mk)
+				end
+			end
+			
+			SetNormal()
+		end
+		Goto(ScreenWidth-1, ScreenHeight-1)
+		
+		DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
+	end,
+	
+	drawmenustack = function(self)
+		RedrawScreen()
+		local o = 0
+		for _, menu in ipairs(menu_stack) do
+			self:drawmenu(o*4, o*2, menu.menu, menu.n)
+			o = o + 1
+		end
+	end,
+	
 	runmenu = function(self, x, y, menu)
 		local n = 1
 		
@@ -240,7 +244,7 @@ MenuClass = {
 			local id
 			
 			while true do
-				drawmenu(x, y, menu, n)
+				self:drawmenu(x, y, menu, n)
 				
 				local c = GetChar():upper()
 				if (c == "KEY_UP") and (n > 1) then
@@ -257,10 +261,11 @@ MenuClass = {
 				elseif (c == "KEY_^X") then
 					local item = menu[n]
 					if (type(item) ~= "string") then
-						if item.ak then
-							self.accelerators[item.ak] = nil
-							item.ak = nil
-							DrawMenuStack()
+						local ak = self.accelerators[item.id]
+						if ak then
+							self.accelerators[ak] = nil
+							self.accelerators[item.id] = nil
+							self:drawmenustack()
 						end
 					end
 				elseif (c == "KEY_^V") then
@@ -274,10 +279,10 @@ MenuClass = {
 							if self.accelerators[ak] then
 								NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
 							else
-								item.ak = ak
 								self.accelerators[ak] = item.id
+								self.accelerators[item.id] = ak
 							end
-							DrawMenuStack()
+							self:drawmenustack()
 						end
 					end
 				elseif (c == "KEY_^R") then
@@ -289,7 +294,7 @@ MenuClass = {
 						NonmodalMessage("All keybindings have been reset to their default settings.")
 						return false
 					end
-					DrawMenuStack()
+					self:drawmenustack()
 				elseif menu.mks[c] then
 					id = menu.mks[c].id
 					break
@@ -312,7 +317,7 @@ MenuClass = {
 					return false
 				end
 				
-				DrawMenuStack()
+				self:drawmenustack()
 				menu_stack[#menu_stack] = nil
 			else
 				if not f then
@@ -353,6 +358,7 @@ function CreateMenu()
 	local my_key_tab = {}
 	for ak, id in pairs(key_tab) do
 		my_key_tab[ak] = id
+		my_key_tab[id] = ak
 	end
 	
 	local m = {
@@ -382,8 +388,9 @@ function RebuildDocumentsMenu(documents)
 	
 	local ak_tab = {}
 	for _, item in ipairs(DocumentsMenu) do
-		if item.ak then
-			ak_tab[item.label] = item.ak
+		local ak = DocumentSet.menu.accelerators[item.id]
+		if ak then
+			ak_tab[item.label] = ak
 		end
 	end
 	submenu(DocumentsMenu)

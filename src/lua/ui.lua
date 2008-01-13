@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local int = math.floor
 local Write = wg.write
@@ -247,5 +247,70 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 	else
 		return nil
 	end
+end
+
+function AboutDialogue()
+	local dialogue = 
+	{
+		title = "About WordGrinder",
+		width = Form.Large,
+		height = 13,
+		
+		["KEY_^C"] = "cancel",
+		["KEY_RETURN"] = "confirm",
+		["KEY_ENTER"] = "confirm",
+		
+		Form.Label {
+			value = "WordGrinder "..VERSION,
+			x1 = 1, y1 = 1, x2 = -1, y2 = 1,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "© 2007-2008 David Given",
+			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "File format version "..FILEFORMAT,
+			x1 = 1, y1 = 4, x2 = -1, y2 = 4,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "Cat vacuuming (n): pointless or otherwise inefficient",
+			x1 = 1, y1 = 6, x2 = -1, y2 = 6,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "    displacement activity to avoid having to settle  ",
+			x1 = 1, y1 = 7, x2 = -1, y2 = 7,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "    down and do some real writing.                   ",
+			x1 = 1, y1 = 8, x2 = -1, y2 = 8,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+			value = "For more information, see http://wordgrinder.sourceforge.net.",
+			x1 = 1, y1 = 10, x2 = -1, y2 = 10,
+			align = Form.Centre,
+		},
+		
+		Form.Label {
+		    value = "<press RETURN to close>",
+		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
+		},
+	}
+
+	local result = Form.Run(dialogue, RedrawScreen)		
+	
+	QueueRedraw()
+	return nil
 end
 

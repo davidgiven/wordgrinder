@@ -918,3 +918,6 @@ function Cmd.ToggleStatusBar()
 	return true
 end
 
+function Cmd.AboutWordGrinder()
+	AboutDialogue()
+end
