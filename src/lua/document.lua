@@ -533,7 +533,7 @@ end
 function CreateDocument()
 	local d =
 	{
-		wrapwidth = 0,
+		wrapwidth = nil,
 		viewmode = 1,
 		margin = 0,
 		cp = 1,

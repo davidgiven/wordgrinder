@@ -280,6 +280,7 @@ function Cmd.LoadDocumentSet(filename)
 	DocumentSet = d
 	Document = d.current
 	
+	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 	
 	RebuildParagraphStylesMenu(DocumentSet.styles)
