@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WORDGRINDER 1 "October 14, 2007"
+.TH WORDGRINDER 1 "@@@DATE@@@" "@@@VERSION@@@" "Terminal-based word processor"
 .\" $Id$
 .\" $URL: $
 .\"
@@ -49,11 +49,6 @@ options starting with two dashes (`-').
 .TP
 .B \-h, \-\-help
 Show summary of options.
-
-.SH SEE ALSO
-.IR "Universal Serial Bus Mass Storage Class - UFI Command Specification" ", revision 1.0"
-.br
-http://www.usb.org/developers/devclass_docs/usbmass-ufi10.pdf
 
 .SH AUTHOR
 .B wordgrinder
