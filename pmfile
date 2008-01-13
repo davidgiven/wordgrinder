@@ -7,6 +7,7 @@
 
 include "c.pm"
 HOME = os.getenv("HOME")
+DATE = "13 January 2008"
 VERSION = "0.2"
 FILEFORMAT = 2
 
@@ -24,7 +25,9 @@ PREFIX = HOME
 
 CBUILDFLAGS = {"-Wall"}
 
--- Any other build options go here. Note the lack of -l, -D or -I. 
+-- Any other build options go in these three sections. Note the lack of -l, -D
+-- or -I. We need the XOPEN stuff to make the wide-character curses library
+-- work. 
 
 CLIBRARIES = {
 	'ncursesw',
@@ -43,7 +46,6 @@ CDEFINES = {
 CINCLUDES = {
 	"/usr/include/ncursesw",
 	"/usr/include/lua5.1",
-	"src/c/liblua",
 }
 
 -- There is nothing editable beyond this point.
@@ -52,6 +54,16 @@ CINCLUDES = {
 -- The staging area for the installation.
 
 BINDIR = ".staging"
+
+-- Build the man page.
+
+wordgrinder_man = simple {
+	command = {
+		"sed -e 's/@@@DATE@@@/%DATE%/g; s/@@@VERSION@@@/%VERSION%/g' %in% > %out%"
+	},
+	outputs = {"%U%-%I%.man"},
+	file "wordgrinder.man"
+}
 
 -- Build the main program.
 
@@ -66,11 +78,13 @@ wordgrinder_exe = cprogram {
 
 wordgrinder_release_exe = group {
 	wordgrinder_exe,
+	wordgrinder_man,
 	CBUILDFLAGS = {PARENT, '-Os'},
 	CDEFINES = {PARENT, 'NDEBUG'},
 	
 	install = {
-		pm.install("%BINDIR%/bin/wordgrinder"),
+		pm.install("%{return self.out[1]}%",     "%BINDIR%/bin/wordgrinder"),
+		pm.install("%{return self.out[2]}%",     "%BINDIR%/man/man1/wordgrinder.1"),
 		pm.install("src/lua/browser.lua",        "%BINDIR%/share/wordgrinder/browser.lua"),
 		pm.install("src/lua/document.lua",       "%BINDIR%/share/wordgrinder/document.lua"),
 		pm.install("src/lua/export.lua",         "%BINDIR%/share/wordgrinder/export.lua"),
