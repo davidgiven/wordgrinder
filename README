@@ -1,8 +1,8 @@
-                               WORDGRINDER V0.1
+                               WORDGRINDER V0.2
                                ================
 
-                            (C) 2007 David Given
-                                 2007-10-14
+                          (C) 2007-2008 David Given
+                                  2008-01-08
 
 
 INTRODUCTION
@@ -89,6 +89,14 @@ LICENSE
 WordGrinder is available under the BSD license. Please see the COPYING file
 for the full text.
 
+
+REVISION HISTORY
+================
+
+WordGrinder 0.2: 2008-01-13: Lots of bug fixes. Added word count. Added about
+dialogue.
+ 
+WordGrinder 0.1: 2007-10-14: Initial release.
 
 THE AUTHOR
 ==========
