@@ -270,7 +270,8 @@ MenuClass = {
 					end
 				elseif (c == "KEY_^V") then
 					local item = menu[n]
-					if (type(item) ~= "string") and not item.ak then
+					if (type(item) ~= "string") and 
+							not self.accelerators[item.id] then
 						DrawStatusLine("Press new accelerator key for menu item.")
 						
 						local ak = GetChar():upper()
@@ -292,6 +293,7 @@ MenuClass = {
 						DocumentSet.menu = CreateMenu()
 						DocumentSet:touch()
 						NonmodalMessage("All keybindings have been reset to their default settings.")
+						menu_stack = {}
 						return false
 					end
 					self:drawmenustack()
