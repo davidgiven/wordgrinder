@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local WriteU8 = wg.writeu8
 local string_find = string.find
@@ -103,7 +103,7 @@ HTMLEntities =
 		["&iexcl;"] = "¡",
 		["&image;"] = "ℑ",
 		["&iquest;"] = "¿",
-		["&lrm;"] = "‎",
+		["&lrm;"] = "",
 		["&mdash;"] = "—",
 		["&ndash;"] = "–",
 		["&not;"] = "¬",
@@ -116,7 +116,7 @@ HTMLEntities =
 		["&Prime;"] = "″",
 		["&real;"] = "ℜ",
 		["&reg;"] = "®",
-		["&rlm;"] = "‏",
+		["&rlm;"] = "",
 		["&sect;"] = "§",
 		["&shy;"] = "­",
 		["&sup1;"] = "¹",
