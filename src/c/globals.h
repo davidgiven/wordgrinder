@@ -3,7 +3,7 @@
  * file in this distribution for the full text.
  *
  * $Id$
- * $URL: $
+ * $URL$
  */
 
 #ifndef GLOBALS_H
@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <assert.h>
 #include <errno.h>
+#include <wctype.h>
 
 /* --- Configuration options --------------------------------------------- */
 
