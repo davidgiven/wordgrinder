@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
@@ -12,6 +12,7 @@ local bitand = wg.bitand
 local bitor = wg.bitor
 local bitxor = wg.bitxor
 local bit = wg.bit
+local string_lower = string.lower
 
 local function savehtmlfile(fp, document)
 	fp:write('<html><head>\n')
@@ -47,41 +48,45 @@ local function savehtmlfile(fp, document)
 		
 	fp:write('<body>\n')
 	for _, paragraph in ipairs(Document) do
-		local style = paragraph.style.html
-		if (style == "LI") then
+		local style = string_lower(paragraph.style.html)
+		if (style == "li") then
 			if not listmode then
-				fp:write("<UL>")
+				fp:write("<ul>")
 				listmode = true
 			end
 		elseif listmode then
-			fp:write("</UL>")
+			fp:write("</ul>")
 		end
 			
 		fp:write('<', style, '>')
 		
-		firstword = true		
-		olditalic = false
-		oldunderline = false
-		for wn, word in ipairs(paragraph) do
-			if not firstword then
-				fp:write(' ')
+		if (#paragraph == 1) and (#paragraph[1].text == 0) then
+			fp:write("<br/>")
+		else
+			firstword = true		
+			olditalic = false
+			oldunderline = false
+			for wn, word in ipairs(paragraph) do
+				if not firstword then
+					fp:write(' ')
+				end
+				firstword = false
+			
+				italic = false
+				underline = false
+				ParseWord(word.text, style.cstyle or 0, wordwriter) -- FIXME
 			end
-			firstword = false
-		
-			italic = false
-			underline = false
-			ParseWord(word.text, style.cstyle or 0, wordwriter) -- FIXME
+			if italic then
+				fp:write('</i>')
+			end
+			if underline then
+				fp:write('</u>')
+			end
 		end
-		if italic then
-			fp:write('</i>')
-		end
-		if underline then
-			fp:write('</u>')
-		end
-		fp:write('</', style, '>\n')
+		fp:write(' </', style, '>\n')
 	end
 	if listmode then
-		fp:write('</UL>')
+		fp:write('</ul>')
 	end
 	fp:write('</body>\n')
 	
@@ -131,9 +136,9 @@ local function exportgenericfile(filename, title, extension, callback)
 	end
 	
 	ImmediateMessage("Exporting...")
-	local fp = io.open(filename, "w")
+	local fp, e = io.open(filename, "w")
 	if not fp then
-		ModalMessage(nil, "The export failed for some reason.")
+		ModalMessage(nil, "Unable to open the output file "..e..".")
 		QueueRedraw()
 		return false
 	end
