@@ -15,10 +15,12 @@ FILEFORMAT = 2
 -- User configurable settings start here!
 
 -- Where do you want WordGrinder installed? By default, it goes into your
--- home directory.
+-- home directory. (Use ".staging" if you're developing WordGrinder and don't
+-- want to have to install it every time you rebuild.)
 
 PREFIX = HOME
 -- PREFIX = "/usr/local"
+-- PREFIX = ".staging"
 
 -- What build flags do you want to use? (Not including -g or -Os, which are
 -- added later.)
