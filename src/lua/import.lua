@@ -184,6 +184,8 @@ local function loadhtmlfile(fp)
 		["<li>"] = function() flush() style = "LB" end,
 		["<i>"] = function() importer:style_on(ITALIC) end,
 		["</i>"] = function() importer:style_off(ITALIC) end,
+		["<em>"] = function() importer:style_on(ITALIC) end,
+		["</em>"] = function() importer:style_off(ITALIC) end,
 		["<u>"] = function() importer:style_on(UNDERLINE) end,
 		["</u>"] = function() importer:style_off(UNDERLINE) end,
 	}
