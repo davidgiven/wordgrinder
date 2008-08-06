@@ -28,6 +28,10 @@ Cmd = {}
 include "margin.lua"
 include "fileio.lua"
 include "export.lua"
+include "export/text.lua"
+include "export/html.lua"
+include "export/latex.lua"
+include "export/troff.lua"
 include "import.lua"
 include "navigate.lua"
 
