@@ -148,10 +148,14 @@ local NavigationMenu = addmenu("Navigation",
 	{"ZR",     nil, "Cursor right",              "RIGHT",     Cmd.GotoNextCharW},
 	{"ZD",     nil, "Cursor down",               "DOWN",      Cmd.GotoNextLine},
 	{"ZL",     nil, "Cursor left",               "LEFT",      Cmd.GotoPreviousCharW},
-	{"ZPGUP",  nil, "Page up",                   "PPAGE",     Cmd.GotoPreviousPage},
-	{"ZPGDN",  nil, "Page down",                 "NPAGE",     Cmd.GotoNextPage},
+	{"ZWL",    nil, "Goto previous word",        "SLEFT",     Cmd.GotoPreviousWordW},
+	{"ZWR",    nil, "Goto next word",            "SRIGHT",    Cmd.GotoNextWordW},
+	{"ZNP",    nil, "Goto next paragraph",       "SDOWN",     Cmd.GotoNextParagraphW},
+	{"ZPP",    nil, "Goto previous paragraph",   "SUP",       Cmd.GotoPreviousParagraphW},
 	{"ZH",     nil, "Goto beginning of line",    "HOME",      Cmd.GotoBeginningOfLine},
 	{"ZE",     nil, "Goto end of line",          "END",       Cmd.GotoEndOfLine},
+	{"ZPGUP",  nil, "Page up",                   "PPAGE",     Cmd.GotoPreviousPage},
+	{"ZPGDN",  nil, "Page down",                 "NPAGE",     Cmd.GotoNextPage},
 	{"ZDPC",   nil, "Delete previous character", "BACKSPACE", Cmd.DeletePreviousChar},
 	{"ZDNC",   nil, "Delete next character",     "DC",        Cmd.DeleteNextChar},
 	{"ZM",     nil, "Toggle mark",               "^@",        Cmd.ToggleMark},
@@ -231,7 +235,11 @@ MenuClass = {
 	end,
 	
 	drawmenustack = function(self)
+		local osb = DocumentSet.statusbar
+		DocumentSet.statusbar = true
 		RedrawScreen()
+		DocumentSet.statusbar = osb
+		
 		local o = 0
 		for _, menu in ipairs(menu_stack) do
 			self:drawmenu(o*4, o*2, menu.menu, menu.n)
@@ -281,6 +289,8 @@ MenuClass = {
 							ak = ak:gsub("^KEY_", "")
 							if self.accelerators[ak] then
 								NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
+							elseif (ak == "ESCAPE") or (ak == "RESIZE") then
+								NonmodalMessage("You can't bind that key.")
 							else
 								self.accelerators[ak] = item.id
 								self.accelerators[item.id] = ak
