@@ -1,4 +1,4 @@
--- © 2007 David Given.
+-- © 2008 David Given.
 -- WordGrinder is licensed under the BSD open source license. See the COPYING
 -- file in this distribution for the full text.
 --
@@ -267,7 +267,7 @@ function AboutDialogue()
 		},
 		
 		Form.Label {
-			value = "© 2007-2008 David Given",
+			value = "© 2008-2008 David Given",
 			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
 			align = Form.Centre,
 		},
