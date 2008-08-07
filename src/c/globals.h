@@ -1,4 +1,4 @@
-/* © 2007 David Given.
+/* © 2008 David Given.
  * WordGrinder is licensed under the BSD open source license. See the COPYING
  * file in this distribution for the full text.
  *
