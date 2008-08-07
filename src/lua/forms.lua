@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local int = math.floor
 local Write = wg.write
@@ -27,6 +27,22 @@ Form.Centre = {}
 Form.Center = Form.Centre
 
 Form.Large = {}
+
+local function min(a, b)
+	if (a < b) then
+		return a
+	else
+		return b
+	end
+end
+
+local function max(a, b)
+	if (a > b) then
+		return a
+	else
+		return b
+	end
+end
 
 local function makewidgetclass(class)
 	return function(table)
@@ -245,7 +261,20 @@ Form.Browser = makewidgetclass {
 	
 	init = function(self)
 		self.cursor = self.cursor or 1
-		self.offset = self.offset or 1
+		self.offset = self.offset or 0
+	end,
+	
+	_adjustOffset = function(self)
+		local h = self.realheight
+		
+		if (self.offset == 0) then
+			self.offset = self.cursor - int(h/2)
+		end
+
+		self.offset = min(self.offset, self.cursor)		
+		self.offset = max(self.offset, self.cursor - (h-2))
+		self.offset = min(self.offset, #self.data - (h-2)) 
+		self.offset = max(self.offset, 1)
 	end,
 	
 	draw = function(self)
@@ -269,16 +298,8 @@ Form.Browser = makewidgetclass {
 			Write(x+1, y+h, border)
 			Write(x+w-1, y+h, "┘")
 		end
-		
-		-- Adjust the offset.
-		
-		if (self.cursor < self.offset) then
-			self.offset = self.cursor
-		end
-		
-		if (self.cursor > (self.offset + h-2)) then
-			self.offset = self.cursor - (h-2)
-		end
+
+		self:_adjustOffset()		
 		
 		-- Draw the data.
 		
