@@ -3,7 +3,7 @@
 -- file in this distribution for the full text.
 --
 -- $Id$
--- $URL: $
+-- $URL$
 
 local min = min
 local max = max
@@ -42,6 +42,7 @@ function FileBrowser(title, message, saving, default)
 	end)
 	
 	local labels = {}
+	local defaultn = 1
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
@@ -51,9 +52,13 @@ function FileBrowser(title, message, saving, default)
 			data = attr.name,
 			label = dmarker..attr.name
 		}
+		if (attr.name == default) then
+			defaultn = #labels
+		end
 	end
 	
-	local f = Browser(title, lfs.currentdir(), message, labels, default)
+	local f = Browser(title, lfs.currentdir(), message, labels,
+		default, defaultn)
 	if not f then
 		return nil
 	end
@@ -83,13 +88,14 @@ function FileBrowser(title, message, saving, default)
 	return f
 end
 
-function Browser(title, topmessage, bottommessage, data, default)
+function Browser(title, topmessage, bottommessage, data, default, defaultn)
 	local browser = Form.Browser {
 		focusable = false,
 		type = Form.Browser,
 		x1 = 1, y1 = 2,
 		x2 = -1, y2 = -4,
 		data = data,
+		cursor = defaultn or 1
 	}
 	
 	local textfield = Form.TextField {
