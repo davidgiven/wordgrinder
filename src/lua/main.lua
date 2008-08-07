@@ -34,6 +34,7 @@ include "export/latex.lua"
 include "export/troff.lua"
 include "import.lua"
 include "navigate.lua"
+include "addons/goto.lua"
 
 include "menu.lua"
 
