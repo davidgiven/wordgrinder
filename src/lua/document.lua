@@ -17,6 +17,7 @@ local SetReverse = wg.setreverse
 local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
+local GetWordText = wg.getwordtext
 
 DocumentSetClass =
 {
@@ -392,6 +393,16 @@ ParagraphClass =
 		self.style = style
 		self:touch()
 	end,
+	
+	-- return an unstyled string containing the contents of the paragraph.
+	asString = function(self)
+		local s = {}
+		for _, w in ipairs(self) do
+			s[#s+1] = w:asString()
+		end
+		
+		return table_concat(s, " ")
+	end
 }
 
 WordClass =
@@ -428,6 +439,11 @@ WordClass =
 		end
 		
 		return len + 1
+	end,
+	
+	-- returns an unstyled string containing the word contents
+	asString = function(self)
+		return GetWordText(self.text)
 	end,
 }
 
