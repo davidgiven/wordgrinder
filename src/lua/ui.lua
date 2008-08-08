@@ -267,7 +267,7 @@ function AboutDialogue()
 		},
 		
 		Form.Label {
-			value = "© 2008-2008 David Given",
+			value = "© 2007-2008 David Given",
 			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
 			align = Form.Centre,
 		},
