@@ -36,14 +36,14 @@ static int initscreen_cb(lua_State* L)
 	idcok(stdscr, TRUE);
 	scrollok(stdscr, FALSE);
 	intrflush(stdscr, FALSE);
-	notimeout(stdscr, TRUE);
+	//notimeout(stdscr, TRUE);
 	keypad(stdscr, TRUE);
-	 
+
 	running = true;
 	atexit(screen_deinit);
 	return 0;
 }
-	
+
 static int clearscreen_cb(lua_State* L)
 {
 	erase();
@@ -100,12 +100,12 @@ static int write_cb(lua_State* L)
 	while (s < send)
 	{
 		wchar_t c = readu8(&s);
-			
+
 		mvaddnwstr(y, x, &c, 1);
 		if (!iswcntrl(c))
 			x += wcwidth(c);
 	}
-	
+
 	return 0;
 }
 
@@ -136,7 +136,7 @@ static int getstringwidth_cb(lua_State* L)
 	size_t size;
 	const char* s = luaL_checklstring(L, 1, &size);
 	const char* send = s + size;
-	
+
 	int width = 0;
 	while (s < send)
 	{
@@ -144,7 +144,7 @@ static int getstringwidth_cb(lua_State* L)
 		if (!iswcntrl(c))
 			width += wcwidth(c);
 	}
-	
+
 	lua_pushnumber(L, width);
 	return 1;
 }
@@ -155,7 +155,7 @@ static int getboundedstring_cb(lua_State* L)
 	const char* start = luaL_checklstring(L, 1, &size);
 	const char* send = start + size;
 	int width = luaL_checkinteger(L, 2);
-	
+
 	const char* s = start;
 	while (s < send)
 	{
@@ -171,7 +171,7 @@ static int getboundedstring_cb(lua_State* L)
 			}
 		}
 	}
-	
+
 	lua_pushlstring(L, start, send - start);
 	return 1;
 }
@@ -179,7 +179,7 @@ static int getboundedstring_cb(lua_State* L)
 static int getbytesofcharacter_cb(lua_State* L)
 {
 	int c = luaL_checkinteger(L, 1);
-	
+
 	lua_pushnumber(L, getu8bytes(c));
 	return 1;
 }
@@ -280,36 +280,48 @@ static const char* getkeyname(int k)
 		case 13: return "KEY_RETURN";
 		case 27: return "KEY_ESCAPE";
 	}
-	
+
 	static char buffer[16];
 	if (k < 32)
 	{
 		sprintf(buffer, "KEY_^%c", k+'A'-1);
 		return buffer;
 	}
-	
+
 	if ((k >= KEY_F0) && (k < (KEY_F0+64)))
 	{
 		sprintf(buffer, "KEY_F%d", k - KEY_F0);
 		return buffer;
-	} 
-	
+	}
+
 	return NULL;
 }
 
 static int getchar_cb(lua_State* L)
 {
+	int t = 0;
+	if (!lua_isnone(L, 1))
+		t = luaL_checkinteger(L, 1);
+
 	move(cursory, cursorx);
 	refresh();
-	
+
 	for (;;)
 	{
+		if (t)
+			timeout(t*1000);
+		else
+			timeout(-1);
+
 		wint_t c;
 		int r = get_wch(&c);
-		
-		if (r == ERR)
-			continue;
-			
+
+		if (r == ERR) /* timeout */
+		{
+			lua_pushnil(L);
+			break;
+		}
+
 		if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
 		{
 			const char* s = getkeyname(c);
@@ -319,22 +331,22 @@ static int getchar_cb(lua_State* L)
 				break;
 			}
 		}
-		
+
 		if (wcwidth(c) > 0)
 		{
 			static char buffer[8];
 			char* p = buffer;
-	
+
 			writeu8(&p, c);
 			*p = '\0';
-			
+
 			lua_pushstring(L, buffer);
 			break;
 		}
 	}
-		
+
 	return 1;
-}		
+}
 
 void screen_init(void)
 {
@@ -358,6 +370,6 @@ void screen_init(void)
 		{ "getchar",                   getchar_cb },
 		{ NULL,                        NULL }
 	};
-	
+
 	luaL_register(L, "wg", funcs);
 }

@@ -73,12 +73,10 @@ local function writetostream(object, fp)
 	return true
 end
 
-local function savedocument(filename)
-	ImmediateMessage("Saving...")
-	
-	local fp = io.open(filename, "w")
+function SaveDocumentSetRaw(filename)
+	local fp, e = io.open(filename, "w")
 	if not fp then
-		return false
+		return false, e
 	end
 	
 	DocumentSet:purge()
@@ -98,9 +96,11 @@ function Cmd.SaveCurrentDocumentAs(filename)
 		DocumentSet.name = filename
 	end
 
-	local r = savedocument(DocumentSet.name)
+	ImmediateMessage("Saving...")
+	DocumentSet:clean()	
+	local r, e = SaveDocumentSetRaw(DocumentSet.name)
 	if not r then
-		ModalMessage("Save failed", "The document could not be saved for some reason.")
+		ModalMessage("Save failed", "The document could not be saved: "..e)
 	else
 		NonmodalMessage("Save succeeded.")
 	end
@@ -250,6 +250,10 @@ local function loaddocument(filename)
 	
 	d:purge()
 	
+	-- Even if the changed flag was set in the document on disk, remove it.
+	
+	d:clean()
+	
 	d.name = filename
 	return d
 end
@@ -321,6 +325,8 @@ end
 
 do
 	local function cb(event, token, oldversion, newversion)
+		-- Upgrade version 1 to 2.
+		
 		if (oldversion < 2) then
 			-- Update wordcount.
 
@@ -337,6 +343,19 @@ do
 			-- Status bar defaults to on.
 
 			DocumentSet.statusbar = true
+		end
+		
+		-- Upgrade version 2 to 3.
+		
+		if (oldversion < 3) then
+			-- Idle time defaults to 3.
+			
+			DocumentSet.idletime = 3
+			
+			-- Initialise addons.
+			
+			DocumentSet.addons = {}
+			FireEvent(Event.RegisterAddons)
 		end
 	end
 	

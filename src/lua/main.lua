@@ -35,6 +35,7 @@ include "export/troff.lua"
 include "import.lua"
 include "navigate.lua"
 include "addons/goto.lua"
+include "addons/autosave.lua"
 
 include "menu.lua"
 
@@ -63,6 +64,10 @@ function ResetDocumentSet()
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	DocumentSet:purge()
+	DocumentSet:clean()
+	
+	FireEvent(Event.DocumentCreated)
+	FireEvent(Event.RegisterAddons)
 end
 
 -- This function contains the word processor proper, including the main event
@@ -98,35 +103,42 @@ function WordProcessor(filename)
 			DocumentSet.justchanged = false
 		end
 		
-		if redrawpending then
-			RedrawScreen()
-			redrawpending = false
+		FireEvent(Event.WaitingForUser)
+		local c = nil
+		while not c do
+			if redrawpending then
+				RedrawScreen()
+				redrawpending = false
+			end
+		
+			c = wg.getchar(DocumentSet.idletime)
+			if not c then
+				FireEvent(Event.Idle)
+			end
 		end
 		
-		FireEvent(Event.WaitingForUser)
-		local c = wg.getchar()
-		if c then
-			-- Anything in masterkeymap overrides everything else.
-			local f = masterkeymap[c]
-			if f then
-				f()
+		ResetNonmodalMessages()
+		
+		-- Anything in masterkeymap overrides everything else.
+		local f = masterkeymap[c]
+		if f then
+			f()
+		else
+			-- It's not in masterkeymap. If it's printable, insert it; if it's
+			-- not, look it up in the menu hierarchy.
+			
+			if not c:match("^KEY_") then
+				Cmd.InsertStringIntoWord(c)
 			else
-				-- It's not in masterkeymap. If it's printable, insert it; if it's
-				-- not, look it up in the menu hierarchy.
-				
-				if not c:match("^KEY_") then
-					Cmd.InsertStringIntoWord(c)
-				else
-					f = DocumentSet.menu:lookupAccelerator(c)
-					if f then
-						if (type(f) == "function") then
-							f()
-						else
-							Cmd.ActivateMenu(f)
-						end
+				f = DocumentSet.menu:lookupAccelerator(c)
+				if f then
+					if (type(f) == "function") then
+						f()
 					else
-						NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
+						Cmd.ActivateMenu(f)
 					end
+				else
+					NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
 				end
 			end
 		end
