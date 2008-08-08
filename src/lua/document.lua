@@ -26,13 +26,16 @@ DocumentSetClass =
 		for _, l in ipairs(self.documents) do
 			l:purge()
 		end
-		self.changed = nil
-		self.justchanged = nil
 	end,
 	
 	touch = function(self)
 		self.changed = true
 		self.justchanged = true
+	end,
+	
+	clean = function(self)
+		self.changed = nil
+		self.justchanged = nil
 	end,
 	
 	_findDocument = function(self, name)
@@ -538,8 +541,10 @@ function CreateDocumentSet()
 	{
 		fileformat = FILEFORMAT,
 		statusbar = true,
+		idletime = 3,
 		documents = {},
-		styles = create_styles()
+		styles = create_styles(),
+		addons = {},
 	}
 	
 	setmetatable(ds, {__index = DocumentSetClass})

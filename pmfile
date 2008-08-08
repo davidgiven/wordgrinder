@@ -7,9 +7,9 @@
 
 include "c.pm"
 HOME = os.getenv("HOME")
-DATE = "13 January 2008"
-VERSION = "0.2"
-FILEFORMAT = 2
+DATE = "5 August 2008"
+VERSION = "0.3"
+FILEFORMAT = 3
 
 -----------------------------------------------------------------------------
 -- User configurable settings start here!
@@ -85,23 +85,29 @@ wordgrinder_release_exe = group {
 	CDEFINES = {PARENT, 'NDEBUG'},
 	
 	install = {
-		pm.install("%{return self.out[1]}%",     "%BINDIR%/bin/wordgrinder"),
-		pm.install("%{return self.out[2]}%",     "%BINDIR%/man/man1/wordgrinder.1"),
-		pm.install("src/lua/browser.lua",        "%BINDIR%/share/wordgrinder/browser.lua"),
-		pm.install("src/lua/document.lua",       "%BINDIR%/share/wordgrinder/document.lua"),
-		pm.install("src/lua/export.lua",         "%BINDIR%/share/wordgrinder/export.lua"),
-		pm.install("src/lua/fileio.lua",         "%BINDIR%/share/wordgrinder/fileio.lua"),
-		pm.install("src/lua/forms.lua",          "%BINDIR%/share/wordgrinder/forms.lua"),
-		pm.install("src/lua/html.lua",           "%BINDIR%/share/wordgrinder/html.lua"),
-		pm.install("src/lua/events.lua",         "%BINDIR%/share/wordgrinder/events.lua"),
-		pm.install("src/lua/margin.lua",         "%BINDIR%/share/wordgrinder/margin.lua"),
-		pm.install("src/lua/import.lua",         "%BINDIR%/share/wordgrinder/import.lua"),
-		pm.install("src/lua/main.lua",           "%BINDIR%/share/wordgrinder/main.lua"),
-		pm.install("src/lua/menu.lua",           "%BINDIR%/share/wordgrinder/menu.lua"),
-		pm.install("src/lua/navigate.lua",       "%BINDIR%/share/wordgrinder/navigate.lua"),
-		pm.install("src/lua/redraw.lua",         "%BINDIR%/share/wordgrinder/redraw.lua"),
-		pm.install("src/lua/ui.lua",             "%BINDIR%/share/wordgrinder/ui.lua"),
-		pm.install("src/lua/utils.lua",          "%BINDIR%/share/wordgrinder/utils.lua"),
+		pm.install("%{return self.out[1]}%",      "%BINDIR%/bin/wordgrinder"),
+		pm.install("%{return self.out[2]}%",      "%BINDIR%/man/man1/wordgrinder.1"),
+		pm.install("src/lua/browser.lua",         "%BINDIR%/share/wordgrinder/browser.lua"),
+		pm.install("src/lua/document.lua",        "%BINDIR%/share/wordgrinder/document.lua"),
+		pm.install("src/lua/export.lua",          "%BINDIR%/share/wordgrinder/export.lua"),
+		pm.install("src/lua/export/text.lua",     "%BINDIR%/share/wordgrinder/export/text.lua"),
+		pm.install("src/lua/export/html.lua",     "%BINDIR%/share/wordgrinder/export/html.lua"),
+		pm.install("src/lua/export/latex.lua",    "%BINDIR%/share/wordgrinder/export/latex.lua"),
+		pm.install("src/lua/export/troff.lua",    "%BINDIR%/share/wordgrinder/export/troff.lua"),
+		pm.install("src/lua/fileio.lua",          "%BINDIR%/share/wordgrinder/fileio.lua"),
+		pm.install("src/lua/forms.lua",           "%BINDIR%/share/wordgrinder/forms.lua"),
+		pm.install("src/lua/html.lua",            "%BINDIR%/share/wordgrinder/html.lua"),
+		pm.install("src/lua/events.lua",          "%BINDIR%/share/wordgrinder/events.lua"),
+		pm.install("src/lua/margin.lua",          "%BINDIR%/share/wordgrinder/margin.lua"),
+		pm.install("src/lua/import.lua",          "%BINDIR%/share/wordgrinder/import.lua"),
+		pm.install("src/lua/main.lua",            "%BINDIR%/share/wordgrinder/main.lua"),
+		pm.install("src/lua/menu.lua",            "%BINDIR%/share/wordgrinder/menu.lua"),
+		pm.install("src/lua/navigate.lua",        "%BINDIR%/share/wordgrinder/navigate.lua"),
+		pm.install("src/lua/redraw.lua",          "%BINDIR%/share/wordgrinder/redraw.lua"),
+		pm.install("src/lua/ui.lua",              "%BINDIR%/share/wordgrinder/ui.lua"),
+		pm.install("src/lua/utils.lua",           "%BINDIR%/share/wordgrinder/utils.lua"),
+		pm.install("src/lua/addons/goto.lua",     "%BINDIR%/share/wordgrinder/addons/goto.lua"),
+		pm.install("src/lua/addons/autosave.lua", "%BINDIR%/share/wordgrinder/addons/autosave.lua"),
 	}
 }
 

@@ -9,10 +9,13 @@ local listeners = {}
 
 Event = {}
 Event.Redraw = {}            --- the screen has just been redrawn
+Event.Idle = {}              --- the user isn't touching the keyboard
 Event.WaitingForUser = {}    --- we're about to wait for a keypress
 Event.Changed = {}           --- the document's been changed
-Event.DocumentLoaded = {}    --- a new document has just been loaded
-Event.DocumentUpgrade = {}   --- (oldversion, newversion) the document is being upgraded
+Event.DocumentCreated = {}   --- a new documentset has just been created
+Event.DocumentLoaded = {}    --- a new documentset has just been loaded
+Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
+Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.

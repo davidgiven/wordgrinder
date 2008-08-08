@@ -23,6 +23,10 @@ function NonmodalMessage(s)
 	QueueRedraw()
 end
 
+function ResetNonmodalMessages()
+	messages = {}
+end
+
 function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
 	Document:wrap(ScreenWidth - Document.margin - 1)
@@ -92,7 +96,6 @@ local function redrawstatus()
 			ClearToEOL()
 			y = y - 1
 		end
-		messages = {}
 
 		SetNormal()
 	end

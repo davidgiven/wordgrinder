@@ -93,22 +93,29 @@ local ExportMenu = addmenu("Export current document",
 	{"FEtr",   "F", "Export to Troff...",        nil,         Cmd.ExportTroffFile},
 })
 
+local SettingsMenu = addmenu("Settings",
+{
+    {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
+})
+
 local FileMenu = addmenu("File",
 {
-	{"FN",     "N", "New document set",          nil,         Cmd.CreateBlankDocumentSet},
-	{"FO",     "O", "Load document set...",      nil,         Cmd.LoadDocumentSet},
-	{"FS",     "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument},
-	{"FA",     "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs},
+	{"FN",         "N", "New document set",          nil,         Cmd.CreateBlankDocumentSet},
+	{"FO",         "O", "Load document set...",      nil,         Cmd.LoadDocumentSet},
+	{"FS",         "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument},
+	{"FA",         "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs},
 	"-",
-	{"FB",     "B", "Add new blank document",    nil,         Cmd.AddBlankDocument},
-	{"FI",     "I", "Import new document ▷",     nil,         ImportMenu},
-	{"FE",     "E", "Export current document ▷", nil,         ExportMenu},
+	{"FB",         "B", "Add new blank document",    nil,         Cmd.AddBlankDocument},
+	{"FI",         "I", "Import new document ▷",     nil,         ImportMenu},
+	{"FE",         "E", "Export current document ▷", nil,         ExportMenu},
 	"-",
-	{"FR",     "R", "Rename document...",        nil,         Cmd.RenameDocument},
-	{"FD",     "D", "Delete document...",        nil,         Cmd.DeleteDocument},
+	{"FR",         "R", "Rename document...",        nil,         Cmd.RenameDocument},
+	{"FD",         "D", "Delete document...",        nil,         Cmd.DeleteDocument},
 	"-",
-	{"Fabout", "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
-	{"FQ",     "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
+	{"Fsettings",  "T", "Settings ▷",                nil,         SettingsMenu},
+	"-",
+	{"Fabout",     "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
+	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
 })
 
 local EditMenu = addmenu("Edit",
