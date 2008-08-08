@@ -47,6 +47,7 @@ end
 local function makewidgetclass(class)
 	return function(table)
 		setmetatable(table, {__index = class})
+		table.class = class
 		return table
 	end
 end
@@ -91,6 +92,7 @@ Form.Label = makewidgetclass {
 			xo = self.realwidth - GetStringWidth(self.value)
 		end
 		
+		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		Write(self.realx1 + xo, self.realy1, self.value)
 	end
 }
@@ -112,17 +114,15 @@ Form.Checkbox = makewidgetclass {
 		else
 			s = "✘"
 		end
+				
+		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 		
-		Write(self.realx1, self.realy1, s)		
+		Write(self.realx2, self.realy1, s)		
 		if self.focus then
-			Goto(self.realx1, self.realy1)
+			Goto(self.realx2, self.realy1)
 		end
-		
-		Write(self.realx1 + 2, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 	end,
 	
-	["KEY_RETURN"] = checkbox_toggle,
-	["KEY_ENTER"] = checkbox_toggle,
 	[" "] = checkbox_toggle
 }
 
