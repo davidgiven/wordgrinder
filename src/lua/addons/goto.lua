@@ -84,12 +84,14 @@ function Cmd.Goto()
 	end
 	
 	local result = gotobrowser(data, currentheading)
+	QueueRedraw()
+
 	if result then
 		Document.cp = data[result].paran
 		Document.cw = 1
 		Document.co = 1
+		return true
 	end
 	
-	QueueRedraw()
 	return false
 end
