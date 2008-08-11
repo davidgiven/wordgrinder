@@ -277,6 +277,10 @@ Form.Browser = makewidgetclass {
 		self.offset = max(self.offset, 1)
 	end,
 	
+	changed = function(self)
+		return "nop"
+	end,
+	
 	draw = function(self)
 		local x = self.realx1
 		local y = self.realy1
@@ -340,6 +344,7 @@ Form.Browser = makewidgetclass {
 		if (self.cursor > 1) then
 			self.cursor = self.cursor - 1
 			self:draw()
+			return self:changed()
 		end
 		
 		return "nop"
@@ -349,27 +354,38 @@ Form.Browser = makewidgetclass {
 		if (self.cursor < #self.data) then
 			self.cursor = self.cursor + 1
 			self:draw()
+			return self:changed()
 		end
 		
 		return "nop"
 	end,
 	
 	["KEY_PPAGE"] = function(self, key)
-		self.cursor = self.cursor - int(self.realheight/2)
+		local oldcursor = self.cursor
+		self.cursor = oldcursor - int(self.realheight/2)
 		if (self.cursor < 1) then
 			self.cursor = 1
 		end
 		
-		self:draw()
+		if (self.cursor ~= oldcursor) then
+			self:draw()
+			return self:changed()
+		end
+		return "nop"
 	end,
 	
 	["KEY_NPAGE"] = function(self, key)
-		self.cursor = self.cursor + int(self.realheight/2)
+		local oldcursor = self.cursor
+		self.cursor = oldcursor + int(self.realheight/2)
 		if (self.cursor > #self.data) then
 			self.cursor = #self.data
 		end
 		
-		self:draw()
+		if (self.cursor ~= oldcursor) then
+			self:draw()
+			return self:changed()
+		end
+		return "nop"
 	end,
 }
 
