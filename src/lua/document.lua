@@ -6,6 +6,7 @@
 -- $URL$
 
 local table_remove = table.remove
+local table_insert = table.insert
 local table_concat = table.concat
 local Write = wg.write
 local WriteStyled = wg.writestyled
@@ -38,6 +39,10 @@ DocumentSetClass =
 		self.justchanged = nil
 	end,
 	
+	getDocumentList = function(self)
+		return self.documents
+	end,
+	
 	_findDocument = function(self, name)
 		for i, d in ipairs(self.documents) do
 			if (d.name == name) then
@@ -60,7 +65,7 @@ DocumentSetClass =
 		return document
 	end,
 	
-	addDocument = function(self, document, name)
+	addDocument = function(self, document, name, index)
 		document.name = name
 		
 		local n = self:_findDocument(name) or (#self.documents + 1)
@@ -74,18 +79,46 @@ DocumentSetClass =
 		RebuildDocumentsMenu(self.documents)
 	end,
 	
-	deleteDocument = function(self, name)
+	moveDocumentIndexTo = function(self, name, targetIndex)
 		local n = self:_findDocument(name)
 		if not n then
 			return
 		end
+		local document = self.documents[n]
+		
+		table_remove(self.documents, n)
+		table_insert(self.documents, targetIndex, document)
+		self:touch()
+		RebuildDocumentsMenu(self.documents)
+	end,
+	
+	deleteDocument = function(self, name)
+		if (#self.documents == 1) then
+			return false
+		end
+		
+		local n = self:_findDocument(name)
+		if not n then
+			return
+		end
+		local document = self.documents[n]
 		
 		table_remove(self.documents, n)
 		self.documents[name] = nil
 		
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
-		self:setCurrent(name)
+		
+		if (Document == document) then
+			document = self.documents[n]
+			if not document then
+				document = self.documents[#self.documents]
+			end
+			
+			self:setCurrent(document.name)
+		end
+		
+		return true
 	end,
 	
 	setCurrent = function(self, name)
@@ -100,6 +133,10 @@ DocumentSetClass =
 	end,
 	
 	renameDocument = function(self, oldname, newname)
+		if self.documents[newname] then
+			return false
+		end
+		
 		local d = self.documents[oldname]
 		self.documents[oldname] = nil
 		self.documents[newname] = d
@@ -107,6 +144,7 @@ DocumentSetClass =
 		
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
+		return true
 	end,
 	
 	setClipboard = function(self, clipboard)
