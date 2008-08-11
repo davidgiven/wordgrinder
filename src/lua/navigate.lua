@@ -532,53 +532,6 @@ function Cmd.ChangeDocument(name)
 	return true
 end
 
-function Cmd.RenameDocument(name)
-	if not name then
-		name = PromptForString("Change name of current document", "Please enter the new document name:", Document.name)
-		if not name then
-			return false
-		end
-	end
-		
-	if (name ~= Document.name) and DocumentSet.documents[name] then
-		ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
-		return false
-	end
-
-	DocumentSet:renameDocument(Document.name, name)
-	QueueRedraw()
-	return true
-end
-
-function Cmd.DeleteDocument()
-	if not PromptForYesNo("Delete this document?", "Are you sure you want to delete this document? It will be removed from the current document set, and will be gone forever.") then
-		return false
-	end
-	
-	DocumentSet:deleteDocument(Document.name)
-	QueueRedraw()
-	return true
-end
-
-function Cmd.AddBlankDocument(name)
-	if not name then
-		name = PromptForString("Name of new document?", "Please enter the new document name:")
-		if not name or (name == "") then
-			return false
-		end
-	end
-
-	if DocumentSet.documents[name] then
-		ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
-		return false
-	end
-
-	DocumentSet:addDocument(CreateDocument(), name)
-	DocumentSet:setCurrent(name)
-	QueueRedraw()
-	return true
-end
-
 function Cmd.Cut()
 	return Cmd.Copy(true) and Cmd.Delete()
 end

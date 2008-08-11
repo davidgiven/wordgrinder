@@ -1,8 +1,8 @@
                                WORDGRINDER V0.2
                                ================
 
-                          (C) 2007-2008 David Given
-                                  2008-01-08
+                           © 2007-2008 David Given
+                                 2008-01-08
 
 
 INTRODUCTION
@@ -34,6 +34,9 @@ WordGrinder needs the following packages installed:
    available from:
      http://www.keplerproject.org/luafilesystem/index.html
 
+ - the iconv character set conversion library. This is shipped automatically
+   with most glibc-based systems.
+   
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
@@ -92,6 +95,10 @@ for the full text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.3: 2008-08-06: Lots more bug fixes. Added LaTeX export; troff
+export; next/previous word/character; table of contents; autosave.
+Fixed some issues with key binding. [...]
 
 WordGrinder 0.2: 2008-01-13: Lots of bug fixes. Added word count. Added about
 dialogue.
