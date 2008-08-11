@@ -127,7 +127,6 @@ DocumentSetClass =
 			Document = self.documents[1]
 		end
 
-		self:touch()
 		self.current = Document
 		ResizeScreen()
 	end,
