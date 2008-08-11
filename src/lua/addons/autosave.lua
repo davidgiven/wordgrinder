@@ -17,10 +17,10 @@ local function announce()
 	local settings = DocumentSet.addons.autosave
 
 	if settings.enabled then
-		NonmodalMessage("Autosave enabled. Next save in "..settings.period..
+		NonmodalMessage("Autosave is enabled. Next save in "..settings.period..
 			" minute"..optionals(settings.period)..".")
 	else
-		NonmodalMessage("Autosave disabled.")
+		NonmodalMessage("Autosave is disabled.")
 	end	
 end
 
