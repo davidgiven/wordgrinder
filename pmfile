@@ -108,6 +108,7 @@ wordgrinder_release_exe = group {
 		pm.install("src/lua/utils.lua",           "%BINDIR%/share/wordgrinder/utils.lua"),
 		pm.install("src/lua/addons/goto.lua",     "%BINDIR%/share/wordgrinder/addons/goto.lua"),
 		pm.install("src/lua/addons/autosave.lua", "%BINDIR%/share/wordgrinder/addons/autosave.lua"),
+		pm.install("src/lua/addons/docsetman.lua",   "%BINDIR%/share/wordgrinder/addons/docsetman.lua"),
 	}
 }
 
