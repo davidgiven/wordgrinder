@@ -300,21 +300,25 @@ do
 	local function cb(event, token)	
 		local fileformat = DocumentSet.fileformat or 1
 		
-		if (fileformat == FILEFORMAT) then
-			return
+		if (fileformat ~= FILEFORMAT) then
+			ModalMessage(nil, "You are trying to open a file belonging to an earlier "..
+				"version of WordGrinder. I can do that, but if you save the file again "..
+				"it may not work on the old version. Also, all keybindings defined in "..
+				"this file will get reset to their default values.")
+			
+			ImmediateMessage("Upgrading...")
+			FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
+				
+			DocumentSet.fileformat = FILEFORMAT
+			DocumentSet.menu = CreateMenu()
+			DocumentSet:touch()
 		end
 		
-		ModalMessage(nil, "You are trying to open a file belonging to an earlier "..
-			"version of WordGrinder. I can do that, but if you save the file again "..
-			"it may not work on the old version. Also, all keybindings defined in "..
-			"this file will get reset to their default values.")
+		-- This happens here because it must happen before the result of the
+		-- DocumentLoaded handlers fire, but after the DocumentUpgrade
+		-- handlers. It's not really a very elegant place for it.
 		
-		ImmediateMessage("Upgrading...")
-		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
-			
-		DocumentSet.fileformat = FILEFORMAT
-		DocumentSet.menu = CreateMenu()
-		DocumentSet:touch()
+		FireEvent(Event.RegisterAddons)
 	end
 	
 	AddEventListener(Event.DocumentLoaded, cb)
@@ -352,10 +356,9 @@ do
 			
 			DocumentSet.idletime = 3
 			
-			-- Initialise addons.
+			-- Add the addons setting table.
 			
 			DocumentSet.addons = {}
-			FireEvent(Event.RegisterAddons)
 		end
 	end
 	
