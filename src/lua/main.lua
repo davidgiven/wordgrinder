@@ -37,6 +37,7 @@ include "navigate.lua"
 include "addons/goto.lua"
 include "addons/autosave.lua"
 include "addons/docsetman.lua"
+include "addons/scrapbook.lua"
 
 include "menu.lua"
 
