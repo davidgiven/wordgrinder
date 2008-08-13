@@ -122,6 +122,12 @@ DocumentSetClass =
 	end,
 	
 	setCurrent = function(self, name)
+		-- Ensure any housekeeping on the current document gets done.
+		
+		if Document and Document.changed then
+			FireEvent(Event.Changed)
+		end
+
 		Document = self.documents[name]
 		if not Document then
 			Document = self.documents[1]
