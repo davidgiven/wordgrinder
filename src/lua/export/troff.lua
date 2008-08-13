@@ -93,7 +93,6 @@ local function callback(fp, document)
 		text = emit_text,
 		
 		notext = function(s)
-			fp:write('\\paragraph{}')
 		end,
 		
 		italic_on = function()
