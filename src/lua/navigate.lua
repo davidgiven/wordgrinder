@@ -37,6 +37,16 @@ function Cmd.GotoEndOfParagraph()
 	return Cmd.GotoEndOfWord()
 end
 
+function Cmd.GotoBeginningOfDocument()
+	Document.cp = 1
+	return Cmd.GotoBeginningOfParagraph()
+end
+
+function Cmd.GotoEndOfDocument()
+	Document.cp = #Document
+	return Cmd.GotoEndOfParagraph()
+end
+
 function Cmd.GotoPreviousParagraph()
 	if (Document.cp == 1) then
 		return false
@@ -165,6 +175,20 @@ function Cmd.InsertStringIntoWord(c)
 	
 	DocumentSet:touch()
 	QueueRedraw()
+	return true
+end
+
+function Cmd.InsertStringIntoParagraph(c)
+	local first = true
+	for word in c:gmatch("[^%s]+") do
+		if not first then
+			Cmd.SplitCurrentWord()
+		end
+		
+		Cmd.InsertStringIntoWord(word)
+		
+		first = false
+	end
 	return true
 end
 
