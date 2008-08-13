@@ -281,7 +281,7 @@ static const char* getkeyname(int k)
 		case 27: return "KEY_ESCAPE";
 	}
 
-	static char buffer[16];
+	static char buffer[32];
 	if (k < 32)
 	{
 		sprintf(buffer, "KEY_^%c", k+'A'-1);
@@ -294,7 +294,8 @@ static const char* getkeyname(int k)
 		return buffer;
 	}
 
-	return NULL;
+	sprintf(buffer, "KEY_UNKNOWN_%d", k);
+	return buffer;
 }
 
 static int getchar_cb(lua_State* L)
