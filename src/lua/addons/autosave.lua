@@ -94,7 +94,7 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.autosave = {
+		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {
 			enabled = false,
 			period = 10,
 			pattern = "%F.autosave.%T.wg" 
