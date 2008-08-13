@@ -96,6 +96,7 @@ local ExportMenu = addmenu("Export current document",
 local SettingsMenu = addmenu("Settings",
 {
     {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
+    {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
 })
 
 local FileMenu = addmenu("File",
@@ -116,18 +117,26 @@ local FileMenu = addmenu("File",
 	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
 })
 
+local ScrapbookMenu = addmenu("Scrapbook",
+{
+	{"EScut",      "T", "Cut to scrapbook",          nil,         Cmd.CutToScrapbook},
+	{"EScopy",     "C", "Copy to scrapbook",         nil,         Cmd.CopyToScrapbook},
+	{"ESpaste",    "P", "Paste to scrapbook",        nil,         Cmd.PasteToScrapbook},
+})
+
 local EditMenu = addmenu("Edit",
 {
-	{"ET",     "T", "Cut",                       "^X",        Cmd.Cut},
-	{"EC",     "C", "Copy",                      "^C",        Cmd.Copy},
-	{"EP",     "P", "Paste",                     "^V",        Cmd.Paste},
-	{"ED",     "D", "Delete",                    nil,         Cmd.Delete},
+	{"ET",         "T", "Cut",                       "^X",        Cmd.Cut},
+	{"EC",         "C", "Copy",                      "^C",        Cmd.Copy},
+	{"EP",         "P", "Paste",                     "^V",        Cmd.Paste},
+	{"ED",         "D", "Delete",                    nil,         Cmd.Delete},
 	"-",
-	{"EF",     "F", "Find and replace...",       "^F",        Cmd.Find},
-	{"EN",     "N", "Find next",                 "^K",        Cmd.FindNext},
-	{"ER",     "R", "Replace then find",         "^R",        Cmd.ReplaceThenFind},
+	{"EF",         "F", "Find and replace...",       "^F",        Cmd.Find},
+	{"EN",         "N", "Find next",                 "^K",        Cmd.FindNext},
+	{"ER",         "R", "Replace then find",         "^R",        Cmd.ReplaceThenFind},
 	"-",
-	{"EG",     "G", "Go to...",                  "^G",        Cmd.Goto},
+	{"EG",         "G", "Go to...",                  "^G",        Cmd.Goto},
+	{"Escrapbook", "S", "Scrapbook ▷",               nil,         ScrapbookMenu},
 })
 
 local MarginMenu = addmenu("Margin",
@@ -161,6 +170,8 @@ local NavigationMenu = addmenu("Navigation",
 	{"ZPP",    nil, "Goto previous paragraph",   "SUP",       Cmd.GotoPreviousParagraphW},
 	{"ZH",     nil, "Goto beginning of line",    "HOME",      Cmd.GotoBeginningOfLine},
 	{"ZE",     nil, "Goto end of line",          "END",       Cmd.GotoEndOfLine},
+	{"ZBD",    nil, "Goto beginning of document", nil,        Cmd.GotoBeginningOfDocument},
+	{"ZED",    nil, "Goto end of document",       nil,        Cmd.GotoEndOfDocument},
 	{"ZPGUP",  nil, "Page up",                   "PPAGE",     Cmd.GotoPreviousPage},
 	{"ZPGDN",  nil, "Page down",                 "NPAGE",     Cmd.GotoNextPage},
 	{"ZDPC",   nil, "Delete previous character", "BACKSPACE", Cmd.DeletePreviousChar},
