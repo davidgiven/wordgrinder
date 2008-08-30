@@ -117,7 +117,10 @@ Form.Checkbox = makewidgetclass {
 				
 		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 		
-		Write(self.realx2, self.realy1, s)		
+		SetBold()
+		Write(self.realx2, self.realy1, s)
+		SetNormal()
+				
 		if self.focus then
 			Goto(self.realx2, self.realy1)
 		end
@@ -135,7 +138,7 @@ Form.TextField = makewidgetclass {
 	end,
 	
 	draw = function(self)
-		Write(self.realx1, self.realy1 + 1, string_rep("⎺", self.realwidth))
+		Write(self.realx1, self.realy1 + 1, string_rep("▔", self.realwidth))
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		
 		-- If the cursor is to the left of the visible area, adjust.
@@ -161,7 +164,9 @@ Form.TextField = makewidgetclass {
 		-- Draw the visible bit of the string.
 			
 		local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
+		SetBold()
 		Write(self.realx1, self.realy1, s)
+		SetNormal()
 		
 		if self.focus then
 			Goto(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
