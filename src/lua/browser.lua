@@ -11,7 +11,6 @@ local int = math.floor
 local string_rep = string.rep
 local Write = wg.write
 local Goto = wg.goto
-local ClearToEOL = wg.cleartoeol
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
 local SetUnderline = wg.setunderline
