@@ -229,7 +229,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 				
-	["KEY_DC"] = function(self, key)
+	["KEY_DELETE"] = function(self, key)
 		local v = self.value:byte(self.cursor)
 		if v then
 			local w = GetBytesOfCharacter(self.value:byte(self.cursor))
@@ -365,7 +365,7 @@ Form.Browser = makewidgetclass {
 		return "nop"
 	end,
 	
-	["KEY_PPAGE"] = function(self, key)
+	["KEY_PGUP"] = function(self, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor - int(self.realheight/2)
 		if (self.cursor < 1) then
@@ -379,7 +379,7 @@ Form.Browser = makewidgetclass {
 		return "nop"
 	end,
 	
-	["KEY_NPAGE"] = function(self, key)
+	["KEY_PGDN"] = function(self, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor + int(self.realheight/2)
 		if (self.cursor > #self.data) then
