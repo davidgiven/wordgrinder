@@ -74,7 +74,7 @@ local function writetostream(object, fp)
 end
 
 function SaveDocumentSetRaw(filename)
-	local fp, e = io.open(filename, "w")
+	local fp, e = io.open(filename, "wb")
 	if not fp then
 		return false, e
 	end
@@ -230,7 +230,7 @@ local function loadfromstream(fp)
 end
 
 local function loaddocument(filename)
-	local fp, e = io.open(filename)
+	local fp, e = io.open(filename, "rb")
 	if not fp then
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
@@ -301,10 +301,12 @@ do
 		local fileformat = DocumentSet.fileformat or 1
 		
 		if (fileformat ~= FILEFORMAT) then
-			ModalMessage(nil, "You are trying to open a file belonging to an earlier "..
-				"version of WordGrinder. I can do that, but if you save the file again "..
-				"it may not work on the old version. Also, all keybindings defined in "..
-				"this file will get reset to their default values.")
+			ModalMessage("Upgrading document",
+				"You are trying to open a file belonging to an earlier "..
+				"version of WordGrinder. That's not a problem, but if you "..
+				"save the file again it may not work on the old version. "..
+				"Also, all keybindings defined in this file will get reset "..
+				"to their default values.")
 			
 			ImmediateMessage("Upgrading...")
 			FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
