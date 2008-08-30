@@ -5,7 +5,9 @@
 -- $Id$
 -- $URL$
 
-include "c.pm"
+include "tools/c.pm"
+include "tools/lua.pm"
+
 HOME = os.getenv("HOME")
 DATE = "5 August 2008"
 VERSION = "0.3"
@@ -25,21 +27,20 @@ PREFIX = HOME
 -- What build flags do you want to use? (Not including -g or -Os, which are
 -- added later.)
 
-CBUILDFLAGS = {"-Wall"}
+CBUILDFLAGS = {
+	'-Wall',
+	'--std=c99'
+}
 
 -- Any other build options go in these three sections. Note the lack of -l, -D
 -- or -I. We need the XOPEN stuff to make the wide-character curses library
 -- work. 
 
 CLIBRARIES = {
-	'ncursesw',
 	'm',
-	'lua5.1',
 }
 
 CDEFINES = {
-	'_XOPEN_SOURCE_EXTENDED',
-	'_XOPEN_SOURCE',
 	'VERSION="%VERSION%"',
 	'FILEFORMAT=%FILEFORMAT%',
 	'PREFIX="%PREFIX%"'
@@ -48,14 +49,23 @@ CDEFINES = {
 CINCLUDES = {
 	"/usr/include/ncursesw",
 	"/usr/include/lua5.1",
+	"src/c"
 }
+
+-- When doing a Windows build, what compiler should we use?
+
+if posix.stat("c:/") then
+	-- Attempt to autodetect cygwin, which is funny.
+	WINCCOMPILER = "gcc"
+	WINCBUILDFLAGS = {"-mno-cygwin"}
+else
+	-- Otherwise, change this to something appropriate.
+	WINCCOMPILER = "i586-mingw32msvc-gcc"
+	WINCBUILDFLAGS = EMPTY
+end
 
 -- There is nothing editable beyond this point.
 -----------------------------------------------------------------------------
-
--- The staging area for the installation.
-
-BINDIR = ".staging"
 
 -- Build the man page.
 
@@ -67,74 +77,191 @@ wordgrinder_man = simple {
 	file "wordgrinder.man"
 }
 
+-- The Lua runtime (only used on some platforms).
+
+luacore = group {
+	cfile "src/c/luacore/lapi.c",
+	cfile "src/c/luacore/lauxlib.c",
+	cfile "src/c/luacore/lbaselib.c",
+	cfile "src/c/luacore/lcode.c",
+	cfile "src/c/luacore/ldblib.c",
+	cfile "src/c/luacore/ldebug.c",
+	cfile "src/c/luacore/ldo.c",
+	cfile "src/c/luacore/ldump.c",
+	cfile "src/c/luacore/lfunc.c",
+	cfile "src/c/luacore/lgc.c",
+	cfile "src/c/luacore/linit.c",
+	cfile "src/c/luacore/liolib.c",
+	cfile "src/c/luacore/llex.c",
+	cfile "src/c/luacore/lmathlib.c",
+	cfile "src/c/luacore/lmem.c",
+	cfile "src/c/luacore/loadlib.c",
+	cfile "src/c/luacore/lobject.c",
+	cfile "src/c/luacore/lopcodes.c",
+	cfile "src/c/luacore/loslib.c",
+	cfile "src/c/luacore/lparser.c",
+	cfile "src/c/luacore/lstate.c",
+	cfile "src/c/luacore/lstring.c",
+	cfile "src/c/luacore/lstrlib.c",
+	cfile "src/c/luacore/ltable.c",
+	cfile "src/c/luacore/ltablib.c",
+	cfile "src/c/luacore/ltm.c",
+	cfile "src/c/luacore/lundump.c",
+	cfile "src/c/luacore/lvm.c",
+	cfile "src/c/luacore/lzio.c",
+}
+
+-- LuaFileSystem (only used on some platforms)
+
+lualfs = group {
+	cfile "src/c/lfs/lfs.c"
+}
+
+-- Build the Lua part of the program into a C file.
+
+wordgrinder_lua = simple {
+	outputs = {"%U%-%I%.c"},
+	command = "lua tools/multibin2c.lua script_table %in% > %out%",
+	
+	luafile "src/lua/_prologue.lua",
+	luafile "src/lua/utils.lua",
+	luafile "src/lua/events.lua",
+	luafile "src/lua/redraw.lua",
+	luafile "src/lua/document.lua",
+	luafile "src/lua/forms.lua",
+	luafile "src/lua/ui.lua",
+	luafile "src/lua/browser.lua",
+	luafile "src/lua/html.lua",
+	luafile "src/lua/margin.lua",
+	luafile "src/lua/fileio.lua",
+	luafile "src/lua/export.lua",
+	luafile "src/lua/export/text.lua",
+	luafile "src/lua/export/html.lua",
+	luafile "src/lua/export/latex.lua",
+	luafile "src/lua/export/troff.lua",
+	luafile "src/lua/import.lua",
+	luafile "src/lua/navigate.lua",
+	luafile "src/lua/addons/goto.lua",
+	luafile "src/lua/addons/autosave.lua",
+	luafile "src/lua/addons/docsetman.lua",
+	luafile "src/lua/addons/scrapbook.lua",
+	luafile "src/lua/menu.lua",
+	luafile "src/lua/main.lua",
+}
+
 -- Build the main program.
 
-wordgrinder_exe = cprogram {
+wordgrinder_core = group {
 	cfile "src/c/utils.c",
 	cfile "src/c/main.c",
 	cfile "src/c/lua.c",
-	cfile "src/c/screen.c",
 	cfile "src/c/word.c",
 	cfile "src/c/bit.c",
+	cfile "src/c/screen.c",
+	cfile { wordgrinder_lua }
 }
 
-wordgrinder_release_exe = group {
-	wordgrinder_exe,
-	wordgrinder_man,
-	CBUILDFLAGS = {PARENT, '-Os'},
-	CDEFINES = {PARENT, 'NDEBUG'},
+wordgrinder_curses_exe = cprogram {
+	wordgrinder_core,
+	cfile "src/c/dpy/cursesw.c",
+
+	CDEFINES = {
+		PARENT,
+		'_XOPEN_SOURCE_EXTENDED',
+		'_XOPEN_SOURCE',
+	},
 	
-	install = {
-		pm.install("%{return self.out[1]}%",      "%BINDIR%/bin/wordgrinder"),
-		pm.install("%{return self.out[2]}%",      "%BINDIR%/man/man1/wordgrinder.1"),
-		pm.install("src/lua/browser.lua",         "%BINDIR%/share/wordgrinder/browser.lua"),
-		pm.install("src/lua/document.lua",        "%BINDIR%/share/wordgrinder/document.lua"),
-		pm.install("src/lua/export.lua",          "%BINDIR%/share/wordgrinder/export.lua"),
-		pm.install("src/lua/export/text.lua",     "%BINDIR%/share/wordgrinder/export/text.lua"),
-		pm.install("src/lua/export/html.lua",     "%BINDIR%/share/wordgrinder/export/html.lua"),
-		pm.install("src/lua/export/latex.lua",    "%BINDIR%/share/wordgrinder/export/latex.lua"),
-		pm.install("src/lua/export/troff.lua",    "%BINDIR%/share/wordgrinder/export/troff.lua"),
-		pm.install("src/lua/fileio.lua",          "%BINDIR%/share/wordgrinder/fileio.lua"),
-		pm.install("src/lua/forms.lua",           "%BINDIR%/share/wordgrinder/forms.lua"),
-		pm.install("src/lua/html.lua",            "%BINDIR%/share/wordgrinder/html.lua"),
-		pm.install("src/lua/events.lua",          "%BINDIR%/share/wordgrinder/events.lua"),
-		pm.install("src/lua/margin.lua",          "%BINDIR%/share/wordgrinder/margin.lua"),
-		pm.install("src/lua/import.lua",          "%BINDIR%/share/wordgrinder/import.lua"),
-		pm.install("src/lua/main.lua",            "%BINDIR%/share/wordgrinder/main.lua"),
-		pm.install("src/lua/menu.lua",            "%BINDIR%/share/wordgrinder/menu.lua"),
-		pm.install("src/lua/navigate.lua",        "%BINDIR%/share/wordgrinder/navigate.lua"),
-		pm.install("src/lua/redraw.lua",          "%BINDIR%/share/wordgrinder/redraw.lua"),
-		pm.install("src/lua/ui.lua",              "%BINDIR%/share/wordgrinder/ui.lua"),
-		pm.install("src/lua/utils.lua",           "%BINDIR%/share/wordgrinder/utils.lua"),
-		pm.install("src/lua/addons/goto.lua",     "%BINDIR%/share/wordgrinder/addons/goto.lua"),
-		pm.install("src/lua/addons/autosave.lua", "%BINDIR%/share/wordgrinder/addons/autosave.lua"),
-		pm.install("src/lua/addons/docsetman.lua",   "%BINDIR%/share/wordgrinder/addons/docsetman.lua"),
+	CLIBRARIES = {
+		PARENT,
+		'ncursesw',
+		'lua5.1'
 	}
 }
 
+wordgrinder_w32_exe = cprogram {
+	luacore,
+	lualfs,
+	wordgrinder_core,
+	cfile "src/c/emu/wcwidth.c",
+	cfile "src/c/dpy/w32.c",
+
+	CCOMPILER = "%WINCCOMPILER% %WINCBUILDFLAGS%",
+	
+	CDEFINES = {
+		PARENT,
+		"EMULATED_WCWIDTH",
+		"BUILTIN_LFS",
+		"WIN32"
+	},
+
+	CINCLUDES = {
+		PARENT,
+		"src/c/luacore"
+	},
+}
+
+wordgrinder_w32_release_exe = group {
+	wordgrinder_w32_exe,
+	CBUILDFLAGS = {PARENT, '-Os'},
+	LUABUILDFLAGS = {PARENT, '-s'},
+	CDEFINES = {PARENT, 'NDEBUG'},
+	CLINKFLAGS = {PARENT, '-s'},
+	
+	install = pm.install("wordgrinder.exe")
+}
+
+wordgrinder_w32_debug_exe = group {
+	wordgrinder_w32_exe,
+	CBUILDFLAGS = {PARENT, '-g'},
+	
+	install = pm.install("wordgrinder-debug.exe")
+}
+
+wordgrinder_release_exe = group {
+	wordgrinder_curses_exe,
+	CBUILDFLAGS = {PARENT, '-Os'},
+	LUABUILDFLAGS = {PARENT, '-s'},
+	CDEFINES = {PARENT, 'NDEBUG'},
+	CLINKFLAGS = {PARENT, '-s'},
+	
+	install = pm.install("wordgrinder")
+}
+
 wordgrinder_debug_exe = group {
-	wordgrinder_exe,
+	wordgrinder_curses_exe,
 	CBUILDFLAGS = {PARENT, '-g'},
 	
 	install = pm.install("wordgrinder-debug")
 }
 
-wordgrinder_both_exe = group {
+default = group {
+	wordgrinder_debug_exe,
 	wordgrinder_release_exe,
-	wordgrinder_debug_exe
 }
 
-default = wordgrinder_both_exe
+windows = group {
+	wordgrinder_w32_debug_exe,
+	wordgrinder_w32_release_exe,
+}	
+
+all = group {
+	wordgrinder_debug_exe,
+	wordgrinder_release_exe,
+	wordgrinder_w32_debug_exe,
+	wordgrinder_w32_release_exe
+}
 
 -- Once built, do the installation, rather crudely. FIXME.
 
 install = simple {
 	outputs = {"dummy"},
-	command = "",
-	__dobuild = function(self, inputs, outputs)
-		os.execute("mkdir -p "..PREFIX)
-		os.execute("(cd "..BINDIR.." && tar chf - .) | (cd "..PREFIX.." && tar xvf -)")
-	end,
+	command = {
+		"install -D -m 755 %in[1]% %PREFIX%/bin/wordgrinder",
+		"install -D -m 644 %in[2]% %PREFIX%/man/man1/wordgrinder.1",
+		"install -D -m 644 %in[3]% %PREFIX%/share/doc/wordgrinder/README.wg"
+	},
 	
-	wordgrinder_both_exe
+	wordgrinder_release_exe,
+	wordgrinder_man,
+	file "README.wg"
 }
