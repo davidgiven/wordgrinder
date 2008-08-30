@@ -397,38 +397,42 @@ Form.Browser = makewidgetclass {
 local standard_actions =
 {
 	["KEY_UP"] = function(dialogue, key)
-		local f = dialogue.focus - 1
-		while (f ~= dialogue.focus) do
-			if (f == 0) then
-				f = #dialogue
+		if dialogue.focus then
+			local f = dialogue.focus - 1
+			while (f ~= dialogue.focus) do
+				if (f == 0) then
+					f = #dialogue
+				end
+	
+				local widget = dialogue[f]
+				if widget.focusable then
+					dialogue.focus = f
+					return "redraw"
+				end
+			
+				f = f - 1
 			end
-
-			local widget = dialogue[f]
-			if widget.focusable then
-				dialogue.focus = f
-				return "redraw"
-			end
-		
-			f = f - 1
 		end
 		
 		return "nop"
 	end,
 	
 	["KEY_DOWN"] = function(dialogue, key)
-		local f = dialogue.focus + 1
-		while (f ~= dialogue.focus) do
-			if (f > #dialogue) then
-				f = 1
+		if dialogue.focus then
+			local f = dialogue.focus + 1
+			while (f ~= dialogue.focus) do
+				if (f > #dialogue) then
+					f = 1
+				end
+	
+				local widget = dialogue[f]
+				if widget.focusable then
+					dialogue.focus = f
+					return "redraw"
+				end
+			
+				f = f + 1
 			end
-
-			local widget = dialogue[f]
-			if widget.focusable then
-				dialogue.focus = f
-				return "redraw"
-			end
-		
-			f = f + 1
 		end
 		
 		return "nop"
