@@ -70,15 +70,15 @@ function WordProcessor(filename)
 		end
 		
 		FireEvent(Event.WaitingForUser)
-		local c = nil
-		while not c do
+		local c = "KEY_TIMEOUT"
+		while (c == "KEY_TIMEOUT") do
 			if redrawpending then
 				RedrawScreen()
 				redrawpending = false
 			end
 		
 			c = wg.getchar(DocumentSet.idletime)
-			if not c then
+			if (c == "KEY_TIMEOUT") then
 				FireEvent(Event.Idle)
 			end
 		end

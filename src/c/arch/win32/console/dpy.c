@@ -13,6 +13,7 @@
 #define VKM_SHIFT 0x100
 #define VKM_CTRL 0x200
 #define VK_RESIZE 0x1000
+#define VK_TIMEOUT 0x1001
 
 static HANDLE cin = INVALID_HANDLE_VALUE;
 static HANDLE cout = INVALID_HANDLE_VALUE;
@@ -223,7 +224,7 @@ uni_t dpy_getchar(int timeout)
 		DWORD numread;
 		if (timeout != -1)
 			if (WaitForSingleObject(cin, timeout*1000) == WAIT_TIMEOUT)
-				return 0;
+				return -VK_TIMEOUT;
 
 		ReadConsoleInputW(cin, &buffer, 1, &numread);
 
@@ -249,8 +250,11 @@ uni_t dpy_getchar(int timeout)
 
 const char* dpy_getkeyname(uni_t k)
 {
-	if (k == -VK_RESIZE)
-		return "KEY_RESIZE";
+	switch (-k)
+	{
+		case VK_RESIZE:      return "KEY_RESIZE";
+		case VK_TIMEOUT:     return "KEY_TIMEOUT";
+	}
 
 	int mods = -k;
 	int key = (-k & 0xFF);
