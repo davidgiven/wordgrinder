@@ -19,11 +19,13 @@ local table_concat = table.concat
 
 function Cmd.GotoBeginningOfWord()
 	Document.co = 1
+	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoEndOfWord()
 	Document.co = Document[Document.cp][Document.cw].text:len() + 1
+	QueueRedraw()
 	return true
 end
 
@@ -49,6 +51,7 @@ end
 
 function Cmd.GotoPreviousParagraph()
 	if (Document.cp == 1) then
+		QueueRedraw()
 		return false
 	end
 	
@@ -62,6 +65,7 @@ end
 	
 function Cmd.GotoNextParagraph()
 	if (Document.cp == #Document) then
+		QueueRedraw()
 		return false
 	end
 
@@ -83,6 +87,7 @@ end
 
 function Cmd.GotoPreviousWord()
 	if (Document.cw == 1) then
+		QueueRedraw()
 		return false
 	end
 	
@@ -96,6 +101,7 @@ end
 function Cmd.GotoNextWord()
 	local p = Document[Document.cp]
 	if (Document.cw == #p) then
+		QueueRedraw()
 		return false
 	end
 	
