@@ -4,6 +4,8 @@
                            © 2007-2008 David Given
                                  2008-01-08
 
+                                Unix version
+
 
 INTRODUCTION
 ============
@@ -97,20 +99,21 @@ REVISION HISTORY
 ================
 
 WordGrinder 0.3: 2008-08-06: Lots more bug fixes. Added LaTeX export; troff
-export; next/previous word/character; table of contents; autosave.
-Fixed some issues with key binding. [...]
+export; next/previous word/character; table of contents; autosave; scrapbook;
+Windows console port. Fixed some issues with key binding. Lua bytecode is now
+embedded in the executable, making it self contained. [...]
 
 WordGrinder 0.2: 2008-01-13: Lots of bug fixes. Added word count. Added about
 dialogue.
- 
+
 WordGrinder 0.1: 2007-10-14: Initial release.
 
 THE AUTHOR
 ==========
 
-Prime Mover was written by me, David Given. You may contact me at
+WordGrinder was written by me, David Given. You may contact me at
 dg@cowlark.com, or visit my website at http://www.cowlark.com. There may or
 may not be anything interesting there.
 
 
-$Id$
+$Id: README 79 2008-08-11 21:22:56Z dtrg $
