@@ -13,6 +13,8 @@
 #include <sys/time.h>
 #include <time.h>
 
+#define KEY_TIMEOUT (KEY_MAX + 1)
+
 void dpy_init(const char* argv[])
 {
 }
@@ -109,7 +111,7 @@ uni_t dpy_getchar(int timeout)
 
 			int delay = ((u_int64_t) timeout*1000) + nowms - thenms;
 			if (delay <= 0)
-				return 0;
+				return -KEY_TIMEOUT;
 
 			timeout(delay);
 		}
@@ -120,7 +122,7 @@ uni_t dpy_getchar(int timeout)
 		int r = get_wch(&c);
 
 		if (r == ERR) /* timeout */
-			return 0;
+			return -KEY_TIMEOUT;
 
 		if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
 			return -c;
@@ -136,6 +138,7 @@ const char* dpy_getkeyname(uni_t k)
 
 	switch (k)
 	{
+		case KEY_TIMEOUT: return "KEY_TIMEOUT";
 		case KEY_DOWN: return "KEY_DOWN";
 		case KEY_UP: return "KEY_UP";
 		case KEY_LEFT: return "KEY_LEFT";

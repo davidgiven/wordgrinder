@@ -185,13 +185,7 @@ static int getchar_cb(lua_State* L)
 	for (;;)
 	{
 		uni_t c = dpy_getchar(t);
-		if (c == 0) /* timeout */
-		{
-			lua_pushnil(L);
-			break;
-		}
-
-		if (c < 0)
+		if (c <= 0)
 		{
 			const char* s = dpy_getkeyname(c);
 			if (s)
