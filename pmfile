@@ -62,6 +62,7 @@ else
 	-- Otherwise, change this to something appropriate.
 	WINCCOMPILER = "i586-mingw32msvc-gcc"
 	WINCBUILDFLAGS = EMPTY
+	WINRESCOMPILER = "i586-mingw32msvc-windres"
 end
 
 -- There is nothing editable beyond this point.
@@ -163,7 +164,7 @@ wordgrinder_core = group {
 
 wordgrinder_curses_exe = cprogram {
 	wordgrinder_core,
-	cfile "src/c/dpy/cursesw.c",
+	cfile "src/c/arch/unix/cursesw/dpy.c",
 
 	CDEFINES = {
 		PARENT,
@@ -178,12 +179,19 @@ wordgrinder_curses_exe = cprogram {
 	}
 }
 
+rcfile = simple_with_clike_dependencies {
+	class = "rcfile",
+	command = "%WINRESCOMPILER% %in% %out%",
+	outputs = {"%U%-%I%.o"}
+}
+
 wordgrinder_w32_exe = cprogram {
 	luacore,
 	lualfs,
 	wordgrinder_core,
 	cfile "src/c/emu/wcwidth.c",
-	cfile "src/c/dpy/w32.c",
+	cfile "src/c/arch/win32/console/dpy.c",
+	rcfile "src/c/arch/win32/wordgrinder.rc",
 
 	CCOMPILER = "%WINCCOMPILER% %WINCBUILDFLAGS%",
 	
