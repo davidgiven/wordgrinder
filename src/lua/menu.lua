@@ -141,21 +141,21 @@ local EditMenu = addmenu("Edit",
 
 local MarginMenu = addmenu("Margin",
 {
-	{"SM1",    "H", "Hide margin",               "",          function() Cmd.SetViewMode(1) end},
-	{"SM2",    "S", "Show paragraph styles",     "",          function() Cmd.SetViewMode(2) end},
-	{"SM3",    "N", "Show paragraph numbers",    "",          function() Cmd.SetViewMode(3) end},
-	{"SM4",    "W", "Show paragraph word counts", "",         function() Cmd.SetViewMode(4) end},
+	{"SM1",    "H", "Hide margin",                nil,          function() Cmd.SetViewMode(1) end},
+	{"SM2",    "S", "Show paragraph styles",      nil,          function() Cmd.SetViewMode(2) end},
+	{"SM3",    "N", "Show paragraph numbers",     nil,          function() Cmd.SetViewMode(3) end},
+	{"SM4",    "W", "Show paragraph word counts", nil,         function() Cmd.SetViewMode(4) end},
 })
 	
 local StyleMenu = addmenu("Style",
 {
-	{"SB",     "I", "Set italic",                "^I",        function() Cmd.ToggleStyle("i") end},
-	{"SU",     "U", "Set underline",             "^U",        function() Cmd.ToggleStyle("u") end},
-	{"SO",     "O", "Set plain",                 "^O",        function() Cmd.ToggleStyle("o") end},
+	{"SB",     "I", "Set italic",                 "^I",        function() Cmd.ToggleStyle("i") end},
+	{"SU",     "U", "Set underline",              "^U",        function() Cmd.ToggleStyle("u") end},
+	{"SO",     "O", "Set plain",                  "^O",        function() Cmd.ToggleStyle("o") end},
 	"-",
-	{"SP",     "P", "Change paragraph style ▷",  "^P",        ParagraphStylesMenu},
-	{"SM",     "M", "Set margin mode ▷",         "",          MarginMenu},
-	{"SS",     "S", "Toggle status bar",         "^W",        Cmd.ToggleStatusBar},
+	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
+	{"SM",     "M", "Set margin mode ▷",          nil,          MarginMenu},
+	{"SS",     "S", "Toggle status bar",          "^W",        Cmd.ToggleStatusBar},
 })
 
 local NavigationMenu = addmenu("Navigation",
