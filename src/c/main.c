@@ -16,12 +16,13 @@ int main(int argc, const char* argv[])
 	setlocale(LC_ALL, "");
 	setlocale(LC_COLLATE, "C");
 	script_init();
-	screen_init();
+	screen_init(argv);
 	word_init();
 	bit_init();
 	utils_init();
-	
-	script_load(LUA_SRC_DIR "main.lua", argv);
-	
+
+	script_load_from_table(script_table);
+	script_run(argv);
+
 	return 0;
 }

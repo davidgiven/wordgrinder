@@ -7,7 +7,6 @@
  */
 
 #include "globals.h"
-#include <curses.h>
 #include <ctype.h>
 
 /* A 'word' is a string with embedded text style codes.
@@ -31,16 +30,16 @@ enum
 
 #define OVERHEAD (3*2 + 1)
 
-/* Convert a style bitmask into a curses bitmask. */
+/* Convert a style bitmask into a dpy bitmask. */
 
-static int styletocurses(int c)
+static int styletodpy(int c)
 {
 	int attr = 0;
 
 	if (c & (1<<STYLE_ITALIC))
-		attr |= A_BOLD;
+		attr |= DPY_BOLD;
 	if (c & (1<<STYLE_UNDERLINE))
-		attr |= A_UNDERLINE;
+		attr |= DPY_UNDERLINE;
 
 	return attr;
 }
@@ -114,47 +113,44 @@ static int writestyled_cb(lua_State* L)
 	const char* revoff = s + lua_tointeger(L, 6) - 1;
 	int sor = lua_tointeger(L, 7);
 
-	sor = styletocurses(sor);
+	sor = styletodpy(sor);
 
 	int attr = sor;
 	int mark = 0;
 
-	attrset(sor);
+	dpy_setattr(0, sor);
 	bool first = true;
 	while (s < send)
 	{
 		if (s == revon)
 		{
-			mark = A_REVERSE;
-			attrset(attr | mark);
+			mark = DPY_REVERSE;
+			dpy_setattr(0, attr | mark);
 		}
 		if (s == revoff)
 		{
 			mark = 0;
-			attrset(attr | mark);
+			dpy_setattr(0, attr | mark);
 		}
 
 		wchar_t c = readu8(&s);
 
 		if (iswcntrl(c))
 		{
-			attr = styletocurses(c) | sor;
-			attrset(attr | mark);
+			attr = styletodpy(c) | sor;
+			dpy_setattr(0, attr | mark);
 		}
 		else
 		{
 			if (first && oattr && ((attr | mark) == oattr))
-			{
-				static const wchar_t cc = 160; /* non-breaking space */
-				mvaddnwstr(y, x-1, &cc, 1);
-			}
+				dpy_writechar(x-1, y, 160); /* non-breaking space */
 
-			mvaddnwstr(y, x, &c, 1);
+			dpy_writechar(x, y, c);
 			x += wcwidth(c);
 			first = false;
 		}
 	}
-	attrset(0);
+	dpy_setattr(0, 0);
 
 	lua_pushnumber(L, attr | mark);
 	return 1;

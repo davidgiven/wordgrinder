@@ -7,7 +7,6 @@
  */
 
 #include "globals.h"
-#include <iconv.h>
 
 static const uint32_t offsets[6] = {
     0x00000000UL, 0x00003080UL, 0x000E2080UL,
@@ -38,12 +37,12 @@ int getu8bytes(char c)
 	return trailing_bytes[(unsigned char) c] + 1;
 }
 
-wint_t readu8(const char** srcp)
+uni_t readu8(const char** srcp)
 {
 	const char* src = *srcp;
 	int nb = trailing_bytes[*(unsigned char*)src];
 
-	wint_t ch = 0;
+	uni_t ch = 0;
 	switch (nb) {
 	    /* these fall through deliberately */
 		case 3: ch += (unsigned char)*src++; ch <<= 6;
@@ -51,16 +50,16 @@ wint_t readu8(const char** srcp)
 		case 1: ch += (unsigned char)*src++; ch <<= 6;
 		case 0: ch += (unsigned char)*src++;
 	}
-	
+
 	ch -= offsets[nb];
 	*srcp = src;
 	return ch;
 }
 
-void writeu8(char** destp, wint_t ch)
+void writeu8(char** destp, uni_t ch)
 {
 	char* dest = *destp;
-	
+
     if (ch < 0x80)
     {
         *dest++ = (char)ch;
@@ -83,7 +82,7 @@ void writeu8(char** destp, wint_t ch)
         *dest++ = ((ch>>6) & 0x3F) | 0x80;
         *dest++ = (ch & 0x3F) | 0x80;
     }
-    
+
     *destp = dest;
 }
 
@@ -91,44 +90,27 @@ static int readu8_cb(lua_State* L)
 {
 	const char* s = luaL_checkstring(L, 1);
 	int offset = lua_tointeger(L, 2);
-	wint_t c;
-	
+	uni_t c;
+
 	if (offset > 0)
 		offset--;
 	s = s + offset;
 	c = readu8(&s);
-	
+
 	lua_pushnumber(L, c);
 	return 1;
 }
 
 static int writeu8_cb(lua_State* L)
 {
-	wint_t c = luaL_checkinteger(L, 1);
+	uni_t c = luaL_checkinteger(L, 1);
 	static char buffer[8];
 	char* s = buffer;
-	
+
 	writeu8(&s, c);
 	*s = '\0';
 	lua_pushstring(L, buffer);
 	return 1;
-}
-
-static iconv_t transcoder = NULL;
-
-static int setencodings_cb(lua_State* L)
-{
-	const char* from_encoding = luaL_checkstring(L, 1);
-	const char* to_encoding = luaL_checkstring(L, 2);
-	
-	if (transcoder)
-	{
-		iconv_close(transcoder);
-		transcoder = NULL;
-	}
-	
-	transcoder = iconv_open(to_encoding, from_encoding);
-	return 0;
 }
 
 static int transcode_cb(lua_State* L)
@@ -138,27 +120,19 @@ static int transcode_cb(lua_State* L)
 
 	size_t outputbuffersize = inputbuffersize*2 + 32;
 	char outputbuffer[outputbuffersize]; /* should fit everything */
-	
-	char* in = (char*) inputbuffer;
-	size_t inleft = inputbuffersize;
+
+	const char* in = (char*) inputbuffer;
+	const char* inend = inputbuffer + inputbuffersize;
+
 	char* out = outputbuffer;
-	size_t outleft = outputbuffersize;
-	
-	while (inleft > 0)
+	//char* outend = outputbuffer + outputbuffersize - 4;
+
+	while (in < inend)
 	{
-		size_t e = iconv(transcoder, &in, &inleft, &out, &outleft);
-		if (e == -1)
-		{
-			assert(errno != E2BIG);
-			if ((errno == EILSEQ) || (errno == EINVAL))
-			{
-				*out++ = '?';
-				outleft--;
-				in++;
-			}
-		}
+		int c = readu8(&in);
+		writeu8(&out, c);
 	}
-	
+
 	lua_pushlstring(L, outputbuffer, out - outputbuffer);
 	return 1;
 }
@@ -169,10 +143,9 @@ void utils_init(void)
 	{
 		{ "readu8",                    readu8_cb },
 		{ "writeu8",                   writeu8_cb },
-		{ "setencodings",              setencodings_cb },
 		{ "transcode",                 transcode_cb },
 		{ NULL,                        NULL }
 	};
-	
+
 	luaL_register(L, "wg", funcs);
 }
