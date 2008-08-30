@@ -8,7 +8,7 @@
 local int = math.floor
 local Write = wg.write
 local Goto = wg.goto
-local ClearToEOL = wg.cleartoeol
+local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
 local SetUnderline = wg.setunderline
@@ -73,8 +73,8 @@ local function redrawstatus()
 		
 		SetReverse()
 		SetBold()	
+		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
-		ClearToEOL()
 		
 		local s = {
 			string.format("│ P: %d/%d ", Document.cp, #Document),
@@ -92,8 +92,8 @@ local function redrawstatus()
 		SetReverse()
 
 		for i = #messages, 1, -1 do
+			ClearArea(0, y, ScreenWidth-1, y)
 			Write(0, y, messages[i])
-			ClearToEOL()
 			y = y - 1
 		end
 
