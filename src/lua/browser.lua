@@ -64,7 +64,7 @@ function FileBrowser(title, message, saving, default)
 	
 	local attr, e = lfs.attributes(f)
 	if not saving and e then
-		ModalMessage("File not found", "The file '"..f.."' does not exist (or you do not have permission to access it).")
+		ModalMessage("File inaccessible", "The file '"..f.."' could not be accessed: "..e)
 		return FileBrowser(title, message, saving)
 	end
 
@@ -78,13 +78,13 @@ function FileBrowser(title, message, saving, default)
 		if (r == nil) then
 			return nil
 		elseif r then
-			return f
+			return lfs.currentdir().."/"..f
 		else
 			return FileBrowser(title, message, saving)
 		end
 	end
 	
-	return f
+	return lfs.currentdir().."/"..f
 end
 
 function Browser(title, topmessage, bottommessage, data, default, defaultn)
