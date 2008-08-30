@@ -63,8 +63,11 @@ local function redrawstatus()
 	local y = ScreenHeight - 1
 
 	if DocumentSet.statusbar then
+		local _, _, leafname = (DocumentSet.name or "(unnamed)"):
+			find("([^/]+)$")
+			
 		local s = {
-			DocumentSet.name or "(unnamed)",
+			leafname,
 			"[",
 			Document.name or "",
 			"] ",
