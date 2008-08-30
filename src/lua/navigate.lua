@@ -525,7 +525,7 @@ function Cmd.ChangeParagraphStyle(style)
 	
 	DocumentSet:touch()
 	QueueRedraw()
-	return true
+	return Cmd.UnsetMark()
 end
 
 function Cmd.ToggleMark()
