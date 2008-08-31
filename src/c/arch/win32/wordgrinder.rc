@@ -6,4 +6,4 @@
  * $URL: https://wordgrinder.svn.sourceforge.net/svnroot/wordgrinder/wordgrinder/src/c/screen.c $
  */
 
-101 ICON DISCARDABLE "src/c/arch/win32/icon32.ico"
+101 ICON DISCARDABLE "src/c/arch/win32/icon.ico"
