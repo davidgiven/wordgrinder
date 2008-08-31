@@ -10,10 +10,13 @@
 #include <string.h>
 #include <windows.h>
 
-#define VKM_SHIFT 0x100
-#define VKM_CTRL 0x200
-#define VK_RESIZE 0x1000
-#define VK_TIMEOUT 0x1001
+#define VKM_SHIFT      0x100
+#define VKM_CTRL       0x200
+#define VKM_CTRLASCII  0x400
+#define VK_RESIZE     0x1000
+#define VK_TIMEOUT    0x1001
+
+#define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
 static HANDLE cin = INVALID_HANDLE_VALUE;
 static HANDLE cout = INVALID_HANDLE_VALUE;
@@ -170,26 +173,52 @@ static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
 	if (!event->bKeyDown)
 		return false;
 
+	int vk = event->wVirtualKeyCode;
+	if ((vk == VK_SHIFT) || (vk == VK_CONTROL) || (vk == VK_MENU))
+		return false;
+
 	uni_t c = event->uChar.UnicodeChar;
 	int state = event->dwControlKeyState;
 
 	*r1 = *r2 = 0;
 
-	if (!iswprint(c) || (c == 9))
+	/* Special handling for CTRL+SPACE. */
+
+	if ((vk == VK_SPACE) && (state & CTRL_PRESSED))
 	{
-		int vk = event->wVirtualKeyCode;
+		int mods = VKM_CTRLASCII;
+		if (state & SHIFT_PRESSED)
+			mods |= VK_SHIFT;
+
+		*r1 = -(mods | 0);
+		return true;
+	}
+
+	/* Distinguish between ^I, ^M, TAB and RETURN... */
+
+	if ((vk == VK_TAB) || (vk == VK_RETURN))
+		c = 0;
+
+	/* CTRL + printable character. */
+
+	if ((c > 0) && (c < 32))
+	{
+		int mods = VKM_CTRLASCII;
+		if (state & SHIFT_PRESSED)
+			mods |= VK_SHIFT;
+
+		*r1 = -(mods | c);
+		return true;
+	}
+
+	/* Control keys. */
+
+	if (c == 0)
+	{
 		int mods = 0;
 
-		if ((vk == VK_SHIFT) || (vk == VK_CONTROL) || (vk == VK_MENU))
-			return false;
-
 		if (state & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-		{
-			if (vk == ' ')
-				vk = '@';
-
 			mods |= VKM_CTRL;
-		}
 
 		if (state & SHIFT_PRESSED)
 			mods |= VKM_SHIFT;
@@ -198,15 +227,17 @@ static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
 		return true;
 	}
 
-	if (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
-	{
-		*r1 = -27;
-		*r2 = c;
-		return true;
-	}
+	/* Anything else must be printable. */
 
 	if (wcwidth(c) > 0)
 	{
+		if (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
+		{
+			*r1 = -27;
+			*r2 = c;
+			return true;
+		}
+
 		*r1 = c;
 		return true;
 	}
@@ -258,6 +289,15 @@ const char* dpy_getkeyname(uni_t k)
 
 	int mods = -k;
 	int key = (-k & 0xFF);
+	static char buffer[32];
+
+	if (mods & VKM_CTRLASCII)
+	{
+		sprintf(buffer, "KEY_%s^%c",
+				(mods & VKM_SHIFT) ? "S" : "",
+				key + 64);
+		return buffer;
+	}
 
 	const char* template = NULL;
 	switch (key)
@@ -280,7 +320,6 @@ const char* dpy_getkeyname(uni_t k)
 		case VK_ESCAPE:      template = "ESCAPE"; break;
 	}
 
-	static char buffer[32];
 	if (template)
 	{
 		sprintf(buffer, "KEY_%s%s%s",
@@ -290,20 +329,12 @@ const char* dpy_getkeyname(uni_t k)
 		return buffer;
 	}
 
-	if ((key >= '@') && (key <= '_'))
-	{
-		sprintf(buffer, "KEY_%s^%c",
-				(mods & VKM_SHIFT) ? "S" : "",
-				key);
-		return buffer;
-	}
-
 	if ((key >= VK_F1) && (key <= (VK_F24)))
 	{
 		sprintf(buffer, "KEY_%s%sF%d",
 				(mods & VKM_SHIFT) ? "S" : "",
 				(mods & VKM_CTRL) ? "C" : "",
-				key - VK_F1);
+				key - VK_F1 + 1);
 		return buffer;
 	}
 
