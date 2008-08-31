@@ -219,7 +219,9 @@ file to load on startup. If not given, you get a blank document instead.
 		end
 	end
 	
-	if not filename:find("^/") and not filename:find("^[a-zA-Z]:[/\\]") then
+	if filename and
+			not filename:find("^/") and
+			not filename:find("^[a-zA-Z]:[/\\]") then
 		filename = lfs.currentdir() .. "/" .. filename
 	end
 	
