@@ -58,6 +58,7 @@ if posix.stat("c:/") then
 	-- Attempt to autodetect cygwin, which is funny.
 	WINCCOMPILER = "gcc"
 	WINCBUILDFLAGS = {"-mno-cygwin"}
+	WINRESCOMPILER = "windres"
 else
 	-- Otherwise, change this to something appropriate.
 	WINCCOMPILER = "i586-mingw32msvc-gcc"
