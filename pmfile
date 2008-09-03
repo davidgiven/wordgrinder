@@ -69,6 +69,16 @@ end
 -- There is nothing editable beyond this point.
 -----------------------------------------------------------------------------
 
+-- Utility.
+
+rename = simple {
+	class = "rename",
+	command = {
+		"cp %in% %out%"
+	},
+	outputs = {"%U%-%I%/%name%"}
+}
+
 -- Build the man page.
 
 wordgrinder_man = simple {
@@ -253,6 +263,37 @@ windows = group {
 	wordgrinder_w32_release_exe,
 }	
 
+windows_package = simple {
+	class = "windows_package",
+	command = {
+		"rm -f %out%",
+		"zip -9j %out% %in%"
+	},
+	outputs = {"%U%-%I%.zip"},
+	
+	file "README.wg",
+	file "README.Windows.txt",
+	file "extras/DejaVuSansMono-license.txt",
+	file "extras/DejaVuSansMono.reg",
+	file "extras/DejaVuSansMono.ttf",
+}
+	
+windows_debug_zip = windows_package {
+	rename {
+		name = "wordgrinder_debug.exe",
+		wordgrinder_w32_debug_exe,
+	},
+	install = pm.install("windows-debug.zip")	
+}
+	
+windows_release_zip = windows_package {
+	rename {
+		name = "wordgrinder.exe",
+		wordgrinder_w32_release_exe,
+	},
+	install = pm.install("windows.zip")	
+}
+ 
 all = group {
 	wordgrinder_debug_exe,
 	wordgrinder_release_exe,
