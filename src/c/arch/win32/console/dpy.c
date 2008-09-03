@@ -194,9 +194,12 @@ static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
 		return true;
 	}
 
-	/* Distinguish between ^I, ^M, TAB and RETURN... */
+	/* Distinguish between CTRL+char and special keys... */
 
-	if ((vk == VK_TAB) || (vk == VK_RETURN))
+	if ((vk == VK_TAB) ||
+			(vk == VK_RETURN) ||
+			(vk == VK_BACK) ||
+			(vk == VK_ESCAPE))
 		c = 0;
 
 	/* CTRL + printable character. */
