@@ -9,7 +9,7 @@ include "tools/c.pm"
 include "tools/lua.pm"
 
 HOME = os.getenv("HOME")
-DATE = "5 August 2008"
+DATE = "7 September 2008"
 VERSION = "0.3"
 FILEFORMAT = 3
 
