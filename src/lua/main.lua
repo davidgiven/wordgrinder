@@ -138,7 +138,8 @@ function Main(...)
 			stdout:write([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
-   -h    --help        Displays this message.
+   -h    --help            Displays this message.
+         --lua file.lua    Loads and executes file.lua before startup 
 
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
@@ -148,6 +149,19 @@ file to load on startup. If not given, you get a blank document instead.
 			end
 			
 			os.exit(0)
+		end
+		
+		local function do_lua(opt)
+			if not opt then
+				usererror("--lua must have an argument")
+			end
+			
+			local f, e = loadfile(opt)
+			if e then
+				usererror("user script compilation error: "..e)
+			end
+			f()
+			return 1
 		end
 		
 		local function do_profile(opt)
@@ -164,6 +178,7 @@ file to load on startup. If not given, you get a blank document instead.
 		local argmap = {
 			["h"]           = do_help,
 			["help"]        = do_help,
+			["lua"]         = do_lua,
 		}
 		
 		if DEBUG then
