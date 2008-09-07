@@ -171,11 +171,14 @@ function RedrawScreen()
 	local mw = Document.mw
 	local mo = Document.mo
 	
+	
 	-- Draw backwards.
 	
 	local pn = cp - 1
 	local y = cy - cl - 1 - Document:spaceAbove(cp)
 	
+	Document.topp = nil
+	Document.topw = nil
 	while (y >= 0) do
 		local paragraph = Document[pn]
 		if not paragraph then
@@ -224,7 +227,7 @@ function RedrawScreen()
 			break
 		end
 		
-		drawmargin(y, pn, paragraph)
+		drawmargin(y, pn, paragraph)		
 
 		local x = paragraph.style.indent or 0 -- FIXME
 		for ln, l in ipairs(paragraph:wrap()) do
@@ -233,7 +236,15 @@ function RedrawScreen()
 			else
 				paragraph:renderMarkedLine(l, margin + x, y, nil, pn)
 			end
+	
+			-- If the top of the page hasn't already been set, then the
+			-- current paragraph extends off the top of the screen.
 			
+			if not Document.topp and (y == 0) then
+				Document.topp = pn
+				Document.topw = l.wn
+			end
+	
 			Document.botp = pn
 			Document.botw = l.wn
 			y = y + 1
@@ -244,6 +255,14 @@ function RedrawScreen()
 		end
 		y = y + Document:spaceBelow(pn)
 		pn = pn + 1
+	end
+	
+	-- If the top of the page *still* hasn't been set, then we're on the
+	-- first paragraph of the document.
+	
+	if not Document.topp then
+		Document.topp = 1
+		Document.topw = 1
 	end
 	
 	if (y <= ScreenHeight) then
