@@ -16,7 +16,7 @@
 **   lfs.touch (filepath [, atime [, mtime]])
 **   lfs.unlock (fh)
 **
-** $Id: lfs.c,v 1.53 2008/05/07 19:06:37 carregal Exp $
+** $Id$
 */
 
 #define _LARGEFILE64_SOURCE

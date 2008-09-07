@@ -2,8 +2,8 @@
  * WordGrinder is licensed under the BSD open source license. See the COPYING
  * file in this distribution for the full text.
  *
- * $Id: screen.c 73 2008-08-08 00:44:29Z dtrg $
- * $URL: https://wordgrinder.svn.sourceforge.net/svnroot/wordgrinder/wordgrinder/src/c/screen.c $
+ * $Id$
+ * $URL$
  */
 
 101 ICON DISCARDABLE "src/c/arch/win32/icon.ico"
