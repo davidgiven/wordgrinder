@@ -17,15 +17,13 @@ FILEFORMAT = 3
 -- User configurable settings start here!
 
 -- Where do you want WordGrinder installed? By default, it goes into your
--- home directory. (Use ".staging" if you're developing WordGrinder and don't
--- want to have to install it every time you rebuild.)
+-- home directory.
 
 PREFIX = HOME
 -- PREFIX = "/usr/local"
--- PREFIX = ".staging"
 
 -- What build flags do you want to use? (Not including -g or -Os, which are
--- added later.)
+-- added later automatically.)
 
 CBUILDFLAGS = {
 	'-Wall',
@@ -55,7 +53,7 @@ CINCLUDES = {
 -- When doing a Windows build, what compiler should we use?
 
 if posix.stat("c:/") then
-	-- Attempt to autodetect cygwin, which is funny.
+	-- Attempt to autodetect cygwin, which is rather strange.
 	WINCCOMPILER = "gcc"
 	WINCBUILDFLAGS = {"-mno-cygwin"}
 	WINRESCOMPILER = "windres"
@@ -66,6 +64,34 @@ else
 	WINRESCOMPILER = "i586-mingw32msvc-windres"
 end
 
+-----------------------------------------------------------------------------
+-- Build rules
+--
+-- This pmfile will build a large number of different things. If you don't
+-- specify a build rule you'll get the standard Unix release.
+--
+-- install
+--   Compiles the release version of the standard Unix executable and
+--   installs it into %PREFIX%.
+-- 
+-- wordgrinder_release_exe
+-- wordgrinder_debug_exe
+--   Builds the debugging and release versions of the standard Unix
+--   executable.
+--
+-- wordgrinder_w32_release_exe
+-- wordgrinder_w32_debug_exe
+--   Builds the debugging and release versions of the Windows
+--   executable.
+--
+-- windows_release_zip 
+-- windows_debug_zip
+--   Builds the debugging and release versions of the Windows binary
+--   package (containing the executable, the font, the READMEs, etc.)
+--
+-- all
+--   Builds all the executables (but not the binary packages). 
+  
 -- There is nothing editable beyond this point.
 -----------------------------------------------------------------------------
 
