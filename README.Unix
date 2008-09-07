@@ -1,8 +1,8 @@
-                               WORDGRINDER V0.2
+                               WORDGRINDER V0.3
                                ================
 
                            © 2007-2008 David Given
-                                 2008-01-08
+                                 2008-09-07
 
                                 Unix version
 
@@ -21,6 +21,7 @@ key sequences, HTML import and export, and some other useful features.
 WordGrinder does not require X. It runs in a terminal. 
 
 
+
 INSTALLATION
 ============
 
@@ -36,9 +37,6 @@ WordGrinder needs the following packages installed:
    available from:
      http://www.keplerproject.org/luafilesystem/index.html
 
- - the iconv character set conversion library. This is shipped automatically
-   with most glibc-based systems.
-   
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
@@ -67,6 +65,7 @@ build and install in two stages by doing "./pm; ./pm install").
 It is now ready to use.
 
 
+
 USAGE
 =====
 
@@ -88,11 +87,13 @@ new releases. You can subscribe or view the archives at the following page:
 https://lists.sourceforge.net/lists/listinfo/wordgrinder-users
 
 
+
 LICENSE
 =======
 
 WordGrinder is available under the BSD license. Please see the COPYING file
 for the full text.
+
 
 
 REVISION HISTORY
@@ -101,12 +102,15 @@ REVISION HISTORY
 WordGrinder 0.3: 2008-08-06: Lots more bug fixes. Added LaTeX export; troff
 export; next/previous word/character; table of contents; autosave; scrapbook;
 Windows console port. Fixed some issues with key binding. Lua bytecode is now
-embedded in the executable, making it self contained. [...]
+embedded in the executable, making it self contained. --lua option. General
+overhaulage.
 
 WordGrinder 0.2: 2008-01-13: Lots of bug fixes. Added word count. Added about
 dialogue.
 
 WordGrinder 0.1: 2007-10-14: Initial release.
+
+
 
 THE AUTHOR
 ==========
@@ -116,4 +120,5 @@ dg@cowlark.com, or visit my website at http://www.cowlark.com. There may or
 may not be anything interesting there.
 
 
-$Id: README 79 2008-08-11 21:22:56Z dtrg $
+
+$Id$
