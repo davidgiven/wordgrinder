@@ -148,7 +148,9 @@ function Cmd.ConfigureAutosave()
 			draw = function(self)
 				self.class.draw(self)
 				
-				example_label.value = "(Example filename: "..makefilename(self.value)..")"
+				local _, _, example = makefilename(self.value):
+					find("([^/]+)$")
+				example_label.value = "(e.g.: .../"..example..")"
 				example_label:draw()
 			end
 		}
