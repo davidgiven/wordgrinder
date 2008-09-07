@@ -2,8 +2,8 @@
 -- WordGrinder is licensed under the BSD open source license. See the COPYING
 -- file in this distribution for the full text.
 --
--- $Id: export.lua 58 2008-08-06 00:08:24Z dtrg $
--- $URL: https://wordgrinder.svn.sourceforge.net/svnroot/wordgrinder/wordgrinder/src/lua/export.lua $
+-- $Id$
+-- $URL$
 
 local function optionals(n)
 	if (n == 1) then
