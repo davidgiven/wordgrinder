@@ -2,8 +2,8 @@
 -- WordGrinder is licensed under the BSD open source license. See the COPYING
 -- file in this distribution for the full text.
 --
--- $Id: utils.lua 68 2008-08-07 16:26:32Z dtrg $
--- $URL: https://wordgrinder.svn.sourceforge.net/svnroot/wordgrinder/wordgrinder/src/lua/utils.lua $
+-- $Id$
+-- $URL$
 
 local function write(...)
 	io.stdout:write(...)

@@ -106,5 +106,5 @@ dg@cowlark.com, or visit my website at http://www.cowlark.com. There may or
 may not be anything interesting there.
 
 
-$Id: README 79 2008-08-11 21:22:56Z dtrg $
+$Id$
 
