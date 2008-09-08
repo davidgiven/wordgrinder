@@ -5,20 +5,13 @@
 -- $Id$
 -- $URL$
 
-local function optionals(n)
-	if (n == 1) then
-		return ""
-	else
-		return "s"
-	end
-end
-
 local function announce()
 	local settings = DocumentSet.addons.autosave
 
 	if settings.enabled then
 		NonmodalMessage("Autosave is enabled. Next save in "..settings.period..
-			" minute"..optionals(settings.period)..".")
+			" minute"..pluralise(settings.period, "", "s")..
+			".")
 	else
 		NonmodalMessage("Autosave is disabled.")
 	end	
@@ -148,9 +141,8 @@ function Cmd.ConfigureAutosave()
 			draw = function(self)
 				self.class.draw(self)
 				
-				local _, _, example = makefilename(self.value):
-					find("([^/]+)$")
-				example_label.value = "(e.g.: .../"..example..")"
+				local f = Leafname(makefilename(self.value))
+				example_label.value = "(e.g.: .../"..f..")"
 				example_label:draw()
 			end
 		}
