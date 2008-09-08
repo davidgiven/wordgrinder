@@ -24,9 +24,9 @@ end
 
 function ResetDocumentSet()
 	DocumentSet = CreateDocumentSet()
+	DocumentSet.menu = CreateMenu()
 	DocumentSet:addDocument(CreateDocument(), "main")
 	DocumentSet:setCurrent("main")
-	DocumentSet.menu = CreateMenu()
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	DocumentSet:purge()
