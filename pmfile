@@ -9,8 +9,8 @@ include "tools/c.pm"
 include "tools/lua.pm"
 
 HOME = os.getenv("HOME")
-DATE = "7 September 2008"
-VERSION = "0.3"
+DATE = "8 September 2008"
+VERSION = "0.3.1"
 FILEFORMAT = 3
 
 -----------------------------------------------------------------------------
@@ -90,7 +90,7 @@ end
 --   package (containing the executable, the font, the READMEs, etc.)
 --
 -- all
---   Builds all the executables (but not the binary packages). 
+--   Builds everything. 
   
 -- There is nothing editable beyond this point.
 -----------------------------------------------------------------------------
@@ -252,14 +252,14 @@ wordgrinder_w32_release_exe = group {
 	CDEFINES = {PARENT, 'NDEBUG'},
 	CLINKFLAGS = {PARENT, '-s'},
 	
-	install = pm.install("wordgrinder.exe")
+	install = pm.install("bin/wordgrinder.exe")
 }
 
 wordgrinder_w32_debug_exe = group {
 	wordgrinder_w32_exe,
 	CBUILDFLAGS = {PARENT, '-g'},
 	
-	install = pm.install("wordgrinder-debug.exe")
+	install = pm.install("bin/wordgrinder-debug.exe")
 }
 
 wordgrinder_release_exe = group {
@@ -269,14 +269,14 @@ wordgrinder_release_exe = group {
 	CDEFINES = {PARENT, 'NDEBUG'},
 	CLINKFLAGS = {PARENT, '-s'},
 	
-	install = pm.install("wordgrinder")
+	install = pm.install("bin/wordgrinder")
 }
 
 wordgrinder_debug_exe = group {
 	wordgrinder_curses_exe,
 	CBUILDFLAGS = {PARENT, '-g'},
 	
-	install = pm.install("wordgrinder-debug")
+	install = pm.install("bin/wordgrinder-debug")
 }
 
 default = group {
@@ -309,7 +309,7 @@ windows_debug_zip = windows_package {
 		name = "wordgrinder_debug.exe",
 		wordgrinder_w32_debug_exe,
 	},
-	install = pm.install("windows-debug.zip")	
+	install = pm.install("bin/wordgrinder-for-windows-%VERSION%-debug.zip")	
 }
 	
 windows_release_zip = windows_package {
@@ -317,14 +317,14 @@ windows_release_zip = windows_package {
 		name = "wordgrinder.exe",
 		wordgrinder_w32_release_exe,
 	},
-	install = pm.install("windows.zip")	
+	install = pm.install("bin/wordgrinder-for-windows-%VERSION%.zip")	
 }
  
 all = group {
 	wordgrinder_debug_exe,
 	wordgrinder_release_exe,
-	wordgrinder_w32_debug_exe,
-	wordgrinder_w32_release_exe
+	windows_debug_zip,
+	windows_release_zip
 }
 
 -- Once built, do the installation, rather crudely. FIXME.
