@@ -250,22 +250,21 @@ local function generic_importer(filename, title, callback)
 	
 	-- Add the document to the document set.
 	
-	filename = filename:gsub("%..-$", "")
-	document.name = filename .. ".wg"
+	local docname = Leafname(filename)
 
-	if DocumentSet.documents[filename] then
+	if DocumentSet.documents[docname] then
 		local id = 1
 		while true do
-			local f = filename.."-"..id
+			local f = docname.."-"..id
 			if not DocumentSet.documents[f] then
-				filename = f
+				docname = f
 				break
 			end
 		end
 	end
 	
-	DocumentSet:addDocument(document, filename)
-	DocumentSet:setCurrent(filename)
+	DocumentSet:addDocument(document, docname)
+	DocumentSet:setCurrent(docname)
 
 	QueueRedraw()
 	return true
