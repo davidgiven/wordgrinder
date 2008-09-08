@@ -63,11 +63,8 @@ local function redrawstatus()
 	local y = ScreenHeight - 1
 
 	if DocumentSet.statusbar then
-		local _, _, leafname = (DocumentSet.name or "(unnamed)"):
-			find("([^/]+)$")
-			
 		local s = {
-			leafname,
+			Leafname(DocumentSet.name or "(unnamed)"),
 			"[",
 			Document.name or "",
 			"] ",
@@ -82,7 +79,7 @@ local function redrawstatus()
 		local s = {
 			string.format("│ P: %d/%d ", Document.cp, #Document),
 			string.format("│ %d %s", Document.wordcount or 0,
-				pluralise(Document.wordcount or 0, "word ", "words "))
+				Pluralise(Document.wordcount or 0, "word ", "words "))
 		}
 		
 		RAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
