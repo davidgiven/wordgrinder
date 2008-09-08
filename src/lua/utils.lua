@@ -26,26 +26,11 @@ end
 -- control sequences.
 --
 -- @param s                  string to process
--- @param encoding           input encoding; defaults to UTF-8
 -- @return                   canonicalised string
 
-do
-	local currentencoding = nil
-	
-	function CanonicaliseString(s, encoding)
-		if not encoding then
-			encoding = "utf-8"
-		else
-			encoding = encoding:lower()
-		end
-		if (encoding ~= currentencoding) then
-			currentencoding = encoding
-			wg.setencodings(currentencoding, "utf-8")
-		end
-		
-		s = wg.transcode(s)
-		return s:gsub("%c+", "")
-	end
+function CanonicaliseString(s)
+	s = wg.transcode(s)
+	return s:gsub("%c+", "")
 end
 
 --- Chooses between a singular or a plural string.
@@ -55,10 +40,23 @@ end
 -- @param plural             returned if number ~= 1
 -- @return                   either singular or plural
 
-function pluralise(n, singular, plural)
+function Pluralise(n, singular, plural)
 	if (n == 1) then
 		return singular
 	else
 		return plural
 	end
+end
+
+--- Extracts the leaf part of a filename by truncating at the last / or \.
+--
+-- @param filename           filename
+-- @return                   leaf
+
+function Leafname(filename)
+	local _, _, f = filename:find("([^/\\]+)$")
+	if f then 
+		return f
+	end
+	return filename
 end
