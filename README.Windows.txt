@@ -1,8 +1,8 @@
-                               WORDGRINDER V0.3
-                               ================
+                              WORDGRINDER V0.3.1
+                              ==================
 
                            © 2007-2008 David Given
-                                 2008-09-07
+                                 2008-09-08
 
                                Windows version
 
@@ -91,6 +91,11 @@ for the full text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.3.1: 2008-09-08: Minor bugfix revision to correct a few minor
+but really embarrassing crashes problems in 0.3: no crash on HTML import, no
+crash on File->New. Also some minor cosmetic fixes I noticed while doing the
+work.
 
 WordGrinder 0.3: 2008-09-07: Lots more bug fixes. Added LaTeX export; troff
 export; next/previous word/character; table of contents; autosave; scrapbook;
