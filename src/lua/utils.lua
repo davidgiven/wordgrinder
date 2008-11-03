@@ -60,3 +60,23 @@ function Leafname(filename)
 	end
 	return filename
 end
+
+--- Produces an exception traceback.
+--
+-- @param e                  the error
+-- @return                   the trace, as a string
+
+function Traceback(e)
+	local i = 1
+	local s = {"Exception: "..e}
+	while true do
+		local t = debug.getinfo(i)
+		if not t then
+			break
+		end
+		s[#s+1] = t.short_src .. ":" .. t.currentline 
+		i = i + 1
+	end
+
+	return table.concat(s, "\n")	
+end

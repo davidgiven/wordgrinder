@@ -62,51 +62,64 @@ function WordProcessor(filename)
 		["KEY_ESCAPE"] = Cmd.ActivateMenu,
 	}	
 		
-	local nl = string.char(13)
-	while true do
-		if DocumentSet.justchanged then
-			FireEvent(Event.Changed)
-			DocumentSet.justchanged = false
-		end
-		
-		FireEvent(Event.WaitingForUser)
-		local c = "KEY_TIMEOUT"
-		while (c == "KEY_TIMEOUT") do
-			if redrawpending then
-				RedrawScreen()
-				redrawpending = false
+	local function eventloop()
+		local nl = string.char(13)
+		while true do
+			if DocumentSet.justchanged then
+				FireEvent(Event.Changed)
+				DocumentSet.justchanged = false
 			end
-		
-			c = wg.getchar(DocumentSet.idletime)
-			if (c == "KEY_TIMEOUT") then
-				FireEvent(Event.Idle)
-			end
-		end
-		
-		ResetNonmodalMessages()
-		
-		-- Anything in masterkeymap overrides everything else.
-		local f = masterkeymap[c]
-		if f then
-			f()
-		else
-			-- It's not in masterkeymap. If it's printable, insert it; if it's
-			-- not, look it up in the menu hierarchy.
 			
-			if not c:match("^KEY_") then
-				Cmd.InsertStringIntoWord(c)
-			else
-				f = DocumentSet.menu:lookupAccelerator(c)
-				if f then
-					if (type(f) == "function") then
-						f()
-					else
-						Cmd.ActivateMenu(f)
-					end
-				else
-					NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
+			FireEvent(Event.WaitingForUser)
+			local c = "KEY_TIMEOUT"
+			while (c == "KEY_TIMEOUT") do
+				if redrawpending then
+					RedrawScreen()
+					redrawpending = false
+				end
+			
+				c = wg.getchar(DocumentSet.idletime)
+				if (c == "KEY_TIMEOUT") then
+					FireEvent(Event.Idle)
 				end
 			end
+			
+			ResetNonmodalMessages()
+			
+			-- Anything in masterkeymap overrides everything else.
+			local f = masterkeymap[c]
+			if f then
+				f()
+			else
+				-- It's not in masterkeymap. If it's printable, insert it; if it's
+				-- not, look it up in the menu hierarchy.
+				
+				if not c:match("^KEY_") then
+					Cmd.InsertStringIntoWord(c)
+				else
+					f = DocumentSet.menu:lookupAccelerator(c)
+					if f then
+						if (type(f) == "function") then
+							f()
+						else
+							Cmd.ActivateMenu(f)
+						end
+					else
+						NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
+					end
+				end
+			end
+		end
+	end
+	
+	while true do
+		local f, e = xpcall(eventloop, Traceback)
+		if not f then
+			ModalMessage("Internal error!",
+				"Something went wrong inside WordGrinder! I'll try and "..
+				"but you should save your work immediately (under a "..
+				"different filename), exit, and send the following technical "..
+				"information to the author:\n\n" .. e)
 		end
 	end
 end
