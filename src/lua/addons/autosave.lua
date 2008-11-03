@@ -10,7 +10,7 @@ local function announce()
 
 	if settings.enabled then
 		NonmodalMessage("Autosave is enabled. Next save in "..settings.period..
-			" minute"..pluralise(settings.period, "", "s")..
+			" minute"..Pluralise(settings.period, "", "s")..
 			".")
 	else
 		NonmodalMessage("Autosave is disabled.")
