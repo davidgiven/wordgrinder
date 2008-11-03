@@ -19,7 +19,8 @@ fi
 
 mkdir ../wordgrinder-$1
 
-tar cf - . --exclude="*/.*" --exclude="debian" | (cd ../wordgrinder-$1; tar xf -) 
+tar cf - . --exclude="*/.*" --exclude="debian" --exclude="bin" \
+	| (cd ../wordgrinder-$1; tar xf -) 
 rm ../wordgrinder-$1/mkdist
 
 (cd .. && tar cvf wordgrinder-$1.tar.bz2 --bzip2 wordgrinder-$1)
