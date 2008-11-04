@@ -419,29 +419,28 @@ static int dir_create_meta (lua_State *L) {
 }
 
 
-#ifdef _WIN32
- #ifndef S_ISDIR
+#ifndef S_ISDIR
    #define S_ISDIR(mode)  (mode&_S_IFDIR)
- #endif
- #ifndef S_ISREG
-   #define S_ISREG(mode)  (mode&_S_IFREG)
- #endif
- #ifndef S_ISLNK
-   #define S_ISLNK(mode)  (0)
- #endif
- #ifndef S_ISSOCK
-   #define S_ISSOCK(mode)  (0)
- #endif
- #ifndef S_ISFIFO
-   #define S_ISFIFO(mode)  (0)
- #endif
- #ifndef S_ISCHR
-   #define S_ISCHR(mode)  (mode&_S_IFCHR)
- #endif
- #ifndef S_ISBLK
-   #define S_ISBLK(mode)  (0)
- #endif
 #endif
+#ifndef S_ISREG
+   #define S_ISREG(mode)  (mode&_S_IFREG)
+#endif
+#ifndef S_ISLNK
+   #define S_ISLNK(mode)  (0)
+#endif
+#ifndef S_ISSOCK
+   #define S_ISSOCK(mode)  (0)
+#endif
+#ifndef S_ISFIFO
+   #define S_ISFIFO(mode)  (0)
+#endif
+#ifndef S_ISCHR
+   #define S_ISCHR(mode)  (mode&_S_IFCHR)
+#endif
+#ifndef S_ISBLK
+   #define S_ISBLK(mode)  (0)
+#endif
+
 /*
 ** Convert the inode protection mode to a string.
 */
