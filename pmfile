@@ -79,6 +79,9 @@ end
 --   Builds the debugging and release versions of the standard Unix
 --   executable.
 --
+-- wordgrinder_static_exe
+--   Builds the static version of the release executable.
+-- 
 -- wordgrinder_w32_release_exe
 -- wordgrinder_w32_debug_exe
 --   Builds the debugging and release versions of the Windows
@@ -214,6 +217,39 @@ wordgrinder_curses_exe = cprogram {
 		'ncursesw',
 		'lua5.1'
 	}
+}
+
+wordgrinder_static_exe = cprogram {
+	luacore,
+	lualfs,
+	wordgrinder_core,
+	cfile "src/c/emu/wcwidth.c",
+	cfile "src/c/arch/unix/cursesw/dpy.c",
+
+	CBUILDFLAGS = {PARENT, '-Os'},
+	LUABUILDFLAGS = {PARENT, '-s'},
+	CDEFINES = {PARENT, 'NDEBUG'},
+	CLINKFLAGS = {PARENT, '-s', '-static'},
+	
+	CDEFINES = {
+		PARENT,
+		'_XOPEN_SOURCE_EXTENDED',
+		'_XOPEN_SOURCE',
+		"EMULATED_WCWIDTH",
+		"BUILTIN_LFS",
+	},
+	
+	CINCLUDES = {
+		PARENT,
+		"src/c/luacore"
+	},
+	
+	CLIBRARIES = {
+		PARENT,
+		'ncursesw',
+	},
+
+	install = pm.install("bin/wordgrinder-static")
 }
 
 rcfile = simple_with_clike_dependencies {
