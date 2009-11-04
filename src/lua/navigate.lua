@@ -736,7 +736,8 @@ function Cmd.Find(findtext, replacetext)
 	-- Convert the search text into a pattern.
 	
 	local patterns = {}
-	for w in findtext:gmatch("%S+") do
+	local words = SplitString(findtext, "%s")
+	for _, w in ipairs(words) do
 		-- w is a word from the pattern. We need to perform the following
 		-- changes:
 		--   - we need to insert %c* between all letters, to allow it to match
@@ -790,6 +791,12 @@ function Cmd.FindNext()
 	
 	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local patterns = DocumentSet.findtext
+	if (#patterns == 0) then
+		QueueRedraw()
+		NonmodalMessage("Nothing to search for.")
+		return false
+	end
+	
 	local pattern = patterns[1]
 
 	-- Keep looping until we reach the starting point again.
@@ -867,14 +874,12 @@ function Cmd.ReplaceThenFind()
 			return false
 		end
 		
-		local text = DocumentSet.replacetext
-		local firstword = true
 		e = true
-		for w in text:gmatch("%S+") do
-			if not firstword then
-				e = Cmd.SplitCurrentWord()
+		local words = SplitString(DocumentSet.replacetext, "%s")
+		for i, w in ipairs(words) do
+			if (i > 1) then
+				i = Cmd.SplitCurrentWord()
 			end
-			firstword = false
 			
 			e = e and Cmd.InsertStringIntoWord(w)
 		end

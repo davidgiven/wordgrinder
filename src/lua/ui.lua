@@ -201,7 +201,7 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 		cursor = defaultfind:len() + 1,
 		x1 = 11, y1 = -6, x2 = -1, y2 = -5,
 	}
-
+	
 	local replacefield = Form.TextField {
 		value = defaultreplace,
 		cursor = defaultreplace:len() + 1,
