@@ -80,3 +80,34 @@ function Traceback(e)
 
 	return table.concat(s, "\n")	
 end
+
+--- Splits a string by specifying the delimiter pattern.
+--
+-- @param str                the input string
+-- @param delim              the delimiter
+-- @return                   the list of words
+
+function SplitString(str, delim)
+    -- Eliminate bad cases...
+    if not str:find(delim) then
+    	return {str}
+    end
+     
+    local result = {}
+    local pat = "(.-)" .. delim .. "()"
+    local nb = 0
+    local lastPos
+    for part, pos in str:gmatch(pat) do
+		nb = nb + 1
+		result[nb] = part
+		lastPos = pos
+		if (nb == maxNb) then
+			break
+		end
+    end
+    -- Handle the last field
+    if nb ~= maxNb then
+        result[nb + 1] = str:sub(lastPos)
+    end
+    return result
+end
