@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.3.2
-                              ==================
+                             WORDGRINDER V0.3.3rc1
+                             =====================
 
-                           © 2007-2008 David Given
-                                 2008-11-03
+                           © 2007-2009 David Given
+                                 2009-11-06
 
                                Windows version
 
@@ -92,6 +92,10 @@ for the full text.
 REVISION HISTORY
 ================
 
+WordGrinder 0.3.3rc1: 2009-11-06: Fixed a bug when searching for or replacing
+strings containing multiple whitespace characters (that was triggering the
+crash handler). Thanks to lostnbronx for the report.
+ 
 WordGrinder 0.3.2: 2008-11-03: Fixed a very simple and very stupid typo that
 caused a crash if you tried to turn autosave on. Added a simple exception
 handler to try and prevent data loss on error in the future.
