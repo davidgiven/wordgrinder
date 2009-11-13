@@ -11,6 +11,10 @@ local function callback(fp, document)
 		prologue = function()
 		end,
 		
+		rawtext = function(s)
+			fp:write(s)
+		end,
+		
 		text = function(s)
 			fp:write(s)
 		end,

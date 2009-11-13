@@ -23,6 +23,7 @@ local style_tab =
 	["LB"] = {'<li>', '</li>'},
 	["Q"] =  {'<blockquote>', '</blockquote>'},
 	["V"] =  {'<blockquote>', '</blockquote>'},
+	["RAW"] = {'', ''}
 }
 
 local function callback(fp, document)
@@ -35,6 +36,10 @@ local function callback(fp, document)
 			fp:write('<meta name="generator" content="WordGrinder '..VERSION..'">\n')
 			fp:write('<title>', unhtml(document.name), '</title>\n')
 			fp:write('</head><body>\n')
+		end,
+		
+		rawtext = function(s)
+			fp:write(s)
 		end,
 		
 		text = function(s)

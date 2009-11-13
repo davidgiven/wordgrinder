@@ -23,6 +23,7 @@ local style_tab =
 	["LB"] = '.IP \\[bu]',
 	["Q"] =  '.IP',
 	["V"] =  '.IP',
+	["RAW"] = ''
 }
 
 local function callback(fp, document)
@@ -91,6 +92,10 @@ local function callback(fp, document)
 		end,
 		
 		text = emit_text,
+		
+		rawtext = function(s)
+			fp:write(s)
+		end,
 		
 		notext = function(s)
 		end,

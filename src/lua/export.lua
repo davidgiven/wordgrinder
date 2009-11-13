@@ -21,6 +21,7 @@ function ExportFileUsingCallbacks(document, cb)
 	cb.prologue()
 	
 	local listmode = false
+	local rawmode = false
 	local italic, underline
 	local olditalic, oldunderline
 	local firstword
@@ -30,6 +31,13 @@ function ExportFileUsingCallbacks(document, cb)
 		italic = bit(style, ITALIC)
 		underline = bit(style, UNDERLINE)
 		
+		local writer
+		if rawmode then
+			writer = cb.rawtext
+		else
+			writer = cb.text
+		end
+		
 		if not italic and olditalic then
 			cb.italic_off()
 		end
@@ -38,7 +46,7 @@ function ExportFileUsingCallbacks(document, cb)
 		end
 		
 		if wordbreak then
-			cb.text(' ')
+			writer(' ')
 			wordbreak = false
 		end
 	
@@ -48,7 +56,7 @@ function ExportFileUsingCallbacks(document, cb)
 		if italic and not olditalic then
 			cb.italic_on()
 		end
-		cb.text(text)
+		writer(text)
 		
 		olditalic = italic
 		oldunderline = underline
@@ -65,11 +73,15 @@ function ExportFileUsingCallbacks(document, cb)
 			cb.list_end()
 			listmode = false
 		end
-			
+		
+		rawmode = (style.name == "RAW")
+		
 		cb.paragraph_start(style.name)
 	
 		if (#paragraph == 1) and (#paragraph[1].text == 0) then
-			cb.notext()
+			if rawmode then
+				cb.notext()
+			end
 		else
 			firstword = true
 			wordbreak = false	

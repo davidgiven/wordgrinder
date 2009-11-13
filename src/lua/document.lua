@@ -569,6 +569,14 @@ local function create_styles()
 			indent = 4,
 			above = 0,
 			below = 0
+		},
+		{
+			desc = "Raw data exported to output file",
+			name = "RAW",
+			html = nil,
+			indent = 0,
+			above = 0,
+			below = 0
 		}
 	}
 	
