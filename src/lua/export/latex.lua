@@ -36,6 +36,7 @@ local style_tab =
 	["LB"] = {'\\item{',              '}'},
 	["Q"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
 	["V"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
+	["RAW"] = {'', ''}
 }
 
 local function callback(fp, document)
@@ -52,6 +53,10 @@ local function callback(fp, document)
 			fp:write('\\title{', untex(Document.name), '}\n')
 			fp:write('\\author{(no author)}\n')
 			fp:write('\\maketitle\n')
+		end,
+		
+		rawtext = function(s)
+			fp:write(s)
 		end,
 		
 		text = function(s)
