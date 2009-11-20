@@ -26,6 +26,7 @@ function ExportFileUsingCallbacks(document, cb)
 	local olditalic, oldunderline
 	local firstword
 	local wordbreak
+	local emptyword
 	
 	local wordwriter = function (style, text)
 		italic = bit(style, ITALIC)
@@ -57,7 +58,8 @@ function ExportFileUsingCallbacks(document, cb)
 			cb.italic_on()
 		end
 		writer(text)
-		
+
+		emptyword = false
 		olditalic = italic
 		oldunderline = underline
 	end
@@ -95,9 +97,13 @@ function ExportFileUsingCallbacks(document, cb)
 					wordbreak = true
 				end
 				
+				emptyword = true
 				italic = false
 				underline = false
 				ParseWord(word.text, 0, wordwriter) -- FIXME
+				if emptyword then
+					wordwriter(0, "")
+				end
 			end
 			if italic then
 				cb.italic_off()
