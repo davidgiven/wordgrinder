@@ -63,8 +63,8 @@ function CreateImporter(document)
 			wbuffer[#wbuffer + 1] = t
 		end,
 	 
-		flushword = function(self)
-			if (#wbuffer > 0) then
+		flushword = function(self, force)
+			if (#wbuffer > 0) or force then
 				local s = table_concat(wbuffer)
 				pbuffer[#pbuffer + 1] = CreateWord(s)
 				wbuffer = {}
@@ -95,6 +95,7 @@ local function loadtextfile(fp)
 	local document = CreateDocument()
 	for l in fp:lines() do
 		l = CanonicaliseString(l)
+		l = l:gsub("%c+", "")
 		local p = CreateParagraph(DocumentSet.styles["P"], ParseStringIntoWords(l))
 		document:appendParagraph(p)
 	end
@@ -107,7 +108,8 @@ local function loadhtmlfile(fp)
 
 	-- Collapse whitespace; this makes things far easier to parse.
 
-	data = data:gsub("[ \t\n\r]+", " ")
+	data = data:gsub("[\t\f]", " ")
+	data = data:gsub("\r\n", "\n")
 
 	-- Canonicalise the string, making it valid UTF-8.
 
@@ -127,8 +129,13 @@ local function loadhtmlfile(fp)
 		end
 		
 		local s, e, t
-		s, e = string_find(data, "^ ", pos)
-		if s then pos = e+1 return " " end
+		s, e, t = string_find(data, "^([ \n])", pos)
+		if s then pos = e+1 return t end
+		
+		if string_find(data, "^%c") then
+			pos = pos + 1
+			return tokens()
+		end
 		
 		s, e, t = string_find(data, "^(<[^>]*>)", pos)
 		if s then pos = e+1 return t:lower() end
@@ -136,10 +143,10 @@ local function loadhtmlfile(fp)
 		s, e, t = string_find(data, "^(&[^;]-;)", pos)
 		if s then pos = e+1 return t end
 		
-		s, e, t = string_find(data, "^([^ <&\t\n\r]+)", pos)
+		s, e, t = string_find(data, "^([^ <&\n]+)", pos)
 		if s then pos = e+1 return t end
 		
-		t = string_sub(data, 1, 1)
+		t = string_sub(data, pos, pos+1)
 		pos = pos + 1
 		return t
 	end
@@ -157,6 +164,7 @@ local function loadhtmlfile(fp)
 	local document = CreateDocument()
 	local importer = CreateImporter(document)
 	local style = "P"
+	local pre = false
 	
 	local function flush()
 		importer:flushparagraph(style)
@@ -164,15 +172,22 @@ local function loadhtmlfile(fp)
 	end
 	
 	local function flushword()
-		importer:flushword()
+		importer:flushword(pre)
 	end
 	
+	local function flushpre()
+		flush()
+		if pre then
+			style = "PRE"
+		end
+	end
+
 	local elements =
 	{
 		[" "] = flushword,
 		["<p>"] = flush,
-		["<br>"] = flush,
-		["<br/>"] = flush,
+		["<br>"] = flushpre,
+		["<br/>"] = flushpre,
 		["</h1>"] = flush,
 		["</h2>"] = flush,
 		["</h3>"] = flush,
@@ -188,6 +203,9 @@ local function loadhtmlfile(fp)
 		["</em>"] = function() importer:style_off(ITALIC) end,
 		["<u>"] = function() importer:style_on(UNDERLINE) end,
 		["</u>"] = function() importer:style_off(UNDERLINE) end,
+		["<pre>"] = function() flush() style = "PRE" pre = true end,
+		["</pre>"] = function() flush() pre = false end,
+		["\n"] = function() if pre then flush() style = "PRE" else flushword() end end
 	}
 	
 	-- Actually do the parsing.
