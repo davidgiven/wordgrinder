@@ -36,7 +36,8 @@ local style_tab =
 	["LB"] = {'\\item{',              '}'},
 	["Q"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
 	["V"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
-	["RAW"] = {'', ''}
+	["RAW"] = {'', ''},
+	["PRE"] = {'\\begin{verbatim}\n', '\n\\end{verbatim}'}
 }
 
 local function callback(fp, document)

@@ -22,15 +22,13 @@ function min(a, b)
 end
 
 --- Transcodes a string.
--- Converts the string to guaranteed valid UTF-8, and removes any
--- control sequences.
+-- Converts the string to guaranteed valid UTF-8.
 --
 -- @param s                  string to process
 -- @return                   canonicalised string
 
 function CanonicaliseString(s)
-	s = wg.transcode(s)
-	return s:gsub("%c+", "")
+	return wg.transcode(s)
 end
 
 --- Chooses between a singular or a plural string.
