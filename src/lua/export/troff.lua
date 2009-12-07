@@ -23,10 +23,12 @@ local style_tab =
 	["LB"] = '.IP \\[bu]',
 	["Q"] =  '.IP',
 	["V"] =  '.IP',
-	["RAW"] = ''
+	["RAW"] = '',
+	["PRE"] = '.LD 1',
 }
 
 local function callback(fp, document)
+	local currentstyle = nil
 	local ul = false
 	local it = false
 	local linestart = true
@@ -123,9 +125,15 @@ local function callback(fp, document)
 		end,
 		
 		paragraph_start = function(style)
-			fp:write(style_tab[style] or ".LP")
-			fp:write('\n')
+			if (currentstyle ~= "PRE") or (style ~= "PRE") then
+				if (currentstyle == "PRE") then
+					fp:write(".DE\n")
+				end
+				fp:write(style_tab[style] or ".LP")
+				fp:write('\n')
+			end
 			linestart = true
+			currentstyle = style
 		end,		
 		
 		paragraph_end = function(style)

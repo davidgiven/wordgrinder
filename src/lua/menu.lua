@@ -97,6 +97,7 @@ local SettingsMenu = addmenu("Settings",
 {
     {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
     {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
+    {"FHTMLExport", "H", "HTML export...",           nil,         Cmd.ConfigureHTMLExport},
 })
 
 local FileMenu = addmenu("File",
@@ -406,7 +407,14 @@ function RebuildParagraphStylesMenu(styles)
 	local m = {}
 	
 	for id, style in ipairs(styles) do
-		m[#m+1] = {"SP"..id, tostring(id-1), style.name..": "..style.desc, nil,
+		local shortcut
+		if (id <= 10) then
+			shortcut = tostring(id - 1)
+		else
+			shortcut = string.char(id + 54)
+		end
+		
+		m[#m+1] = {"SP"..id, shortcut, style.name..": "..style.desc, nil,
 			function()
 				Cmd.ChangeParagraphStyle(style.name)
 			end}

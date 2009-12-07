@@ -571,6 +571,14 @@ local function create_styles()
 			below = 0
 		},
 		{
+			desc = "Preformatted text",
+			name = "PRE",
+			html = "PRE",
+			indent = 4,
+			above = 0,
+			below = 0
+		},
+		{
 			desc = "Raw data exported to output file",
 			name = "RAW",
 			html = nil,
