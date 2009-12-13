@@ -1,8 +1,8 @@
-                             WORDGRINDER V0.3.3rc1
+                             WORDGRINDER V0.3.3rc2
                              =====================
 
                            © 2007-2009 David Given
-                                 2009-11-06
+                                 2009-11-22
 
                                Windows version
 
@@ -84,7 +84,7 @@ https://lists.sourceforge.net/lists/listinfo/wordgrinder-users
 LICENSE
 =======
 
-WordGrinder is available under the BSD license. Please see the COPYING file
+WordGrinder is available under the MIT license. Please see the COPYING file
 for the full text.
 
 
@@ -92,9 +92,11 @@ for the full text.
 REVISION HISTORY
 ================
 
-WordGrinder 0.3.3rc1: 2009-11-06: Fixed a bug when searching for or replacing
+WordGrinder 0.3.3rc2: 2009-12-07: Fixed a bug when searching for or replacing
 strings containing multiple whitespace characters (that was triggering the
-crash handler). Thanks to lostnbronx for the report.
+crash handler). Thanks to lostnbronx for the report. Added RAW and PRE
+paragraph styles. Cleaned up HTML import. Add customisability to HTML export.
+Relicensed to MIT.
  
 WordGrinder 0.3.2: 2008-11-03: Fixed a very simple and very stupid typo that
 caused a crash if you tried to turn autosave on. Added a simple exception
@@ -128,4 +130,3 @@ may not be anything interesting there.
 
 
 $Id$
-
