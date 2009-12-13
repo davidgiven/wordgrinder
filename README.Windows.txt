@@ -1,8 +1,8 @@
-                             WORDGRINDER V0.3.3rc2
-                             =====================
+                              WORDGRINDER V0.3.3
+                              ==================
 
                            © 2007-2009 David Given
-                                 2009-11-22
+                                 2009-12-13
 
                                Windows version
 
@@ -92,7 +92,7 @@ for the full text.
 REVISION HISTORY
 ================
 
-WordGrinder 0.3.3rc2: 2009-12-07: Fixed a bug when searching for or replacing
+WordGrinder 0.3.3: 2009-12-13: Fixed a bug when searching for or replacing
 strings containing multiple whitespace characters (that was triggering the
 crash handler). Thanks to lostnbronx for the report. Added RAW and PRE
 paragraph styles. Cleaned up HTML import. Add customisability to HTML export.

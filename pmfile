@@ -9,8 +9,8 @@ include "tools/c.pm"
 include "tools/lua.pm"
 
 HOME = os.getenv("HOME")
-DATE = "11 November 2008"
-VERSION = "0.3.2"
+DATE = "13 December 2009"
+VERSION = "0.3.3"
 FILEFORMAT = 3
 
 -----------------------------------------------------------------------------
@@ -332,7 +332,8 @@ windows_package = simple {
 		"zip -9j %out% %in%"
 	},
 	outputs = {"%U%-%I%.zip"},
-	
+
+	file "COPYING",	
 	file "README.wg",
 	file "README.Windows.txt",
 	file "extras/DejaVuSansMono-license.txt",
