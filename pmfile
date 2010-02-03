@@ -263,16 +263,23 @@ wordgrinder_w32_exe = cprogram {
 	lualfs,
 	wordgrinder_core,
 	cfile "src/c/emu/wcwidth.c",
-	cfile "src/c/arch/win32/console/dpy.c",
+	cfile "src/c/arch/win32/gdi/dpy.c",
+	cfile "src/c/arch/win32/gdi/glyphcache.c",
 	rcfile "src/c/arch/win32/wordgrinder.rc",
 
 	CCOMPILER = "%WINCCOMPILER% %WINCBUILDFLAGS%",
+	
+	CBUILDFLAGS = {
+		PARENT,
+		"-mwindows"
+	},
 	
 	CDEFINES = {
 		PARENT,
 		"EMULATED_WCWIDTH",
 		"BUILTIN_LFS",
-		"WIN32"
+		"WIN32",
+		"WINVER=0x0500"
 	},
 
 	CINCLUDES = {
