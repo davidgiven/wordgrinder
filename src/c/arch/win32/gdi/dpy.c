@@ -479,9 +479,9 @@ static void switch_to_full_screen(void)
 	RECT rect;
 	SystemParametersInfo(SPI_GETWORKAREA, sizeof(RECT), &rect, 0);
 
-	window = CreateWindowA(
-		"WordGrinder",                 /* Class Name */
-		"WordGrinder",                 /* Title */
+	window = CreateWindowW(
+		L"WordGrinder",                 /* Class Name */
+		L"WordGrinder",                 /* Title */
 		WS_POPUPWINDOW | WS_VISIBLE,    /* Style */
 		0, 0,                           /* Position */
 		rect.right, rect.bottom,        /* Size */
@@ -589,7 +589,7 @@ void dpy_start(void)
 		wc.cbClsExtra = 0;
 		wc.cbWndExtra = 0;
 		wc.hInstance = GetModuleHandle(NULL);
-		wc.hIcon = NULL;
+		wc.hIcon = LoadIcon(wc.hInstance, MAKEINTRESOURCE(101));
 		wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wc.hbrBackground = NULL;
 		wc.lpszMenuName = NULL;
