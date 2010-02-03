@@ -57,6 +57,8 @@ function WordProcessor(filename)
 			RedrawScreen()
 		end,
 		
+		["KEY_REDRAW"] = RedrawScreen,
+		
 		[" "] = Cmd.SplitCurrentWord,
 		["KEY_RETURN"] = Cmd.SplitCurrentParagraph,
 		["KEY_ESCAPE"] = Cmd.ActivateMenu,
