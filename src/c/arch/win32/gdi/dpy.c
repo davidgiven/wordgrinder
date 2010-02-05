@@ -11,13 +11,6 @@
 #include <windows.h>
 #include "gdi.h"
 
-#define VKM_SHIFT      0x100
-#define VKM_CTRL       0x200
-#define VKM_CTRLASCII  0x400
-#define VK_RESIZE     0x1000
-#define VK_TIMEOUT    0x1001
-#define VK_REDRAW     0x1002
-
 #define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
 #define DEFAULT_CHAR (' ' << 4)
@@ -45,35 +38,11 @@ static bool window_geometry_valid = false;
 static RECT window_geometry;
 static bool window_created = false;
 
-static uni_t queued[3];
-static int numqueued = 0;
-
 static bool resize_buffer(void);
-static bool get_key_code(int vk, int unik, unsigned flags,
-		uni_t* r1, uni_t* r2);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
 static void switch_to_windowed(void);
 static void reset_cursor(void);
-
-static uni_t dequeue(void)
-{
-	uni_t c = queued[0];
-	queued[0] = queued[1];
-	queued[1] = queued[2];
-	queued[2] = queued[3];
-	numqueued--;
-	return c;
-}
-
-static void queue(uni_t c)
-{
-	if (numqueued >= (sizeof(queued)/sizeof(*queued)))
-		return;
-
-	queued[numqueued] = c;
-	numqueued++;
-}
 
 static HKEY make_key(const char* keystring)
 {
@@ -147,12 +116,12 @@ static void unicode_key(uni_t key, unsigned flags)
 	if (flags & (1<<29))
 	{
 		/* ALT pressed */
-		queue(-27);
-		queue(key);
+		dpy_queuekey(-27);
+		dpy_queuekey(key);
 		return;
 	}
 
-	queue(key);
+	dpy_queuekey(key);
 }
 
 static bool special_key(int vk, unsigned flags)
@@ -160,7 +129,7 @@ static bool special_key(int vk, unsigned flags)
 	switch (vk)
 	{
 		case ' ':
-			queue(-(VKM_CTRLASCII | 0));
+			dpy_queuekey(-(VKM_CTRLASCII | 0));
 			return true;
 
 		case VK_RETURN:
@@ -193,7 +162,7 @@ static bool special_key(int vk, unsigned flags)
 			vk = VKM_CTRLASCII | (vk - 64);
 	}
 
-	queue(-vk);
+	dpy_queuekey(-vk);
 	return true;
 }
 
@@ -333,21 +302,23 @@ static void sizing_cb(int type, RECT* r)
 static LRESULT CALLBACK window_cb(HWND window, UINT message,
 		WPARAM wparam, LPARAM lparam)
 {
+	dpy_flushkeys();
+
 	switch (message)
 	{
 		case WM_CLOSE:
 			return 0;
 
-		case WM_ENTERSIZEMOVE:
-			printf("start size loop\n");
-			return 0;
-
 		case WM_EXITSIZEMOVE:
-			printf("exit size loop\n");
+			if (!isfullscreen)
+			{
+				window_geometry_valid = true;
+				GetWindowRect(window, &window_geometry);
+				write_window_geometry();
+			}
 			break;
 
 		case WM_SIZE:
-			printf("size\n");
 			if (!window_created)
 			{
 				create_cb();
@@ -357,7 +328,6 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			break;
 
 		case WM_SIZING:
-			printf("sizing\n");
 			sizing_cb(wparam, (RECT*) lparam);
 			goto delegate;
 
@@ -463,8 +433,7 @@ static bool resize_buffer(void)
 			backbuffer[p] = DEFAULT_CHAR;
 		}
 
-		printf("queue resize %d %d\n", rect.right, rect.bottom);
-		queue(-VK_RESIZE);
+		dpy_queuekey(-VK_RESIZE);
 		return true;
 	}
 
@@ -679,38 +648,6 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
 	for (int y = y1; y <= y2; y++)
 		for (int x = x1; x <= x2; x++)
 			backbuffer[y*screenwidth + x] = (' '<<4) | defaultattr;
-}
-
-uni_t dpy_getchar(int timeout)
-{
-	for (;;)
-	{
-		MSG msg;
-
-		for (;;)
-		{
-			if (numqueued)
-				return dequeue();
-
-			if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) != 0)
-				break;
-
-			if (timeout == -1)
-			{
-				GetMessageW(&msg, NULL, 0, 0);
-				break;
-			}
-			else
-			{
-				if (MsgWaitForMultipleObjects(0, NULL, FALSE, timeout*1000, QS_ALLINPUT)
-					== WAIT_TIMEOUT)
-						return -VK_TIMEOUT;
-			}
-		}
-
-		TranslateMessage(&msg);
-		DispatchMessageW(&msg);
-	}
 }
 
 const char* dpy_getkeyname(uni_t k)

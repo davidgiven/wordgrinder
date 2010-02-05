@@ -11,6 +11,13 @@
 
 #include "uthash.h"
 
+#define VKM_SHIFT      0x100
+#define VKM_CTRL       0x200
+#define VKM_CTRLASCII  0x400
+#define VK_RESIZE     0x1000
+#define VK_TIMEOUT    0x1001
+#define VK_REDRAW     0x1002
+
 struct glyph
 {
 	unsigned int id;
@@ -26,5 +33,8 @@ extern void glyphcache_getfontsize(int* w, int* h);
 
 extern void glyphcache_flush(void);
 extern struct glyph* glyphcache_getglyph(unsigned int id, HDC dc);
+
+extern void dpy_queuekey(uni_t key);
+extern void dpy_flushkeys(void);
 
 #endif
