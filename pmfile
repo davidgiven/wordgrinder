@@ -265,6 +265,7 @@ wordgrinder_w32_exe = cprogram {
 	cfile "src/c/emu/wcwidth.c",
 	cfile "src/c/arch/win32/gdi/dpy.c",
 	cfile "src/c/arch/win32/gdi/glyphcache.c",
+	cfile "src/c/arch/win32/gdi/realmain.c",
 	rcfile "src/c/arch/win32/wordgrinder.rc",
 
 	CCOMPILER = "%WINCCOMPILER% %WINCBUILDFLAGS%",
@@ -279,7 +280,8 @@ wordgrinder_w32_exe = cprogram {
 		"EMULATED_WCWIDTH",
 		"BUILTIN_LFS",
 		"WIN32",
-		"WINVER=0x0500"
+		"WINVER=0x0500",
+		"main=appMain"
 	},
 
 	CINCLUDES = {
@@ -332,43 +334,24 @@ windows = group {
 	wordgrinder_w32_release_exe,
 }	
 
-windows_package = simple {
-	class = "windows_package",
+windows_installer = simple {
+	class = "windows_installer",
 	command = {
-		"rm -f %out%",
-		"zip -9j %out% %in%"
+		"makensis -v2 -nocd -dVERSION=%VERSION% -dOUTFILE=%out% extras/windows-installer.nsi"
 	},
-	outputs = {"%U%-%I%.zip"},
+	outputs = {"%U%-%I%.exe"},
+	
+	file "extras/windows-installer.nsi",
+	wordgrinder_w32_release_exe,
+	
+	install = pm.install("bin/WordGrinder %VERSION% setup.exe")	
+}
 
-	file "COPYING",	
-	file "README.wg",
-	file "README.Windows.txt",
-	file "extras/DejaVuSansMono-license.txt",
-	file "extras/DejaVuSansMono.reg",
-	file "extras/DejaVuSansMono.ttf",
-}
-	
-windows_debug_zip = windows_package {
-	rename {
-		name = "wordgrinder_debug.exe",
-		wordgrinder_w32_debug_exe,
-	},
-	install = pm.install("bin/wordgrinder-for-windows-%VERSION%-debug.zip")	
-}
-	
-windows_release_zip = windows_package {
-	rename {
-		name = "wordgrinder.exe",
-		wordgrinder_w32_release_exe,
-	},
-	install = pm.install("bin/wordgrinder-for-windows-%VERSION%.zip")	
-}
- 
 all = group {
 	wordgrinder_debug_exe,
 	wordgrinder_release_exe,
-	windows_debug_zip,
-	windows_release_zip
+	wordgrinder_w32_debug_exe,
+	windows_installer
 }
 
 -- Once built, do the installation, rather crudely. FIXME.
