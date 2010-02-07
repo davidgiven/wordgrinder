@@ -27,7 +27,7 @@ struct fontinfo
 static int numfonts = 0;
 static struct fontinfo* fontdata = NULL;
 
-#define DEFAULT_PANOSE 0LL
+#define DEFAULT_PANOSE 0x2b66900000LL
 
 static struct glyph* create_struct_glyph(void)
 {
@@ -210,7 +210,7 @@ void glyphcache_init(HDC dc, LOGFONT* defaultfont)
 				fontdata[i].defaultfont = true;
 			}
 		}
-		
+
 		qsort(fontdata, numfonts, sizeof(*fontdata), font_sorter_cb);
 	}
 
