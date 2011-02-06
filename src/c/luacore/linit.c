@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Initialization of libraries for lua.c
 ** See Copyright Notice in lua.h
 */

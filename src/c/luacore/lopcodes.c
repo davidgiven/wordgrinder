@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** See Copyright Notice in lua.h
 */
 

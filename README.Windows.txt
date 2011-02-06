@@ -126,7 +126,3 @@ THE AUTHOR
 WordGrinder was written by me, David Given. You may contact me at
 dg@cowlark.com, or visit my website at http://www.cowlark.com. There may or
 may not be anything interesting there.
-
-
-
-$Id$

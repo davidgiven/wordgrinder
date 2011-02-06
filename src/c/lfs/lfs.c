@@ -15,8 +15,6 @@
 **   lfs.symlinkattributes (filepath [, attributename]) -- thanks to Sam Roberts
 **   lfs.touch (filepath [, atime [, mtime]])
 **   lfs.unlock (fh)
-**
-** $Id$
 */
 
 #define _LARGEFILE64_SOURCE

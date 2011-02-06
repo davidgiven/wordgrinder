@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Lua compiler (saves bytecodes to files; also list bytecodes)
 ** See Copyright Notice in lua.h
 */

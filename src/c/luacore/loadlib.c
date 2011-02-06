@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Dynamic library loader for Lua
 ** See Copyright Notice in lua.h
 **
