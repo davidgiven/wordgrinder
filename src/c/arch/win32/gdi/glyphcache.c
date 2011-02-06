@@ -64,6 +64,27 @@ struct font_reader_cb_data
 	long long currentpanose;
 };
 
+static long long compare_panose(unsigned long long p1, unsigned long long p2)
+{
+	unsigned long long result = 0;
+
+	for (int i=60; i >= 0; i--)
+	{
+		int d1 = (p1 >> i) & 0xf;
+		int d2 = (p2 >> i) & 0xf;
+		if ((d1 != 0) && (d1 != 1) && (d2 != 0) && (d2 != 1))
+		{
+			int d = d1 - d2;
+			if (d < 0)
+				d = -d;
+			result |= d;
+		}
+		result <<= 4;
+	}
+
+	return result;
+}
+
 static long long decode_panose(PANOSE* panose)
 {
 	BYTE* panosebytes = (BYTE*) panose;
@@ -108,9 +129,8 @@ static int CALLBACK font_reader_cb(
 		fi->logfont.lfHeight = fontheight;
 		fi->font = CreateFontIndirect(&fi->logfont);
 		assert(fi->font);
-		fi->panose = get_panose(fi->font, data->dc) - data->currentpanose;
-		if (fi->panose < 0)
-			fi->panose = -fi->panose;
+		unsigned long long p = get_panose(fi->font, data->dc);
+		fi->panose = compare_panose(p, data->currentpanose);
 
 		SelectObject(data->dc, fi->font);
 		int glyphsetsize = GetFontUnicodeRanges(data->dc, NULL);
