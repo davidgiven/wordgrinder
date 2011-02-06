@@ -88,6 +88,7 @@ Section "Start Menu Shortcuts"
 	CreateDirectory "$SMPROGRAMS\WordGrinder"
 	CreateShortCut "$SMPROGRAMS\WordGrinder\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder.lnk" "$INSTDIR\wordgrinder.exe" "" "$INSTDIR\wordgrinder.exe" 0
+	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder manual.lnk" "$INSTDIR\wordgrinder.exe" "$INSTDIR\README.wg" "$INSTDIR\wordgrinder.exe" 0
 SectionEnd
 
 ;--------------------------------
