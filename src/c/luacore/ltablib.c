@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Library for Table Manipulation
 ** See Copyright Notice in lua.h
 */

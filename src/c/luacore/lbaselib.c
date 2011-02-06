@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Basic library
 ** See Copyright Notice in lua.h
 */

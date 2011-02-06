@@ -1,8 +1,4 @@
 #!/bin/sh
-# $Id$
-# $HeadURL$
-# $LastChangedDate: 2007-10-05 00:12:15 +0100 (Fri, 05 Oct 2007) $
-#
 # Script to build a distribution package.
 
 set -e

@@ -1,7 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
 .TH WORDGRINDER 1 "@@@DATE@@@" "@@@VERSION@@@" "Terminal-based word processor"
-.\" $Id$
-.\" $URL: $
 .\"
 .\" Some roff macros, for reference:
 .\" .nh        disable hyphenation

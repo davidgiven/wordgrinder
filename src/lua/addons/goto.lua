@@ -1,9 +1,6 @@
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
---
--- $Id$
--- $URL$
 
 local string_rep = string.rep
 local table_concat = table.concat

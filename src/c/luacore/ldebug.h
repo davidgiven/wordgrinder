@@ -1,5 +1,4 @@
 /*
-** $Id$
 ** Auxiliary functions from Debug Interface module
 ** See Copyright Notice in lua.h
 */
