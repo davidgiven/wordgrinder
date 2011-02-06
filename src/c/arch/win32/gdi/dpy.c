@@ -218,6 +218,7 @@ static void setfont_cb(void)
 	cf.hwndOwner = window;
 	cf.lpLogFont = &fontlf;
 	cf.Flags = CF_INITTOLOGFONTSTRUCT | CF_FIXEDPITCHONLY | CF_SCREENFONTS;
+	cf.nFontType = SCREEN_FONTTYPE;
 
 	if (ChooseFont(&cf))
 	{
@@ -442,18 +443,29 @@ static bool resize_buffer(void)
 
 static void switch_to_full_screen(void)
 {
+	HMONITOR monitor;
+
 	if (window)
+	{
+		monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
 		DestroyWindow(window);
+	}
+	else
+		monitor = MonitorFromWindow(HWND_DESKTOP, MONITOR_DEFAULTTONEAREST);
 
-	RECT rect;
-	SystemParametersInfo(SPI_GETWORKAREA, sizeof(RECT), &rect, 0);
+	MONITORINFO mi;
+	mi.cbSize = sizeof(mi);
+	GetMonitorInfo(monitor, &mi);
 
-	window = CreateWindowW(
+	window = CreateWindowExW(
+		WS_EX_TOPMOST,                  /* Extended class style */
 		L"WordGrinder",                 /* Class Name */
 		L"WordGrinder",                 /* Title */
-		WS_POPUPWINDOW | WS_VISIBLE,    /* Style */
-		0, 0,                           /* Position */
-		rect.right, rect.bottom,        /* Size */
+		WS_POPUP,                       /* Style */
+		mi.rcMonitor.left,              /* x */
+		mi.rcMonitor.top,               /* y */
+		mi.rcMonitor.right - mi.rcMonitor.left, /* width */
+		mi.rcMonitor.bottom - mi.rcMonitor.top, /* height */
 		HWND_DESKTOP,                   /* Parent */
 		NULL,                           /* No menu */
 		GetModuleHandle(NULL),          /* Instance */
