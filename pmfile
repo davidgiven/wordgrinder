@@ -312,7 +312,7 @@ wordgrinder_w32_release_exe = group {
 	wordgrinder_w32_exe,
 	CBUILDFLAGS = {PARENT, '-Os'},
 	CDEFINES = {PARENT, 'NDEBUG'},
-	CLINKFLAGS = {PARENT, '-s'},
+	CLINKFLAGS = {PARENT, '-static', '-s'},
 	
 	install = pm.install("bin/wordgrinder.exe")
 }
@@ -320,6 +320,7 @@ wordgrinder_w32_release_exe = group {
 wordgrinder_w32_debug_exe = group {
 	wordgrinder_w32_exe,
 	CBUILDFLAGS = {PARENT, '-g'},
+	CLINKFLAGS = {PARENT, '-static'},
 	
 	install = pm.install("bin/wordgrinder-debug.exe")
 }
