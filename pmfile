@@ -155,6 +155,27 @@ lualfs = group {
 	cfile "src/c/lfs/lfs.c"
 }
 
+-- zlib (only used on some platforms)
+
+zlib = group {
+	cfile "src/c/zlib/deflate.c",
+	cfile "src/c/zlib/inflate.c",
+	cfile "src/c/zlib/inffast.c",
+	cfile "src/c/zlib/inftrees.c",
+	cfile "src/c/zlib/adler32.c",
+	cfile "src/c/zlib/crc32.c",
+	cfile "src/c/zlib/trees.c",
+	cfile "src/c/zlib/zutil.c"
+}
+
+-- Minizip
+
+minizip = group {
+	cfile "src/c/minizip/ioapi.c",
+	cfile "src/c/minizip/zip.c",
+	cfile "src/c/minizip/unzip.c"
+}
+
 -- Build the Lua part of the program into a C file.
 
 wordgrinder_lua = simple {
@@ -201,6 +222,7 @@ wordgrinder_core = group {
 
 wordgrinder_curses_exe = cprogram {
 	wordgrinder_core,
+	minizip,
 	cfile "src/c/arch/unix/cursesw/dpy.c",
 
 	CDEFINES = {
@@ -212,7 +234,8 @@ wordgrinder_curses_exe = cprogram {
 	CLIBRARIES = {
 		PARENT,
 		'ncursesw',
-		'lua5.1'
+		'lua5.1',
+		'z'
 	}
 }
 
@@ -220,13 +243,15 @@ wordgrinder_static_exe = cprogram {
 	luacore,
 	lualfs,
 	wordgrinder_core,
+	minizip,
+	zlib,
 	cfile "src/c/emu/wcwidth.c",
 	cfile "src/c/arch/unix/cursesw/dpy.c",
 
 	CBUILDFLAGS = {PARENT, '-Os'},
 	LUABUILDFLAGS = {PARENT, '-s'},
 	CDEFINES = {PARENT, 'NDEBUG'},
-	CLINKFLAGS = {PARENT, '-s', '-static'},
+	CLINKFLAGS = {PARENT, '-s'},
 	
 	CDEFINES = {
 		PARENT,
@@ -259,6 +284,8 @@ wordgrinder_w32_exe = cprogram {
 	luacore,
 	lualfs,
 	wordgrinder_core,
+	minizip,
+	zlib,
 	cfile "src/c/emu/wcwidth.c",
 	cfile "src/c/arch/win32/gdi/dpy.c",
 	cfile "src/c/arch/win32/gdi/glyphcache.c",

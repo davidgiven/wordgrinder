@@ -17,9 +17,10 @@
 /* --- Emulation issues -------------------------------------------------- */
 
 #if defined EMULATED_WCWIDTH
-extern int wcwidth(int c);
+extern int emu_wcwidth(int c);
 #else
 #include <wchar.h>
+#define emu_wcwidth(c) wcwidth(c)
 #endif
 
 extern int main(int argc, const char* argv[]);

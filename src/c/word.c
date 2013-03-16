@@ -143,7 +143,7 @@ static int writestyled_cb(lua_State* L)
 				dpy_writechar(x-1, y, 160); /* non-breaking space */
 
 			dpy_writechar(x, y, c);
-			x += wcwidth(c);
+			x += emu_wcwidth(c);
 			first = false;
 		}
 	}
