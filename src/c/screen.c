@@ -85,7 +85,7 @@ static int write_cb(lua_State* L)
 
 		dpy_writechar(x, y, c);
 		if (!iswcntrl(c))
-			x += wcwidth(c);
+			x += emu_wcwidth(c);
 	}
 
 	return 0;
@@ -128,7 +128,7 @@ static int getstringwidth_cb(lua_State* L)
 	{
 		wchar_t c = readu8(&s);
 		if (!iswcntrl(c))
-			width += wcwidth(c);
+			width += emu_wcwidth(c);
 	}
 
 	lua_pushnumber(L, width);
@@ -149,7 +149,7 @@ static int getboundedstring_cb(lua_State* L)
 		wchar_t c = readu8(&s);
 		if (!iswcntrl(c))
 		{
-			width -= wcwidth(c);
+			width -= emu_wcwidth(c);
 			if (width < 0)
 			{
 				send = p;
@@ -192,7 +192,7 @@ static int getchar_cb(lua_State* L)
 			}
 		}
 
-		if (wcwidth(c) > 0)
+		if (emu_wcwidth(c) > 0)
 		{
 			static char buffer[8];
 			char* p = buffer;

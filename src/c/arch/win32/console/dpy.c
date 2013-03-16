@@ -229,7 +229,7 @@ static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
 
 	/* Anything else must be printable. */
 
-	if (wcwidth(c) > 0)
+	if (emu_wcwidth(c) > 0)
 	{
 		if (state & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED))
 		{

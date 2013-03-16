@@ -124,7 +124,7 @@ uni_t dpy_getchar(int timeout)
 		if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
 			return -c;
 
-		if (wcwidth(c) > 0)
+		if (emu_wcwidth(c) > 0)
 			return c;
 	}
 }

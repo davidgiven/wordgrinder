@@ -3,7 +3,6 @@
 -- file in this distribution for the full text.
 
 include "tools/c.pm"
-include "tools/lua.pm"
 
 HOME = os.getenv("HOME")
 DATE = "13 December 2009"
@@ -182,30 +181,30 @@ wordgrinder_lua = simple {
 	outputs = {"%U%-%I%.c"},
 	command = "lua tools/multibin2c.lua script_table %in% > %out%",
 	
-	luafile "src/lua/_prologue.lua",
-	luafile "src/lua/utils.lua",
-	luafile "src/lua/events.lua",
-	luafile "src/lua/redraw.lua",
-	luafile "src/lua/document.lua",
-	luafile "src/lua/forms.lua",
-	luafile "src/lua/ui.lua",
-	luafile "src/lua/browser.lua",
-	luafile "src/lua/html.lua",
-	luafile "src/lua/margin.lua",
-	luafile "src/lua/fileio.lua",
-	luafile "src/lua/export.lua",
-	luafile "src/lua/export/text.lua",
-	luafile "src/lua/export/html.lua",
-	luafile "src/lua/export/latex.lua",
-	luafile "src/lua/export/troff.lua",
-	luafile "src/lua/import.lua",
-	luafile "src/lua/navigate.lua",
-	luafile "src/lua/addons/goto.lua",
-	luafile "src/lua/addons/autosave.lua",
-	luafile "src/lua/addons/docsetman.lua",
-	luafile "src/lua/addons/scrapbook.lua",
-	luafile "src/lua/menu.lua",
-	luafile "src/lua/main.lua",
+	"src/lua/_prologue.lua",
+	"src/lua/utils.lua",
+	"src/lua/events.lua",
+	"src/lua/redraw.lua",
+	"src/lua/document.lua",
+	"src/lua/forms.lua",
+	"src/lua/ui.lua",
+	"src/lua/browser.lua",
+	"src/lua/html.lua",
+	"src/lua/margin.lua",
+	"src/lua/fileio.lua",
+	"src/lua/export.lua",
+	"src/lua/export/text.lua",
+	"src/lua/export/html.lua",
+	"src/lua/export/latex.lua",
+	"src/lua/export/troff.lua",
+	"src/lua/import.lua",
+	"src/lua/navigate.lua",
+	"src/lua/addons/goto.lua",
+	"src/lua/addons/autosave.lua",
+	"src/lua/addons/docsetman.lua",
+	"src/lua/addons/scrapbook.lua",
+	"src/lua/menu.lua",
+	"src/lua/main.lua",
 }
 
 -- Build the main program.
@@ -263,7 +262,8 @@ wordgrinder_static_exe = cprogram {
 	
 	CINCLUDES = {
 		PARENT,
-		"src/c/luacore"
+		"src/c/luacore",
+		"src/c/zlib"
 	},
 	
 	CLIBRARIES = {
@@ -310,7 +310,8 @@ wordgrinder_w32_exe = cprogram {
 
 	CINCLUDES = {
 		PARENT,
-		"src/c/luacore"
+		"src/c/luacore",
+		"src/c/zlib"
 	},
 }
 

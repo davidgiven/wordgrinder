@@ -368,7 +368,7 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 		glyph->dc = CreateCompatibleDC(dc);
 		if (!glyph->dc)
 			goto error;
-		glyph->width = wcwidth(id >> 4) * fontwidth;
+		glyph->width = emu_wcwidth(id >> 4) * fontwidth;
 		glyph->bitmap = CreateCompatibleBitmap(dc, glyph->width, fontheight);
 		if (!glyph->bitmap)
 			goto error;

@@ -361,7 +361,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			MSG tmessage;
 			if (PeekMessage(&tmessage, window, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE))
 			{
-				if (wcwidth(tmessage.wParam) > 0)
+				if (emu_wcwidth(tmessage.wParam) > 0)
 					unicode_key(tmessage.wParam, tmessage.lParam);
 				else
 					return special_key(wparam, lparam);
@@ -616,7 +616,7 @@ void dpy_sync(void)
 			unsigned int id = backbuffer[y*screenwidth + x];
 			frontbuffer[seq] = glyphcache_getglyph(id, dc);
 
-			if (wcwidth(id>>4) == 2)
+			if (emu_wcwidth(id>>4) == 2)
 			{
 				frontbuffer[seq+1] = NULL;
 				x++;
