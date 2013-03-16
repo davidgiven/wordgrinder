@@ -4,7 +4,7 @@
 
 local int = math.floor
 local Write = wg.write
-local Goto = wg.goto
+local GotoXY = wg.gotoxy
 local GetStringWidth = wg.getstringwidth
 local GetBoundedString = wg.getboundedstring
 local GetBytesOfCharacter = wg.getbytesofcharacter
@@ -119,7 +119,7 @@ Form.Checkbox = makewidgetclass {
 		SetNormal()
 				
 		if self.focus then
-			Goto(self.realx2, self.realy1)
+			GotoXY(self.realx2, self.realy1)
 		end
 	end,
 	
@@ -166,7 +166,7 @@ Form.TextField = makewidgetclass {
 		SetNormal()
 		
 		if self.focus then
-			Goto(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
+			GotoXY(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
 		end
 	end,
 
@@ -543,7 +543,7 @@ function Form.Run(dialogue, redraw)
 		
 	-- Draw the widgets.
 	
-	Goto(ScreenWidth-1, ScreenHeight-1)
+	GotoXY(ScreenWidth-1, ScreenHeight-1)
 	for i, widget in ipairs(dialogue) do
 		widget.focus = (i == dialogue.focus)
 		widget:draw()

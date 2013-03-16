@@ -5,7 +5,7 @@
 -- Load the LFS module if needed (Windows has it built in).
 
 if not lfs then
-	require "lfs"
+	lfs = require "lfs"
 end
 
 -- Global definitions that the various source files need.

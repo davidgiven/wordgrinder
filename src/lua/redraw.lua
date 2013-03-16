@@ -4,7 +4,7 @@
 
 local int = math.floor
 local Write = wg.write
-local Goto = wg.goto
+local GotoXY = wg.gotoxy
 local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
@@ -155,7 +155,7 @@ function RedrawScreen()
 
 	do
 		local word = paragraph[Document.cw]
-		Goto(margin + word.x + word:getXOffsetOfChar(Document.co) +
+		GotoXY(margin + word.x + word:getXOffsetOfChar(Document.co) +
 			(paragraph.style.indent or 0), cy - 1)	
 	end
 	

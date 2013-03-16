@@ -42,23 +42,13 @@ CDEFINES = {
 	
 CINCLUDES = {
 	"/usr/include/ncursesw",
-	"/usr/include/lua5.1",
+	"/usr/include/lua5.2",
 	"src/c"
 }
 
--- When doing a Windows build, what compiler should we use?
-
-if posix.stat("c:/") then
-	-- Attempt to autodetect cygwin, which is rather strange.
-	WINCCOMPILER = "gcc"
-	WINCBUILDFLAGS = {"-mno-cygwin"}
-	WINRESCOMPILER = "windres"
-else
-	-- Otherwise, change this to something appropriate.
-	WINCCOMPILER = "i586-mingw32msvc-gcc"
-	WINCBUILDFLAGS = EMPTY
-	WINRESCOMPILER = "i586-mingw32msvc-windres"
-end
+WINCCOMPILER = "mingw32-gcc.exe"
+WINCBUILDFLAGS = EMPTY
+WINRESCOMPILER = "windres.exe"
 
 -----------------------------------------------------------------------------
 -- Build rules
@@ -233,22 +223,19 @@ wordgrinder_curses_exe = cprogram {
 	CLIBRARIES = {
 		PARENT,
 		'ncursesw',
-		'lua5.1',
+		'lua5.2',
 		'z'
 	}
 }
 
 wordgrinder_static_exe = cprogram {
-	luacore,
 	lualfs,
 	wordgrinder_core,
 	minizip,
-	zlib,
 	cfile "src/c/emu/wcwidth.c",
 	cfile "src/c/arch/unix/cursesw/dpy.c",
 
 	CBUILDFLAGS = {PARENT, '-Os'},
-	LUABUILDFLAGS = {PARENT, '-s'},
 	CDEFINES = {PARENT, 'NDEBUG'},
 	CLINKFLAGS = {PARENT, '-s'},
 	
@@ -269,6 +256,8 @@ wordgrinder_static_exe = cprogram {
 	CLIBRARIES = {
 		PARENT,
 		'ncursesw',
+		'lua5.2',
+		'z'
 	},
 
 	install = pm.install("bin/wordgrinder-static")
@@ -281,11 +270,11 @@ rcfile = simple_with_clike_dependencies {
 }
 
 wordgrinder_w32_exe = cprogram {
-	luacore,
+	outputs = {"%U%-%I%.exe"},
+	 
 	lualfs,
 	wordgrinder_core,
 	minizip,
-	zlib,
 	cfile "src/c/emu/wcwidth.c",
 	cfile "src/c/arch/win32/gdi/dpy.c",
 	cfile "src/c/arch/win32/gdi/glyphcache.c",
@@ -299,6 +288,12 @@ wordgrinder_w32_exe = cprogram {
 		"-mwindows"
 	},
 	
+	CLIBRARIES = {
+		PARENT,
+		"z",
+		"lua"
+	},
+	
 	CDEFINES = {
 		PARENT,
 		"EMULATED_WCWIDTH",
@@ -310,15 +305,12 @@ wordgrinder_w32_exe = cprogram {
 
 	CINCLUDES = {
 		PARENT,
-		"src/c/luacore",
-		"src/c/zlib"
 	},
 }
 
 wordgrinder_w32_release_exe = group {
 	wordgrinder_w32_exe,
 	CBUILDFLAGS = {PARENT, '-Os'},
-	LUABUILDFLAGS = {PARENT, '-s'},
 	CDEFINES = {PARENT, 'NDEBUG'},
 	CLINKFLAGS = {PARENT, '-s'},
 	
@@ -335,7 +327,6 @@ wordgrinder_w32_debug_exe = group {
 wordgrinder_release_exe = group {
 	wordgrinder_curses_exe,
 	CBUILDFLAGS = {PARENT, '-Os'},
-	LUABUILDFLAGS = {PARENT, '-s'},
 	CDEFINES = {PARENT, 'NDEBUG'},
 	CLINKFLAGS = {PARENT, '-s'},
 	

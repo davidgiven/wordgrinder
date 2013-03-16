@@ -5,7 +5,7 @@
 local Write = wg.write
 local ClearToEOL = wg.cleartoeol
 local GetChar = wg.getchar
-local Goto = wg.goto
+local GotoXY = wg.gotoxy
 local SetBold = wg.setbold
 local SetReverse = wg.setreverse
 local SetNormal = wg.setnormal
@@ -245,7 +245,7 @@ MenuClass = {
 			
 			SetNormal()
 		end
-		Goto(ScreenWidth-1, ScreenHeight-1)
+		GotoXY(ScreenWidth-1, ScreenHeight-1)
 		
 		DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
 	end,

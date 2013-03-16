@@ -30,7 +30,8 @@ static int report(lua_State* L, int status)
 
 static int traceback (lua_State *L)
 {
-	lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+	lua_pushglobaltable(L);
+	lua_getfield(L, -1, "debug");
 	if (!lua_istable(L, -1))
 	{
 		lua_pop(L, 1);
@@ -72,7 +73,7 @@ void script_deinit(void)
 
 void script_init(void)
 {
-	L = lua_open();
+	L = luaL_newstate();
 	luaL_openlibs(L);
 
 #if defined BUILTIN_LFS
@@ -91,6 +92,9 @@ void script_init(void)
 
 	lua_pushnumber(L, FILEFORMAT);
 	lua_setglobal(L, "FILEFORMAT");
+
+	lua_newtable(L);
+	lua_setglobal(L, "wg");
 
 	lua_pushboolean(L,
 #ifndef NDEBUG
