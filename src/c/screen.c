@@ -101,7 +101,7 @@ static int cleararea_cb(lua_State* L)
 	return 0;
 }
 
-static int goto_cb(lua_State* L)
+static int gotoxy_cb(lua_State* L)
 {
 	cursorx = luaL_checkint(L, 1);
 	cursory = luaL_checkint(L, 2);
@@ -224,7 +224,7 @@ void screen_init(const char* argv[])
 		{ "setnormal",                 setnormal_cb },
 		{ "write",                     write_cb },
 		{ "cleararea",                 cleararea_cb },
-		{ "goto",                      goto_cb },
+		{ "gotoxy",                    gotoxy_cb },
 		{ "getscreensize",             getscreensize_cb },
 		{ "getstringwidth",            getstringwidth_cb },
 		{ "getboundedstring",          getboundedstring_cb },
@@ -233,5 +233,6 @@ void screen_init(const char* argv[])
 		{ NULL,                        NULL }
 	};
 
-	luaL_register(L, "wg", funcs);
+	lua_getglobal(L, "wg");
+	luaL_setfuncs(L, funcs, 0);
 }

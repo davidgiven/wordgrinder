@@ -144,5 +144,6 @@ void utils_init(void)
 		{ NULL,                        NULL }
 	};
 
-	luaL_register(L, "wg", funcs);
+	lua_getglobal(L, "wg");
+	luaL_setfuncs(L, funcs, 0);
 }

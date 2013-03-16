@@ -4,7 +4,7 @@
 
 local int = math.floor
 local Write = wg.write
-local Goto = wg.goto
+local GotoXY = wg.gotoxy
 local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold

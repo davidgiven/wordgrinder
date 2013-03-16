@@ -438,7 +438,8 @@ void word_init(void)
 		{ NULL,                        NULL }
 	};
 
-	luaL_register(L, "wg", funcs);
+	lua_getglobal(L, "wg");
+	luaL_setfuncs(L, funcs, 0);
 
 	lua_pushnumber(L, 1<<STYLE_ITALIC);
 	lua_setfield(L, -2, "ITALIC");
