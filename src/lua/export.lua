@@ -78,9 +78,7 @@ function ExportFileUsingCallbacks(document, cb)
 		cb.paragraph_start(style.name)
 	
 		if (#paragraph == 1) and (#paragraph[1].text == 0) then
-			if rawmode then
-				cb.notext()
-			end
+			cb.notext()
 		else
 			firstword = true
 			wordbreak = false	
