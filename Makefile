@@ -137,7 +137,6 @@ $(call cfile, src/c/utils.c)
 $(call cfile, src/c/main.c)
 $(call cfile, src/c/lua.c)
 $(call cfile, src/c/word.c)
-$(call cfile, src/c/bit.c)
 $(call cfile, src/c/screen.c)
 $(call cfile, .obj/luascripts.c)
 

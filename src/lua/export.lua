@@ -5,10 +5,10 @@
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
 local ParseWord = wg.parseword
-local bitand = wg.bitand
-local bitor = wg.bitor
-local bitxor = wg.bitxor
-local bit = wg.bit
+local bitand = bit32.band
+local bitor = bit32.bor
+local bitxor = bit32.bxor
+local bit = bit32.btest
 local string_lower = string.lower
 
 -- Renders the document by calling the appropriate functions on the cb
