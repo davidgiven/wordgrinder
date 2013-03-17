@@ -16,6 +16,7 @@ int main(int argc, const char* argv[])
 	screen_init(argv);
 	word_init();
 	utils_init();
+	zip_init();
 
 	script_load_from_table(script_table);
 	script_run(argv);
