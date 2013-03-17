@@ -8,6 +8,7 @@ PREFIX = $(HOME)
 CC = gcc
 WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
+MAKENSIS = makensis
 
 VERSION := 0.4
 FILEFORMAT := 3
@@ -270,7 +271,7 @@ src/c/arch/win32/wordgrinder.rc: src/c/arch/win32/icon.ico
 $(WININSTALLER): extras/windows-installer.nsi bin/wordgrinder.exe
 	@echo INSTALLER
 	@mkdir -p bin # $(dir) doesn't work with spaces
-	$(hide)makensis -v2 -nocd -dVERSION=$(VERSION) -dOUTFILE=$(WININSTALLER) $<
+	$(hide)$(MAKENSIS) -v2 -nocd -dVERSION=$(VERSION) -dOUTFILE=$(WININSTALLER) $<
 
 clean::
 	@echo CLEAN $(WININSTALLER)
