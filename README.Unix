@@ -30,7 +30,7 @@ WordGrinder needs the following packages installed:
  - ncursesw, the wide-character version of curses. This is supplied with
    most systems.
    
- - Lua 5.1, the programming language. This is available from:
+ - Lua 5.2, the programming language. This is available from:
      http://www.lua.org/
      
  - LuaFileSystem 1.2, the file system access extension to Lua. This is
@@ -45,22 +45,19 @@ WordGrinder needs the following packages installed:
 If you have Debian, you've already got all these. Merely install these
 packages:
 
-  libncursesw5-dev liblua5.1-0-dev liblua5.1-filesystem0
+  libncursesw5-dev liblua5.2-dev lua-filesystem-dev
   
 
-WordGrinder uses Prime Mover (http://primemover.sf.net) as its build system.
-You do not need to install anything to make this work. You will, however, need
-to configure the pmfile. Load it into an editor and follow the instructions;
-there is very little that will need changing (nothing, if you're on Debian).  
-  
-Then, simply do:
+To build, simply do:
 
-  ./pm install
+  make
   
-WordGrinder will build and install to the location you specified in the
-pmfile. (If you specified a location that needs to be written to as root,
-you will need to use sudo. If you don't like building things as root, you can
-build and install in two stages by doing "./pm; ./pm install").
+To install, do:
+
+  sudo make install PREFIX=/usr
+  
+(Change PREFIX to whatever you like; naturally, if you're not installing in a
+global location, you don't need sudo.)
 
 It is now ready to use.
 
