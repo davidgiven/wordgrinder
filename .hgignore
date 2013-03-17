@@ -1,4 +1,3 @@
-
 syntax: regexp
 ^bin$
-^.pm-.*$
+^\.obj/.*$
