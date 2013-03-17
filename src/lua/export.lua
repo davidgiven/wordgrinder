@@ -10,6 +10,7 @@ local bitor = bit32.bor
 local bitxor = bit32.bxor
 local bit = bit32.btest
 local string_lower = string.lower
+local time = wg.time
 
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
@@ -147,7 +148,12 @@ function ExportFileWithUI(filename, title, extension, callback)
 		return false
 	end
 	
-	callback(fp, Document)
+	local fpw = fp.write
+	local writer = function(s)
+		fpw(fp, s)
+	end
+	
+	callback(writer, Document)
 	fp:close()
 	
 	QueueRedraw()

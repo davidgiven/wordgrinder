@@ -4,6 +4,7 @@
  */
 
 #include "globals.h"
+#include <sys/time.h>
 
 static const uint32_t offsets[6] = {
     0x00000000UL, 0x00003080UL, 0x000E2080UL,
@@ -91,11 +92,12 @@ static int readu8_cb(lua_State* L)
 
 	if (offset > 0)
 		offset--;
-	s = s + offset;
-	c = readu8(&s);
+	const char* p = s + offset;
+	c = readu8(&p);
 
 	lua_pushnumber(L, c);
-	return 1;
+	lua_pushinteger(L, (p - s)+1);
+	return 2;
 }
 
 static int writeu8_cb(lua_State* L)
@@ -105,8 +107,7 @@ static int writeu8_cb(lua_State* L)
 	char* s = buffer;
 
 	writeu8(&s, c);
-	*s = '\0';
-	lua_pushstring(L, buffer);
+	lua_pushlstring(L, buffer, s-buffer);
 	return 1;
 }
 
@@ -134,6 +135,18 @@ static int transcode_cb(lua_State* L)
 	return 1;
 }
 
+static int time_cb(lua_State* L)
+{
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+
+	double t = (double)tv.tv_sec +
+			(double)tv.tv_usec / 1000000.0;
+	lua_pushnumber(L, t);
+
+	return 1;
+}
+
 void utils_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -141,6 +154,7 @@ void utils_init(void)
 		{ "readu8",                    readu8_cb },
 		{ "writeu8",                   writeu8_cb },
 		{ "transcode",                 transcode_cb },
+		{ "time",                      time_cb },
 		{ NULL,                        NULL }
 	};
 

@@ -2,18 +2,18 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local function callback(fp, document)
+local function callback(writer, document)
 	return ExportFileUsingCallbacks(document,
 	{
 		prologue = function()
 		end,
 		
 		rawtext = function(s)
-			fp:write(s)
+			writer(s)
 		end,
 		
 		text = function(s)
-			fp:write(s)
+			writer(s)
 		end,
 		
 		notext = function(s)
@@ -41,7 +41,7 @@ local function callback(fp, document)
 		end,		
 		
 		paragraph_end = function(style)
-			fp:write('\n')
+			writer('\n')
 		end,
 		
 		epilogue = function()

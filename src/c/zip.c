@@ -58,7 +58,7 @@ static int compress_cb(lua_State* L)
 	uint8_t outputbuffer[64*1024];
 
 	z_stream zs = {0};
-	int i = deflateInit(&zs, Z_DEFAULT_COMPRESSION);
+	int i = deflateInit(&zs, 1);
 	if (i != Z_OK)
 		return 0;
 

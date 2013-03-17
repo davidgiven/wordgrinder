@@ -27,7 +27,7 @@ local style_tab =
 	["PRE"] = {true, '<pre>', '</pre>'}
 }
 
-local function callback(fp, document)
+local function callback(writer, document)
 	local settings = DocumentSet.addons.htmlexport
 	local currentpara = nil
 	
@@ -41,63 +41,63 @@ local function callback(fp, document)
 			not newstyle[1] 
 		then
 			if currentstyle then
-				fp:write(currentstyle[3])
+				writer(currentstyle[3])
 			end
-			fp:write("\n")
+			writer("\n")
 			if newstyle then
-				fp:write(newstyle[2])
+				writer(newstyle[2])
 			end
 			currentpara = newpara
 		else
-			fp:write("\n")
+			writer("\n")
 		end
 	end
 		
 	return ExportFileUsingCallbacks(document,
 	{
 		prologue = function()
-			fp:write('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n')
-			fp:write('<html><head>\n')
-			fp:write('<meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n')
-			fp:write('<meta name="generator" content="WordGrinder '..VERSION..'">\n')
-			fp:write('<title>', unhtml(document.name), '</title>\n')
-			fp:write('</head><body>\n')
+			writer('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n')
+			writer('<html><head>\n')
+			writer('<meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n')
+			writer('<meta name="generator" content="WordGrinder '..VERSION..'">\n')
+			writer('<title>', unhtml(document.name), '</title>\n')
+			writer('</head><body>\n')
 		end,
 		
 		rawtext = function(s)
-			fp:write(s)
+			writer(s)
 		end,
 		
 		text = function(s)
-			fp:write(unhtml(s))
+			writer(unhtml(s))
 		end,
 		
 		notext = function(s)
-			fp:write('<br/>')
+			writer('<br/>')
 		end,
 		
 		italic_on = function()
-			fp:write(settings.italic_on)
+			writer(settings.italic_on)
 		end,
 		
 		italic_off = function()
-			fp:write(settings.italic_off)
+			writer(settings.italic_off)
 		end,
 		
 		underline_on = function()
-			fp:write(settings.underline_on)
+			writer(settings.underline_on)
 		end,
 		
 		underline_off = function()
-			fp:write(settings.underline_off)
+			writer(settings.underline_off)
 		end,
 		
 		list_start = function()
-			fp:write('<ul>')
+			writer('<ul>')
 		end,
 		
 		list_end = function()
-			fp:write('</ul>')
+			writer('</ul>')
 		end,
 		
 		paragraph_start = function(style)
@@ -109,8 +109,8 @@ local function callback(fp, document)
 		
 		epilogue = function()
 			changepara(nil)
-			fp:write('</body>\n')	
-			fp:write('</html>\n')
+			writer('</body>\n')	
+			writer('</html>\n')
 		end
 	})
 end
