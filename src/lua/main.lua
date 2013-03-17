@@ -116,7 +116,7 @@ function WordProcessor(filename)
 		if not f then
 			ModalMessage("Internal error!",
 				"Something went wrong inside WordGrinder! I'll try and "..
-				"but you should save your work immediately (under a "..
+				"continue but you should save your work immediately (under a "..
 				"different filename), exit, and send the following technical "..
 				"information to the author:\n\n" .. e)
 		end
