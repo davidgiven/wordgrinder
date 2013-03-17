@@ -134,6 +134,7 @@ endef
 define build-wordgrinder-core
 
 $(call cfile, src/c/utils.c)
+$(call cfile, src/c/zip.c)
 $(call cfile, src/c/main.c)
 $(call cfile, src/c/lua.c)
 $(call cfile, src/c/word.c)

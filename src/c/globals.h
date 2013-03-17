@@ -60,9 +60,9 @@ extern void screen_deinit(void);
 
 extern void word_init(void);
 
-/* --- Bitmask management ------------------------------------------------ */
+/* --- Zipfile management ------------------------------------------------ */
 
-extern void bit_init(void);
+extern void zip_init(void);
 
 /* --- General utilities ------------------------------------------------- */
 
