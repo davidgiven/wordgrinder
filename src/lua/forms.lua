@@ -456,6 +456,10 @@ local function findaction(table, object, key)
 end
 
 function Form.Run(dialogue, redraw)
+	-- Ensure the screen is properly sized.
+	
+	ResizeScreen()
+	
 	-- Find a widget to give the focus to.
 	
 	if not dialogue.focus then
