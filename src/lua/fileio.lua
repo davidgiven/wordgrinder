@@ -9,23 +9,44 @@ local bitand = bit32.band
 local bitor = bit32.bor
 local bitxor = bit32.bxor
 local bit = bit32.btest
+local time = wg.time
+local compress = wg.compress
+local decompress = wg.decompress
+local writeu8 = wg.writeu8
+local readu8 = wg.readu8
 
 local MAGIC = "WordGrinder dumpfile v1: this is not a text file!"
+local ZMAGIC = "WordGrinder dumpfile v2: this is not a text file!"
 
-local function writetostream(object, fp)
+local STOP = 0
+local TABLE = 1
+local BOOLEANTRUE = 2
+local BOOLEANFALSE = 3
+local STRING = 4
+local NUMBER = 5
+local CACHE = 6
+
+local DOCUMENTSETCLASS = 100
+local DOCUMENTCLASS = 101
+local PARAGRAPHCLASS = 102
+local WORDCLASS = 103
+local MENUCLASS = 104
+
+local function writetostream(object, writes, writei)
 	local type_lookup = {
-		[DocumentSetClass] = "DS",
-		[DocumentClass] = "D",
-		[ParagraphClass] = "P",
-		[WordClass] = "W",
-		[MenuClass] = "M",
+		[DocumentSetClass] = DOCUMENTSETCLASS,
+		[DocumentClass] = DOCUMENTCLASS,
+		[ParagraphClass] = PARAGRAPHCLASS,
+		[WordClass] = WORDCLASS,
+		[MenuClass] = MENUCLASS,
 	}
 	
 	local cache = {}
 	local cacheid = 1
 	local function save(t)
 		if cache[t] then
-			fp:write(cache[t], "\n")
+			writei(CACHE)
+			writei(cache[t])
 			return
 		end
 		cache[t] = cacheid
@@ -36,9 +57,10 @@ local function writetostream(object, fp)
 			if m then
 				m = type_lookup[m.__index]
 			else
-				m = "T"
+				m = TABLE
 			end
-			fp:write(m, "\n", #t, "\n")
+			writei(m)
+			writei(#t)
 			
 			for _, i in ipairs(t) do
 				save(i)
@@ -49,17 +71,20 @@ local function writetostream(object, fp)
 					save(v)
 				end
 			end
-			fp:write(".\n")
+			writei(STOP)
 		elseif (type(t) == "boolean") then
 			if t then
-				fp:write("B\nT\n")
+				writei(BOOLEANTRUE)
 			else
-				fp:write("B\nF\n")
+				writei(BOOLEANFALSE)
 			end
 		elseif (type(t) == "string") then
-			fp:write("S\n", t, "\n")
+			writei(STRING)
+			writei(#t)
+			writes(t)
 		elseif (type(t) == "number") then
-			fp:write("N\n", t, "\n")
+			writei(NUMBER)
+			writei(t)
 		else
 			error("unsupported type "..type(t))
 		end
@@ -77,8 +102,26 @@ function SaveDocumentSetRaw(filename)
 	end
 	
 	DocumentSet:purge()
-	fp:write(MAGIC, "\n")
-	local r = writetostream(DocumentSet, fp)
+	
+	local fpw = fp.write
+	
+	local ss = {}
+	local writes = function(s)
+		if (type(s) == "number") then
+			s = writeu8(s)
+		end
+		ss[#ss+1] = s
+	end
+	
+	local writei = function(s)
+		s = writeu8(s)
+		ss[#ss+1] = s
+	end
+	
+	fp:write(ZMAGIC, "\n")
+	local r = writetostream(DocumentSet, writes, writei)
+	local s = compress(table.concat(ss))	
+	fp:write(s)
 	fp:close()
 	
 	return r
@@ -226,17 +269,142 @@ local function loadfromstream(fp)
 	return load()		
 end
 
+local function loadfromstreamz(fp)
+	local cache = {}
+	local load
+	local data = decompress(fp:read("*a"))
+	local offset = 1
+	
+	local function populate_table(t)
+		local n
+		n, offset = readu8(data, offset)
+		for i = 1, n do
+			t[i] = load()
+		end
+		
+		while true do
+			local k = load()
+			if not k then
+				break
+			end
+			
+			t[k] = load()
+		end
+		
+		return t
+	end
+	
+	local load_cb = {
+		[CACHE] = function()
+			local n
+			n, offset = readu8(data, offset)
+			return cache[n]
+		end,
+		
+		[DOCUMENTSETCLASS] = function()
+			local t = {}
+			setmetatable(t, {__index = DocumentSetClass})
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[DOCUMENTCLASS] = function()
+			local t = {}
+			setmetatable(t, {__index = DocumentClass})
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[PARAGRAPHCLASS] = function()
+			local t = {}
+			setmetatable(t, {__index = ParagraphClass})
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[WORDCLASS] = function()
+			local t = {}
+			setmetatable(t, {__index = WordClass})
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[MENUCLASS] = function()
+			local t = {}
+			setmetatable(t, {__index = MenuClass})
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[TABLE] = function()
+			local t = {}
+			cache[#cache + 1] = t
+			return populate_table(t)
+		end,
+		
+		[STRING] = function()
+			local n
+			n, offset = readu8(data, offset)
+			local s = data:sub(offset, offset+n-1)
+			offset = offset + n
+
+			cache[#cache + 1] = s
+			return s
+		end,
+		
+		[NUMBER] = function()
+			local n
+			n, offset = readu8(data, offset)
+			cache[#cache + 1] = n
+			return n
+		end,
+		
+		[BOOLEANTRUE] = function()
+			cache[#cache + 1] = true
+			return true
+		end,
+		
+		[BOOLEANFALSE] = function()
+			cache[#cache + 1] = false
+			return false
+		end,
+		
+		[STOP] = function()
+			return nil
+		end
+	}
+	
+	load = function()
+		local n
+		n, offset = readu8(data, offset)
+		
+		local f = load_cb[n]
+		if not f then
+			error("can't load type "..n.." at offset "..offset)
+		end
+		return f()
+	end
+	
+	return load()		
+end
+
 local function loaddocument(filename)
 	local fp, e = io.open(filename, "rb")
 	if not fp then
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
-	if (fp:read("*l") ~= MAGIC) then
+	local loader = nil
+	local magic = fp:read("*l")
+	if (magic == MAGIC) then
+		loader = loadfromstream
+	elseif (magic == ZMAGIC) then
+		loader = loadfromstreamz
+	else
 		fp:close()
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 	
-	local d, e = loadfromstream(fp)
+	local d, e = loader(fp)
 	fp:close()
 	
 	if not d then
