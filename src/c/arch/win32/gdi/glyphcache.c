@@ -197,7 +197,7 @@ void glyphcache_init(HDC dc, LOGFONT* defaultfont)
 		logfont.lfFaceName[0] = 0;
 		logfont.lfPitchAndFamily = 0;
 		numfonts = 0;
-		EnumFontFamiliesEx(dc, &logfont, font_counter_cb, 0, 0);
+		EnumFontFamiliesEx(dc, &logfont, (FONTENUMPROCA) font_counter_cb, 0, 0);
 	}
 
 	/* Allocate space for them, and then read them in. */
@@ -214,7 +214,7 @@ void glyphcache_init(HDC dc, LOGFONT* defaultfont)
 		data.index = 0;
 		data.dc = dc;
 		data.currentpanose = get_panose(defaultfonthandle, dc);
-		EnumFontFamiliesEx(dc, &logfont, font_reader_cb, (LPARAM) &data, 0);
+		EnumFontFamiliesEx(dc, &logfont, (FONTENUMPROCA) font_reader_cb, (LPARAM) &data, 0);
 	}
 
 	/* Check for the default font, mark it so that it always appears
