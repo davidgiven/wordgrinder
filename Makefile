@@ -19,6 +19,7 @@ override CFLAGS += \
 	-DFILEFORMAT=$(FILEFORMAT) \
 	-DPREFIX='"$(HOME)"' \
 	-Isrc/c \
+	-Isrc/c/minizip \
 	-Wall \
 	--std=c99
 
@@ -31,8 +32,7 @@ all: unix
 unix: \
 	bin/wordgrinder \
 	bin/wordgrinder-debug \
-	bin/wordgrinder-static \
-	bin/wordgrinder.1
+	bin/wordgrinder-static
 .PHONY: unix
 	
 windows: \
@@ -151,6 +151,16 @@ $(call cfile, src/c/lfs/lfs.c)
 
 endef
 
+# --- Builds the minizip library --------------------------------------------
+
+define build-wordgrinder-minizip
+
+$(call cfile, src/c/minizip/ioapi.c)
+$(call cfile, src/c/minizip/zip.c)
+$(call cfile, src/c/minizip/unzip.c)
+
+endef
+
 # --- Builds emulation routines ---------------------------------------------
 
 define build-wordgrinder-emu
@@ -201,6 +211,7 @@ exe := bin/wordgrinder
 objs :=
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
+$(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) -g
@@ -209,6 +220,7 @@ exe := bin/wordgrinder-debug
 objs :=
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
+$(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
@@ -217,6 +229,7 @@ exe := bin/wordgrinder-static
 objs :=
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
+$(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder))
@@ -249,6 +262,7 @@ objdir := .obj/win32-release
 exe := bin/wordgrinder.exe
 objs :=
 $(eval $(build-wordgrinder-core))
+$(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder-windows))
@@ -260,6 +274,7 @@ objdir := .obj/win32-debug
 exe := bin/wordgrinder-debug.exe
 objs :=
 $(eval $(build-wordgrinder-core))
+$(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder-windows))

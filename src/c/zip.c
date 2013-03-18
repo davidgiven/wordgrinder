@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include <zlib.h>
+#include "unzip.h"
 
 static int decompress_cb(lua_State* L)
 {
@@ -84,12 +85,49 @@ static int compress_cb(lua_State* L)
 	return 1;
 }
 
+static int readfromzip_cb(lua_State* L)
+{
+	const char* zipname = luaL_checkstring(L, 1);
+	const char* subname = luaL_checkstring(L, 2);
+	int result = 0;
+
+	unzFile zf = unzOpen(zipname);
+	if (zf)
+	{
+		int i = unzLocateFile(zf, subname, 0);
+		if (i == UNZ_OK)
+		{
+			unz_file_info fi;
+			unzGetCurrentFileInfo(zf, &fi,
+				NULL, 0, NULL, 0, NULL, 0);
+
+			char* buffer = malloc(fi.uncompressed_size);
+			if (buffer)
+			{
+				unzOpenCurrentFile(zf);
+				i = unzReadCurrentFile(zf, buffer, fi.uncompressed_size);
+				if (i == fi.uncompressed_size)
+				{
+					lua_pushlstring(L, buffer, fi.uncompressed_size);
+					result = 1;
+				}
+				free(buffer);
+			}
+		}
+
+		unzClose(zf);
+	}
+
+	return result;
+}
+
 void zip_init(void)
 {
 	const static luaL_Reg funcs[] =
 	{
 		{ "compress",                  compress_cb },
 		{ "decompress",                decompress_cb },
+		{ "readfromzip",               readfromzip_cb },
 		{ NULL,                        NULL }
 	};
 
