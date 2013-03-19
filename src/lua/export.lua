@@ -64,7 +64,9 @@ function ExportFileUsingCallbacks(document, cb)
 
 	for _, paragraph in ipairs(Document) do
 		local style = paragraph.style
-		if (style.name == "L") or (style.name == "LB") then
+		local name = style.name
+		
+		if (name == "L") or (name == "LB") then
 			if not listmode then
 				cb.list_start()
 				listmode = true
@@ -74,9 +76,9 @@ function ExportFileUsingCallbacks(document, cb)
 			listmode = false
 		end
 		
-		rawmode = (style.name == "RAW")
+		rawmode = (name == "RAW")
 		
-		cb.paragraph_start(style.name)
+		cb.paragraph_start(name)
 	
 		if (#paragraph == 1) and (#paragraph[1].text == 0) then
 			cb.notext()
@@ -109,7 +111,7 @@ function ExportFileUsingCallbacks(document, cb)
 			end
 		end
 		
-		cb.paragraph_end(style.name)
+		cb.paragraph_end(name)
 	end
 	if listmode then
 		cb.list_end()
@@ -118,7 +120,7 @@ function ExportFileUsingCallbacks(document, cb)
 end
 
 -- Prompts the user to export a document, and then calls
--- callback(fp, document) to actually do the work.
+-- exportcb(writer, document) to actually do the work.
 
 function ExportFileWithUI(filename, title, extension, callback)
 	if not filename then

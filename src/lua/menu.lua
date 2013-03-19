@@ -84,6 +84,7 @@ local ImportMenu = addmenu("Import new document",
 
 local ExportMenu = addmenu("Export current document",
 {
+	{"FEodt",  "O", "Export to ODT...",          nil,         Cmd.ExportODTFile},
 	{"FEhtml", "H", "Export to HTML...",         nil,         Cmd.ExportHTMLFile},
 	{"FEtxt",  "T", "Export to plain text...",   nil,         Cmd.ExportTextFile},
 	{"FEtex",  "L", "Export to LaTeX...",        nil,         Cmd.ExportLatexFile},
