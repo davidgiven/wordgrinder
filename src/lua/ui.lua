@@ -26,10 +26,10 @@ end
 function DrawBox(x, y, w, h)
 	local border = string.rep("─", w)
 	local space = string.rep(" ", w)
-	Write(x-1,   y,     " ╭")
-	Write(x+w+1, y,     "╮ ")
-	Write(x-1,   y+h+1, " ╰")
-	Write(x+w+1, y+h+1, "╯ ")
+	Write(x-1,   y,     " ┌")
+	Write(x+w+1, y,     "┐ ")
+	Write(x-1,   y+h+1, " └")
+	Write(x+w+1, y+h+1, "┘ ")
 	
 	Write(x+1,   y,     border)
 	Write(x+1,   y+h+1, border)
@@ -264,7 +264,7 @@ function AboutDialogue()
 		},
 		
 		Form.Label {
-			value = "© 2007-2008 David Given",
+			value = "© 2007-2013 David Given",
 			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
 			align = Form.Centre,
 		},
