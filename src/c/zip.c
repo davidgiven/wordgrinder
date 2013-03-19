@@ -6,6 +6,7 @@
 #include "globals.h"
 #include <zlib.h>
 #include "unzip.h"
+#include "zip.h"
 
 static int decompress_cb(lua_State* L)
 {
@@ -121,6 +122,62 @@ static int readfromzip_cb(lua_State* L)
 	return result;
 }
 
+static int writezip_cb(lua_State* L)
+{
+	const char* zipname = luaL_checkstring(L, 1);
+	luaL_checktype(L, 2, LUA_TTABLE);
+	int result = 0;
+
+	zipFile zf = zipOpen(zipname, APPEND_STATUS_CREATE);
+	if (zf)
+	{
+		result = 1;
+
+		lua_pushnil(L);
+		while (lua_next(L, 2) != 0)
+		{
+			const char* key = lua_tostring(L, -2);
+			size_t valuelen;
+			const char* value = lua_tolstring(L, -1, &valuelen);
+
+			int i = zipOpenNewFileInZip(zf, key, NULL,
+					NULL, 0,
+					NULL, 0,
+					NULL,
+					Z_DEFLATED,
+					Z_DEFAULT_COMPRESSION);
+			if (i != ZIP_OK)
+			{
+				result = 0;
+				break;
+			}
+
+			i = zipWriteInFileInZip(zf, value, valuelen);
+			if (i != ZIP_OK)
+			{
+				result = 0;
+				break;
+			}
+
+			i = zipCloseFileInZip(zf);
+			if (i != ZIP_OK)
+			{
+				result = 0;
+				break;
+			}
+
+			lua_pop(L, 1); /* leave key on stack */
+		}
+
+		zipClose(zf, NULL);
+	}
+
+	if (!result)
+		return 0;
+	lua_pushboolean(L, true);
+	return 1;
+}
+
 void zip_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -128,6 +185,7 @@ void zip_init(void)
 		{ "compress",                  compress_cb },
 		{ "decompress",                decompress_cb },
 		{ "readfromzip",               readfromzip_cb },
+		{ "writezip",                  writezip_cb },
 		{ NULL,                        NULL }
 	};
 
