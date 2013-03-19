@@ -21,6 +21,8 @@ override CFLAGS += \
 	-Isrc/c \
 	-Isrc/c/minizip \
 	-Wall \
+	-ffunction-sections \
+	-fdata-sections \
 	--std=c99
 
 override LDFLAGS += \
@@ -69,6 +71,7 @@ LUASCRIPTS := \
 	src/lua/export/html.lua \
 	src/lua/export/latex.lua \
 	src/lua/export/troff.lua \
+	src/lua/export/opendocument.lua \
 	src/lua/import.lua \
 	src/lua/navigate.lua \
 	src/lua/addons/goto.lua \
