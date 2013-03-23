@@ -78,6 +78,7 @@ local ParagraphStylesMenu = addmenu("Paragraph Styles", {})
 
 local ImportMenu = addmenu("Import new document",
 {
+	{"FIodt",  "O", "Import ODT file...",        nil,         Cmd.ImportODTFile},
 	{"FIhtml", "H", "Import HTML file...",       nil,         Cmd.ImportHTMLFile},
 	{"FItxt",  "T", "Import text file...",       nil,         Cmd.ImportTextFile},
 })
