@@ -80,6 +80,7 @@ LUASCRIPTS := \
 	src/lua/addons/scrapbook.lua \
 	src/lua/menu.lua \
 	src/lua/main.lua \
+	src/lua/xml.lua
 
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
