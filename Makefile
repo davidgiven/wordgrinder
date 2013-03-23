@@ -76,6 +76,7 @@ LUASCRIPTS := \
 	src/lua/import.lua \
 	src/lua/import/html.lua \
 	src/lua/import/text.lua \
+	src/lua/import/opendocument.lua \
 	src/lua/navigate.lua \
 	src/lua/addons/goto.lua \
 	src/lua/addons/autosave.lua \
