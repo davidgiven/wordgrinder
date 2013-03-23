@@ -5,6 +5,15 @@
 local coroutine_yield = coroutine.yield
 local coroutine_wrap = coroutine.wrap
 local writeu8 = wg.writeu8
+local string_find = string.find
+
+local function cowcopy(t)
+	return setmetatable({},
+		{
+			__index = t
+		}
+	)
+end
 
 --- Tokenises XML.
 -- Given an XML string, this function returns an iterator which streams
@@ -18,13 +27,13 @@ function TokeniseXML(xml)
 	local COMMENT = '^<!%-%-(.-)%-%->'
 	local CDATA = '^<%!%[CDATA%[(.-)%]%]>'
 	local OPENTAG = '^<%s*([%w_-]+)(:?)([%w+-]*)%s*(.-)(/?)>'
-	local TAGATTR1 = '^%s*([%w_-]+)(:?)([%w+-]*)%s*=%s*"(.-)"'
-	local TAGATTR2 = "^%s*([%w_-]+)(:?)([%w+-]*)%s*=%s*'(.-)'"
+	local TAGATTR1 = '^%s*([%w_-]+)(:?)([%w+-]*)%s*=%s*"([^"]*)"'
+	local TAGATTR2 = "^%s*([%w_-]+)(:?)([%w+-]*)%s*=%s*'([^']*)'"
 	local CLOSETAG = '^</%s*([%w_-]+)(:?)([%w+-]*)%s*>'
 	local TEXT = '^([^&<]+)'
-	local DECIMALENTITY = '&#(%d+);'
-	local HEXENTITY = '&#x(%x+);'
-	local NAMEDENTITY = '&(%w+);'
+	local DECIMALENTITY = '^&#(%d+);'
+	local HEXENTITY = '^&#x(%x+);'
+	local NAMEDENTITY = '^&(%w+);'
 	local EOF = '^%s*$'
 
 	local entities =
@@ -57,9 +66,9 @@ function TokeniseXML(xml)
 		local _, e, s1, s2, s3, s4
 		while true do
 			while true do
-				_, e, s1, s2, s3, s4 = data:find(TAGATTR1, offset)
+				_, e, s1, s2, s3, s4 = string_find(data, TAGATTR1, offset)
 				if not e then
-					_, e, s1, s2, s3, s4 = data:find(TAGATTR2, offset)
+					_, e, s1, s2, s3, s4 = string_find(data, TAGATTR2, offset)
 				end
 				if e then
 					local namespace = ""
@@ -102,32 +111,19 @@ function TokeniseXML(xml)
 
 		while true do
 			while true do
-				_, e, s1, s2 = xml:find(PROCESSING, offset)
-				if s1 then
-					coroutine_yield(
-						{
-							event = "processing",
-							name = s1,
-							attrs = parse_attributes({}, s2)
-						}
-					)
-					offset = e + 1
-					break
-				end
-
-				_, e = xml:find(OPENTAG, offset)
+				_, e = string_find(xml, OPENTAG, offset)
 				if e then
 					parse_tag(scope)
 					break
 				end
 
-				_, e = xml:find(CLOSETAG, offset)
+				_, e = string_find(xml, CLOSETAG, offset)
 				if e then
 					offset = e + 1
 					return
 				end
 				
-				_, e, s1 = xml:find(TEXT, offset)
+				_, e, s1 = string_find(xml, TEXT, offset)
 				if e then
 					coroutine_yield(
 						{
@@ -140,7 +136,7 @@ function TokeniseXML(xml)
 					break
 				end
 				
-				_, e, s1 = xml:find(DECIMALENTITY, offset)
+				_, e, s1 = string_find(xml, DECIMALENTITY, offset)
 				if e then
 					coroutine_yield(
 						{
@@ -152,7 +148,7 @@ function TokeniseXML(xml)
 					break
 				end
 				
-				_, e, s1 = xml:find(HEXENTITY, offset)
+				_, e, s1 = string_find(xml, HEXENTITY, offset)
 				if e then
 					coroutine_yield(
 						{
@@ -164,7 +160,7 @@ function TokeniseXML(xml)
 					break
 				end
 				
-				_, e, s1 = xml:find(NAMEDENTITY, offset)
+				_, e, s1 = string_find(xml, NAMEDENTITY, offset)
 				if e then
 					coroutine_yield(
 						{
@@ -176,7 +172,20 @@ function TokeniseXML(xml)
 					break
 				end
 				
-				_, e = xml:find(EOF, offset)
+				_, e, s1, s2 = string_find(xml, PROCESSING, offset)
+				if s1 then
+					coroutine_yield(
+						{
+							event = "processing",
+							name = s1,
+							attrs = parse_attributes({}, s2)
+						}
+					)
+					offset = e + 1
+					break
+				end
+
+				_, e = string_find(xml, EOF, offset)
 				if e then
 					return
 				end
@@ -193,11 +202,8 @@ function TokeniseXML(xml)
 	end
 	
 	parse_tag = function(scope)
-		local _, e, s1, s2, s3, s4, s5 = xml:find(OPENTAG, offset)
-		local newscope = {}
-		for k, v in pairs(scope) do
-			newscope[k] = v
-		end
+		local _, e, s1, s2, s3, s4, s5 = string_find(xml, OPENTAG, offset)
+		local newscope = cowcopy(scope)
 
 		local tag = {
 			event = "opentag",
