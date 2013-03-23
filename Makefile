@@ -56,6 +56,7 @@ install: bin/wordgrinder bin/wordgrinder.1
 
 LUASCRIPTS := \
 	src/lua/_prologue.lua \
+	src/lua/xml.lua \
 	src/lua/utils.lua \
 	src/lua/events.lua \
 	src/lua/redraw.lua \
@@ -73,14 +74,15 @@ LUASCRIPTS := \
 	src/lua/export/troff.lua \
 	src/lua/export/opendocument.lua \
 	src/lua/import.lua \
+	src/lua/import/html.lua \
+	src/lua/import/text.lua \
 	src/lua/navigate.lua \
 	src/lua/addons/goto.lua \
 	src/lua/addons/autosave.lua \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
 	src/lua/menu.lua \
-	src/lua/main.lua \
-	src/lua/xml.lua
+	src/lua/main.lua
 
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
