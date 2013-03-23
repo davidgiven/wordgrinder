@@ -117,7 +117,7 @@ static int transcode_cb(lua_State* L)
 	const char* inputbuffer = luaL_checklstring(L, 1, &inputbuffersize);
 
 	size_t outputbuffersize = inputbuffersize*2 + 32;
-	char outputbuffer[outputbuffersize]; /* should fit everything */
+	char* outputbuffer = malloc(outputbuffersize); /* should fit everything */
 
 	const char* in = (char*) inputbuffer;
 	const char* inend = inputbuffer + inputbuffersize;
@@ -132,6 +132,7 @@ static int transcode_cb(lua_State* L)
 	}
 
 	lua_pushlstring(L, outputbuffer, out - outputbuffer);
+	free(outputbuffer);
 	return 1;
 }
 
