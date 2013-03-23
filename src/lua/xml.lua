@@ -13,7 +13,7 @@ local writeu8 = wg.writeu8
 -- @param xml                   XML string to tokenise
 -- @return                      iterator
 
-function ParseXML(xml)
+function TokeniseXML(xml)
 	local PROCESSING = '^<%?([%w_-]+)%s*(.-)%?>'
 	local COMMENT = '^<!%-%-(.-)%-%->'
 	local CDATA = '^<%!%[CDATA%[(.-)%]%]>'
@@ -233,4 +233,56 @@ function ParseXML(xml)
 	end
 		
 	return coroutine_wrap(parser)
+end
+
+--- Parses an XML string into a DOM-ish tree.
+-- 
+-- @param xml                   XML string to parse
+-- @return                      tree
+
+function ParseXML(xml)
+	local nextToken = TokeniseXML(xml)
+
+	local function parse_tag(token)
+		local n = token.name
+		if (token.namespace ~= "") then
+			n = token.namespace .. " " .. n
+		end
+		
+		local t = {
+			_name = n
+		}
+		
+		for _, a in ipairs(token.attrs) do
+			n = a.name
+			if (a.namespace ~= "") then
+				n = a.namespace .. " " .. n
+			end
+			t[n] = a.value
+		end
+		
+		while true do
+			token = nextToken()
+			
+			if (token.event == "opentag") then
+				t[#t+1] = parse_tag(token)
+			elseif (token.event == "text") then
+				t[#t+1] = token.text
+			elseif (token.event == "closetag") then
+				return t
+			end
+		end 
+	end
+	
+	-- Find and parse the first element.
+	
+	while true do
+		local token = nextToken()
+		if (token.event == "opentag") then
+			return parse_tag(token)
+		end
+		if not token then
+			return {}
+		end
+	end
 end
