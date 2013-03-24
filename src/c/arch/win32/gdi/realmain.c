@@ -75,6 +75,12 @@ static VOID CALLBACK application_cb(LPVOID user)
 
 int main(int argc, const char* argv[])
 {
+	if (AttachConsole(ATTACH_PARENT_PROCESS))
+	{
+		freopen("CONOUT$", "wb", stdout);
+		freopen("CONOUT$", "wb", stderr);
+	}
+
 	uifiber = ConvertThreadToFiber(NULL);
 	assert(uifiber);
 

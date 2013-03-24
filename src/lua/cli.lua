@@ -27,6 +27,7 @@ local export_table =
 local function message(...)
 	stderr:write("wordgrinder: ", ...)
 	stderr:write("\n")
+	stderr:flush()
 end
 
 local function usererror(...)

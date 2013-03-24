@@ -255,7 +255,7 @@ WINDOWSCFLAGS := \
 	-DEMULATED_WCWIDTH \
 	-DBUILTIN_LFS \
 	-DWIN32 \
-	-DWINVER=0x0500 \
+	-DWINVER=0x0501 \
 	-Dmain=appMain \
 	-mwindows
 	
