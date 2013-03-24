@@ -528,7 +528,7 @@ static void switch_to_windowed(void)
 			window_geometry.bottom - window_geometry.top,
 			SWP_NOZORDER);
 
-	/* Add the window menu commands. */
+	/* Add the window menu commands and disable the close button. */
 
 	{
 		HMENU menu = GetSystemMenu(window, FALSE);
@@ -554,6 +554,9 @@ static void switch_to_windowed(void)
 		mii.cch = strlen(mii.dwTypeData);
 		mii.wID = MENUITEM_FULLSCREEN;
 		InsertMenuItem(menu, count++, TRUE, &mii);
+
+		EnableMenuItem(menu, SC_CLOSE,
+			MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
 	}
 
 	ShowWindow(window, SW_SHOWDEFAULT);
