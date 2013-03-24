@@ -48,6 +48,25 @@ options starting with two dashes (`-').
 .B \-h, \-\-help
 Show summary of options.
 
+.TP
+.BI \--lua\  filename
+Loads and executes a Lua file before startup.
+
+.TP
+.BI \--convert\  srcfile\ destfile
+Converts from
+.I srcfile
+to
+.I destfile
+and then exits.
+
+The type of the file is autodetected from the extension of the filename. The
+source file may have a document name suffixed with a
+.I :
+for use when importing or exporting WordGrinder files. 
+  
+  
+  
 .SH AUTHOR
 .B wordgrinder
 was written by David Given.

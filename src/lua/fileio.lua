@@ -133,8 +133,8 @@ function Cmd.SaveCurrentDocumentAs(filename)
 		if not filename then
 			return false
 		end
-		DocumentSet.name = filename
 	end
+	DocumentSet.name = filename
 
 	ImmediateMessage("Saving...")
 	DocumentSet:clean()	
