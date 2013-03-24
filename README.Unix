@@ -95,6 +95,10 @@ LICENSE
 WordGrinder is available under the MIT license. Please see the COPYING file
 for the full text.
 
+WordGrinder contains a copy of the LuaFileSystem code. This is also MIT
+licensed and is © The Kepler Project. See 
+http://www.keplerproject.org/luafilesystem for more information.
+ 
 
 
 REVISION HISTORY
