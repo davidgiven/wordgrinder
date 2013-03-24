@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.3.3
-                              ==================
+                               WORDGRINDER V0.4
+                               ================
 
-                           © 2007-2009 David Given
-                                 2009-12-13
+                           © 2007-2013 David Given
+                                 2013-03-24
 
                                Windows version
 
@@ -10,9 +10,9 @@
 INTRODUCTION
 ============
 
-WordGrinder is a simple, Unicode-aware word processor that runs in a Win32
-console. It's designed to get the hell out of your way and let you write;
-it does very little, but what it does it does well.
+WordGrinder is a simple, Unicode-aware word processor. It's designed to get
+the hell out of your way and let you write; it does very little, but what it
+does it does well.
 
 It supports basic paragraph styles, basic character styles, basic screen
 markup, a menu interface that means you don't have to remember complex
@@ -26,32 +26,21 @@ anything like a traditional Windows application. You Have Been Warned.
 INSTALLATION
 ============
 
-No installation is needed. Simply uncompress the zipfile somewhere, run
-wordgrinder.exe and it will start.
+Run the supplied installer. It's done.
 
 However:
 
-WordGrinder makes heavy use of Unicode for drawing things like menus.
-Unfortunately, the Windows console has rather poor Unicode support. While
-WordGrinder will still *work*, and be useful, a lot of the graphical
-elements will be drawn as strings of ????... characters. This may lead to
-a degraded user experience.
+WordGrinder makes heavy use of Unicode for drawing things like menus. The
+default font has lousy Unicode coverage. WordGrinder will do its best, but
+it'll probably look pretty ugly. You may wish to switch to use a different
+font with the drop-down menu from the application icon in the top-left
+corner of the screen.
 
-As a workaround, supplied in this package are a proper Unicode console font
-and a registry hack to enable it. This will make WordGrinder considerably
-nicer to use. To install:
+Important note! To quit, you'll have to use the menus inside WordGrinder
+(because the application knows nothing about the Windows window close button).
+Do CTRL+Q or ALT+F, X to quit.
 
-- Copy DejaVuSansMono.ttf into the Fonts folder in your Control Panel.
-- Double-click on DejaVuSansMono.reg to install the registry hack.
-- Reboot.
-
-Once done, start WordGrinder, and then click on the window icon on the top
-left of the console and select 'Properties'. You can change the font there.
-Windows will remember the font so that you don't have to set it every time.
-
-This does not work in full-screen mode, unfortunately (press ALT+ENTER to
-toggle); you are restricted to the system bitmap font for that. That's not
-my fault.
+You can toggle full-screen mode with ALT+ENTER.
 
 If you want to use a different font, I recommend the following site which
 explains how:
@@ -63,14 +52,10 @@ http://www.hanselman.com/blog/UsingConsolasAsTheWindowsConsoleFont.aspx
 USAGE
 =====
 
-Simply double-click on the .exe to run WordGrinder.
+Run WordGrinder from the start menu. There's an option for the menu. Please
+read it, as WordGrinder doesn't work like other Windows applications.
 
-Press ESC to get the menu. Press ESC, F, O to open a file. You'll see
-README.wg in there; that's the manual. Please read it.
-
-WARNING: if you close the window, Windows will immediately terminate
-WordGrinder without prompting you to save your document. I recommend
-investigating WordGrinder's autosave feature. 
+Press ESC to get the menu. Press ESC, F, O to open a file.
 
 
 If you use WordGrinder, please join the mailing list. This will allow you
@@ -91,6 +76,10 @@ for the full text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.4: 2013-03-24: Major overhaul: OpenDocument import/export,
+new much smaller file format, a proper Windows port, updated to Lua 5.2,
+switched away from Prime Mover to make (sob), much bug fixage.
 
 WordGrinder 0.3.3: 2009-12-13: Fixed a bug when searching for or replacing
 strings containing multiple whitespace characters (that was triggering the

@@ -51,7 +51,8 @@ SetCompressor /solid lzma
 	program that works entirely differently to Windows programs. You are going \
 	to have to read the manual, just to know how to quit it.$\r$\n\
 	$\r$\n\
-	You can find the manual in the Start Menu. Don't worry, it's painless.$\r$\n\
+	You can find the manual in the Start Menu. Don't worry, it's mostly \
+	painless.$\r$\n\
 	$\r$\n\
 	Have fun!"
 	

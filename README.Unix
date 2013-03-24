@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.3.3
-                              ==================
+                               WORDGRINDER V0.4
+                               ================
 
-                           © 2007-2009 David Given
-                                 2009-12-13
+                           © 2007-2013 David Given
+                                 2013-03-24
 
                                 Unix version
 
@@ -33,6 +33,9 @@ WordGrinder needs the following packages installed:
  - Lua 5.2, the programming language. This is available from:
      http://www.lua.org/
      
+ - zlib. You will already have this, but just on the offchance, it's here:
+     http://www.zlib.net/
+     
  - LuaFileSystem 1.2, the file system access extension to Lua. This is
    available from:
      http://www.keplerproject.org/luafilesystem/index.html
@@ -45,7 +48,7 @@ WordGrinder needs the following packages installed:
 If you have Debian, you've already got all these. Merely install these
 packages:
 
-  libncursesw5-dev liblua5.2-dev lua-filesystem-dev
+  libncursesw5-dev liblua5.2-dev lua-filesystem-dev zlib1g-dev
   
 
 To build, simply do:
@@ -73,8 +76,9 @@ Do this:
 ...to get a blank document. You can load an existing document with:
 
   wordgrinder README.wg
-  
-Please read README.wg; it contains the manual.  
+
+Please read README.wg; it contains the manual. There is also a man page,
+which describes the command line interface.  
 
 
 If you use WordGrinder, please join the mailing list. This will allow you
@@ -95,6 +99,10 @@ for the full text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.4: 2013-03-24: Major overhaul: OpenDocument import/export,
+new much smaller file format, a proper Windows port, updated to Lua 5.2,
+switched away from Prime Mover to make (sob), much bug fixage.
 
 WordGrinder 0.3.3: 2009-12-13: Fixed a bug when searching for or replacing
 strings containing multiple whitespace characters (that was triggering the
