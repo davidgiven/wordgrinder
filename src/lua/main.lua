@@ -37,7 +37,6 @@ end
 -- loop.
 
 function WordProcessor(filename)
-	ResetDocumentSet()
 	wg.initscreen()
 	ResizeScreen()
 	RedrawScreen()
@@ -126,6 +125,11 @@ end
 -- Program entry point. Parses command line arguments and executes.
 
 function Main(...)
+	-- Set up the initial document so that the command line options have
+	-- access.
+	
+	ResetDocumentSet()
+
 	local filename = nil
 	do
 		local stdout = io.stdout
@@ -150,11 +154,17 @@ function Main(...)
 			stdout:write([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
-   -h    --help            Displays this message.
-         --lua file.lua    Loads and executes file.lua before startup 
+   -h    --help              Displays this message.
+         --lua file.lua      Loads and executes file.lua before startup
+   -c    --convert src dest  Converts from one file format to another
 
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
+
+To convert documents, use --convert. The file type is autodetected from the
+extension. To specify a document name, use :name as a suffix. e.g.:
+
+    wordgrinder --convert filename.wg:"Chapter 1" chapter1.odt
 ]])
 			if DEBUG then
 				-- List debugging options here.
@@ -176,9 +186,12 @@ file to load on startup. If not given, you get a blank document instead.
 			return 1
 		end
 		
-		local function do_profile(opt)
-			profiler.start()
-			return 0
+		local function do_convert(opt1, opt2)
+			if not opt1 or not opt2 then
+				usererror("--convert must have two arguments")
+			end
+			
+			CliConvert(opt1, opt2)
 		end
 		
 		local function needarg(opt)
@@ -191,6 +204,8 @@ file to load on startup. If not given, you get a blank document instead.
 			["h"]           = do_help,
 			["help"]        = do_help,
 			["lua"]         = do_lua,
+			["c"]           = do_convert,
+			["convert"]     = do_convert,
 		}
 		
 		if DEBUG then
@@ -220,8 +235,7 @@ file to load on startup. If not given, you get a blank document instead.
 					if not fn then
 						unrecognisedarg("--"..o)
 					end
-					local op = arg[i+1]
-					i = i + fn(op)
+					i = i + fn(arg[i+1], arg[i+2])
 				else
 					-- ...without a -- prefix.
 					local od = o:sub(2, 2)
@@ -231,8 +245,7 @@ file to load on startup. If not given, you get a blank document instead.
 					end
 					op = o:sub(3)
 					if (op == "") then
-						op = arg[i+1]
-						i = i + fn(op)
+						i = i + fn(arg[i+1], arg[i+2])
 					else
 						fn(op)
 					end

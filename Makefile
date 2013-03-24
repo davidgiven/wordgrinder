@@ -83,6 +83,7 @@ LUASCRIPTS := \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
 	src/lua/menu.lua \
+	src/lua/cli.lua \
 	src/lua/main.lua
 
 .obj/luascripts.c: $(LUASCRIPTS)
