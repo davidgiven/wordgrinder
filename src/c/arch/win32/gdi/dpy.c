@@ -13,7 +13,7 @@
 
 #define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
-#define DEFAULT_CHAR (' ' << 4)
+#define DEFAULT_CHAR (' ' << 8)
 
 #define MENUITEM_SETFONT 1
 #define MENUITEM_FULLSCREEN 2
@@ -616,7 +616,7 @@ void dpy_sync(void)
 			unsigned int id = backbuffer[y*screenwidth + x];
 			frontbuffer[seq] = glyphcache_getglyph(id, dc);
 
-			if (emu_wcwidth(id>>4) == 2)
+			if (emu_wcwidth(id>>8) == 2)
 			{
 				frontbuffer[seq+1] = NULL;
 				x++;
@@ -652,14 +652,14 @@ void dpy_writechar(int x, int y, uni_t c)
 	if ((x < 0) || (y < 0) || (x >= screenwidth) || (y >= screenheight))
 		return;
 
-	backbuffer[y*screenwidth + x] = (c<<4) | defaultattr;
+	backbuffer[y*screenwidth + x] = (c<<8) | defaultattr;
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
 	for (int y = y1; y <= y2; y++)
 		for (int x = x1; x <= x2; x++)
-			backbuffer[y*screenwidth + x] = (' '<<4) | defaultattr;
+			backbuffer[y*screenwidth + x] = (' '<<8) | defaultattr;
 }
 
 const char* dpy_getkeyname(uni_t k)

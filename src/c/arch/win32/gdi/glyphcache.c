@@ -305,7 +305,7 @@ static void select_font_with_glyph(HDC dc, uni_t unicode)
 static void draw_glyph(HDC dc, unsigned int id, int w, int h)
 {
 	RECT size = {0, 0, w, h};
-	unsigned int attrs = id & 0xf;
+	unsigned int attrs = id & 0xff;
 	bool reverse = attrs & DPY_REVERSE;
 	int bg = 0x000000;
 	int fg;
@@ -329,7 +329,7 @@ static void draw_glyph(HDC dc, unsigned int id, int w, int h)
 	SetBkColor(dc, bg);
 	SetTextColor(dc, fg);
 
-	uni_t unicode = id >> 4;
+	uni_t unicode = id >> 8;
 	select_font_with_glyph(dc, unicode);
 
 	WCHAR wstring[2];
@@ -368,7 +368,7 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 		glyph->dc = CreateCompatibleDC(dc);
 		if (!glyph->dc)
 			goto error;
-		glyph->width = emu_wcwidth(id >> 4) * fontwidth;
+		glyph->width = emu_wcwidth(id >> 8) * fontwidth;
 		glyph->bitmap = CreateCompatibleBitmap(dc, glyph->width, fontheight);
 		if (!glyph->bitmap)
 			goto error;
