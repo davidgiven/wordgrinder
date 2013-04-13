@@ -49,7 +49,7 @@ wininstaller: $(WININSTALLER)
 install: bin/wordgrinder bin/wordgrinder.1
 	@echo INSTALL
 	$(hide)install -D -m 755 bin/wordgrinder   $(PREFIX)/bin/wordgrinder
-	$(hide)install -D -m 644 bin/wordgrinder.1 $(PREFIX)/man/man1/wordgrinder.1
+	$(hide)install -D -m 644 bin/wordgrinder.1 $(PREFIX)/share/man/man1/wordgrinder.1
 	$(hide)install -D -m 644 README.wg         $(PREFIX)/share/doc/wordgrinder/README.wg
 	
 # --- Builds the script blob ------------------------------------------------
