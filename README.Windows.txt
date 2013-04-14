@@ -1,8 +1,8 @@
-                               WORDGRINDER V0.4
-                               ================
+                              WORDGRINDER V0.4.1
+                              ==================
 
                            © 2007-2013 David Given
-                                 2013-03-24
+                                 2014-04-14
 
                                Windows version
 
@@ -42,11 +42,6 @@ Do CTRL+Q or ALT+F, X to quit.
 
 You can toggle full-screen mode with ALT+ENTER.
 
-If you want to use a different font, I recommend the following site which
-explains how:
-
-http://www.hanselman.com/blog/UsingConsolasAsTheWindowsConsoleFont.aspx
-
 
 
 USAGE
@@ -80,6 +75,9 @@ http://www.keplerproject.org/luafilesystem for more information.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.4.1: 2013-04-14: Minor bugfixes and build optimisation in aid
+of the Debian package.
 
 WordGrinder 0.4: 2013-03-24: Major overhaul: OpenDocument import/export,
 new much smaller file format, a proper Windows port, updated to Lua 5.2,
