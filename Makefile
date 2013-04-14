@@ -210,8 +210,7 @@ UNIXCFLAGS := \
 ldflags := \
 	-lncursesw \
 	-llua5.2 \
-	-lz \
-	-lm
+	-lz
 
 cflags := $(UNIXCFLAGS) -Os -DNDEBUG
 objdir := .obj/release
@@ -262,8 +261,7 @@ WINDOWSCFLAGS := \
 ldflags := \
 	-static \
 	-llua \
-	-lz \
-	-lm
+	-lz
 
 cflags := $(WINDOWSCFLAGS) -Os -DNDEBUG
 objdir := .obj/win32-release
