@@ -10,9 +10,9 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-VERSION := 0.4
+VERSION := 0.4.1
 FILEFORMAT := 3
-DATE := 17\ March\ 2013
+DATE := 14 April 2013
 
 override CFLAGS += \
 	-DVERSION='"$(VERSION)"' \
