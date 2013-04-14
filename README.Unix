@@ -104,6 +104,9 @@ http://www.keplerproject.org/luafilesystem for more information.
 REVISION HISTORY
 ================
 
+WordGrinder 0.4.1: 2013-04-14: Minor bugfixes and build optimisation in aid
+of the Debian package.
+
 WordGrinder 0.4: 2013-03-24: Major overhaul: OpenDocument import/export,
 new much smaller file format, a proper Windows port, updated to Lua 5.2,
 switched away from Prime Mover to make (sob), much bug fixage.
