@@ -9,6 +9,7 @@
 #include "globals.h"
 #include <string.h>
 #include <windows.h>
+#include <ctype.h>
 #include "gdi.h"
 
 #define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
@@ -113,11 +114,9 @@ static void write_window_geometry(void)
 
 static void unicode_key(uni_t key, unsigned flags)
 {
-	if (flags & (1<<29))
+	if ((key >= 1) && (key <=31))
 	{
-		/* ALT pressed */
-		dpy_queuekey(-27);
-		dpy_queuekey(key);
+		dpy_queuekey(-(VKM_CTRLASCII | key));
 		return;
 	}
 
@@ -154,12 +153,17 @@ static bool special_key(int vk, unsigned flags)
 	if (vk > 0x90)
 		return false;
 
-	if ((vk >= '@') && (vk <= '_'))
+	if (isdigit(vk) || isupper(vk))
 	{
-		if (vk == ' ')
-			vk = VKM_CTRLASCII;
-		else
-			vk = VKM_CTRLASCII | (vk - 64);
+		if (flags & (1<<29))
+		{
+			/* ALT pressed */
+			dpy_queuekey(-27);
+			dpy_queuekey(vk);
+			return true;
+		}
+
+		return false;
 	}
 
 	dpy_queuekey(-vk);
@@ -353,23 +357,21 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			break;
 		}
 
+		case WM_CHAR:
+		{
+			reset_cursor();
+			unicode_key(wparam, lparam);
+			break;
+		}
+
 		case WM_KEYDOWN:
 		case WM_SYSKEYDOWN:
 		{
 			reset_cursor();
 
-			MSG tmessage;
-			if (PeekMessage(&tmessage, window, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE))
-			{
-				if (emu_wcwidth(tmessage.wParam) > 0)
-					unicode_key(tmessage.wParam, tmessage.lParam);
-				else
-					return special_key(wparam, lparam);
-			}
-			else
-				special_key(wparam, lparam);
-
-			return TRUE;
+			if (special_key(wparam, lparam))
+				return TRUE;
+			break;
 		}
 
 		case WM_SYSCOMMAND:
