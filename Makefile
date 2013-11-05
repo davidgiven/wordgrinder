@@ -23,7 +23,7 @@ override CFLAGS += \
 	-Wall \
 	-ffunction-sections \
 	-fdata-sections \
-	--std=c99
+	--std=gnu99
 
 override LDFLAGS += \
 
@@ -257,7 +257,7 @@ WINDOWSCFLAGS := \
 	-DWINVER=0x0501 \
 	-Dmain=appMain \
 	-mwindows
-	
+
 ldflags := \
 	-static \
 	-llua \
