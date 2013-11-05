@@ -408,7 +408,7 @@ static int make_link(lua_State *L)
         return pushresult(L,
                 (lua_toboolean(L,3) ? symlink : link)(oldpath, newpath), NULL);
 #else
-        pusherror(L, "make_link is not supported on Windows");
+        return pusherror(L, "make_link is not supported on Windows");
 #endif
 }
 
