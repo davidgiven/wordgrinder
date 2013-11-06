@@ -50,12 +50,6 @@ uni_t dpy_getchar(int t)
 	return currentkey;
 }
 
-static void sendkey(uni_t key)
-{
-	currentkey = key;
-	SwitchToFiber(appfiber);
-}
-
 void dpy_flushkeys(void)
 {
 	if (GetCurrentFiber() == uifiber)
