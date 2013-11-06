@@ -12,7 +12,7 @@ MAKENSIS = makensis
 
 VERSION := 0.4.2pre1
 FILEFORMAT := 3
-DATE := 5 November 2013
+DATE := $(shell date +'%-d %B %Y')
 
 override CFLAGS += \
 	-DVERSION='"$(VERSION)"' \
@@ -287,7 +287,9 @@ $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder-windows))
 $(eval $(build-wordgrinder))
 
-src/c/arch/win32/wordgrinder.rc: src/c/arch/win32/icon.ico
+src/c/arch/win32/wordgrinder.rc: \
+	src/c/arch/win32/icon.ico \
+	src/c/arch/win32/manifest.xml
 
 
 $(WININSTALLER): extras/windows-installer.nsi bin/wordgrinder.exe
