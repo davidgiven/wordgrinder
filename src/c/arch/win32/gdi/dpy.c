@@ -114,9 +114,14 @@ static void write_window_geometry(void)
 
 static void unicode_key(uni_t key, unsigned flags)
 {
-	if ((key >= 1) && (key <=31))
+	if ((key >= 1) && (key <= 31))
 	{
 		dpy_queuekey(-(VKM_CTRLASCII | key));
+		return;
+	}
+	if ((key == ' ') && (GetKeyState(VK_CONTROL) & 0x8000))
+	{
+		dpy_queuekey(-(VKM_CTRLASCII | 0));
 		return;
 	}
 
@@ -127,10 +132,6 @@ static bool special_key(int vk, unsigned flags)
 {
 	switch (vk)
 	{
-		case ' ':
-			dpy_queuekey(-(VKM_CTRLASCII | 0));
-			return true;
-
 		case VK_RETURN:
 			if (flags & (1<<29))
 			{
@@ -153,7 +154,7 @@ static bool special_key(int vk, unsigned flags)
 	if (vk > 0x90)
 		return false;
 
-	if (isdigit(vk) || isupper(vk))
+	if ((vk == ' ') || isdigit(vk) || isupper(vk))
 	{
 		if (flags & (1<<29))
 		{
@@ -166,6 +167,11 @@ static bool special_key(int vk, unsigned flags)
 		return false;
 	}
 
+	if (GetKeyState(VK_CONTROL) & 0x8000)
+		vk |= VKM_CTRL;
+	if (GetKeyState(VK_SHIFT) & 0x8000)
+		vk |= VKM_SHIFT;
+		
 	dpy_queuekey(-vk);
 	return true;
 }
@@ -370,7 +376,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			reset_cursor();
 
 			if (special_key(wparam, lparam))
-				return TRUE;
+				return 1;
 			break;
 		}
 

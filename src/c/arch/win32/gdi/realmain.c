@@ -106,7 +106,7 @@ int main(int argc, const char* argv[])
 		{
 			dpy_flushkeys();
 
-			if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) != 0)
+			if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) > 0)
 				break;
 
 			if (timeout == -1)
@@ -124,8 +124,8 @@ int main(int argc, const char* argv[])
 			}
 		}
 
-		TranslateMessage(&msg);
-		DispatchMessageW(&msg);
+		if (DispatchMessageW(&msg) == 0)
+			TranslateMessage(&msg);
 	}
 
 	return 0;
