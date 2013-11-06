@@ -92,31 +92,23 @@ int main(int argc, const char* argv[])
 
 	/* And now the event loop. */
 
+	int oldtimeout = -1;
 	for (;;)
 	{
 		MSG msg;
 
-		for (;;)
+		dpy_flushkeys();
+
+		if (timeout != oldtimeout)
 		{
-			dpy_flushkeys();
-
-			if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE) > 0)
-				break;
-
 			if (timeout == -1)
-			{
-				GetMessageW(&msg, NULL, 0, 0);
-				break;
-			}
+				KillTimer(window, TIMEOUT_TIMER_ID);
 			else
-			{
-				if (MsgWaitForMultipleObjects(0, NULL, FALSE, timeout*1000, QS_ALLINPUT)
-					== WAIT_TIMEOUT)
-				{
-					dpy_queuekey(-VK_TIMEOUT);
-				}
-			}
+				SetTimer(window, TIMEOUT_TIMER_ID, timeout*1000, NULL);
+			oldtimeout = timeout;
 		}
+
+		GetMessageW(&msg, NULL, 0, 0);
 
 		if (DispatchMessageW(&msg) == 0)
 			TranslateMessage(&msg);

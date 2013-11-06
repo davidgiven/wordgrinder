@@ -18,6 +18,8 @@
 #define VK_TIMEOUT    0x1001
 #define VK_REDRAW     0x1002
 
+#define TIMEOUT_TIMER_ID 1
+
 struct glyph
 {
 	unsigned int id;
@@ -36,5 +38,7 @@ extern struct glyph* glyphcache_getglyph(unsigned int id, HDC dc);
 
 extern void dpy_queuekey(uni_t key);
 extern void dpy_flushkeys(void);
+
+extern HWND window;
 
 #endif

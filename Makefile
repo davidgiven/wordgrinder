@@ -10,7 +10,7 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-VERSION := 0.4.2pre1
+VERSION := 0.4.2pre2
 FILEFORMAT := 3
 DATE := $(shell date +'%-d %B %Y')
 
