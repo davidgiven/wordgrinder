@@ -21,7 +21,7 @@
 
 #define REGISTRY_PATH "Software\\Cowlark Technologies\\WordGrinder"
 
-static HWND window = INVALID_HANDLE_VALUE;
+HWND window = INVALID_HANDLE_VALUE;
 static LOGFONT fontlf;
 static struct glyph** frontbuffer = NULL;
 static unsigned int* backbuffer = NULL;
@@ -396,6 +396,16 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			goto delegate;
 		}
 
+		case WM_TIMER:
+		{
+			if (wparam == TIMEOUT_TIMER_ID)
+			{
+				dpy_queuekey(-VK_TIMEOUT);
+				break;
+			}
+			goto delegate;
+		}
+				
 		delegate:
 		default:
 			return DefWindowProcW(window, message, wparam, lparam);
