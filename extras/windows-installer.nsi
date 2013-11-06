@@ -70,7 +70,7 @@ SetCompressor /solid lzma
 Section "WordGrinder (required)"
 	SectionIn RO
 	SetOutPath $INSTDIR
-	File "bin/wordgrinder.exe"
+	File "bin\wordgrinder.exe"
 	File "README.wg"
 	FILE "COPYING"
 	  
