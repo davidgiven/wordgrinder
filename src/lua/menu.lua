@@ -97,7 +97,8 @@ local SettingsMenu = addmenu("Settings",
 {
     {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
     {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
-    {"FHTMLExport", "H", "HTML export...",           nil,         Cmd.ConfigureHTMLExport},
+    {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
+	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
 })
 
 local FileMenu = addmenu("File",
@@ -142,9 +143,9 @@ local EditMenu = addmenu("Edit",
 
 local MarginMenu = addmenu("Margin",
 {
-	{"SM1",    "H", "Hide margin",                nil,          function() Cmd.SetViewMode(1) end},
-	{"SM2",    "S", "Show paragraph styles",      nil,          function() Cmd.SetViewMode(2) end},
-	{"SM3",    "N", "Show paragraph numbers",     nil,          function() Cmd.SetViewMode(3) end},
+	{"SM1",    "H", "Hide margin",                nil,         function() Cmd.SetViewMode(1) end},
+	{"SM2",    "S", "Show paragraph styles",      nil,         function() Cmd.SetViewMode(2) end},
+	{"SM3",    "N", "Show paragraph numbers",     nil,         function() Cmd.SetViewMode(3) end},
 	{"SM4",    "W", "Show paragraph word counts", nil,         function() Cmd.SetViewMode(4) end},
 })
 	
@@ -155,7 +156,7 @@ local StyleMenu = addmenu("Style",
 	{"SO",     "O", "Set plain",                  "^O",        function() Cmd.ToggleStyle("o") end},
 	"-",
 	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
-	{"SM",     "M", "Set margin mode ▷",          nil,          MarginMenu},
+	{"SM",     "M", "Set margin mode ▷",          nil,         MarginMenu},
 	{"SS",     "S", "Toggle status bar",          "^W",        Cmd.ToggleStatusBar},
 })
 
