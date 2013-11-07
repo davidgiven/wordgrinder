@@ -82,6 +82,7 @@ LUASCRIPTS := \
 	src/lua/addons/autosave.lua \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
+	src/lua/addons/pagecount.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 	src/lua/main.lua

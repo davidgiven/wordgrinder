@@ -76,7 +76,7 @@ local function redrawstatus()
 		local s = {
 			string.format("P: %d/%d", Document.cp, #Document),
 			string.format("%d %s", Document.wordcount or 0,
-				Pluralise(Document.wordcount or 0, "word ", "words "))
+				Pluralise(Document.wordcount or 0, "word", "words"))
 		}
 		FireEvent(Event.BuildStatusBar, s)
 		s = table.concat(s, " │ ")
