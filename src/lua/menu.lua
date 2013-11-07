@@ -90,7 +90,7 @@ local ExportMenu = addmenu("Export current document",
 	{"FEtxt",  "T", "Export to plain text...",   nil,         Cmd.ExportTextFile},
 	{"FEtex",  "L", "Export to LaTeX...",        nil,         Cmd.ExportLatexFile},
 	{"FEtr",   "F", "Export to Troff...",        nil,         Cmd.ExportTroffFile},
-	{"FErtf",  "R", "Export to Troff...",        nil,         Cmd.ExportRTFFile},
+--	{"FErtf",  "R", "Export to Rtf...",        nil,         Cmd.ExportRTFFile},
 })
 
 local SettingsMenu = addmenu("Settings",
