@@ -74,12 +74,17 @@ local function redrawstatus()
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
 		
 		local s = {
-			string.format("│ P: %d/%d ", Document.cp, #Document),
-			string.format("│ %d %s", Document.wordcount or 0,
+			string.format("P: %d/%d", Document.cp, #Document),
+			string.format("%d %s", Document.wordcount or 0,
 				Pluralise(Document.wordcount or 0, "word ", "words "))
 		}
+		FireEvent(Event.BuildStatusBar, s)
+		s = table.concat(s, " │ ")
+		if (string.sub(s, #s) == " ") then
+			s = string.sub(s, 1, #s-1)
+		end
 		
-		RAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
+		RAlignInField(0, ScreenHeight-1, ScreenWidth, s)
 		SetNormal()
 
 		y = y - 1

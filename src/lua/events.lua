@@ -13,6 +13,7 @@ Event.DocumentCreated = {}   --- a new documentset has just been created
 Event.DocumentLoaded = {}    --- a new documentset has just been loaded
 Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
 Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
+Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.
