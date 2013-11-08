@@ -107,9 +107,9 @@ Form.Checkbox = makewidgetclass {
 	draw = function(self)
 		local s
 		if self.value then
-			s = "✔"
+			s = "> YES"
 		else
-			s = "✘"
+			s = "> NO "
 		end
 				
 		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
