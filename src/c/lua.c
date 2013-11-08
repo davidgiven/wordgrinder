@@ -84,15 +84,15 @@ void script_init(void)
 
 	/* Set some global variables. */
 
-	lua_pushstring(L, LUA_SRC_DIR);
-	lua_setglobal(L, "LUA_SRC_DIR");
-
 	lua_pushstring(L, VERSION);
 	lua_setglobal(L, "VERSION");
 
 	lua_pushnumber(L, FILEFORMAT);
 	lua_setglobal(L, "FILEFORMAT");
 
+	lua_pushstring(L, ARCH);
+	lua_setglobal(L, "ARCH");
+	
 	lua_newtable(L);
 	lua_setglobal(L, "wg");
 

@@ -148,7 +148,7 @@ function Cmd.ConfigureAutosave()
 	{
 		title = "Configure Autosave",
 		width = Form.Large,
-		height = 10,
+		height = 9,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -174,16 +174,11 @@ function Cmd.ConfigureAutosave()
 		pattern_textfield,
 		
 		example_label,
-		
-		Form.Label {
-			x1 = 1, y1 = 9,
-			x2 = -1, y2 = 9,
-			value = "<SPACE to toggle, RETURN to confirm, CTRL+C to cancel>"
-		}
 	}
 	
 	while true do
-		local result = Form.Run(dialogue, RedrawScreen)
+		local result = Form.Run(dialogue, RedrawScreen,
+			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 		if not result then
 			return false
 		end

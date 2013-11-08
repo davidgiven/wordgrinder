@@ -35,7 +35,8 @@ local function gotobrowser(data, index)
 		browser,
 	}
 	
-	local result = Form.Run(dialogue, RedrawScreen)
+	local result = Form.Run(dialogue, RedrawScreen,
+		"RETURN to select item, CTRL+C to cancel")
 	QueueRedraw()
 	if result then
 		return browser.cursor

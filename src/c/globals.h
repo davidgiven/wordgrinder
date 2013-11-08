@@ -25,10 +25,6 @@ extern int emu_wcwidth(int c);
 
 extern int main(int argc, const char* argv[]);
 
-/* --- Configuration options --------------------------------------------- */
-
-#define LUA_SRC_DIR PREFIX "/share/wordgrinder/"
-
 /* --- Lua --------------------------------------------------------------- */
 
 #include <lua.h>
