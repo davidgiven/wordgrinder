@@ -59,7 +59,7 @@ function FileBrowser(title, message, saving, default)
 		return nil
 	end
 	
-	if (arch == "windows") and f:match("^%a:$") then
+	if (ARCH == "windows") and f:match("^%a:$") then
 		-- The user has typed a drive specifier; turn it into a path.
 		f = f.."/"
 	end
