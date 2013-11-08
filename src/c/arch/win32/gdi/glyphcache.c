@@ -52,8 +52,7 @@ static int CALLBACK font_counter_cb(
 		DWORD type,
 		LPARAM user)
 {
-	if (strcmp((char*)fontex->elfScript, "Western") == 0)
-		numfonts++;
+	numfonts++;
 	return 1;
 }
 
@@ -120,28 +119,24 @@ static int CALLBACK font_reader_cb(
 		LPARAM user)
 {
 	struct font_reader_cb_data* data = (void*) user;
+	struct fontinfo* fi = &fontdata[data->index];
+	fi->logfont = fontex->elfLogFont;
+	fi->logfont.lfWidth = 0;//fontwidth;
+	fi->logfont.lfHeight = fontheight;
+	fi->font = CreateFontIndirect(&fi->logfont);
+	assert(fi->font);
+	unsigned long long p = get_panose(fi->font, data->dc);
+	fi->panose = compare_panose(p, data->currentpanose);
 
-	if (strcmp((char*)fontex->elfScript, "Western") == 0)
-	{
-		struct fontinfo* fi = &fontdata[data->index];
-		fi->logfont = fontex->elfLogFont;
-		fi->logfont.lfWidth = 0;//fontwidth;
-		fi->logfont.lfHeight = fontheight;
-		fi->font = CreateFontIndirect(&fi->logfont);
-		assert(fi->font);
-		unsigned long long p = get_panose(fi->font, data->dc);
-		fi->panose = compare_panose(p, data->currentpanose);
+	SelectObject(data->dc, fi->font);
+	int glyphsetsize = GetFontUnicodeRanges(data->dc, NULL);
+	fi->glyphset = malloc(glyphsetsize);
+	assert(fi->glyphset);
+	GetFontUnicodeRanges(data->dc, fi->glyphset);
 
-		SelectObject(data->dc, fi->font);
-		int glyphsetsize = GetFontUnicodeRanges(data->dc, NULL);
-		fi->glyphset = malloc(glyphsetsize);
-		assert(fi->glyphset);
-		GetFontUnicodeRanges(data->dc, fi->glyphset);
+	fi->defaultfont = false;
 
-		fi->defaultfont = false;
-
-		data->index++;
-	}
+	data->index++;
 	return 1;
 }
 
@@ -283,23 +278,24 @@ static void unicode_to_utf16(uni_t unicode, WCHAR* string, int* slen)
 	*slen = 2;
 }
 
-static void select_font_with_glyph(HDC dc, uni_t unicode)
+static bool select_font_with_glyph(HDC dc, uni_t unicode)
 {
-	for (int i = 0; i < numfonts; i++)
+	for (int fi = 0; fi < numfonts; fi++)
 	{
-		SelectObject(dc, fontdata[i].font);
-
-		GLYPHSET* gs = fontdata[i].glyphset;
+		GLYPHSET* gs = fontdata[fi].glyphset;
 		for (int i = 0; i < gs->cRanges; i++)
 		{
 			WCRANGE* range = &gs->ranges[i];
 			int delta = unicode - range->wcLow;
 			if ((delta >= 0) && (delta < range->cGlyphs))
-				return;
+			{
+				SelectObject(dc, fontdata[fi].font);
+				return true;
+			}
 		}
 	}
 
-	SelectObject(dc, fontdata[0].font);
+	return false;
 }
 
 static void draw_glyph(HDC dc, unsigned int id, int w, int h)
@@ -330,19 +326,38 @@ static void draw_glyph(HDC dc, unsigned int id, int w, int h)
 	SetTextColor(dc, fg);
 
 	uni_t unicode = id >> 8;
-	select_font_with_glyph(dc, unicode);
-
-	WCHAR wstring[2];
-	int slen;
-	unicode_to_utf16(unicode, wstring, &slen);
-	TextOutW(dc, 0, 0, wstring, slen);
-
-	if (attrs & DPY_UNDERLINE)
+	if (select_font_with_glyph(dc, unicode))
 	{
+		/* Successfully found a font with this glyph in it. Draw it. */
+
+		WCHAR wstring[2];
+		int slen;
+		unicode_to_utf16(unicode, wstring, &slen);
+		TextOutW(dc, 0, 0, wstring, slen);
+
+		if (attrs & DPY_UNDERLINE)
+		{
+			HPEN pen = CreatePen(PS_SOLID, 0, fg);
+			SelectObject(dc, pen);
+			MoveToEx(dc, 0, h-1, NULL);
+			LineTo(dc, w, h-1);
+			DeleteObject(pen);
+		}
+	}
+	else
+	{
+		/* No glyph --- fake it, badly. */
+
 		HPEN pen = CreatePen(PS_SOLID, 0, fg);
 		SelectObject(dc, pen);
+		MoveToEx(dc, 0, 0, NULL);
+		LineTo(dc, w-1, 0);
+		LineTo(dc, w-1, h-1);
+		LineTo(dc, 0, h-1);
+		LineTo(dc, 0, 0);
+		LineTo(dc, w, h);
 		MoveToEx(dc, 0, h-1, NULL);
-		LineTo(dc, w, h-1);
+		LineTo(dc, w-1, 0);
 		DeleteObject(pen);
 	}
 }
