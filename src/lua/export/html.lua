@@ -174,7 +174,7 @@ function Cmd.ConfigureHTMLExport()
 	{
 		title = "Configure HTML Export",
 		width = Form.Large,
-		height = 11,
+		height = 9,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -212,16 +212,11 @@ function Cmd.ConfigureHTMLExport()
 			value = "Italics off:"
 		},
 		italic_off_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = -2,
-			x2 = -1, y2 = -2,
-			value = "<SPACE to toggle, RETURN to confirm, CTRL+C to cancel>"
-		}
 	}
 	
 	while true do
-		local result = Form.Run(dialogue, RedrawScreen)
+		local result = Form.Run(dialogue, RedrawScreen,
+			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 		if not result then
 			return false
 		end

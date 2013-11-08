@@ -206,6 +206,7 @@ UNIXCFLAGS := \
 	-D_XOPEN_SOURCE_EXTENDED \
 	-D_XOPEN_SOURCE \
 	-D_GNU_SOURCE \
+	-DARCH=\"unix\" \
 	-I/usr/include/ncursesw
 	
 ldflags := \
@@ -256,6 +257,7 @@ WINDOWSCFLAGS := \
 	-DBUILTIN_LFS \
 	-DWIN32 \
 	-DWINVER=0x0501 \
+	-DARCH=\"windows\" \
 	-Dmain=appMain \
 	-mwindows
 

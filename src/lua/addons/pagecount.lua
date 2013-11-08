@@ -57,7 +57,7 @@ function Cmd.ConfigurePageCount()
 	{
 		title = "Configure Page Count",
 		width = Form.Large,
-		height = 7,
+		height = 5,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -73,16 +73,11 @@ function Cmd.ConfigurePageCount()
 			value = "Number of words per page:"
 		},
 		count_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = -2,
-			x2 = -1, y2 = -2,
-			value = "<SPACE to toggle, RETURN to confirm, CTRL+C to cancel>"
-		}
 	}
 	
 	while true do
-		local result = Form.Run(dialogue, RedrawScreen)
+		local result = Form.Run(dialogue, RedrawScreen,
+			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 		if not result then
 			return false
 		end

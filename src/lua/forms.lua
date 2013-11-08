@@ -455,7 +455,7 @@ local function findaction(table, object, key)
 	return action
 end
 
-function Form.Run(dialogue, redraw)
+function Form.Run(dialogue, redraw, helptext)
 	-- Ensure the screen is properly sized.
 	
 	ResizeScreen()
@@ -488,13 +488,13 @@ function Form.Run(dialogue, redraw)
 	-- Size the dialogue.
 	
 	if (dialogue.width == Form.Large) then
-		dialogue.realwidth = int(ScreenWidth * 4/5)
+		dialogue.realwidth = int(ScreenWidth * 6/7)
 	else
 		dialogue.realwidth = dialogue.width
 	end
 	
 	if (dialogue.height == Form.Large) then
-		dialogue.realheight = int(ScreenHeight * 4/5)
+		dialogue.realheight = int(ScreenHeight * 5/6)
 	else
 		dialogue.realheight = dialogue.height
 	end
@@ -539,11 +539,22 @@ function Form.Run(dialogue, redraw)
 	
 	-- Draw the dialogue itself.
 	
-	SetBold()
-	DrawTitledBox(dialogue.realx - 1, dialogue.realy - 1,
-		dialogue.realwidth, dialogue.realheight,
-		dialogue.title)
-	SetNormal()
+	do
+		SetBold()
+		local sizeadjust = 0
+		if helptext then
+			sizeadjust = 1
+		end
+		DrawTitledBox(dialogue.realx - 1, dialogue.realy - 1,
+			dialogue.realwidth, dialogue.realheight + sizeadjust,
+			dialogue.title)
+		SetNormal()
+
+		if helptext then
+			CentreInField(dialogue.realx, dialogue.realy + dialogue.realheight,
+				dialogue.realwidth, "<"..helptext..">")
+		end
+	end
 		
 	-- Draw the widgets.
 	
@@ -560,7 +571,7 @@ function Form.Run(dialogue, redraw)
 		
 		if (key == "KEY_RESIZE") then
 			ResizeScreen()
-			return Form.Run(dialogue, redraw)
+			return Form.Run(dialogue, redraw, helptext)
 		end
 		
 		local action = nil
@@ -575,7 +586,7 @@ function Form.Run(dialogue, redraw)
 		end
 			
 		if (action == "redraw") then
-			return Form.Run(dialogue, redraw)
+			return Form.Run(dialogue, redraw, helptext)
 		elseif (action == "cancel") then
 			return false
 		elseif (action == "confirm") then

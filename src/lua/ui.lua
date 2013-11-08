@@ -58,9 +58,12 @@ function RAlignInField(x, y, w, s)
 	Write(x+xo, y, s)
 end
 
-function DrawTitledBox(x, y, w, h, title)
+function DrawTitledBox(x, y, w, h, title, subtitle)
 	DrawBox(x, y, w, h)
 	CentreInField(x+1, y, w, title)
+	if subtitle then
+		CentreInField(x+1, y+h+1, w, subtitle)
+	end
 end
 
 function ImmediateMessage(text)
@@ -80,7 +83,7 @@ function ModalMessage(title, message)
 	{
 		title = title or "Message",
 		width = Form.Large,
-		height = 3,
+		height = 2,
 		stretchy = true,
 
 		["KEY_^C"] = "cancel",
@@ -90,14 +93,10 @@ function ModalMessage(title, message)
 			value = message,
 			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
 		},
-
-		Form.Label {
-		    value = "<press SPACE to continue>",
-		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
-		},
 	}
 
-	Form.Run(dialogue, RedrawScreen)		
+	Form.Run(dialogue, RedrawScreen,
+		"press SPACE to continue")		
 	QueueRedraw()
 end
 
@@ -118,7 +117,7 @@ function PromptForYesNo(title, message)
 	{
 		title = title or "Message",
 		width = Form.Large,
-		height = 3,
+		height = 2,
 		stretchy = true,
 
 		["KEY_^C"] = "cancel",
@@ -131,14 +130,10 @@ function PromptForYesNo(title, message)
 			value = message,
 			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
 		},
-
-		Form.Label {
-		    value = "<Y for yes, N for no, or CTRL+C to cancel>",
-		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
-		},
 	}
 
-	Form.Run(dialogue, RedrawScreen)		
+	Form.Run(dialogue, RedrawScreen,
+		"Y for yes, N for no, or CTRL+C to cancel")
 	QueueRedraw()
 	return result
 end
@@ -159,7 +154,7 @@ function PromptForString(title, message, default)
 	{
 		title = title,
 		width = Form.Large,
-		height = 6,
+		height = 4,
 		stretchy = true,
 
 		["KEY_^C"] = "cancel",
@@ -172,14 +167,10 @@ function PromptForString(title, message, default)
 		},
 
 		textfield,			
-		
-		Form.Label {
-		    value = "<enter string, or CTRL+C to cancel>",
-		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
-		},
 	}
 
-	local result = Form.Run(dialogue, RedrawScreen)		
+	local result = Form.Run(dialogue, RedrawScreen,
+		"RETURN to confirm, CTRL+C to cancel")		
 	
 	QueueRedraw()
 	if result then
@@ -196,20 +187,20 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 	local findfield = Form.TextField {
 		value = defaultfind,
 		cursor = defaultfind:len() + 1,
-		x1 = 11, y1 = -6, x2 = -1, y2 = -5,
+		x1 = 11, y1 = 1, x2 = -1, y2 = 2,
 	}
 	
 	local replacefield = Form.TextField {
 		value = defaultreplace,
 		cursor = defaultreplace:len() + 1,
-		x1 = 11, y1 = -4, x2 = -1, y2 = -3,
+		x1 = 11, y1 = 3, x2 = -1, y2 = 4,
 	}
 
 	local dialogue = 
 	{
 		title = "Find and Replace",
 		width = Form.Large,
-		height = 7,
+		height = 5,
 
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
@@ -217,26 +208,22 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 
 		Form.Label {
 			value = "Find:",
-			x1 = 1, y1 = -6, x2 = 10, y2 = -6,
+			x1 = 1, y1 = 1, x2 = 10, y2 = 1,
 			align = Form.Left,
 		},
 		 		
 		Form.Label {
 			value = "Replace:",
-			x1 = 1, y1 = -4, x2 = 10, y2 = -4,
+			x1 = 1, y1 = 3, x2 = 10, y2 = 3,
 			align = Form.Left,
 		},
 		 		
 		findfield,
 		replacefield,			
-		
-		Form.Label {
-		    value = "<enter string, or CTRL+C to cancel>",
-		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
-		},
 	}
 
-	local result = Form.Run(dialogue, RedrawScreen)		
+	local result = Form.Run(dialogue, RedrawScreen,
+		"RETURN to confirm, CTRL+C to cancel")		
 	
 	QueueRedraw()
 	if result then
@@ -251,11 +238,12 @@ function AboutDialogue()
 	{
 		title = "About WordGrinder",
 		width = Form.Large,
-		height = 13,
+		height = 12,
 		
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
+		[" "] = "confirm",
 		
 		Form.Label {
 			value = "WordGrinder "..VERSION,
@@ -298,14 +286,10 @@ function AboutDialogue()
 			x1 = 1, y1 = 10, x2 = -1, y2 = 10,
 			align = Form.Centre,
 		},
-		
-		Form.Label {
-		    value = "<press RETURN to close>",
-		    x1 = 1, y1 = -1, x2 = -1, y2 = -1
-		},
 	}
 
-	local result = Form.Run(dialogue, RedrawScreen)		
+	local result = Form.Run(dialogue, RedrawScreen,
+		"press SPACE to continue")
 	
 	QueueRedraw()
 	return nil

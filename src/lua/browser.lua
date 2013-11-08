@@ -59,6 +59,11 @@ function FileBrowser(title, message, saving, default)
 		return nil
 	end
 	
+	if (arch == "windows") and f:match("^%a:$") then
+		-- The user has typed a drive specifier; turn it into a path.
+		f = f.."/"
+	end
+
 	local attr, e = lfs.attributes(f)
 	if not saving and e then
 		ModalMessage("File inaccessible", "The file '"..f.."' could not be accessed: "..e)
@@ -89,14 +94,14 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		focusable = false,
 		type = Form.Browser,
 		x1 = 1, y1 = 2,
-		x2 = -1, y2 = -4,
+		x2 = -1, y2 = -5,
 		data = data,
 		cursor = defaultn or 1
 	}
 	
 	local textfield = Form.TextField {
-		x1 = GetStringWidth(bottommessage) + 3, y1 = -2,
-		x2 = -1, y2 = -1,
+		x1 = GetStringWidth(bottommessage) + 3, y1 = -3,
+		x2 = -1, y2 = -2,
 		value = default or data[1].data,
 	}
 		
@@ -108,7 +113,14 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		textfield:draw()
 		return action
 	end
-	
+
+	local helptext
+	if (ARCH == "windows") then
+		helptext = "enter an absolute path or drive letter ('c:') to go there"
+	else
+		helptext = "enter an absolute path to go there"
+	end
+
 	local dialogue =
 	{
 		title = title,
@@ -135,13 +147,20 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		browser,
 		
 		Form.Label {
-			x1 = 1, y1 = -2,
-			x2 = GetStringWidth(bottommessage) + 1, y2 = -2,
+			x1 = 1, y1 = -3,
+			x2 = GetStringWidth(bottommessage) + 1, y2 = -3,
 			value = bottommessage
 		},
+
+		Form.Label {
+			x1 = 1, y1 = -1,
+			x2 = -1, y2 = -1,
+			value = helptext
+		}
 	}
 	
-	local result = Form.Run(dialogue, RedrawScreen)
+	local result = Form.Run(dialogue, RedrawScreen,
+		"RETURN to confirm, CTRL+C to cancel")
 	QueueRedraw()
 	if result then
 		return textfield.value
