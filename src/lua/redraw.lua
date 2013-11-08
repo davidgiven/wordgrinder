@@ -105,7 +105,7 @@ end
 		
 local topmarker = {
 	"     ▲          ▲          ▲          ▲          ▲     ",
-	"▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔"
+	"───────────────────────────────────────────────────────"
 }
 local topmarkerwidth = GetStringWidth(topmarker[1])
 
@@ -123,7 +123,7 @@ local function drawtopmarker(y)
 end
 
 local bottommarker = {
-	"▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁",
+	"───────────────────────────────────────────────────────",
 	"     ▼          ▼          ▼          ▼          ▼     ",
 }
 local bottommarkerwidth = GetStringWidth(bottommarker[1])
