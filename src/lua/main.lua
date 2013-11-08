@@ -12,6 +12,10 @@ local GetStringWidth = wg.getstringwidth
 
 local redrawpending = true
 
+-- Determine the user's home directory.
+
+HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
+
 function QueueRedraw()
 	redrawpending = true
 	if not Document.wrapwidth then
