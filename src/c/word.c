@@ -12,7 +12,7 @@
  * control codes. A word is always considered to start with
  * all style turned off.
  *
- * Control codes consist of combinations of 2^STYLE, with 2^3 set to prevent
+ * Control codes consist of combinations of 1<<STYLE, with 1<<4 set to prevent
  * nil characters.
  */
 
@@ -21,6 +21,8 @@ enum
 	STYLE_ITALIC,
 	STYLE_UNDERLINE,
 	STYLE_REVERSE,
+	STYLE_BOLD,
+	STYLE_MARKER, /* always set */
 
 	STYLE_ALL = 15
 };
@@ -34,9 +36,11 @@ static int styletodpy(int c)
 	int attr = 0;
 
 	if (c & (1<<STYLE_ITALIC))
-		attr |= DPY_BOLD;
+		attr |= DPY_ITALIC;
 	if (c & (1<<STYLE_UNDERLINE))
 		attr |= DPY_UNDERLINE;
+	if (c & (1<<STYLE_BOLD))
+		attr |= DPY_BOLD;
 
 	return attr;
 }
@@ -276,7 +280,7 @@ static bool copy(char** dest, int* dstate, const char** src, int* sstate, int st
 			 * back up over the printable character we just read, so we
 			 * can read it again next time.
 			 */
-			writeu8(dest, estate | 16);
+			writeu8(dest, estate | (16<<STYLE_MARKER));
 			*dstate = estate;
 
 			*src = oldsrc;
@@ -449,4 +453,7 @@ void word_init(void)
 
 	lua_pushnumber(L, 1<<STYLE_REVERSE);
 	lua_setfield(L, -2, "REVERSE");
+
+	lua_pushnumber(L, 1<<STYLE_BOLD);
+	lua_setfield(L, -2, "BOLD");
 }

@@ -28,8 +28,17 @@ local function callback(writer, document)
 	local currentstyle = nil
 	local ul = false
 	local it = false
+	local bf = false
+	local embedded = false
 	local linestart = true
 	
+	local function newline()
+		if not linestart then
+			writer("\n")
+		end
+		linestart = true
+	end
+
 	local function emit_text(s)
 		if linestart then
 			s = string_gsub(s, "^([.'])", '\\%1')
@@ -37,6 +46,10 @@ local function callback(writer, document)
 			linestart = false
 		end
 		
+		if embedded then
+			s = string_gsub(s, '"', '\\"')
+		end
+
 		s = string_gsub(s, '\\', '\\\\')
 		
 		local o = 1
@@ -48,34 +61,38 @@ local function callback(writer, document)
 			if (c < 127) then
 				writer(string_char(c))
 			else
-				writer(string_format('\\[char%d]', c))
+				writer(string_format('\\[u%04X]', c))
 			end
 		end
 	end
 	
-	local function changestate(newit, newul)
-		if not newit and it then
-			writer('\\fR')
+	local function changestate(newit, newul, newbf)
+		if newul and not ul then
+			newline()
+			writer('.UL "')
+			embedded = true
 			linestart = false
+		end
+
+		if newit and not newbf then
+			writer('\\fI')
+		elseif newit and newbf then
+			writer('\\f(BI')
+		elseif not newit and newbf then
+			writer('\\fB')
+		elseif not newit and not newbf and (it or bf) then
+			writer('\\fR')
 		end
 		
 		if not newul and ul then
 			writer('"\n')
+			embedded = false
 			linestart = true
 		end
 		
-		if newul and not ul then
-			writer('\n.UL "')
-			linestart = false
-		end
-		
-		if newit and not it then
-			writer('\\fI')
-			linestart = false
-		end
-	
 		it = newit
 		ul = newul
+		bf = newbf
 	end
 	
 	return ExportFileUsingCallbacks(document,
@@ -100,19 +117,27 @@ local function callback(writer, document)
 		end,
 		
 		italic_on = function()
-			changestate(true, ul)
+			changestate(true, ul, bf)
 		end,
 		
 		italic_off = function()
-			changestate(false, ul)
+			changestate(false, ul, bf)
 		end,
 		
 		underline_on = function()
-			changestate(it, true)
+			changestate(it, true, bf)
 		end,
 		
 		underline_off = function()
-			changestate(it, false)
+			changestate(it, false, bf)
+		end,
+		
+		bold_on = function()
+			changestate(it, ul, true)
+		end,
+		
+		bold_off = function()
+			changestate(it, ul, false)
 		end,
 		
 		list_start = function()
@@ -134,8 +159,7 @@ local function callback(writer, document)
 		end,		
 		
 		paragraph_end = function(style)
-			writer('\n')
-			linestart = true
+			newline()
 		end,
 		
 		epilogue = function()

@@ -31,6 +31,12 @@ local function callback(writer, document)
 		underline_off = function()
 		end,
 		
+		bold_on = function()
+		end,
+		
+		bold_off = function()
+		end,
+		
 		list_start = function()
 		end,
 		

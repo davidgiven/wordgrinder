@@ -389,8 +389,9 @@ end
 
 local style_tab =
 {
-	["u"] = {2, 15},
-	["i"] = {1, 15},
+	["b"] = {wg.BOLD, 15},
+	["u"] = {wg.UNDERLINE, 15},
+	["i"] = {wg.ITALIC, 15},
 	["o"] = {0, 0},
 }
 

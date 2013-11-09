@@ -4,6 +4,7 @@
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
+local BOLD = wg.BOLD
 local ParseWord = wg.parseword
 local WriteU8 = wg.writeu8
 local bitand = bit32.band
@@ -118,6 +119,8 @@ local function loadhtmlfile(fp)
 		["</em>"] = function() importer:style_off(ITALIC) end,
 		["<u>"] = function() importer:style_on(UNDERLINE) end,
 		["</u>"] = function() importer:style_off(UNDERLINE) end,
+		["<b>"] = function() importer:style_on(BOLD) end,
+		["</b>"] = function() importer:style_off(BOLD) end,
 		["<pre>"] = function() flush() style = "PRE" pre = true end,
 		["</pre>"] = function() flush() pre = false end,
 		["\n"] = function() if pre then flush() style = "PRE" else flushword() end end

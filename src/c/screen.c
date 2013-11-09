@@ -65,6 +65,12 @@ static int setdim_cb(lua_State* L)
 	return 0;
 }
 
+static int setitalic_cb(lua_State* L)
+{
+	dpy_setattr(-1, DPY_ITALIC);
+	return 0;
+}
+
 static int setnormal_cb(lua_State* L)
 {
 	dpy_setattr(0, 0);
@@ -221,6 +227,7 @@ void screen_init(const char* argv[])
 		{ "setunderline",              setunderline_cb },
 		{ "setreverse",                setreverse_cb },
 		{ "setdim",                    setdim_cb },
+		{ "setitalic",                 setitalic_cb },
 		{ "setnormal",                 setnormal_cb },
 		{ "write",                     write_cb },
 		{ "cleararea",                 cleararea_cb },

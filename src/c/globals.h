@@ -77,7 +77,8 @@ enum
 	DPY_BOLD = (1<<1),
 	DPY_UNDERLINE = (1<<2),
 	DPY_REVERSE = (1<<3),
-	DPY_DIM = (1<<4)
+	DPY_DIM = (1<<4),
+	DPY_ITALIC = (1<<5),
 };
 
 extern void dpy_init(const char* argv[]);

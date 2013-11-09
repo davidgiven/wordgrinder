@@ -151,8 +151,9 @@ local MarginMenu = addmenu("Margin",
 	
 local StyleMenu = addmenu("Style",
 {
-	{"SB",     "I", "Set italic",                 "^I",        function() Cmd.ToggleStyle("i") end},
+	{"SI",     "I", "Set italic",                 "^I",        function() Cmd.ToggleStyle("i") end},
 	{"SU",     "U", "Set underline",              "^U",        function() Cmd.ToggleStyle("u") end},
+	{"SB",     "B", "Set bold",                   "^B",        function() Cmd.ToggleStyle("b") end},
 	{"SO",     "O", "Set plain",                  "^O",        function() Cmd.ToggleStyle("o") end},
 	"-",
 	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
