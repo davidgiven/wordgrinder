@@ -99,6 +99,14 @@ local function callback(writer, document)
 			writer("</text:span>")
 		end,
 		
+		bold_on = function()
+			writer('<text:span text:style-name="B">')
+		end,
+		
+		bold_off = function()
+			writer("</text:span>")
+		end,
+		
 		underline_on = function()
 			writer('<text:span text:style-name="UL">')
 		end,
@@ -190,6 +198,12 @@ local function export_odt_with_ui(filename, title, extension)
 				</office:font-face-decls>
 				 
 				<office:styles>
+					<style:style style:name="B" style:family="text">
+	              		<style:text-properties fo:font-weight="bold"
+	              			style:font-weight-complex="bold"
+	                		style:font-weight-asian="bold"/>
+	            	</style:style>
+	            	
 					<style:style style:name="I" style:family="text">
 	              		<style:text-properties fo:font-style="italic"
 	              			style:font-style-asian="italic"

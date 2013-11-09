@@ -10,8 +10,8 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-VERSION := 0.4.2pre2
-FILEFORMAT := 3
+VERSION := 0.5
+FILEFORMAT := 4
 DATE := $(shell date +'%-d %B %Y')
 
 override CFLAGS += \

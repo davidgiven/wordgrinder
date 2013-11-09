@@ -4,6 +4,7 @@
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
+local BOLD = wg.BOLD
 local ParseWord = wg.parseword
 local WriteU8 = wg.writeu8
 local ReadFromZip = wg.readfromzip
@@ -32,6 +33,7 @@ local function parse_style(styles, xml)
 	local TEXT_PROPERTIES = STYLE_NS .. " text-properties"
 	local PARAGRAPH_PROPERTIES = STYLE_NS .. " paragraph-properties"
 	local FONT_STYLE = FO_NS .. " font-style"
+	local FONT_WEIGHT = FO_NS .. " font-weight"
 	local UNDERLINE_STYLE = STYLE_NS .. " text-underline-style"
 	local MARGIN_LEFT = FO_NS .. " margin-left"
 	
@@ -45,6 +47,9 @@ local function parse_style(styles, xml)
 		if (element._name == TEXT_PROPERTIES) then
 			if (element[FONT_STYLE] == "italic") then
 				style.italic = true
+			end
+			if (element[FONT_WEIGHT] == "bold") then
+				style.bold = true
 			end
 			if (element[UNDERLINE_STYLE] == "solid") then
 				style.underline = true
@@ -73,6 +78,7 @@ local function resolve_parent_styles(styles)
 
 	for k, v in pairs(styles) do
 		v.italic = recursively_fetch(k, "italic")
+		v.bold = recursively_fetch(k, "bold")
 		v.underline = recursively_fetch(k, "underline")
 		v.indented = recursively_fetch(k, "indented")
 	end
@@ -128,12 +134,18 @@ local function add_text(styles, importer, xml)
 			if style.italic then
 				importer:style_on(ITALIC)
 			end
+			if style.bold then
+				importer:style_on(BOLD)
+			end
 			if style.underline then
 				importer:style_on(UNDERLINE)
 			end
 			add_text(styles, importer, element)
 			if style.underline then
 				importer:style_off(UNDERLINE)
+			end
+			if style.bold then
+				importer:style_off(BOLD)
 			end
 			if style.italic then
 				importer:style_off(ITALIC)

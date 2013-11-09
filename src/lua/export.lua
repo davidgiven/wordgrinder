@@ -4,6 +4,7 @@
 
 local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
+local BOLD = wg.BOLD
 local ParseWord = wg.parseword
 local bitand = bit32.band
 local bitor = bit32.bor
@@ -20,8 +21,8 @@ function ExportFileUsingCallbacks(document, cb)
 	
 	local listmode = false
 	local rawmode = false
-	local italic, underline
-	local olditalic, oldunderline
+	local italic, underline, bold
+	local olditalic, oldunderline, oldbold
 	local firstword
 	local wordbreak
 	local emptyword
@@ -29,6 +30,7 @@ function ExportFileUsingCallbacks(document, cb)
 	local wordwriter = function (style, text)
 		italic = bit(style, ITALIC)
 		underline = bit(style, UNDERLINE)
+		bold = bit(style, BOLD)
 		
 		local writer
 		if rawmode then
@@ -43,12 +45,18 @@ function ExportFileUsingCallbacks(document, cb)
 		if not underline and oldunderline then
 			cb.underline_off()
 		end
+		if not bold and oldbold then
+			cb.bold_off()
+		end
 		
 		if wordbreak then
 			writer(' ')
 			wordbreak = false
 		end
 	
+		if bold and not oldbold then
+			cb.bold_on()
+		end
 		if underline and not oldunderline then
 			cb.underline_on()
 		end
@@ -60,6 +68,7 @@ function ExportFileUsingCallbacks(document, cb)
 		emptyword = false
 		olditalic = italic
 		oldunderline = underline
+		oldbold = bold
 	end
 
 	for _, paragraph in ipairs(Document) do
@@ -87,6 +96,7 @@ function ExportFileUsingCallbacks(document, cb)
 			wordbreak = false	
 			olditalic = false
 			oldunderline = false
+			oldbold = false
 
 			for wn, word in ipairs(paragraph) do
 				if firstword then
@@ -98,16 +108,21 @@ function ExportFileUsingCallbacks(document, cb)
 				emptyword = true
 				italic = false
 				underline = false
+				bold = false
 				ParseWord(word.text, 0, wordwriter) -- FIXME
 				if emptyword then
 					wordwriter(0, "")
 				end
 			end
+
 			if italic then
 				cb.italic_off()
 			end
 			if underline then
 				cb.underline_off()
+			end
+			if bold then
+				cb.bold_off()
 			end
 		end
 		
@@ -151,8 +166,8 @@ function ExportFileWithUI(filename, title, extension, callback)
 	end
 	
 	local fpw = fp.write
-	local writer = function(s)
-		fpw(fp, s)
+	local writer = function(...)
+		fpw(fp, ...)
 	end
 	
 	callback(writer, Document)

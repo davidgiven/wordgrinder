@@ -63,7 +63,7 @@ void dpy_setattr(int andmask, int ormask)
 	attr |= ormask;
 
 	int cattr = 0;
-	if (attr & DPY_BOLD)
+	if (attr & (DPY_ITALIC|DPY_BOLD))
 		cattr |= A_BOLD;
 	if (attr & DPY_UNDERLINE)
 		cattr |= A_UNDERLINE;

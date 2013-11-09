@@ -92,6 +92,14 @@ local function callback(writer, document)
 			writer(settings.underline_off)
 		end,
 		
+		bold_on = function()
+			writer(settings.bold_on)
+		end,
+		
+		bold_off = function()
+			writer(settings.bold_off)
+		end,
+		
 		list_start = function()
 			writer('<ul>')
 		end,
@@ -131,6 +139,10 @@ do
 			italic_on = "<i>",
 			italic_off = "</i>"
 		}
+
+		local s = DocumentSet.addons.htmlexport
+		s.bold_on = s.bold_on or "<b>"
+		s.bold_off = s.bold_off or "</b>"
 	end
 	
 	AddEventListener(Event.RegisterAddons, cb)
@@ -170,11 +182,25 @@ function Cmd.ConfigureHTMLExport()
 			value = settings.italic_off
 		}
 
+	local bold_on_textfield =
+		Form.TextField {
+			x1 = 16, y1 = 9,
+			x2 = -1, y2 = 9,
+			value = settings.bold_on
+		}
+
+	local bold_off_textfield =
+		Form.TextField {
+			x1 = 16, y1 = 11,
+			x2 = -1, y2 = 11,
+			value = settings.bold_off
+		}
+
 	local dialogue =
 	{
 		title = "Configure HTML Export",
 		width = Form.Large,
-		height = 9,
+		height = 13,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -212,6 +238,22 @@ function Cmd.ConfigureHTMLExport()
 			value = "Italics off:"
 		},
 		italic_off_textfield,
+		
+		Form.Label {
+			x1 = 1, y1 = 9,
+			x2 = 32, y2 = 9,
+			align = Form.Left,
+			value = "Bold on:"
+		},
+		bold_on_textfield,
+		
+		Form.Label {
+			x1 = 1, y1 = 11,
+			x2 = 32, y2 = 11,
+			align = Form.Left,
+			value = "Bold off:"
+		},
+		bold_off_textfield,
 	}
 	
 	while true do
@@ -225,6 +267,8 @@ function Cmd.ConfigureHTMLExport()
 		settings.underline_off = underline_off_textfield.value
 		settings.italic_on = italic_on_textfield.value
 		settings.italic_off = italic_off_textfield.value
+		settings.bold_on = bold_on_textfield.value
+		settings.bold_off = bold_off_textfield.value
 		return true
 	end
 		

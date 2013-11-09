@@ -66,10 +66,18 @@ local function callback(writer, document)
 		end,
 		
 		italic_on = function()
-			writer('\\emph{')
+			writer('\\textit{')
 		end,
 		
 		italic_off = function()
+			writer('}')
+		end,
+		
+		bold_on = function()
+			writer('\\textbf{')
+		end,
+		
+		bold_off = function()
 			writer('}')
 		end,
 		

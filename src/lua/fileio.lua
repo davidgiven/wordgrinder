@@ -2,8 +2,6 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local ITALIC = wg.ITALIC
-local UNDERLINE = wg.UNDERLINE
 local ParseWord = wg.parseword
 local bitand = bit32.band
 local bitor = bit32.bor
