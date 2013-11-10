@@ -20,6 +20,9 @@ struct fontinfo
 	LOGFONT logfont;
 	long long panose;
 	HFONT font;
+	HFONT fontb;
+	HFONT fonti;
+	HFONT fontbi;
 	GLYPHSET* glyphset;
 	bool defaultfont : 1;
 };
@@ -123,8 +126,23 @@ static int CALLBACK font_reader_cb(
 	fi->logfont = fontex->elfLogFont;
 	fi->logfont.lfWidth = 0;//fontwidth;
 	fi->logfont.lfHeight = fontheight;
+
+	fi->logfont.lfItalic = FALSE;
+	fi->logfont.lfWeight = FW_NORMAL;
 	fi->font = CreateFontIndirect(&fi->logfont);
-	assert(fi->font);
+
+	fi->logfont.lfItalic = TRUE;
+	fi->logfont.lfWeight = FW_NORMAL;
+	fi->fonti = CreateFontIndirect(&fi->logfont);
+
+	fi->logfont.lfItalic = FALSE;
+	fi->logfont.lfWeight = FW_BOLD;
+	fi->fontb = CreateFontIndirect(&fi->logfont);
+
+	fi->logfont.lfItalic = TRUE;
+	fi->logfont.lfWeight = FW_BOLD;
+	fi->fontbi = CreateFontIndirect(&fi->logfont);
+
 	unsigned long long p = get_panose(fi->font, data->dc);
 	fi->panose = compare_panose(p, data->currentpanose);
 
@@ -161,6 +179,7 @@ static int font_sorter_cb(const void* p1, const void* p2)
 void glyphcache_init(HDC dc, LOGFONT* defaultfont)
 {
 	HFONT defaultfonthandle = CreateFontIndirect(defaultfont);
+	int state = SaveDC(dc);
 	SelectObject(dc, defaultfonthandle);
 
 	{
@@ -231,16 +250,27 @@ void glyphcache_init(HDC dc, LOGFONT* defaultfont)
 
 	glyphs = NULL;
 	DeleteObject(defaultfonthandle);
+
+	RestoreDC(dc, state);
 }
 
 void glyphcache_deinit(void)
 {
 	glyphcache_flush();
 
-	for (int i = 0; i < numfonts; i++)
+	if (fontdata)
 	{
-		DeleteObject(fontdata[i].font);
-		free(fontdata[i].glyphset);
+		for (int i = 0; i < numfonts; i++)
+		{
+			DeleteObject(fontdata[i].font);
+			DeleteObject(fontdata[i].fonti);
+			DeleteObject(fontdata[i].fontb);
+			DeleteObject(fontdata[i].fontbi);
+			free(fontdata[i].glyphset);
+		}
+		numfonts = 0;
+		free(fontdata);
+		fontdata = NULL;
 	}
 }
 
@@ -258,9 +288,6 @@ void glyphcache_flush(void)
 		HASH_DEL(glyphs, glyph);
 		delete_struct_glyph(glyph);
 	}
-
-	fontwidth = 0;
-	fontheight = 0;
 }
 
 static void unicode_to_utf16(uni_t unicode, WCHAR* string, int* slen)
@@ -278,7 +305,7 @@ static void unicode_to_utf16(uni_t unicode, WCHAR* string, int* slen)
 	*slen = 2;
 }
 
-static bool select_font_with_glyph(HDC dc, uni_t unicode)
+static bool select_font_with_glyph(HDC dc, uni_t unicode, int attrs)
 {
 	for (int fi = 0; fi < numfonts; fi++)
 	{
@@ -289,7 +316,16 @@ static bool select_font_with_glyph(HDC dc, uni_t unicode)
 			int delta = unicode - range->wcLow;
 			if ((delta >= 0) && (delta < range->cGlyphs))
 			{
-				SelectObject(dc, fontdata[fi].font);
+				bool bold = attrs & DPY_BOLD;
+				bool italic = attrs & DPY_ITALIC;
+				if (!bold && !italic)
+					SelectObject(dc, fontdata[fi].font);
+				else if (bold && !italic)
+					SelectObject(dc, fontdata[fi].fontb);
+				else if (bold && italic)
+					SelectObject(dc, fontdata[fi].fontbi);
+				else if (!bold && italic)
+					SelectObject(dc, fontdata[fi].fonti);
 				return true;
 			}
 		}
@@ -326,7 +362,7 @@ static void draw_glyph(HDC dc, unsigned int id, int w, int h)
 	SetTextColor(dc, fg);
 
 	uni_t unicode = id >> 8;
-	if (select_font_with_glyph(dc, unicode))
+	if (select_font_with_glyph(dc, unicode, attrs))
 	{
 		/* Successfully found a font with this glyph in it. Draw it. */
 
@@ -384,6 +420,9 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 		if (!glyph->dc)
 			goto error;
 		glyph->width = emu_wcwidth(id >> 8) * fontwidth;
+		glyph->realwidth = glyph->width;
+		glyph->realheight = fontheight;
+		glyph->xoffset = glyph->yoffset = 0;
 		glyph->bitmap = CreateCompatibleBitmap(dc, glyph->width, fontheight);
 		if (!glyph->bitmap)
 			goto error;

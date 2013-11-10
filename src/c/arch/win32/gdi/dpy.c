@@ -29,6 +29,9 @@ static int screenwidth = 0;
 static int screenheight = 0;
 static int defaultattr = 0;
 
+static HDC cachedc = INVALID_HANDLE_VALUE;
+static HBITMAP cachebitmap = INVALID_HANDLE_VALUE;
+
 static UINT_PTR timer = 0;
 static bool cursor_visible = false;
 static int cursorx = 0;
@@ -39,7 +42,7 @@ static bool window_geometry_valid = false;
 static RECT window_geometry;
 static bool window_created = false;
 
-static bool resize_buffer(void);
+static void resize_buffer(void);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
 static void switch_to_windowed(void);
@@ -176,10 +179,8 @@ static bool special_key(int vk, unsigned flags)
 	return true;
 }
 
-static void paint_cb(HWND window, PAINTSTRUCT* ps)
+static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 {
-	HDC dc = ps->hdc;
-
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
@@ -187,18 +188,10 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps)
 	int y1 = ps->rcPaint.top / textheight;
 	int x2 = ps->rcPaint.right / textwidth + 1;
 	if (x2 > screenwidth)
-	{
-		RECT r = {screenwidth*textwidth, 0, ps->rcPaint.right, ps->rcPaint.bottom};
-		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
 		x2 = screenwidth;
-	}
 	int y2 = ps->rcPaint.bottom / textheight + 1;
 	if (y2 > screenheight)
-	{
-		RECT r = {0, screenheight*textheight, ps->rcPaint.right, ps->rcPaint.bottom};
-		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
 		y2 = screenheight;
-	}
 
 	for (int y = y1; y < y2; y++)
 	{
@@ -208,13 +201,17 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps)
 			int seq = y*screenwidth + x;
 			int sx = x * textwidth;
 
-			struct glyph* glyph = frontbuffer[seq];
+			unsigned int id = backbuffer[seq];
+			struct glyph* glyph = glyphcache_getglyph(id, dc);
 			if (glyph)
 			{
-				BitBlt(dc, sx, sy, glyph->width, textheight, glyph->dc, 0, 0, SRCCOPY);
+				BitBlt(dc, sx+glyph->xoffset, sy+glyph->yoffset,
+					glyph->realwidth, glyph->realheight,
+					glyph->dc, 0, 0, SRCPAINT);
+
 				if (cursor_visible && (x == cursorx) && (y == cursory))
 					BitBlt(dc, sx, sy, glyph->width, textheight,
-							dc, 0, 0, DSTINVERT);
+							NULL, 0, 0, DSTINVERT);
 			}
 		}
 	}
@@ -232,12 +229,6 @@ static void setfont_cb(void)
 
 	if (ChooseFont(&cf))
 	{
-		glyphcache_deinit();
-
-		HDC dc = GetDC(window);
-		glyphcache_init(dc, &fontlf);
-		ReleaseDC(window, dc);
-
 		write_default_font();
 		resize_buffer();
 	}
@@ -257,6 +248,8 @@ static void fullscreen_cb(void)
 		switch_to_full_screen();
 	else
 		switch_to_windowed();
+
+	resize_buffer();
 }
 
 static void create_cb(void)
@@ -349,7 +342,17 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 		{
 			PAINTSTRUCT ps;
 			BeginPaint(window, &ps);
-			paint_cb(window, &ps);
+
+			FillRect(cachedc, &ps.rcPaint, GetStockObject(BLACK_BRUSH));
+			paint_cb(window, &ps, cachedc);
+
+			BitBlt(ps.hdc,
+				ps.rcPaint.left, ps.rcPaint.top,
+				ps.rcPaint.right, ps.rcPaint.bottom,
+				cachedc,
+				ps.rcPaint.left, ps.rcPaint.top,
+				SRCCOPY);
+
 			EndPaint(window, &ps);
 			break;
 		}
@@ -359,7 +362,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			PAINTSTRUCT ps;
 			ps.hdc = (HDC) wparam;
 			GetClientRect(window, &ps.rcPaint);
-			paint_cb(window, &ps);
+			paint_cb(window, &ps, ps.hdc);
 			break;
 		}
 
@@ -419,44 +422,59 @@ void dpy_init(const char* argv[])
 	read_window_geometry();
 }
 
-static bool resize_buffer(void)
+static void resize_buffer(void)
 {
 	RECT rect;
 	int e = GetClientRect(window, &rect);
 	if (!e)
 		SystemParametersInfo(SPI_GETWORKAREA, sizeof(RECT), &rect, 0);
 
+	/* Recreate the off-screen bitmap we're going to draw into. */
+
+	if (cachebitmap)
+	{
+		DeleteObject(cachebitmap);
+		cachebitmap = INVALID_HANDLE_VALUE;
+	}
+	if (cachedc)
+	{
+		DeleteDC(cachedc);
+		cachedc = INVALID_HANDLE_VALUE;
+	}
+
+	HDC dc = GetDC(window);
+		
+	cachedc = CreateCompatibleDC(dc);
+	cachebitmap = CreateCompatibleBitmap(dc, rect.right, rect.bottom);
+	SelectObject(cachedc, cachebitmap);
+
+	glyphcache_flush();
+
+	ReleaseDC(window, dc);
+
+	/* Wipe the character storage. */
+
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
-	int newscreenwidth = rect.right / textwidth;
-	int newscreenheight = rect.bottom / textheight;
-	if ((newscreenwidth != screenwidth) ||
-		(newscreenheight != screenheight))
+	screenwidth = rect.right / textwidth;
+	screenheight = rect.bottom / textheight;
+
+	frontbuffer = realloc(frontbuffer, sizeof(struct glyph*)
+			* screenwidth * screenheight);
+	backbuffer = realloc(backbuffer, sizeof(unsigned int)
+			* screenwidth * screenheight);
+
+	for (int p = 0; p < (screenwidth * screenheight); p++)
 	{
-		screenwidth = newscreenwidth;
-		screenheight = newscreenheight;
-
-		frontbuffer = realloc(frontbuffer, sizeof(struct glyph*)
-				* screenwidth * screenheight);
-		backbuffer = realloc(backbuffer, sizeof(unsigned int)
-				* screenwidth * screenheight);
-
-		HDC dc = GetDC(window);
-		struct glyph* defaultchar = glyphcache_getglyph(DEFAULT_CHAR, dc);
-		ReleaseDC(window, dc);
-
-		for (int p = 0; p < (screenwidth * screenheight); p++)
-		{
-			frontbuffer[p] = defaultchar;
-			backbuffer[p] = DEFAULT_CHAR;
-		}
-
-		dpy_queuekey(-VK_RESIZE);
-		return true;
+		frontbuffer[p] = NULL;
+		backbuffer[p] = DEFAULT_CHAR;
 	}
 
-	return false;
+	/* Tell the main app that the screen has changed size; it'll
+	 * redraw the character storage. */
+
+	dpy_queuekey(-VK_RESIZE);
 }
 
 static void switch_to_full_screen(void)
@@ -628,25 +646,6 @@ void dpy_getscreensize(int* x, int* y)
 
 void dpy_sync(void)
 {
-	HDC dc = GetDC(window);
-	for (int y = 0; y < screenheight; y++)
-	{
-		for (int x = 0; x < screenwidth; x++)
-		{
-			int seq = y*screenwidth + x;
-			unsigned int id = backbuffer[y*screenwidth + x];
-			frontbuffer[seq] = glyphcache_getglyph(id, dc);
-
-			if (emu_wcwidth(id>>8) == 2)
-			{
-				frontbuffer[seq+1] = NULL;
-				x++;
-			}
-		}
-	}
-
-	ReleaseDC(window, dc);
-
 	InvalidateRect(window, NULL, 0);
 	UpdateWindow(window);
 }
