@@ -23,7 +23,7 @@
 
 HWND window = INVALID_HANDLE_VALUE;
 static LOGFONT fontlf;
-static struct glyph** frontbuffer = NULL;
+static unsigned int* frontbuffer = NULL;
 static unsigned int* backbuffer = NULL;
 static int screenwidth = 0;
 static int screenheight = 0;
@@ -201,7 +201,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 			int seq = y*screenwidth + x;
 			int sx = x * textwidth;
 
-			unsigned int id = backbuffer[seq];
+			unsigned int id = frontbuffer[seq];
 			struct glyph* glyph = glyphcache_getglyph(id, dc);
 			if (glyph)
 			{
@@ -460,14 +460,14 @@ static void resize_buffer(void)
 	screenwidth = rect.right / textwidth;
 	screenheight = rect.bottom / textheight;
 
-	frontbuffer = realloc(frontbuffer, sizeof(struct glyph*)
+	frontbuffer = realloc(frontbuffer, sizeof(unsigned int)
 			* screenwidth * screenheight);
 	backbuffer = realloc(backbuffer, sizeof(unsigned int)
 			* screenwidth * screenheight);
 
 	for (int p = 0; p < (screenwidth * screenheight); p++)
 	{
-		frontbuffer[p] = NULL;
+		frontbuffer[p] = 0;
 		backbuffer[p] = DEFAULT_CHAR;
 	}
 
@@ -646,7 +646,24 @@ void dpy_getscreensize(int* x, int* y)
 
 void dpy_sync(void)
 {
-	InvalidateRect(window, NULL, 0);
+	int textwidth, textheight;
+	glyphcache_getfontsize(&textwidth, &textheight);
+
+	for (int y=0; y<screenheight; y++)
+	{
+		unsigned int* front = frontbuffer + y*screenwidth;
+		unsigned int* back = backbuffer + y*screenwidth;
+		if (memcmp(front, back, screenwidth * sizeof(*backbuffer)) != 0)
+		{
+			memcpy(front, back, screenwidth * sizeof(*backbuffer));
+
+			int sy = y*textheight;
+			RECT r = {0, y, screenwidth*textwidth, sy+textheight};
+			InvalidateRect(window, &r, 0);
+		}
+	}
+
+	invalidate_character_at(cursorx, cursory);
 	UpdateWindow(window);
 }
 
