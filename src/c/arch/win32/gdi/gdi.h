@@ -26,6 +26,8 @@ struct glyph
 	HDC dc;
 	HBITMAP bitmap;
 	int width;
+	int xoffset, yoffset;
+	int realwidth, realheight;
 	UT_hash_handle hh;
 };
 
