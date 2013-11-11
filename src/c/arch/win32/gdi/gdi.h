@@ -22,12 +22,12 @@
 
 struct glyph
 {
-	unsigned int id;
-	HDC dc;
-	HBITMAP bitmap;
-	int width;
-	int xoffset, yoffset;
-	int realwidth, realheight;
+	unsigned int id;              /* id of this glyph */
+	HDC dc;                       /* Memory DC this glyph is drawn to */
+	HBITMAP bitmap;               /* Backing store for memory DC */
+	int width;                    /* Width of cell for this glyph */
+	int xoffset, yoffset;         /* Draw offset */
+	int realwidth, realheight;    /* Actual size of glyph bitmap */
 	UT_hash_handle hh;
 };
 

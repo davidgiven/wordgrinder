@@ -29,9 +29,6 @@ static int screenwidth = 0;
 static int screenheight = 0;
 static int defaultattr = 0;
 
-static HDC cachedc = INVALID_HANDLE_VALUE;
-static HBITMAP cachebitmap = INVALID_HANDLE_VALUE;
-
 static UINT_PTR timer = 0;
 static bool cursor_visible = false;
 static int cursorx = 0;
@@ -184,18 +181,40 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
+	struct glyph* cursorglyph = NULL;
+
 	int x1 = ps->rcPaint.left / textwidth;
+	x1 -= 1;
+	if (x1 < 0)
+		x1 = 0;
+
 	int y1 = ps->rcPaint.top / textheight;
 	int x2 = ps->rcPaint.right / textwidth + 1;
+	x2 += 1;
 	if (x2 > screenwidth)
 		x2 = screenwidth;
+
 	int y2 = ps->rcPaint.bottom / textheight + 1;
 	if (y2 > screenheight)
 		y2 = screenheight;
 
+	int state = SaveDC(dc);
+
+	HPEN brightpen = CreatePen(PS_SOLID, 0, 0xffffff);
+	HPEN normalpen = CreatePen(PS_SOLID, 0, 0x808080);
+	HPEN dimpen = CreatePen(PS_SOLID, 0, 0x606060);
+
 	for (int y = y1; y < y2; y++)
 	{
 		int sy = y * textheight;
+
+		/* Clear this line (or at least the part of it we're drawing). */
+
+		RECT r = {ps->rcPaint.left, sy, ps->rcPaint.right, sy+textheight};
+		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
+
+		/* Draw the actual text. */
+
 		for (int x = x1; x < x2; x++)
 		{
 			int seq = y*screenwidth + x;
@@ -209,12 +228,56 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 					glyph->realwidth, glyph->realheight,
 					glyph->dc, 0, 0, SRCPAINT);
 
-				if (cursor_visible && (x == cursorx) && (y == cursory))
-					BitBlt(dc, sx, sy, glyph->width, textheight,
-							NULL, 0, 0, DSTINVERT);
+				if (id & DPY_UNDERLINE)
+				{
+					if (id & DPY_BOLD)
+						SelectObject(dc, brightpen);
+					else if (id & DPY_DIM)
+						SelectObject(dc, dimpen);
+					else
+						SelectObject(dc, normalpen);
+
+					MoveToEx(dc, sx, sy+textheight-1, NULL);
+					LineTo(dc, sx+glyph->width, sy+textheight-1);
+				}
+			}
+
+			if ((x == cursorx) && (y == cursory))
+				cursorglyph = glyph;
+		}
+
+		/* Now go through and invert any characters which are in reverse. */
+
+		for (int x = x1; x < x2; x++)
+		{
+			int seq = y*screenwidth + x;
+			int sx = x * textwidth;
+
+			unsigned int id = frontbuffer[seq];
+			if (id & DPY_REVERSE)
+			{
+				int w;
+				struct glyph* glyph = glyphcache_getglyph(id, dc);
+				if (glyph)
+					w = glyph->width;
+				else
+					w = textwidth;
+
+				BitBlt(dc, sx, sy, w, textheight, NULL, 0, 0, DSTINVERT);
 			}
 		}
 	}
+
+	/* Invert the square containing the cursor. */
+
+	if (cursor_visible && cursorglyph)
+		BitBlt(dc, cursorx*textwidth, cursory*textheight, cursorglyph->width, textheight,
+				NULL, 0, 0, DSTINVERT);
+
+	DeleteObject(brightpen);
+	DeleteObject(normalpen);
+	DeleteObject(dimpen);
+	RestoreDC(dc, state);
 }
 
 static void setfont_cb(void)
@@ -230,6 +293,12 @@ static void setfont_cb(void)
 	if (ChooseFont(&cf))
 	{
 		write_default_font();
+
+		HDC dc = GetDC(window);
+		glyphcache_deinit();
+		glyphcache_init(dc, &fontlf);
+		ReleaseDC(window, dc);
+
 		resize_buffer();
 	}
 }
@@ -343,15 +412,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			PAINTSTRUCT ps;
 			BeginPaint(window, &ps);
 
-			FillRect(cachedc, &ps.rcPaint, GetStockObject(BLACK_BRUSH));
-			paint_cb(window, &ps, cachedc);
-
-			BitBlt(ps.hdc,
-				ps.rcPaint.left, ps.rcPaint.top,
-				ps.rcPaint.right, ps.rcPaint.bottom,
-				cachedc,
-				ps.rcPaint.left, ps.rcPaint.top,
-				SRCCOPY);
+			paint_cb(window, &ps, ps.hdc);
 
 			EndPaint(window, &ps);
 			break;
@@ -419,6 +480,13 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 
 void dpy_init(const char* argv[])
 {
+	SystemParametersInfo(SPI_SETFONTSMOOTHING,
+			 TRUE, 0,
+			 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+	SystemParametersInfo(SPI_SETFONTSMOOTHINGTYPE,
+			 0, (PVOID)FE_FONTSMOOTHINGCLEARTYPE,
+			 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
+
 	read_window_geometry();
 }
 
@@ -431,26 +499,7 @@ static void resize_buffer(void)
 
 	/* Recreate the off-screen bitmap we're going to draw into. */
 
-	if (cachebitmap)
-	{
-		DeleteObject(cachebitmap);
-		cachebitmap = INVALID_HANDLE_VALUE;
-	}
-	if (cachedc)
-	{
-		DeleteDC(cachedc);
-		cachedc = INVALID_HANDLE_VALUE;
-	}
-
-	HDC dc = GetDC(window);
-		
-	cachedc = CreateCompatibleDC(dc);
-	cachebitmap = CreateCompatibleBitmap(dc, rect.right, rect.bottom);
-	SelectObject(cachedc, cachebitmap);
-
 	glyphcache_flush();
-
-	ReleaseDC(window, dc);
 
 	/* Wipe the character storage. */
 

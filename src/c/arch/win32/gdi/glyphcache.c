@@ -305,7 +305,7 @@ static void unicode_to_utf16(uni_t unicode, WCHAR* string, int* slen)
 	*slen = 2;
 }
 
-static bool select_font_with_glyph(HDC dc, uni_t unicode, int attrs)
+static HFONT select_font_with_glyph(HDC dc, uni_t unicode, int attrs)
 {
 	for (int fi = 0; fi < numfonts; fi++)
 	{
@@ -319,83 +319,173 @@ static bool select_font_with_glyph(HDC dc, uni_t unicode, int attrs)
 				bool bold = attrs & DPY_BOLD;
 				bool italic = attrs & DPY_ITALIC;
 				if (!bold && !italic)
-					SelectObject(dc, fontdata[fi].font);
+					return fontdata[fi].font;
 				else if (bold && !italic)
-					SelectObject(dc, fontdata[fi].fontb);
+					return fontdata[fi].fontb;
 				else if (bold && italic)
-					SelectObject(dc, fontdata[fi].fontbi);
+					return fontdata[fi].fontbi;
 				else if (!bold && italic)
-					SelectObject(dc, fontdata[fi].fonti);
-				return true;
+					return fontdata[fi].fonti;
 			}
 		}
 	}
 
-	return false;
+	return INVALID_HANDLE_VALUE;
 }
 
-static void draw_glyph(HDC dc, unsigned int id, int w, int h)
+static void draw_unicode(HDC dc, WCHAR* wstring, int slen, int w, int h,
+		int xo, unsigned int attrs)
 {
-	RECT size = {0, 0, w, h};
-	unsigned int attrs = id & 0xff;
-	bool reverse = attrs & DPY_REVERSE;
-	int bg = 0x000000;
 	int fg;
 
-	if (attrs & DPY_REVERSE)
+	if (attrs & DPY_DIM)
+		fg = 0x606060;
+	else if (attrs & DPY_BOLD)
+		fg = 0xffffff;
+	else
+		fg = 0x808080;
+
+	SetBkColor(dc, 0x000000);
+	SetTextColor(dc, fg);
+
+	if (wstring)
 	{
-		fg = 0x000000;
-		bg = 0xffffff;
+		/* If there's text, draw it. */
+
+		TextOutW(dc, xo, 0, wstring, slen);
 	}
 	else
 	{
-		if (attrs & DPY_DIM)
-			fg = 0x606060;
-		else if (attrs & DPY_BOLD)
-			fg = 0xffffff;
-		else
-			fg = 0x808080;
-	}
+		/* No text, so draw a placeholder. */
 
-	FillRect(dc, &size, GetStockObject(reverse ? WHITE_BRUSH : BLACK_BRUSH));
-	SetBkColor(dc, bg);
-	SetTextColor(dc, fg);
+		HPEN pen = CreatePen(PS_SOLID, 0, fg);
+		SelectObject(dc, pen);
+		MoveToEx(dc, xo, 0, NULL);
+		LineTo(dc, xo+w-1, 0);
+		LineTo(dc, xo+w-1, h-1);
+		LineTo(dc, xo, h-1);
+		LineTo(dc, xo, 0);
+		LineTo(dc, xo+w, h);
+		MoveToEx(dc, xo, h-1, NULL);
+		LineTo(dc, xo+w-1, 0);
+		DeleteObject(pen);
+	}
+}
+
+static struct glyph* create_glyph(unsigned int id, HDC dc)
+{
+	int state = SaveDC(dc);
+
+	struct glyph* glyph = create_struct_glyph();
+	if (!glyph)
+		goto error;
+	glyph->id = id;
+
+	int x, xo, w, h;
+
+	/* Look for a font containing this glyph. */
 
 	uni_t unicode = id >> 8;
-	if (select_font_with_glyph(dc, unicode, attrs))
+	unsigned int attrs = id & 0xff;
+	attrs &= DPY_ITALIC | DPY_BOLD | DPY_DIM;
+	HFONT font = select_font_with_glyph(dc, unicode, attrs);
+
+	/* Determine the size of the bitmap needed. */
+
+	WCHAR wstringarray[2];
+	int slen;
+	WCHAR* wstring;
+	if (font)
 	{
-		/* Successfully found a font with this glyph in it. Draw it. */
+		/* There is a font for this glyph; calculate its size. */
 
-		WCHAR wstring[2];
-		int slen;
-		unicode_to_utf16(unicode, wstring, &slen);
-		TextOutW(dc, 0, 0, wstring, slen);
+		SelectObject(dc, font);
 
-		if (attrs & DPY_UNDERLINE)
+		unicode_to_utf16(unicode, wstringarray, &slen);
+		wstring = wstringarray;
+
+		SIZE size;
+		GetTextExtentPoint32W(dc, wstring, slen, &size);
+		w = size.cx;
+		h = size.cy;
+
+		/* Adjust size to cope with font glyphs that are bigger than a
+		 * character cell (italic or bold bitmap, or TrueType). */
+
+		ABC abc;
+		if (GetCharABCWidths(dc, unicode, unicode, &abc))
 		{
-			HPEN pen = CreatePen(PS_SOLID, 0, fg);
-			SelectObject(dc, pen);
-			MoveToEx(dc, 0, h-1, NULL);
-			LineTo(dc, w, h-1);
-			DeleteObject(pen);
+			/* If this function succeeds, then this is a TrueType font,
+			 * so we use the ABC mechanism to calculate the overhang. */
+
+			if (abc.abcB > w)
+				w = abc.abcB;
+			if (abc.abcA < 0)
+			{
+				xo = -abc.abcA;
+				w += xo;
+				x = abc.abcA;
+			}
+			else
+			{
+				xo = 0;
+				x = 0;
+			}
+			if (abc.abcC < 0)
+				w += -abc.abcC;
+		}
+		else
+		{
+			/* GetCharABCWidths() failed, therefore this is a bitmap
+			 * font, and we need to use GetTextMetrics() to calculate the
+			 * overhang. */
+
+			TEXTMETRIC tm;
+			GetTextMetrics(dc, &tm);
+			w += tm.tmOverhang;
+			x = -tm.tmOverhang/2;
+			xo = 0;
 		}
 	}
 	else
 	{
-		/* No glyph --- fake it, badly. */
-
-		HPEN pen = CreatePen(PS_SOLID, 0, fg);
-		SelectObject(dc, pen);
-		MoveToEx(dc, 0, 0, NULL);
-		LineTo(dc, w-1, 0);
-		LineTo(dc, w-1, h-1);
-		LineTo(dc, 0, h-1);
-		LineTo(dc, 0, 0);
-		LineTo(dc, w, h);
-		MoveToEx(dc, 0, h-1, NULL);
-		LineTo(dc, w-1, 0);
-		DeleteObject(pen);
+		/* There isn't a font for this glyph. Use a placeholder. */
+		w = emu_wcwidth(unicode) * fontwidth;
+		h = fontheight;
+		x = 0;
 	}
+
+	/* Now create the bitmap. */
+
+	/* Attempt to create the bitmap. */
+
+	glyph->dc = CreateCompatibleDC(dc);
+	if (!glyph->dc)
+		goto error;
+	glyph->bitmap = CreateCompatibleBitmap(dc, w, h);
+	if (!glyph->bitmap)
+		goto error;
+	SelectObject(glyph->dc, glyph->bitmap);
+	if (font)
+		SelectObject(glyph->dc, font);
+
+	/* Initialise the glyph structure and draw it. */
+
+	glyph->width = emu_wcwidth(unicode) * fontwidth;
+	glyph->realwidth = w;
+	glyph->realheight = h;
+	glyph->xoffset = x;
+	glyph->yoffset = 0;
+	draw_unicode(glyph->dc, wstring, slen, w+1, h, xo, attrs);
+
+exit:
+	RestoreDC(dc, state);
+	return glyph;
+
+error:
+	delete_struct_glyph(glyph);
+	glyph = NULL;
+	goto exit;
 }
 
 struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
@@ -406,40 +496,11 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 
     HASH_FIND_INT(glyphs, &id, glyph);
     if (!glyph)
-    {
-		/* Need to create a new glyph. */
-
-		glyph = create_struct_glyph();
-		if (!glyph)
-			goto error;
-		glyph->id = id;
-
-		/* Attempt to create the bitmap. */
-
-		glyph->dc = CreateCompatibleDC(dc);
-		if (!glyph->dc)
-			goto error;
-		glyph->width = emu_wcwidth(id >> 8) * fontwidth;
-		glyph->realwidth = glyph->width;
-		glyph->realheight = fontheight;
-		glyph->xoffset = glyph->yoffset = 0;
-		glyph->bitmap = CreateCompatibleBitmap(dc, glyph->width, fontheight);
-		if (!glyph->bitmap)
-			goto error;
-		SelectObject(glyph->dc, glyph->bitmap);
-
-		/* Now draw the glyph. */
-
-		draw_glyph(glyph->dc, glyph->id, glyph->width, fontheight);
-
-		/* Add the glyph to the cache. */
-
-		HASH_ADD_INT(glyphs, id, glyph);
+	{
+		glyph = create_glyph(id, dc);
+		if (glyph)
+			HASH_ADD_INT(glyphs, id, glyph);
     }
 
     return glyph;
-
-error:
-	delete_struct_glyph(glyph);
-	return NULL;
 }
