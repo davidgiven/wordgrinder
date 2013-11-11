@@ -348,28 +348,99 @@ static void draw_unicode(HDC dc, WCHAR* wstring, int slen, int w, int h,
 	SetBkColor(dc, 0x000000);
 	SetTextColor(dc, fg);
 
+	HPEN pen = CreatePen(PS_SOLID, 0, fg);
+	SelectObject(dc, pen);
+
 	if (wstring)
 	{
 		/* If there's text, draw it. */
 
-		TextOutW(dc, xo, 0, wstring, slen);
+		switch (*wstring)
+		{
+			case 32:
+			case 160: /* Non-breaking space */
+				break;
+
+			case 0x2500: /* ─ */
+			case 0x2501: /* ━ */
+				MoveToEx(dc, 0, h/2, NULL);
+				LineTo(dc, w, h/2);
+				break;
+
+			case 0x2502: /* │ */
+			case 0x2503: /* ┃ */
+				MoveToEx(dc, w/2, 0, NULL);
+				LineTo(dc, w/2, h);
+				break;
+
+			case 0x250c: /* ┌ */
+			case 0x250d: /* ┍ */
+			case 0x250e: /* ┎ */
+			case 0x250f: /* ┏ */
+				MoveToEx(dc, w/2, h, NULL);
+				LineTo(dc, w/2, h/2);
+				LineTo(dc, w, h/2);
+				break;
+
+			case 0x2510: /* ┐ */
+			case 0x2511: /* ┑ */
+			case 0x2512: /* ┒ */
+			case 0x2513: /* ┓ */
+				MoveToEx(dc, w/2, h, NULL);
+				LineTo(dc, w/2, h/2);
+				LineTo(dc, -1, h/2);
+				break;
+
+			case 0x2514: /* └ */
+			case 0x2515: /* ┕ */
+			case 0x2516: /* ┖ */
+			case 0x2517: /* ┗ */
+				MoveToEx(dc, w/2, 0, NULL);
+				LineTo(dc, w/2, h/2);
+				LineTo(dc, w, h/2);
+				break;
+
+			case 0x2518: /* ┘ */
+			case 0x2519: /* ┙ */
+			case 0x251a: /* ┚ */
+			case 0x251b: /* ┛ */
+				MoveToEx(dc, w/2, 0, NULL);
+				LineTo(dc, w/2, h/2);
+				LineTo(dc, -1, h/2);
+				break;
+
+			case 0x2551: /* ║ */
+				MoveToEx(dc, w/2-1, 0, NULL);
+				LineTo(dc, w/2-1, h);
+				MoveToEx(dc, w/2+1, 0, NULL);
+				LineTo(dc, w/2+1, h);
+				break;
+
+			case 0x2594: /* ▔ */
+				MoveToEx(dc, 0, 0, NULL);
+				LineTo(dc, w, 0);
+				break;
+
+			default:
+				TextOutW(dc, xo, 0, wstring, slen);
+				break;
+		}
 	}
 	else
 	{
 		/* No text, so draw a placeholder. */
 
-		HPEN pen = CreatePen(PS_SOLID, 0, fg);
-		SelectObject(dc, pen);
 		MoveToEx(dc, xo, 0, NULL);
 		LineTo(dc, xo+w-1, 0);
 		LineTo(dc, xo+w-1, h-1);
 		LineTo(dc, xo, h-1);
 		LineTo(dc, xo, 0);
-		LineTo(dc, xo+w, h);
+		LineTo(dc, xo+w-1, h);
 		MoveToEx(dc, xo, h-1, NULL);
 		LineTo(dc, xo+w-1, 0);
-		DeleteObject(pen);
 	}
+
+	DeleteObject(pen);
 }
 
 static struct glyph* create_glyph(unsigned int id, HDC dc)
@@ -395,7 +466,7 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 	WCHAR wstringarray[2];
 	int slen;
 	WCHAR* wstring;
-	if (font)
+	if (font != INVALID_HANDLE_VALUE)
 	{
 		/* There is a font for this glyph; calculate its size. */
 
@@ -404,47 +475,83 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 		unicode_to_utf16(unicode, wstringarray, &slen);
 		wstring = wstringarray;
 
-		SIZE size;
-		GetTextExtentPoint32W(dc, wstring, slen, &size);
-		w = size.cx;
-		h = size.cy;
-
-		/* Adjust size to cope with font glyphs that are bigger than a
-		 * character cell (italic or bold bitmap, or TrueType). */
-
-		ABC abc;
-		if (GetCharABCWidths(dc, unicode, unicode, &abc))
+		switch (unicode)
 		{
-			/* If this function succeeds, then this is a TrueType font,
-			 * so we use the ABC mechanism to calculate the overhang. */
+			/* These are box drawing glyphs, and are handled specially. */
 
-			if (abc.abcB > w)
-				w = abc.abcB;
-			if (abc.abcA < 0)
-			{
-				xo = -abc.abcA;
-				w += xo;
-				x = abc.abcA;
-			}
-			else
-			{
-				xo = 0;
+			case 0x2500: /* ─ */
+			case 0x2501: /* ━ */
+			case 0x2502: /* │ */
+			case 0x2503: /* ┃ */
+			case 0x250c: /* ┌ */
+			case 0x250d: /* ┍ */
+			case 0x250e: /* ┎ */
+			case 0x250f: /* ┏ */
+			case 0x2510: /* ┐ */
+			case 0x2511: /* ┑ */
+			case 0x2512: /* ┒ */
+			case 0x2513: /* ┓ */
+			case 0x2514: /* └ */
+			case 0x2515: /* ┕ */
+			case 0x2516: /* ┖ */
+			case 0x2517: /* ┗ */
+			case 0x2518: /* ┘ */
+			case 0x2519: /* ┙ */
+			case 0x251a: /* ┚ */
+			case 0x251b: /* ┛ */
+			case 0x2551: /* ║ */
+			case 0x2594: /* ▔ */
+				w = fontwidth;
+				h = fontheight;
 				x = 0;
-			}
-			if (abc.abcC < 0)
-				w += -abc.abcC;
-		}
-		else
-		{
-			/* GetCharABCWidths() failed, therefore this is a bitmap
-			 * font, and we need to use GetTextMetrics() to calculate the
-			 * overhang. */
+				xo = 0;
+				break;
 
-			TEXTMETRIC tm;
-			GetTextMetrics(dc, &tm);
-			w += tm.tmOverhang;
-			x = -tm.tmOverhang/2;
-			xo = 0;
+			default: /* This is an ordinary glyph. */
+			{
+				SIZE size;
+				GetTextExtentPoint32W(dc, wstring, slen, &size);
+				w = size.cx;
+				h = size.cy;
+
+				/* Adjust size to cope with font glyphs that are bigger than a
+				 * character cell (italic or bold bitmap, or TrueType). */
+
+				ABC abc;
+				if (GetCharABCWidths(dc, unicode, unicode, &abc))
+				{
+					/* If this function succeeds, then this is a TrueType font,
+					 * so we use the ABC mechanism to calculate the overhang. */
+
+					if (abc.abcB > w)
+						w = abc.abcB;
+					if (abc.abcA < 0)
+					{
+						xo = -abc.abcA;
+						w += xo;
+						x = abc.abcA;
+					}
+					else
+					{
+						xo = 0;
+						x = 0;
+					}
+					if (abc.abcC < 0)
+						w += -abc.abcC;
+				}
+				else
+				{
+					/* GetCharABCWidths() failed, therefore this is a bitmap
+					 * font, and we need to use GetTextMetrics() to calculate the
+					 * overhang. */
+
+					TEXTMETRIC tm;
+					GetTextMetrics(dc, &tm);
+					w += tm.tmOverhang;
+					x = -tm.tmOverhang/2;
+					xo = 0;
+				}
+			}
 		}
 	}
 	else
@@ -453,9 +560,9 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 		w = emu_wcwidth(unicode) * fontwidth;
 		h = fontheight;
 		x = 0;
+		xo = 0;
+		wstring = NULL;
 	}
-
-	/* Now create the bitmap. */
 
 	/* Attempt to create the bitmap. */
 
@@ -466,7 +573,7 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 	if (!glyph->bitmap)
 		goto error;
 	SelectObject(glyph->dc, glyph->bitmap);
-	if (font)
+	if (font != INVALID_HANDLE_VALUE)
 		SelectObject(glyph->dc, font);
 
 	/* Initialise the glyph structure and draw it. */
@@ -476,7 +583,7 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 	glyph->realheight = h;
 	glyph->xoffset = x;
 	glyph->yoffset = 0;
-	draw_unicode(glyph->dc, wstring, slen, w+1, h, xo, attrs);
+	draw_unicode(glyph->dc, wstring, slen, w, h, xo, attrs);
 
 exit:
 	RestoreDC(dc, state);
