@@ -280,7 +280,7 @@ static bool copy(char** dest, int* dstate, const char** src, int* sstate, int st
 			 * back up over the printable character we just read, so we
 			 * can read it again next time.
 			 */
-			writeu8(dest, estate | (16<<STYLE_MARKER));
+			writeu8(dest, estate | (1<<STYLE_MARKER));
 			*dstate = estate;
 
 			*src = oldsrc;
