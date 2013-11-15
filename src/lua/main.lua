@@ -226,7 +226,8 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 		-- Do the actual argument parsing.
 		
 		local arg = {...}
-		for i = 2, #arg do
+		local i = 2
+		while (i <= #arg) do
 			local o = arg[i]
 			local op
 			
@@ -260,6 +261,8 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 				end
 				filename = o
 			end	
+
+			i = i + 1
 		end
 	end
 	
