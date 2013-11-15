@@ -229,13 +229,11 @@ static int prevcharinword_cb(lua_State* L)
 		return 1;
 	}
 
-	/* Back up over the UTF-8 code point. */
+	/* Back up, and then skip any UTF-8 trailing bytes. */
 
-	do
-	{
+	p--;
+	while ((p != src) && (getu8bytes(*p) == 0))
 		p--;
-	}
-	while (getu8bytes(*p) == 0);
 
 	/* Back up over any control codes. */
 

@@ -11,7 +11,7 @@ static const uint32_t offsets[6] = {
     0x03C82080UL, 0xFA082080UL, 0x82082080UL
 };
 
-static const char trailing_bytes[256] = {
+static const signed char trailing_bytes[256] = {
      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0
      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 1
      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 2
