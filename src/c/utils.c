@@ -42,6 +42,11 @@ uni_t readu8(const char** srcp)
 
 	uni_t ch = 0;
 	switch (nb) {
+		case -1:
+			/* Invalid character! */
+			(*srcp)++;
+			return 0xfffd;
+
 	    /* these fall through deliberately */
 		case 3: ch += (unsigned char)*src++; ch <<= 6;
 		case 2: ch += (unsigned char)*src++; ch <<= 6;
