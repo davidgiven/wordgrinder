@@ -7,7 +7,7 @@
 
 do
 	local function cb(event, token, terms)
-		local settings = DocumentSet.addons.pagecount
+		local settings = DocumentSet.addons.pagecount or {}
 		if settings.enabled then
 			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
 			terms[#terms+1] = 
