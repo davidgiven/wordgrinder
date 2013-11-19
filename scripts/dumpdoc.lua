@@ -45,6 +45,12 @@ local PARAGRAPHCLASS = 102
 local WORDCLASS = 103
 local MENUCLASS = 104
 
+local outfp
+
+local function dprint(s)
+	outfp:write(s, "\n")
+end
+
 local function loadfromstreamz(fp)
 	local cache = {}
 	local load
@@ -65,25 +71,25 @@ local function loadfromstreamz(fp)
 		if (len > 16) then
 			s[#s+1] = "..."
 		end
-		print(table_concat(s))
+		dprint(table_concat(s))
 	end
 
 	local function populate_table(t, tag)
 		local n
 		n, offset = readu8(data, offset)
-		print(spaces().."@"..(#cache).." "..tag.."("..n..")")
-		print(spaces().."{")
+		dprint(spaces().."@"..(#cache).." "..tag.."("..n..")")
+		dprint(spaces().."{")
 		indent = indent + 1
 
 		for i = 1, n do
-			print(spaces().."-- index "..i)
+			dprint(spaces().."-- index "..i)
 			indent = indent + 1
 			t[i] = load()
 			indent = indent - 1
 		end
 		
 		while true do
-			print(spaces().."-- key:")
+			dprint(spaces().."-- key:")
 			indent = indent + 1
 			local k = load()
 			indent = indent - 1
@@ -91,14 +97,14 @@ local function loadfromstreamz(fp)
 				break
 			end
 			
-			print(spaces().."-- value:")
+			dprint(spaces().."-- value:")
 			indent = indent + 1
 			t[k] = load()
 			indent = indent - 1
 		end
 		
 		indent = indent - 1
-		print(spaces().."}")
+		dprint(spaces().."}")
 		return t
 	end
 	
@@ -106,7 +112,7 @@ local function loadfromstreamz(fp)
 		[CACHE] = function()
 			local n
 			n, offset = readu8(data, offset)
-			print(spaces().."ref @"..n)
+			dprint(spaces().."ref @"..n)
 			return cache[n]
 		end,
 		
@@ -158,7 +164,7 @@ local function loadfromstreamz(fp)
 			offset = offset + n
 
 			cache[#cache + 1] = s
-			print(spaces().."@"..(#cache).." string"..string_format("(%d, %q)", n, s))
+			dprint(spaces().."@"..(#cache).." string"..string_format("(%d, %q)", n, s))
 			return s
 		end,
 		
@@ -166,19 +172,19 @@ local function loadfromstreamz(fp)
 			local n
 			n, offset = readu8(data, offset)
 			cache[#cache + 1] = n
-			print(spaces().."@"..(#cache).." number("..n..")")
+			dprint(spaces().."@"..(#cache).." number("..n..")")
 			return n
 		end,
 		
 		[BOOLEANTRUE] = function()
 			cache[#cache + 1] = true
-			print(spaces().."@"..(#cache).." true")
+			dprint(spaces().."@"..(#cache).." true")
 			return true
 		end,
 		
 		[BOOLEANFALSE] = function()
 			cache[#cache + 1] = false
-			print(spaces().."@"..(#cache).." false")
+			dprint(spaces().."@"..(#cache).." false")
 			return false
 		end,
 		
@@ -189,13 +195,13 @@ local function loadfromstreamz(fp)
 	
 	load = function()
 		local n
-		print(spaces()..string_format("-- 0x%08x", offset))
+		dprint(spaces()..string_format("-- 0x%08x", offset))
 		local oldoffset = offset
 		n, offset = readu8(data, offset)
 		
 		local f = load_cb[n]
 		if not f then
-			print(spaces().."-- load error!")
+			dprint(spaces().."-- load error!")
 			dumpdata(offset-1, offset+32)
 			error("can't load type "..n.." at offset "..offset)
 		end
@@ -227,11 +233,14 @@ end
 
 local function main(filename)
 	if not filename then
-		print("You must specify a filename to dump.")
+		dprint("You must specify a filename to dump.")
 		os.exit(1)
 	end
 
-	print("dump of "..filename)
+	outfp = io.open("dumpfile.txt", "w")
+	print("writing output to dumpfile.txt")
+
+	dprint("dump of "..filename)
 	local e = loaddocument(filename)
 	if e then
 		print("dump failed with: "..e)
