@@ -177,17 +177,16 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 			os.exit(0)
 		end
 		
-		local function do_lua(opt)
-			if not opt then
+		local function do_lua(opt1, opt2)
+			if not opt1 then
 				usererror("--lua must have an argument")
 			end
 			
-			local f, e = loadfile(opt)
+			local f, e = loadfile(opt1)
 			if e then
 				usererror("user script compilation error: "..e)
 			end
-			f()
-			return 1
+			return f(opt2) or 1
 		end
 		
 		local function do_convert(opt1, opt2)
