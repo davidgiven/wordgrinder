@@ -6,9 +6,8 @@
 #include "globals.h"
 #include <sys/time.h>
 
-static const uint32_t offsets[6] = {
-    0x00000000UL, 0x00003080UL, 0x000E2080UL,
-    0x03C82080UL, 0xFA082080UL, 0x82082080UL
+static const uint8_t masks[6] = {
+	0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01
 };
 
 static const signed char trailing_bytes[256] = {
@@ -40,21 +39,24 @@ uni_t readu8(const char** srcp)
 	const char* src = *srcp;
 	int nb = trailing_bytes[*(unsigned char*)src];
 
-	uni_t ch = 0;
+	if (nb == -1)
+	{
+		/* Invalid character! */
+		(*srcp)++;
+		return 0xfffd;
+	}
+		
+	uni_t ch = (unsigned char)*src++ & masks[nb];
 	switch (nb) {
-		case -1:
-			/* Invalid character! */
-			(*srcp)++;
-			return 0xfffd;
-
 	    /* these fall through deliberately */
-		case 3: ch += (unsigned char)*src++; ch <<= 6;
-		case 2: ch += (unsigned char)*src++; ch <<= 6;
-		case 1: ch += (unsigned char)*src++; ch <<= 6;
-		case 0: ch += (unsigned char)*src++;
+		case 5: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 4: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 3: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 2: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 1: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 0: break;
 	}
 
-	ch -= offsets[nb];
 	*srcp = src;
 	return ch;
 }
@@ -78,13 +80,32 @@ void writeu8(char** destp, uni_t ch)
         *dest++ = ((ch>>6) & 0x3F) | 0x80;
         *dest++ = (ch & 0x3F) | 0x80;
     }
-    else
+    else if (ch < 0x200000)
     {
         *dest++ = (ch>>18) | 0xF0;
         *dest++ = ((ch>>12) & 0x3F) | 0x80;
         *dest++ = ((ch>>6) & 0x3F) | 0x80;
         *dest++ = (ch & 0x3F) | 0x80;
     }
+	else if (ch < 0x4000000)
+	{
+        *dest++ = (ch>>24) | 0xF8;
+        *dest++ = ((ch>>18) & 0x3F) | 0x80;
+        *dest++ = ((ch>>12) & 0x3F) | 0x80;
+        *dest++ = ((ch>>6) & 0x3F) | 0x80;
+        *dest++ = (ch & 0x3F) | 0x80;
+	}
+	else if (ch <= 0x7fffffff)
+	{
+        *dest++ = (ch>>30) | 0xFC;
+        *dest++ = ((ch>>24) & 0x3F) | 0x80;
+        *dest++ = ((ch>>18) & 0x3F) | 0x80;
+        *dest++ = ((ch>>12) & 0x3F) | 0x80;
+        *dest++ = ((ch>>6) & 0x3F) | 0x80;
+        *dest++ = (ch & 0x3F) | 0x80;
+	}
+	else
+		assert(false);
 
     *destp = dest;
 }

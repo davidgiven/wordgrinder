@@ -16,8 +16,10 @@
 
 /* --- Emulation issues -------------------------------------------------- */
 
+typedef unsigned int uni_t;
+
 #if defined EMULATED_WCWIDTH
-extern int emu_wcwidth(int c);
+extern int emu_wcwidth(uni_t c);
 #else
 #include <wchar.h>
 #define emu_wcwidth(c) wcwidth(c)
@@ -61,8 +63,6 @@ extern void word_init(void);
 extern void zip_init(void);
 
 /* --- General utilities ------------------------------------------------- */
-
-typedef int uni_t;
 
 extern int getu8bytes(char c);
 extern uni_t readu8(const char** ptr);
