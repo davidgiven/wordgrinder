@@ -38,6 +38,7 @@ local BOOLEANFALSE = 3
 local STRING = 4
 local NUMBER = 5
 local CACHE = 6
+local NEGNUMBER = 7
 
 local DOCUMENTSETCLASS = 100
 local DOCUMENTCLASS = 101
@@ -173,6 +174,14 @@ local function loadfromstreamz(fp)
 			n, offset = readu8(data, offset)
 			cache[#cache + 1] = n
 			dprint(spaces().."@"..(#cache).." number("..n..")")
+			return n
+		end,
+		
+		[NEGNUMBER] = function()
+			local n
+			n, offset = readu8(data, offset)
+			cache[#cache + 1] = n
+			dprint(spaces().."@"..(#cache).." negnumber("..(-n)..")")
 			return n
 		end,
 		

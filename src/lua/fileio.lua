@@ -23,6 +23,7 @@ local BOOLEANFALSE = 3
 local STRING = 4
 local NUMBER = 5
 local CACHE = 6
+local NEGNUMBER = 7
 
 local DOCUMENTSETCLASS = 100
 local DOCUMENTCLASS = 101
@@ -81,8 +82,13 @@ local function writetostream(object, writes, writei)
 			writei(#t)
 			writes(t)
 		elseif (type(t) == "number") then
-			writei(NUMBER)
-			writei(t)
+			if (t >= 0) then
+				writei(NUMBER)
+				writei(t)
+			else
+				writei(NEGNUMBER)
+				writei(-t)
+			end
 		else
 			error("unsupported type "..type(t))
 		end
@@ -353,6 +359,14 @@ local function loadfromstreamz(fp)
 		[NUMBER] = function()
 			local n
 			n, offset = readu8(data, offset)
+			cache[#cache + 1] = n
+			return n
+		end,
+		
+		[NEGNUMBER] = function()
+			local n
+			n, offset = readu8(data, offset)
+			n = -n
 			cache[#cache + 1] = n
 			return n
 		end,
