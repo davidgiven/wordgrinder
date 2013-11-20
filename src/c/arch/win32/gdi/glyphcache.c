@@ -599,6 +599,11 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 {
 	struct glyph* glyph;
 
+	/* 0 is special, and means don't draw. */
+
+	if (id == 0)
+		return;
+
 	/* Attempt to find the glyph in the cache. */
 
     HASH_FIND_INT(glyphs, &id, glyph);
