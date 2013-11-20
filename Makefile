@@ -10,6 +10,12 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
+ifneq ($(findstring Windows,$(OS)),)
+OS = windows
+else
+OS = unix
+endif
+
 VERSION := 0.5
 FILEFORMAT := 4
 DATE := $(shell date +'%-d %B %Y')
@@ -105,6 +111,11 @@ $(objdir)/$(1:.c=.o): $1 Makefile
 	@mkdir -p $$(dir $$@)
 	$(hide)$(cc) $(CFLAGS) $(cflags) $(INCLUDES) -c -o $$@ $1
 
+$(objdir)/$(1:.c=.d): $1 Makefile
+	@echo DEPEND $$@
+	@mkdir -p $$(dir $$@)
+	$(hide)$(cc) $(CFLAGS) $(cflags) $(INCLUDES) -MP -MM -MF $$@ $1
+
 DEPENDS += $(objdir)/$(1:.c=.d)
 objs += $(objdir)/$(1:.c=.o)
 
@@ -199,6 +210,8 @@ endef
 
 # --- Unix ------------------------------------------------------------------
 
+ifeq ($(OS),unix)
+
 cc := gcc
 INCLUDES := -I/usr/include/lua5.2
 
@@ -247,8 +260,12 @@ $(eval $(build-wordgrinder))
 bin/wordgrinder.1: wordgrinder.man
 	@echo MANPAGE
 	$(hide)sed -e 's/@@@DATE@@@/$(DATE)/g; s/@@@VERSION@@@/$(VERSION)/g' $< > $@
+
+endif
 	
 # --- Windows ---------------------------------------------------------------
+
+ifeq ($(OS),windows)
 
 cc := $(WINCC)
 
@@ -303,6 +320,9 @@ clean::
 	@echo CLEAN $(WININSTALLER)
 	@rm -f $(WININSTALLER)
 	
+endif
+
 # --- Final setup -----------------------------------------------------------
 
 -include $(DEPENDS)
+
