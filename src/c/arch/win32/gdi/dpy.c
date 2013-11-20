@@ -184,19 +184,27 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	struct glyph* cursorglyph = NULL;
 
 	int x1 = ps->rcPaint.left / textwidth;
-	x1 -= 1;
+	x1 -= 1; /* because of overlapping characters */
 	if (x1 < 0)
 		x1 = 0;
 
-	int y1 = ps->rcPaint.top / textheight;
-	int x2 = ps->rcPaint.right / textwidth + 1;
-	x2 += 1;
-	if (x2 > screenwidth)
+	int y1 = ps->rcPaint.top/textheight;
+	int x2 = ps->rcPaint.right/textwidth;
+	x2 += 1; /* because of overlapping characters */
+	if (x2 >= screenwidth)
+	{
+		RECT r = {screenwidth*textwidth, 0, ps->rcPaint.right, ps->rcPaint.bottom};
+		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
 		x2 = screenwidth;
+	}
 
-	int y2 = ps->rcPaint.bottom / textheight + 1;
-	if (y2 > screenheight)
+	int y2 = ps->rcPaint.bottom / textheight;
+	if (y2 >= screenheight)
+	{
+		RECT r = {0, screenheight*textheight, ps->rcPaint.right, ps->rcPaint.bottom};
+		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
 		y2 = screenheight;
+	}
 
 	int state = SaveDC(dc);
 
@@ -497,33 +505,48 @@ static void resize_buffer(void)
 	if (!e)
 		SystemParametersInfo(SPI_GETWORKAREA, sizeof(RECT), &rect, 0);
 
-	/* Recreate the off-screen bitmap we're going to draw into. */
-
-	glyphcache_flush();
-
-	/* Wipe the character storage. */
-
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
-	screenwidth = rect.right / textwidth;
-	screenheight = rect.bottom / textheight;
+	int w = rect.right / textwidth;
+	int h = rect.bottom / textheight;
 
-	frontbuffer = realloc(frontbuffer, sizeof(unsigned int)
-			* screenwidth * screenheight);
-	backbuffer = realloc(backbuffer, sizeof(unsigned int)
-			* screenwidth * screenheight);
-
-	for (int p = 0; p < (screenwidth * screenheight); p++)
+	if ((w != screenwidth) || (h != screenheight))
 	{
-		frontbuffer[p] = 0;
-		backbuffer[p] = DEFAULT_CHAR;
+		glyphcache_flush();
+
+		/* Wipe the character storage. */
+
+		screenwidth = w;
+		screenheight = h;
+
+		frontbuffer = realloc(frontbuffer, sizeof(unsigned int) * w * h);
+		backbuffer = realloc(backbuffer, sizeof(unsigned int) * w * h);
+
+		for (int p = 0; p < (w * h); p++)
+		{
+			frontbuffer[p] = 0;
+			backbuffer[p] = DEFAULT_CHAR;
+		}
+
+		/* Tell the main app that the screen has changed size; it'll
+		 * redraw the character storage. */
+
+		dpy_queuekey(-VK_RESIZE);
 	}
 
-	/* Tell the main app that the screen has changed size; it'll
-	 * redraw the character storage. */
+	/* The front end will redraw the content area, if necessary, but it
+	 * doesn't know anything about the screen borders. We need to force
+	 * them to be redrawn as well. */
 
-	dpy_queuekey(-VK_RESIZE);
+	RECT r;
+	r = rect;
+	r.left = w * textwidth;
+	InvalidateRect(window, &r, 0);
+
+	r = rect;
+	r.top = h * textheight;
+	InvalidateRect(window, &r, 0);
 }
 
 static void switch_to_full_screen(void)
@@ -707,7 +730,7 @@ void dpy_sync(void)
 			memcpy(front, back, screenwidth * sizeof(*backbuffer));
 
 			int sy = y*textheight;
-			RECT r = {0, y, screenwidth*textwidth, sy+textheight};
+			RECT r = {0, sy, screenwidth*textwidth, sy+textheight};
 			InvalidateRect(window, &r, 0);
 		}
 	}
