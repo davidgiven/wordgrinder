@@ -37,8 +37,17 @@ int getu8bytes(char c)
 uni_t readu8(const char** srcp)
 {
 	const char* src = *srcp;
-	int nb = trailing_bytes[*(unsigned char*)src];
 
+	/* Bug workaround: old versions of WordGrinder would encode negative
+	 * numbers incorrectly. Recover, crudely. */
+
+	if (*src == -1)
+	{
+		*srcp += 4;
+		return 0;
+	}
+
+	int nb = trailing_bytes[*(unsigned char*)src];
 	if (nb == -1)
 	{
 		/* Invalid character! */
