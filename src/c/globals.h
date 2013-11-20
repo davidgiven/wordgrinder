@@ -16,7 +16,7 @@
 
 /* --- Emulation issues -------------------------------------------------- */
 
-typedef unsigned int uni_t;
+typedef int uni_t;
 
 #if defined EMULATED_WCWIDTH
 extern int emu_wcwidth(uni_t c);

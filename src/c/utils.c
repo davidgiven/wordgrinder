@@ -65,7 +65,9 @@ void writeu8(char** destp, uni_t ch)
 {
 	char* dest = *destp;
 
-    if (ch < 0x80)
+	if (ch < 0)
+		assert(false);
+    else if (ch < 0x80)
     {
         *dest++ = (char)ch;
     }
@@ -104,8 +106,6 @@ void writeu8(char** destp, uni_t ch)
         *dest++ = ((ch>>6) & 0x3F) | 0x80;
         *dest++ = (ch & 0x3F) | 0x80;
 	}
-	else
-		assert(false);
 
     *destp = dest;
 }
