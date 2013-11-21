@@ -10,7 +10,7 @@ local function gotobrowser(data, index)
 		focusable = true,
 		type = Form.Browser,
 		x1 = 1, y1 = 2,
-		x2 = -1, y2 = -2,
+		x2 = -1, y2 = -1,
 		data = data,
 		cursor = index
 	}

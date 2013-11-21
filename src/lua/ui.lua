@@ -18,7 +18,6 @@ local GetBoundedString = wg.getboundedstring
 
 function DrawStatusLine(s)
 	SetReverse()
-	SetBold()	
 	ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 	Write(0, ScreenHeight-1, s)
 	SetNormal()
