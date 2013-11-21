@@ -114,7 +114,8 @@ $(objdir)/$(1:.c=.o): $1 Makefile
 $(objdir)/$(1:.c=.d): $1 Makefile
 	@echo DEPEND $$@
 	@mkdir -p $$(dir $$@)
-	$(hide)$(cc) $(CFLAGS) $(cflags) $(INCLUDES) -MP -MM -MF $$@ $1
+	$(hide)$(cc) $(CFLAGS) $(cflags) $(INCLUDES) \
+		-MP -MM -MT $(objdir)/$(1:.c=.o) -MF $$@ $1
 
 DEPENDS += $(objdir)/$(1:.c=.d)
 objs += $(objdir)/$(1:.c=.o)
