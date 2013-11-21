@@ -183,6 +183,7 @@ function Cmd.ConfigureScrapbook()
 			settings.document = document
 			settings.timestamp = timestamp
 			settings.pattern = pattern
+			DocumentSet:touch()
 
 			return true
 		end

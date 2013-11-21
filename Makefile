@@ -89,6 +89,7 @@ LUASCRIPTS := \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
 	src/lua/addons/pagecount.lua \
+	src/lua/addons/widescreen.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 	src/lua/main.lua

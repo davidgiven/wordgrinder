@@ -3,19 +3,14 @@
 -- file in this distribution for the full text.
 
 -----------------------------------------------------------------------------
--- Build the status bar.
+-- Fetch the maximum allowed width.
 
-do
-	local function cb(event, token, terms)
-		local settings = DocumentSet.addons.pagecount or {}
-		if settings.enabled then
-			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
-			terms[#terms+1] = 
-				string.format("%d %s", pages, Pluralise(pages, "page", "pages"))
-		end
+function GetMaximumAllowedWidth(screenwidth)
+	local settings = DocumentSet.addons.widescreen
+	if not settings or not settings.enabled then
+		return screenwidth
 	end
-	
-	AddEventListener(Event.BuildStatusBar, cb)
+	return math.min(screenwidth, settings.maxwidth)
 end
 
 -----------------------------------------------------------------------------
@@ -23,9 +18,9 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.pagecount = DocumentSet.addons.pagecount or {
+		DocumentSet.addons.widescreen = DocumentSet.addons.widescreen or {
 			enabled = false,
-			wordsperpage = 250,
+			maxwidth = 80
 		}
 	end
 	
@@ -35,27 +30,27 @@ end
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
-function Cmd.ConfigurePageCount()
-	local settings = DocumentSet.addons.pagecount
+function Cmd.ConfigureWidescreen()
+	local settings = DocumentSet.addons.widescreen
 
 	local enabled_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
 			x2 = 33, y2 = 1,
-			label = "Show approximate page count",
+			label = "Enable widescreen mode",
 			value = settings.enabled
 		}
 
-	local count_textfield =
+	local maxwidth_textfield =
 		Form.TextField {
 			x1 = 33, y1 = 3,
 			x2 = 43, y2 = 3,
-			value = tostring(settings.wordsperpage)
+			value = tostring(settings.maxwidth)
 		}
 		
 	local dialogue =
 	{
-		title = "Configure Page Count",
+		title = "Configure Widescreen Mode",
 		width = Form.Large,
 		height = 5,
 		stretchy = false,
@@ -70,9 +65,9 @@ function Cmd.ConfigurePageCount()
 			x1 = 1, y1 = 3,
 			x2 = 32, y2 = 3,
 			align = Form.Left,
-			value = "Number of words per page:"
+			value = "Maximum allowed width:",
 		},
-		count_textfield,
+		maxwidth_textfield,
 	}
 	
 	while true do
@@ -83,13 +78,13 @@ function Cmd.ConfigurePageCount()
 		end
 		
 		local enabled = enabled_checkbox.value
-		local wordsperpage = tonumber(count_textfield.value)
+		local maxwidth = tonumber(maxwidth_textfield.value)
 		
-		if not wordsperpage then
-			ModalMessage("Parameter error", "The number of words per page must be a valid number.")
+		if not maxwidth or (maxwidth < 20) then
+			ModalMessage("Parameter error", "The maximum width must be a valid number that's at least 20.")
 		else
 			settings.enabled = enabled
-			settings.wordsperpage = wordsperpage
+			settings.maxwidth = maxwidth
 			DocumentSet:touch()
 
 			return true
