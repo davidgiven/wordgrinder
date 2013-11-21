@@ -8,6 +8,7 @@ local GotoXY = wg.gotoxy
 local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
+local SetBright = wg.setbright
 local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local SetDim = wg.setdim
@@ -69,7 +70,6 @@ local function redrawstatus()
 		}
 		
 		SetReverse()
-		SetBold()	
 		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
 		
@@ -112,7 +112,7 @@ local topmarkerwidth = GetStringWidth(topmarker[1])
 local function drawtopmarker(y)
 	local x = int((ScreenWidth - topmarkerwidth)/2)
 	
-	SetBold()
+	SetBright()
 	for i = #topmarker, 1, -1 do
 		if (y >= 0) then
 			Write(x, y, topmarker[i])
@@ -131,7 +131,7 @@ local bottommarkerwidth = GetStringWidth(bottommarker[1])
 local function drawbottommarker(y)
 	local x = int((ScreenWidth - bottommarkerwidth)/2)
 	
-	SetBold()
+	SetBright()
 	for i = 1, #bottommarker do
 		if (y <= ScreenHeight) then
 			Write(x, y, bottommarker[i])
@@ -169,7 +169,6 @@ function RedrawScreen()
 	local mp = Document.mp
 	local mw = Document.mw
 	local mo = Document.mo
-	
 	
 	-- Draw backwards.
 	

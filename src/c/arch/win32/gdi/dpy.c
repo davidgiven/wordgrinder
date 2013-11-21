@@ -209,8 +209,8 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	int state = SaveDC(dc);
 
 	HPEN brightpen = CreatePen(PS_SOLID, 0, 0xffffff);
-	HPEN normalpen = CreatePen(PS_SOLID, 0, 0x808080);
-	HPEN dimpen = CreatePen(PS_SOLID, 0, 0x606060);
+	HPEN normalpen = CreatePen(PS_SOLID, 0, 0x888888);
+	HPEN dimpen = CreatePen(PS_SOLID, 0, 0x555555);
 
 	for (int y = y1; y < y2; y++)
 	{
@@ -238,7 +238,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 
 				if (id & DPY_UNDERLINE)
 				{
-					if (id & DPY_BOLD)
+					if (id & DPY_BRIGHT)
 						SelectObject(dc, brightpen);
 					else if (id & DPY_DIM)
 						SelectObject(dc, dimpen);

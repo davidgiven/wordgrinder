@@ -74,11 +74,15 @@ extern void utils_init(void);
 
 enum
 {
-	DPY_BOLD = (1<<1),
-	DPY_UNDERLINE = (1<<2),
-	DPY_REVERSE = (1<<3),
-	DPY_DIM = (1<<4),
-	DPY_ITALIC = (1<<5),
+	/* These four are also style control codes. */
+	DPY_ITALIC = (1<<0),
+	DPY_UNDERLINE = (1<<1),
+	DPY_REVERSE = (1<<2),
+	DPY_BOLD = (1<<3),
+
+	/* These cannot appear in text. */
+	DPY_BRIGHT = (1<<4),
+	DPY_DIM = (1<<5),
 };
 
 extern void dpy_init(const char* argv[]);

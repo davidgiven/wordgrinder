@@ -7,6 +7,7 @@ local ClearToEOL = wg.cleartoeol
 local GetChar = wg.getchar
 local GotoXY = wg.gotoxy
 local SetBold = wg.setbold
+local SetBright = wg.setbright
 local SetReverse = wg.setreverse
 local SetNormal = wg.setnormal
 local GetStringWidth = wg.getstringwidth
@@ -217,9 +218,7 @@ MenuClass = {
 		end
 		
 		local w = menu.maxwidth + 4 + akw
-		SetBold()
 		DrawTitledBox(x, y, w, #menu, menu.label)
-		SetNormal()
 		
 		for i, item in ipairs(menu) do
 			local ak = self.accelerators[item.id]
@@ -228,6 +227,7 @@ MenuClass = {
 				if (i == n) then
 					SetReverse()
 				end
+				SetBright()
 				Write(x+1, y+i, string.rep("─", w))
 			else
 				if (i == n) then
@@ -236,14 +236,15 @@ MenuClass = {
 				end
 				
 				Write(x+4, y+i, item.label)
+
+				SetBold()
+				SetBright()
 				if ak then
 					local l = GetStringWidth(ak)
-					SetBold()
 					Write(x+w-l, y+i, ak)
 				end
 		
 				if item.mk then
-					SetBold()
 					Write(x+2, y+i, item.mk)
 				end
 			end
