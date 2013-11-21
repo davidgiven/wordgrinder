@@ -199,6 +199,7 @@ function Cmd.ConfigureAutosave()
 			settings.period = period
 			settings.pattern = pattern
 			settings.lastsaved = nil
+			DocumentSet:touch()
 
 			announce()			
 			return true

@@ -100,6 +100,7 @@ local SettingsMenu = addmenu("Settings",
     {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
     {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
 	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
+	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},ConfigureWidescreen
 })
 
 local FileMenu = addmenu("File",

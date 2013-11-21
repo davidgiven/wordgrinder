@@ -15,6 +15,7 @@ local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 
 local messages = {}
+local leftpadding = 0
 
 function NonmodalMessage(s)
 	messages[#messages+1] = s
@@ -27,7 +28,10 @@ end
 
 function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
-	Document:wrap(ScreenWidth - Document.margin - 1)
+	local w = GetMaximumAllowedWidth(ScreenWidth)
+	local rw = w - Document.margin - 1
+	leftpadding = math.floor(ScreenWidth/2 - rw/2)
+	Document:wrap(w - Document.margin - 1)
 end
 
 local function drawmargin(y, pn, p)
@@ -37,7 +41,7 @@ local function drawmargin(y, pn, p)
 
 		if s then
 			SetDim()
-			RAlignInField(0, y, Document.margin - 1, s)
+			RAlignInField(leftpadding, y, Document.margin - 1, s)
 			SetNormal()
 		end
 	end
@@ -47,7 +51,7 @@ local function drawmargin(y, pn, p)
 		local w = GetStringWidth(bullet) + 1
 		local i = p.style.indent
 		if (i >= w) then
-			Write(Document.margin + i - w, y, bullet)
+			Write(leftpadding + Document.margin + i - w, y, bullet)
 		end
 	end
 end
@@ -160,7 +164,8 @@ function RedrawScreen()
 
 	do
 		local word = paragraph[Document.cw]
-		GotoXY(margin + word.x + word:getXOffsetOfChar(Document.co) +
+		GotoXY(leftpadding + margin + word.x +
+			word:getXOffsetOfChar(Document.co) +
 			(paragraph.style.indent or 0), cy - 1)	
 	end
 	
@@ -189,9 +194,11 @@ function RedrawScreen()
 			local l = lines[ln]
 			
 			if not mp then
-				paragraph:renderLine(l, margin + x, y)
+				paragraph:renderLine(l,
+					leftpadding + margin + x, y)
 			else
-				paragraph:renderMarkedLine(l, margin + x, y, nil, pn)
+				paragraph:renderMarkedLine(l,
+					leftpadding + margin + x, y, nil, pn)
 			end
 			
 			if (ln == 1) then
@@ -230,9 +237,11 @@ function RedrawScreen()
 		local x = paragraph.style.indent or 0 -- FIXME
 		for ln, l in ipairs(paragraph:wrap()) do
 			if not mp then
-				paragraph:renderLine(l, margin + x, y)
+				paragraph:renderLine(l,
+					leftpadding + margin + x, y)
 			else
-				paragraph:renderMarkedLine(l, margin + x, y, nil, pn)
+				paragraph:renderMarkedLine(l,
+					leftpadding + margin + x, y, nil, pn)
 			end
 	
 			-- If the top of the page hasn't already been set, then the
