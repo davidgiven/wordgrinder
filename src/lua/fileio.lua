@@ -24,6 +24,7 @@ local STRING = 4
 local NUMBER = 5
 local CACHE = 6
 local NEGNUMBER = 7
+local BRIEFWORD = 8
 
 local DOCUMENTSETCLASS = 100
 local DOCUMENTCLASS = 101
@@ -58,19 +59,24 @@ local function writetostream(object, writes, writei)
 			else
 				m = TABLE
 			end
-			writei(m)
-			writei(#t)
-			
-			for _, i in ipairs(t) do
-				save(i)
-			end
-			for k, v in pairs(t) do
-				if (type(k) ~= "number") then
-					save(k)
-					save(v)
+			if (m == WORDCLASS) then
+				writei(BRIEFWORD)
+				save(t.text)
+			else
+				writei(m)
+				writei(#t)
+				
+				for _, i in ipairs(t) do
+					save(i)
 				end
+				for k, v in pairs(t) do
+					if (type(k) ~= "number") then
+						save(k)
+						save(v)
+					end
+				end
+				writei(STOP)
 			end
-			writei(STOP)
 		elseif (type(t) == "boolean") then
 			if t then
 				writei(BOOLEANTRUE)
@@ -331,6 +337,14 @@ local function loadfromstreamz(fp)
 			setmetatable(t, {__index = WordClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
+		end,
+		
+		[BRIEFWORD] = function()
+			local t = {}
+			setmetatable(t, {__index = WordClass})
+			cache[#cache + 1] = t
+			t.text = load()
+			return t
 		end,
 		
 		[MENUCLASS] = function()

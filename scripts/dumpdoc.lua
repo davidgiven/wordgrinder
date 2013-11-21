@@ -39,6 +39,7 @@ local STRING = 4
 local NUMBER = 5
 local CACHE = 6
 local NEGNUMBER = 7
+local BRIEFWORD = 8
 
 local DOCUMENTSETCLASS = 100
 local DOCUMENTCLASS = 101
@@ -197,6 +198,16 @@ local function loadfromstreamz(fp)
 			return false
 		end,
 		
+		[BRIEFWORD] = function()
+			local o = {}
+			cache[#cache + 1] = o
+			dprint(spaces().."@"..(#cache).." briefword")
+			indent = indent + 1
+			load()
+			indent = indent - 1
+			return o
+		end,
+
 		[STOP] = function()
 			return nil
 		end
