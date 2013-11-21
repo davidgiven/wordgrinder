@@ -143,6 +143,9 @@ function Cmd.SaveCurrentDocumentAs(filename)
 		if not filename then
 			return false
 		end
+		if filename:find("/[^.]*$") then
+			filename = filename .. ".wg"
+		end
 	end
 	DocumentSet.name = filename
 

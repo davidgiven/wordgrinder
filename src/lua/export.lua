@@ -155,6 +155,9 @@ function ExportFileWithUI(filename, title, extension, callback)
 		if not filename then
 			return false
 		end
+		if filename:find("/[^.]*$") then
+			filename = filename .. extension
+		end
 	end
 	
 	ImmediateMessage("Exporting...")
