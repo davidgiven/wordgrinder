@@ -63,14 +63,14 @@ void dpy_setattr(int andmask, int ormask)
 	attr |= ormask;
 
 	int cattr = 0;
-	if (attr & (DPY_ITALIC|DPY_BOLD))
+	if (attr & (DPY_ITALIC|DPY_BOLD|DPY_BRIGHT))
 		cattr |= A_BOLD;
+	if (attr & DPY_DIM)
+		cattr |= A_DIM;
 	if (attr & DPY_UNDERLINE)
 		cattr |= A_UNDERLINE;
 	if (attr & DPY_REVERSE)
 		cattr |= A_REVERSE;
-	if (attr & DPY_DIM)
-		cattr |= A_DIM;
 
 	attrset(cattr);
 }

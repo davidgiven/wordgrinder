@@ -8,6 +8,7 @@ local GotoXY = wg.gotoxy
 local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
+local SetBright = wg.setbright
 local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local SetDim = wg.setdim
@@ -59,11 +60,14 @@ function RAlignInField(x, y, w, s)
 end
 
 function DrawTitledBox(x, y, w, h, title, subtitle)
+	SetBright()
 	DrawBox(x, y, w, h)
 	CentreInField(x+1, y, w, title)
 	if subtitle then
+		SetBold()
 		CentreInField(x+1, y+h+1, w, subtitle)
 	end
+	SetNormal()
 end
 
 function ImmediateMessage(text)
@@ -71,9 +75,7 @@ function ImmediateMessage(text)
 	local x = int((ScreenWidth - w) / 2)
 	local y = int(ScreenHeight / 2)
 	
-	SetBold()
 	DrawBox(x-2, y-1, w+2, 1)
-	SetNormal()
 	Write(x, y, text)
 	wg.sync()
 end

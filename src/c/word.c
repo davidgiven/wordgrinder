@@ -12,38 +12,17 @@
  * control codes. A word is always considered to start with
  * all style turned off.
  *
- * Control codes consist of combinations of 1<<STYLE, with 1<<4 set to prevent
- * nil characters.
+ * Control codes consist of combinations of the first four DPY_
+ * constants, with STYLE_MARKER set to prevent nil characters.
  */
 
 enum
 {
-	STYLE_ITALIC,
-	STYLE_UNDERLINE,
-	STYLE_REVERSE,
-	STYLE_BOLD,
-	STYLE_MARKER, /* always set */
-
+	STYLE_MARKER = (1<<4), /* always set */
 	STYLE_ALL = 15
 };
 
 #define OVERHEAD (3*2 + 1)
-
-/* Convert a style bitmask into a dpy bitmask. */
-
-static int styletodpy(int c)
-{
-	int attr = 0;
-
-	if (c & (1<<STYLE_ITALIC))
-		attr |= DPY_ITALIC;
-	if (c & (1<<STYLE_UNDERLINE))
-		attr |= DPY_UNDERLINE;
-	if (c & (1<<STYLE_BOLD))
-		attr |= DPY_BOLD;
-
-	return attr;
-}
 
 /* Parse a styled word. */
 
@@ -114,8 +93,6 @@ static int writestyled_cb(lua_State* L)
 	const char* revoff = s + lua_tointeger(L, 6) - 1;
 	int sor = lua_tointeger(L, 7);
 
-	sor = styletodpy(sor);
-
 	int attr = sor;
 	int mark = 0;
 
@@ -138,7 +115,8 @@ static int writestyled_cb(lua_State* L)
 
 		if (iswcntrl(c))
 		{
-			attr = styletodpy(c) | sor;
+			c &= STYLE_ALL;
+			attr = c | sor;
 			dpy_setattr(0, attr | mark);
 		}
 		else
@@ -263,7 +241,7 @@ static bool copy(char** dest, int* dstate, const char** src, int* sstate, int st
 
 	if (iswcntrl(c))
 	{
-		*sstate = c;
+		*sstate = c & STYLE_ALL;
 		return true;
 	}
 
@@ -278,7 +256,7 @@ static bool copy(char** dest, int* dstate, const char** src, int* sstate, int st
 			 * back up over the printable character we just read, so we
 			 * can read it again next time.
 			 */
-			writeu8(dest, estate | (1<<STYLE_MARKER));
+			writeu8(dest, estate | STYLE_MARKER);
 			*dstate = estate;
 
 			*src = oldsrc;
@@ -443,15 +421,21 @@ void word_init(void)
 	lua_getglobal(L, "wg");
 	luaL_setfuncs(L, funcs, 0);
 
-	lua_pushnumber(L, 1<<STYLE_ITALIC);
+	lua_pushnumber(L, DPY_ITALIC);
 	lua_setfield(L, -2, "ITALIC");
 
-	lua_pushnumber(L, 1<<STYLE_UNDERLINE);
+	lua_pushnumber(L, DPY_UNDERLINE);
 	lua_setfield(L, -2, "UNDERLINE");
 
-	lua_pushnumber(L, 1<<STYLE_REVERSE);
+	lua_pushnumber(L, DPY_REVERSE);
 	lua_setfield(L, -2, "REVERSE");
 
-	lua_pushnumber(L, 1<<STYLE_BOLD);
+	lua_pushnumber(L, DPY_BOLD);
 	lua_setfield(L, -2, "BOLD");
+
+	lua_pushnumber(L, DPY_BRIGHT);
+	lua_setfield(L, -2, "BRIGHT");
+
+	lua_pushnumber(L, DPY_DIM);
+	lua_setfield(L, -2, "DIM");
 }

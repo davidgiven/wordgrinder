@@ -339,11 +339,11 @@ static void draw_unicode(HDC dc, WCHAR* wstring, int slen, int w, int h,
 	int fg;
 
 	if (attrs & DPY_DIM)
-		fg = 0x606060;
-	else if (attrs & DPY_BOLD)
+		fg = 0x555555;
+	else if (attrs & DPY_BRIGHT)
 		fg = 0xffffff;
 	else
-		fg = 0x808080;
+		fg = 0x888888;
 
 	SetBkColor(dc, 0x000000);
 	SetTextColor(dc, fg);
@@ -458,7 +458,7 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 
 	uni_t unicode = id >> 8;
 	unsigned int attrs = id & 0xff;
-	attrs &= DPY_ITALIC | DPY_BOLD | DPY_DIM;
+	attrs &= DPY_ITALIC | DPY_BOLD | DPY_DIM | DPY_BRIGHT;
 	HFONT font = select_font_with_glyph(dc, unicode, attrs);
 
 	/* Determine the size of the bitmap needed. */
@@ -602,7 +602,7 @@ struct glyph* glyphcache_getglyph(unsigned int id, HDC dc)
 	/* 0 is special, and means don't draw. */
 
 	if (id == 0)
-		return;
+		return NULL;
 
 	/* Attempt to find the glyph in the cache. */
 

@@ -10,6 +10,7 @@ local GetBoundedString = wg.getboundedstring
 local GetBytesOfCharacter = wg.getbytesofcharacter
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
+local SetBright = wg.setbright
 local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local string_rep = string.rep
@@ -114,7 +115,7 @@ Form.Checkbox = makewidgetclass {
 				
 		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 		
-		SetBold()
+		SetBright()
 		Write(self.realx2, self.realy1, s)
 		SetNormal()
 				
@@ -135,8 +136,10 @@ Form.TextField = makewidgetclass {
 	end,
 	
 	draw = function(self)
+		SetBright()
 		Write(self.realx1, self.realy1 + 1, string_rep("▔", self.realwidth))
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
+		SetNormal()
 		
 		-- If the cursor is to the left of the visible area, adjust.
 		
@@ -161,7 +164,7 @@ Form.TextField = makewidgetclass {
 		-- Draw the visible bit of the string.
 			
 		local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
-		SetBold()
+		SetBright()
 		Write(self.realx1, self.realy1, s)
 		SetNormal()
 		
@@ -293,6 +296,7 @@ Form.Browser = makewidgetclass {
 		
 		do	
 			local border = string_rep("─", w - 2)
+			SetBright()
 			Write(x, y, "┌")
 			Write(x+1, y, border)
 			Write(x+w-1, y, "┐")
@@ -303,6 +307,7 @@ Form.Browser = makewidgetclass {
 			Write(x, y+h, "└")
 			Write(x+1, y+h, border)
 			Write(x+w-1, y+h, "┘")
+			SetNormal()
 		end
 
 		self:_adjustOffset()		
@@ -329,10 +334,10 @@ Form.Browser = makewidgetclass {
 
 			if (#self.data > (h-2)) then
 				SetNormal()
+				SetBright()
 				s = "│"
 				local yf = (i+1) * #self.data / (h-1)
 				if (yf >= self.offset) and (yf <= (self.offset + h-2)) then
-					SetBold()
 					s = "║"
 				end
 				Write(x+w-1, y+1+i, s)
@@ -540,7 +545,6 @@ function Form.Run(dialogue, redraw, helptext)
 	-- Draw the dialogue itself.
 	
 	do
-		SetBold()
 		local sizeadjust = 0
 		if helptext then
 			sizeadjust = 1
@@ -548,7 +552,6 @@ function Form.Run(dialogue, redraw, helptext)
 		DrawTitledBox(dialogue.realx - 1, dialogue.realy - 1,
 			dialogue.realwidth, dialogue.realheight + sizeadjust,
 			dialogue.title)
-		SetNormal()
 
 		if helptext then
 			CentreInField(dialogue.realx, dialogue.realy + dialogue.realheight,

@@ -16,6 +16,20 @@ local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetWordText = wg.getwordtext
+local BOLD = wg.BOLD
+local ITALIC = wg.ITALIC
+local UNDERLINE = wg.UNDERLINE
+local REVERSE = wg.REVERSE
+local BRIGHT = wg.BRIGHT
+local DIM = wg.DIM
+
+local stylemarkup =
+{
+	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,
+	["H2"] = BRIGHT + BOLD + UNDERLINE,
+	["H3"] = ITALIC + BRIGHT + BOLD,
+	["H4"] = BRIGHT + BOLD
+}
 
 DocumentSetClass =
 {
@@ -300,7 +314,7 @@ ParagraphClass =
 	renderLine = function(self, line, x, y)
 		width = width or (ScreenWidth - x)
 
-		local cstyle = self.style.cstyle
+		local cstyle = stylemarkup[self.style.name] or 0
 		local ostyle = 0
 		for wn, w in ipairs(line) do
 			local text = w.text
@@ -316,7 +330,7 @@ ParagraphClass =
 		local lwn = line.wn		
 		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
 
-		local cstyle = self.style.cstyle
+		local cstyle = stylemarkup[self.style.name] or 0
 		local ostyle = 0
 		for wn, w in ipairs(line) do
 			local s, e
@@ -504,7 +518,6 @@ local function create_styles()
 			desc = "Heading #1",
 			name = "H1",
 			html = "H1",
-			cstyle = 3,
 			above = 3,
 			below = 1,
 		},
@@ -512,7 +525,6 @@ local function create_styles()
 			desc = "Heading #2",
 			name = "H2",
 			html = "H2",
-			cstyle = 3,
 			above = 2,
 			below = 1,
 		},
@@ -520,7 +532,6 @@ local function create_styles()
 			desc = "Heading #3",
 			name = "H3",
 			html = "H3",
-			cstyle = 1,
 			above = 1,
 			below = 1,
 		},
@@ -528,7 +539,6 @@ local function create_styles()
 			desc = "Heading #4",
 			name = "H4",
 			html = "H4",
-			cstyle = 1,
 			above = 1,
 			below = 1,
 		},
@@ -544,7 +554,6 @@ local function create_styles()
 			desc = "List item with bullet",
 			name = "LB",
 			html = "LI",
-			cstyle = 0,
 			above = 1,
 			below = 1,
 			indent = 4,
@@ -554,7 +563,6 @@ local function create_styles()
 			desc = "List item without bullet",
 			name = "L",
 			html = "LI",
-			cstyle = 0,
 			above = 1,
 			below = 1,
 			indent = 4,
