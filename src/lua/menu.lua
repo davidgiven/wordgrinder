@@ -293,6 +293,8 @@ MenuClass = {
 					return nil
 				elseif (c == "KEY_ESCAPE") then
 					return nil
+				elseif (c == "KEY_^C") then
+					return nil
 				elseif (c == "KEY_^X") then
 					local item = menu[n]
 					if (type(item) ~= "string") then
