@@ -29,7 +29,6 @@ cp -a --parents \
 	./extras/icon-unbroken.xcf.gz \
 	./extras/windows-installer.nsi \
 	./src/c/arch/unix/cursesw/dpy.c \
-	./src/c/arch/win32/console/dpy.c \
 	./src/c/arch/win32/gdi/dpy.c \
 	./src/c/arch/win32/gdi/gdi.h \
 	./src/c/arch/win32/gdi/glyphcache.c \
@@ -63,6 +62,8 @@ cp -a --parents \
 	./src/lua/addons/docsetman.lua \
 	./src/lua/addons/goto.lua \
 	./src/lua/addons/scrapbook.lua \
+	./src/lua/addons/pagecount.lua \
+	./src/lua/addons/widescreen.lua \
 	./src/lua/browser.lua \
 	./src/lua/cli.lua \
 	./src/lua/document.lua \
@@ -91,6 +92,7 @@ cp -a --parents \
 	./testdocs/README-v0.1.wg \
 	./testdocs/README-v0.2.wg \
 	./testdocs/README-v0.3.3.wg \
+	./testdocs/README-v0.4.1.wg \
 	./tools/multibin2c.lua \
 	./wordgrinder.man \
 	\

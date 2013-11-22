@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.4.1
-                              ==================
+                               WORDGRINDER V0.5
+                               ================
 
                            © 2007-2013 David Given
-                                 2013-03-24
+                                 2013-11-22
 
                                 Unix version
 
@@ -103,6 +103,10 @@ http://www.keplerproject.org/luafilesystem for more information.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.5: 2013-11-22: Major overhaul: fixed hideous file corruption
+bug; much improved Windows text renderer; bold; page count; widescreen mode;
+UI style overhaul; many other minor bugfixes.
 
 WordGrinder 0.4.1: 2013-04-14: Minor bugfixes and build optimisation in aid
 of the Debian package.
