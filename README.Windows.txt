@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.4.1
-                              ==================
+                               WORDGRINDER V0.5
+                               ================
 
                            © 2007-2013 David Given
-                                 2014-04-14
+                                 2013-11-22
 
                                Windows version
 
@@ -28,17 +28,12 @@ INSTALLATION
 
 Run the supplied installer. It's done.
 
-However:
-
-WordGrinder makes heavy use of Unicode for drawing things like menus. The
-default font has lousy Unicode coverage. WordGrinder will do its best, but
-it'll probably look pretty ugly. You may wish to switch to use a different
-font with the drop-down menu from the application icon in the top-left
-corner of the screen.
+You can switch to use a different font with the drop-down menu from the
+application icon in the top-left corner of the screen.
 
 Important note! To quit, you'll have to use the menus inside WordGrinder
 (because the application knows nothing about the Windows window close button).
-Do CTRL+Q or ALT+F, X to quit.
+Do CTRL+Q to quit.
 
 You can toggle full-screen mode with ALT+ENTER.
 
@@ -75,6 +70,10 @@ http://www.keplerproject.org/luafilesystem for more information.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.5: 2013-11-22: Major overhaul: fixed hideous file corruption
+bug; much improved Windows text renderer; bold; page count; widescreen mode;
+UI style overhaul; many other minor bugfixes.
 
 WordGrinder 0.4.1: 2013-04-14: Minor bugfixes and build optimisation in aid
 of the Debian package.
