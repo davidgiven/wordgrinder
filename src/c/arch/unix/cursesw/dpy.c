@@ -155,6 +155,8 @@ const char* dpy_getkeyname(uni_t k)
 		case KEY_SDC: return "KEY_SDELETE";
 		case KEY_SHOME: return "KEY_SHOME";
 		case KEY_SEND: return "KEY_SEND";
+		case KEY_SR: return "KEY_SUP";
+		case KEY_SF: return "KEY_SDOWN";
 		case KEY_SLEFT: return "KEY_SLEFT";
 		case KEY_SRIGHT: return "KEY_SRIGHT";
 		case KEY_MOUSE: return "KEY_MOUSE";
@@ -175,6 +177,19 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		sprintf(buffer, "KEY_F%d", k - KEY_F0);
 		return buffer;
+	}
+
+	const char* name = keyname(k);
+	if (name)
+	{
+		if (strcmp(name, "kUP5") == 0)  return "KEY_^UP";
+		if (strcmp(name, "kRIT5") == 0) return "KEY_^RIGHT";
+		if (strcmp(name, "kDN5") == 0)  return "KEY_^DOWN";
+		if (strcmp(name, "kLFT5") == 0) return "KEY_^LEFT";
+		if (strcmp(name, "kUP6") == 0)  return "KEY_^SUP";
+		if (strcmp(name, "kRIT6") == 0) return "KEY_^SRIGHT";
+		if (strcmp(name, "kDN6") == 0)  return "KEY_^SDOWN";
+		if (strcmp(name, "kLFT6") == 0) return "KEY_^SLEFT";
 	}
 
 	sprintf(buffer, "KEY_UNKNOWN_%d", k);
