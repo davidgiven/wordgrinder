@@ -464,7 +464,7 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 	/* Determine the size of the bitmap needed. */
 
 	WCHAR wstringarray[2];
-	int slen;
+	int slen = 0;
 	WCHAR* wstring;
 	if (font != INVALID_HANDLE_VALUE)
 	{
