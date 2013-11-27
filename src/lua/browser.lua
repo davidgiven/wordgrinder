@@ -53,6 +53,17 @@ function FileBrowser(title, message, saving, default)
 		end
 	end
 	
+	-- Windows will sometimes give you a directory with no entries
+	-- in it at all (e.g. Documents and Settings on Win7). This is
+	-- annoying.
+
+	if (#labels == 0) then
+		labels[#labels+1] = {
+			data = "..",
+			label = "◇ .."
+		}
+	end
+
 	local f = Browser(title, lfs.currentdir(), message, labels,
 		default, defaultn)
 	if not f then
