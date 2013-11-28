@@ -208,6 +208,9 @@ $(call cfile, src/c/arch/win32/gdi/glyphcache.c)
 $(call cfile, src/c/arch/win32/gdi/realmain.c)
 $(call rcfile, src/c/arch/win32/wordgrinder.rc)
 
+src/c/arch/win32/wordgrinder.rc: \
+	src/c/arch/win32/manifest.xml
+
 endef
 
 # --- Unix ------------------------------------------------------------------
@@ -282,6 +285,7 @@ WINDOWSCFLAGS := \
 
 ldflags := \
 	-static \
+	-lcomctl32 \
 	-llua \
 	-lz
 

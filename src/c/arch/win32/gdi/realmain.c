@@ -9,6 +9,7 @@
 #include "globals.h"
 #include <string.h>
 #include <windows.h>
+#include <commctrl.h>
 #include "gdi.h"
 
 #undef main
@@ -69,6 +70,8 @@ static VOID CALLBACK application_cb(LPVOID user)
 
 int main(int argc, const char* argv[])
 {
+	InitCommonControls();
+
 	if (AttachConsole(ATTACH_PARENT_PROCESS))
 	{
 		freopen("CONOUT$", "wb", stdout);
