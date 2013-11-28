@@ -6,7 +6,8 @@
 -- Fetch the maximum allowed width.
 
 function GetMaximumAllowedWidth(screenwidth)
-	local settings = DocumentSet.addons.widescreen
+	local addons = DocumentSet.addons or {}
+	local settings = addons.widescreen
 	if not settings or not settings.enabled then
 		return screenwidth
 	end
