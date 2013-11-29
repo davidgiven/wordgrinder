@@ -49,7 +49,7 @@ static HKEY make_key(const char* keystring)
 {
 	HKEY key;
 
-	int e = RegCreateKeyEx(HKEY_LOCAL_MACHINE, keystring,
+	int e = RegCreateKeyEx(HKEY_CURRENT_USER, keystring,
 			0, NULL, REG_OPTION_NON_VOLATILE,
 			KEY_ALL_ACCESS, NULL, &key,
 			NULL);
