@@ -458,6 +458,13 @@ static struct glyph* create_glyph(unsigned int id, HDC dc)
 
 	uni_t unicode = id >> 8;
 	unsigned int attrs = id & 0xff;
+
+	/* Force bright if in reverse text; this makes reverse much easier
+	 * to read. */
+
+	if (attrs & DPY_REVERSE)
+		attrs |= DPY_BRIGHT;
+
 	attrs &= DPY_ITALIC | DPY_BOLD | DPY_DIM | DPY_BRIGHT;
 	HFONT font = select_font_with_glyph(dc, unicode, attrs);
 
