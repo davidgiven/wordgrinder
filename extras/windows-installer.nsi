@@ -43,19 +43,23 @@ SetCompressor /solid lzma
 !insertmacro MUI_PAGE_INSTFILES
 
 !define MUI_FINISHPAGE_TITLE "Installation complete"
+!define MUI_FINISHPAGE_TEXT_LARGE
 !define MUI_FINISHPAGE_TEXT "WordGrinder is now ready to use. However:$\r$\n\
 	$\r$\n\
-	Beware!$\r$\n\
-	$\r$\n\
-	WordGrinder is not a conventional Windows program! It's a port of a Unix \
-	program that works entirely differently to Windows programs. You are going \
-	to have to read the manual, just to know how to quit it.$\r$\n\
-	$\r$\n\
-	You can find the manual in the Start Menu. Don't worry, it's mostly \
-	painless.$\r$\n\
+	Beware! \
+	WordGrinder is not a conventional Windows program! You REALLY \
+	NEED to read at least the first few paragraphs of the manual. \
+	Not kidding.$\r$\n\
 	$\r$\n\
 	Have fun!"
 	
+Function showreadmeaction
+	ExecShell "" "$INSTDIR\README.wg"
+FunctionEnd
+
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_TEXT "Show manual now (strongly, strongly recommended)"
+!define MUI_FINISHPAGE_RUN_FUNCTION showreadmeaction
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -63,6 +67,22 @@ SetCompressor /solid lzma
 !insertmacro MUI_UNPAGE_FINISH
 
 !insertmacro MUI_LANGUAGE "English"
+
+;--------------------------------
+; Utility functions
+
+!define SHCNE_ASSOCCHANGED 0x08000000
+!define SHCNF_IDLIST 0
+ 
+Function RefreshShellIcons
+	System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v \
+		(${SHCNE_ASSOCCHANGED}, ${SHCNF_IDLIST}, 0, 0)'
+FunctionEnd
+
+Function un.RefreshShellIcons
+	System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v \
+		(${SHCNE_ASSOCCHANGED}, ${SHCNF_IDLIST}, 0, 0)'
+FunctionEnd
 
 ;--------------------------------
 
@@ -83,6 +103,19 @@ Section "WordGrinder (required)"
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\WordGrinder" "NoModify" 1
 	WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\WordGrinder" "NoRepair" 1
 	WriteUninstaller "uninstall.exe"
+
+	; Create a file extension mapping.
+	WriteRegStr HKCR ".wg" "" "WordGrinder.Document"
+	
+	; Now create the file type.
+	WriteRegStr HKCR "WordGrinder.Document" "" "WordGrinder Document"
+	WriteRegStr HKCR "WordGrinder.Document\DefaultIcon" "" "$INSTDIR\wordgrinder.exe,0"
+
+	; Add an open action.
+	WriteRegStr HKCR "WordGrinder.Document\shell\open\command" "" '"$INSTDIR\wordgrinder.exe" "%1"'
+
+	; Update the shell.
+	Call RefreshShellIcons
 SectionEnd
 
 Section "Start Menu Shortcuts"
@@ -93,6 +126,11 @@ Section "Start Menu Shortcuts"
 	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder manual.lnk" "$INSTDIR\wordgrinder.exe" '"$INSTDIR\README.wg"' "$INSTDIR\wordgrinder.exe" 0
 SectionEnd
 
+Section "Desktop Shortcut"
+	SetOutPath "$DOCUMENTS"
+	CreateShortCut "$DESKTOP\WordGrinder.lnk" "$INSTDIR\wordgrinder.exe" "" "$INSTDIR\wordgrinder.exe" 0
+SectionEnd
+
 ;--------------------------------
 
 ; Uninstaller
@@ -101,6 +139,9 @@ Section "Uninstall"
 	; Remove registry keys
 	DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\WordGrinder"
 	DeleteRegKey HKLM SOFTWARE\NSIS_WordGrinder
+	DeleteRegKey HKCR ".wg"
+	DeleteRegKey HKCR "WordGrinder.Document"
+	Call un.RefreshShellIcons
 
 	; Remove files and uninstaller
 	Delete $INSTDIR\wordgrinder.exe
@@ -110,6 +151,7 @@ Section "Uninstall"
 
 	; Remove shortcuts, if any
 	Delete "$SMPROGRAMS\WordGrinder\*.*"
+	Delete "$DESKTOP\WordGrinder.lnk"
 
 	; Remove directories used
 	RMDir "$SMPROGRAMS\WordGrinder"
