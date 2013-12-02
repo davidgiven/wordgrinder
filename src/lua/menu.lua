@@ -292,9 +292,9 @@ MenuClass = {
 				elseif (c == "KEY_LEFT") then
 					return nil
 				elseif (c == "KEY_ESCAPE") then
-					return nil
+					return false
 				elseif (c == "KEY_^C") then
-					return nil
+					return false
 				elseif (c == "KEY_^X") then
 					local item = menu[n]
 					if (type(item) ~= "string") then
@@ -352,6 +352,8 @@ MenuClass = {
 				}
 				
 				local r = self:runmenu(x+4, y+2, f)
+				menu_stack[#menu_stack] = nil
+
 				if (r == true) then
 					return true
 				elseif (r == false) then
@@ -359,7 +361,6 @@ MenuClass = {
 				end
 				
 				self:drawmenustack()
-				menu_stack[#menu_stack] = nil
 			else
 				if not f then
 					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
