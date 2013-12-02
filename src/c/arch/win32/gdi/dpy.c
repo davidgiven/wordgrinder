@@ -154,6 +154,10 @@ static bool special_key(int vk, unsigned flags)
 	if (vk > 0x90)
 		return false;
 
+	/* Numeric keypad. */
+	if ((vk >= 0x60) && (vk <= 0x6f))
+		return false;
+
 	if ((vk == ' ') || isdigit(vk) || isupper(vk))
 	{
 		if (flags & (1<<29))
@@ -817,7 +821,7 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		sprintf(buffer, "KEY_%s%s%s",
 				(mods & VKM_SHIFT) ? "S" : "",
-				(mods & VKM_CTRL) ? "C" : "",
+				(mods & VKM_CTRL) ? "^" : "",
 				template);
 		return buffer;
 	}
@@ -826,7 +830,7 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		sprintf(buffer, "KEY_%s%sF%d",
 				(mods & VKM_SHIFT) ? "S" : "",
-				(mods & VKM_CTRL) ? "C" : "",
+				(mods & VKM_CTRL) ? "^" : "",
 				key - VK_F1 + 1);
 		return buffer;
 	}
