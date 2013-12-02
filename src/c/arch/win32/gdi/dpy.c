@@ -203,7 +203,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	{
 		RECT r = {0, screenheight*textheight, ps->rcPaint.right, ps->rcPaint.bottom};
 		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
-		y2 = screenheight;
+		y2 = screenheight-1;
 	}
 
 	int state = SaveDC(dc);
@@ -212,7 +212,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	HPEN normalpen = CreatePen(PS_SOLID, 0, 0x888888);
 	HPEN dimpen = CreatePen(PS_SOLID, 0, 0x555555);
 
-	for (int y = y1; y < y2; y++)
+	for (int y = y1; y <= y2; y++)
 	{
 		int sy = y * textheight;
 
