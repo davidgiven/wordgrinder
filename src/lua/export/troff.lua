@@ -76,12 +76,16 @@ local function callback(writer, document)
 
 		if newit and not newbf then
 			writer('\\fI')
+			linestart = false
 		elseif newit and newbf then
 			writer('\\f(BI')
+			linestart = false
 		elseif not newit and newbf then
 			writer('\\fB')
+			linestart = false
 		elseif not newit and not newbf and (it or bf) then
 			writer('\\fR')
+			linestart = false
 		end
 		
 		if not newul and ul then
