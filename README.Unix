@@ -2,7 +2,7 @@
                                ================
 
                            © 2007-2013 David Given
-                                 2013-11-22
+                                 2013-12-06
 
                                 Unix version
 
@@ -104,7 +104,7 @@ http://www.keplerproject.org/luafilesystem for more information.
 REVISION HISTORY
 ================
 
-WordGrinder 0.5: 2013-11-22: Major overhaul: fixed hideous file corruption
+WordGrinder 0.5: 2013-12-06: Major overhaul: fixed hideous file corruption
 bug; much improved Windows text renderer; bold; page count; widescreen mode;
 UI style overhaul; many other minor bugfixes.
 
