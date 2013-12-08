@@ -16,7 +16,7 @@ else
 OS = unix
 endif
 
-VERSION := 0.5
+VERSION := 0.5.1
 FILEFORMAT := 4
 DATE := $(shell date +'%-d %B %Y')
 
