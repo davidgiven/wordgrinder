@@ -73,7 +73,8 @@ REVISION HISTORY
 
 WordGrinder 0.5: 2013-12-06: Major overhaul: fixed hideous file corruption
 bug; much improved Windows text renderer; bold; page count; widescreen mode;
-UI style overhaul; many other minor bugfixes.
+UI style overhaul; many other minor bugfixes. Many thanks to Connor Karatzas
+for extensive Windows testing.
 
 WordGrinder 0.4.1: 2013-04-14: Minor bugfixes and build optimisation in aid
 of the Debian package.
