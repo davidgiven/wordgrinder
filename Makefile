@@ -97,7 +97,7 @@ LUASCRIPTS := \
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
 	@mkdir -p .obj
-	@lua tools/multibin2c.lua script_table $^ > $@
+	$(hide)lua tools/multibin2c.lua script_table $^ > $@
 	
 clean::
 	@echo CLEAN .obj/luascripts.c
