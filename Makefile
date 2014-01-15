@@ -12,8 +12,24 @@ MAKENSIS = makensis
 
 ifneq ($(findstring Windows,$(OS)),)
 OS = windows
+else ifneq ($(Apple_PubSub_Socket_Render),)
+	BREWPREFIX := $(shell brew --prefix 2>/dev/null || echo)
+
+	LIBROOT := $(BREWPREFIX)/lib $(BREWPREFIX)/opt/ncurses/lib
+	INCROOT := $(BREWPREFIX)
+	LUA_INCLUDE := $(BREWPREFIX)/include
+	NCURSES_INCLUDE := $(BREWPREFIX)/opt/ncurses/include
+	LUA_LIB := lua.5.2
+
+	OS = unix
 else
-OS = unix
+	LIBROOT := /usr/lib
+	INCROOT := /usr
+	LUA_INCLUDE := $(INCROOT)/include/lua5.2
+	NCURSES_INCLUDE := $(INCROOT)/include/ncursesw
+	LUA_LIB := lua5.2
+
+	OS = unix
 endif
 
 VERSION := 0.5.1
@@ -218,18 +234,18 @@ endef
 ifeq ($(OS),unix)
 
 cc := gcc
-INCLUDES := -I/usr/include/lua5.2
+INCLUDES := -I$(LUA_INCLUDE) -I$(NCURSES_INCLUDE)
 
 UNIXCFLAGS := \
 	-D_XOPEN_SOURCE_EXTENDED \
 	-D_XOPEN_SOURCE \
 	-D_GNU_SOURCE \
-	-DARCH=\"unix\" \
-	-I/usr/include/ncursesw
+	-DARCH=\"unix\"
 	
 ldflags := \
+	$(addprefix -L,$(LIBROOT)) \
 	-lncursesw \
-	-llua5.2 \
+	-l$(LUA_LIB) \
 	-lz
 
 cflags := $(UNIXCFLAGS) -Os -DNDEBUG
