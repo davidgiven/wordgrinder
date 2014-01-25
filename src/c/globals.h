@@ -14,6 +14,12 @@
 #include <errno.h>
 #include <wctype.h>
 
+/* --- Platform detection ------------------------------------------------ */
+
+#if defined(__APPLE__) && defined(__MACH__)
+	#define OSX
+#endif
+
 /* --- Emulation issues -------------------------------------------------- */
 
 typedef int uni_t;

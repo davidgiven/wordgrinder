@@ -135,6 +135,12 @@ const char* dpy_getkeyname(uni_t k)
 
 	switch (k)
 	{
+#if defined(OSX)
+		case 127: /* OSX produces this */
+#endif
+		case KEY_BACKSPACE:
+			return "KEY_BACKSPACE";
+
 		case KEY_TIMEOUT: return "KEY_TIMEOUT";
 		case KEY_DOWN: return "KEY_DOWN";
 		case KEY_UP: return "KEY_UP";
@@ -142,7 +148,6 @@ const char* dpy_getkeyname(uni_t k)
 		case KEY_RIGHT: return "KEY_RIGHT";
 		case KEY_HOME: return "KEY_HOME";
 		case KEY_END: return "KEY_END";
-		case KEY_BACKSPACE: return "KEY_BACKSPACE";
 		case KEY_DC: return "KEY_DELETE";
 		case KEY_IC: return "KEY_INSERT";
 		case KEY_NPAGE: return "KEY_PGDN";
