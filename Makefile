@@ -19,7 +19,8 @@ else ifneq ($(Apple_PubSub_Socket_Render),)
 	INCROOT := $(BREWPREFIX)
 	LUA_INCLUDE := $(BREWPREFIX)/include
 	NCURSES_INCLUDE := $(BREWPREFIX)/opt/ncurses/include
-	LUA_LIB := lua.5.2
+	NCURSES_LIB := -L$(BREWPREFIX)/opt/ncurses/lib -lncursesw
+	LUA_LIB := -llua.5.2
 
 	OS = unix
 else
@@ -27,7 +28,8 @@ else
 	INCROOT := /usr
 	LUA_INCLUDE := $(INCROOT)/include/lua5.2
 	NCURSES_INCLUDE := $(INCROOT)/include/ncursesw
-	LUA_LIB := lua5.2
+	LUA_LIB := -llua5.2
+	NCURSES_LIB := -lncursesw
 
 	OS = unix
 endif
@@ -244,8 +246,8 @@ UNIXCFLAGS := \
 	
 ldflags := \
 	$(addprefix -L,$(LIBROOT)) \
-	-lncursesw \
-	-l$(LUA_LIB) \
+	$(NCURSES_LIB) \
+	$(LUA_LIB) \
 	-lz
 
 cflags := $(UNIXCFLAGS) -Os -DNDEBUG
