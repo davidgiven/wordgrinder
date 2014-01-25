@@ -49,7 +49,6 @@ If you have Debian, you've already got all these. Merely install these
 packages:
 
   libncursesw5-dev liblua5.2-dev lua-filesystem-dev zlib1g-dev
-  
 
 To build, simply do:
 
@@ -63,6 +62,16 @@ To install, do:
 global location, you don't need sudo.)
 
 It is now ready to use.
+
+Notes for Apple users: WordGrinder works fine on OS X with Homebrew.  You'll
+need the following packages installed:
+
+  lua52 ncurses
+ 
+The Makefile should autodetect Homebrew and just work. However, note that only
+the wordgrinder-static binary will actually work, so you'll have to install
+this manually. Sorry, I haven't tried to make things work with any other OS X
+package manager --- patches welcome.
 
 
 
