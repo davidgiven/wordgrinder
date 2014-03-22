@@ -284,6 +284,10 @@ function Cmd.DeleteWordLeftOfCursor()
 end
 
 function Cmd.DeleteWord()
+	if (Document.co == 1) and (Document.cw == 1) then
+		return Cmd.DeletePreviousChar()
+	end
+
 	if (Document.co == 1) then
 		Cmd.DeletePreviousChar()
 	end
