@@ -269,32 +269,25 @@ function Cmd.DeleteNextChar()
 	return true
 end
 
-function Cmd.DeleteCurrentWord()
+function Cmd.DeleteWordLeftOfCursor()
 	local paragraph = Document[Document.cp]
-	if (Document.cw < #paragraph) then
-		paragraph:deleteWordAt(Document.cw)
-		Document.co = 1
+	local word = paragraph[Document.cw]
+	local co = Document.co
 
-		paragraph:touch()
-		DocumentSet:touch()
-		QueueRedraw()
-		return true
-	else
-		local word = paragraph[Document.cw]
-		word.text = ""
-		return true
-	end
+	word.text = DeleteFromWord(word.text, 1, Document.co)
+	Document.co = 1
+	paragraph:touch()
+	
+	DocumentSet:touch()
+	QueueRedraw()
+	return true
 end
 
 function Cmd.DeleteWord()
-	if not Cmd.DeleteCurrentWord() then
-		return false
+	if (Document.co == 1) then
+		Cmd.DeletePreviousChar()
 	end
-	if Cmd.GotoPreviousWord() then
-		return Cmd.GotoEndOfWord()
-	else
-		return Cmd.GotoBeginningOfWord()
-	end
+	return Cmd.DeleteWordLeftOfCursor()
 end
 
 function Cmd.SplitCurrentParagraph()
