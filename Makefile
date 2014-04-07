@@ -11,7 +11,8 @@ WINDRES = windres.exe
 MAKENSIS = makensis
 
 ifneq ($(findstring Windows,$(OS)),)
-OS = windows
+	OS = windows
+all: windows
 else ifneq ($(Apple_PubSub_Socket_Render),)
 	BREWPREFIX := $(shell brew --prefix 2>/dev/null || echo)
 
@@ -23,6 +24,7 @@ else ifneq ($(Apple_PubSub_Socket_Render),)
 	LUA_LIB := -llua.5.2
 
 	OS = unix
+all: unix
 else
 	LIBROOT := /usr/lib
 	INCROOT := /usr
@@ -32,6 +34,7 @@ else
 	NCURSES_LIB := -lncursesw
 
 	OS = unix
+all: unix
 endif
 
 VERSION := 0.5.1
@@ -52,8 +55,6 @@ override CFLAGS += \
 override LDFLAGS += \
 
 WININSTALLER := bin/WordGrinder\ $(VERSION)\ setup.exe
-
-all: unix
 
 unix: \
 	bin/wordgrinder \
