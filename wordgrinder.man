@@ -1,0 +1,74 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH WORDGRINDER 1 "@@@DATE@@@" "@@@VERSION@@@" "Terminal-based word processor"
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+wordgrinder \- console-based word processor
+
+
+
+.SH SYNOPSIS
+
+.B wordgrinder
+.RI [ options ]
+.RI [ filename ]
+
+
+
+.SH DESCRIPTION
+
+.B wordgrinder
+is a simple character cell word processor that runs on the console. It is
+primarily designed for text entry. It's designed to get the hell out of
+your way and let you write; it does very little, but what it does it does well.
+
+It supports Unicode, basic paragraph styles, basic character styles, basic screen
+markup, a menu interface that means you don't have to remember complex
+key sequences, HTML import and export, and some other useful features.
+
+When running, pressing ESC (or ALT + menu shortcut key) will open the menu.
+
+
+
+.SH OPTIONS
+
+These options follow the usual GNU command line syntax, with long
+options starting with two dashes (`-').
+
+.TP
+.B \-h, \-\-help
+Show summary of options.
+
+.TP
+.BI \--lua\  filename
+Loads and executes a Lua file before startup.
+
+.TP
+.BI \--convert\  srcfile\ destfile
+Converts from
+.I srcfile
+to
+.I destfile
+and then exits.
+
+The type of the file is autodetected from the extension of the filename. The
+source file may have a document name suffixed with a
+.I :
+for use when importing or exporting WordGrinder files. 
+  
+  
+  
+.SH AUTHOR
+.B wordgrinder
+was written by David Given.
+.br
+http://wordgrinder.sourceforge.net
