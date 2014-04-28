@@ -73,7 +73,9 @@ local function callback(writer, document)
 		end,
 		
 		notext = function(s)
-			writer('<br/>')
+			if (currentpara ~= "PRE") then
+				writer('<br/>')
+			end
 		end,
 		
 		italic_on = function()
