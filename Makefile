@@ -4,6 +4,8 @@
 
 hide = @
 
+.DELETE_ON_ERROR:
+
 PREFIX = $(HOME)
 CC = gcc
 WINCC = mingw32-gcc.exe
