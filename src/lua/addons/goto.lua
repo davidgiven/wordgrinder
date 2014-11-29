@@ -55,7 +55,14 @@ function Cmd.Goto()
 		local _, _, level = para.style.name:find("^H(%d)$") 
 		if level then
 			level = tonumber(level)
+
+			-- Update the array of section counts. Remember that subsections
+			-- are local to their section, so make sure to zero out the
+			-- level count for subsections contained within this section.
 			levelcount[level] = levelcount[level] + 1
+			for i = level+1, 4 do
+				levelcount[i] = 0
+			end
 
 			local s = {}
 			for i = 1, level do
