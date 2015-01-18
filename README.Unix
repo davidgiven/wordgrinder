@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.5.1
+                              WORDGRINDER V0.5.2
                               ==================
 
-                           © 2007-2013 David Given
-                                 2013-12-06
+                           © 2007-2015 David Given
+                                 2015-01-18
 
                                 Unix version
 
@@ -113,7 +113,12 @@ http://www.keplerproject.org/luafilesystem for more information.
 REVISION HISTORY
 ================
 
-WordGrinder 0.5: 2013-12-06: Major overhaul: fixed hideous file corruption
+WordGrinder 0.5.2: 2015-02-18: Minor bugfixes: build system fixes; updated
+minizip to a version which builds better on Ubuntu; OSX Homebrew build
+system; delete word; subsection counts now correct; HTML PRE emission issue
+corrected.
+
+WordGrinder 0.5.1: 2013-12-08: Major overhaul: fixed hideous file corruption
 bug; much improved Windows text renderer; bold; page count; widescreen mode;
 UI style overhaul; many other minor bugfixes. Many thanks to Connor Karatzas
 for extensive Windows testing.

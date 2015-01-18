@@ -39,7 +39,7 @@ else
 all: unix
 endif
 
-VERSION := 0.5.1
+VERSION := 0.5.2
 FILEFORMAT := 4
 DATE := $(shell date +'%-d %B %Y')
 
