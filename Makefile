@@ -21,8 +21,8 @@ else ifneq ($(Apple_PubSub_Socket_Render),)
 	LIBROOT := $(BREWPREFIX)/lib $(BREWPREFIX)/opt/ncurses/lib
 	INCROOT := $(BREWPREFIX)
 	LUA_INCLUDE := $(BREWPREFIX)/include
-	NCURSES_INCLUDE := $(BREWPREFIX)/opt/ncurses/include
-	NCURSES_LIB := -L$(BREWPREFIX)/opt/ncurses/lib -lncursesw
+	NCURSES_INCLUDE := /usr/include
+	NCURSES_LIB := -L/usr/lib -lncurses
 	LUA_LIB := -llua.5.2
 
 	OS = unix
@@ -75,9 +75,12 @@ wininstaller: $(WININSTALLER)
 
 install: bin/wordgrinder bin/wordgrinder.1
 	@echo INSTALL
-	$(hide)install -D -m 755 bin/wordgrinder   $(PREFIX)/bin/wordgrinder
-	$(hide)install -D -m 644 bin/wordgrinder.1 $(PREFIX)/share/man/man1/wordgrinder.1
-	$(hide)install -D -m 644 README.wg         $(PREFIX)/share/doc/wordgrinder/README.wg
+	$(hide)install -d                       $(PREFIX)/bin
+	$(hide)install -m 755 bin/wordgrinder   $(PREFIX)/bin/wordgrinder
+	$(hide)install -d                       $(PREFIX)/share/man/man1
+	$(hide)install -m 644 bin/wordgrinder.1 $(PREFIX)/share/man/man1/wordgrinder.1
+	$(hide)install -d                       $(PREFIX)/share/doc/wordgrinder
+	$(hide)install -m 644 README.wg         $(PREFIX)/share/doc/wordgrinder/README.wg
 	
 # --- Builds the script blob ------------------------------------------------
 
