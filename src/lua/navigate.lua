@@ -13,6 +13,7 @@ local ApplyStyleToWord = wg.applystyletoword
 local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
 local table_concat = table.concat
+local unpack = unpack or table.unpack
 
 function Cmd.GotoBeginningOfWord()
 	Document.co = 1
