@@ -24,14 +24,14 @@ local export_table =
 	["txt"] = Cmd.ExportTextFile,
 }
 
-local function message(...)
+function CLIMessage(...)
 	stderr:write("wordgrinder: ", ...)
 	stderr:write("\n")
 	stderr:flush()
 end
 
-local function usererror(...)
-	message(...)
+function CLIError(...)
+	CLIMessage(...)
 	os.exit(1)
 end
 		
@@ -40,13 +40,13 @@ end
 function EngageCLI()
 	function ImmediateMessage(s)
 		if s then
-			message(s)
+			CLIMessage(s)
 		end
 	end
 	
 	function ModalMessage(s1, s2)
 		if s2 then
-			message(s2)
+			CLIMessage(s2)
 		end
 	end
 end
@@ -64,7 +64,7 @@ function CliConvert(file1, file2)
 			"^(.*)%.(%w*)(:?)(.*)$")
 		
 		if not root or not extension then
-			usererror("unable to parse filename '", f, "'")
+			CLIError("unable to parse filename '", f, "'")
 		end
 			
 		return root, extension, hassubdoc, subdoc
@@ -76,7 +76,7 @@ function CliConvert(file1, file2)
 	local f2 = f2r.."."..f2e
 	
 	if (f2hs ~= "") then
-		usererror("you cannot specify a document name for the output file")
+		CLIError("you cannot specify a document name for the output file")
 	end
 	
 	local function supported_extensions(t)
@@ -89,20 +89,20 @@ function CliConvert(file1, file2)
 	
 	local importer = import_table[f1e]
 	if not importer then
-		usererror("don't know how to import extension '", f1e, "' ",
+		CLIError("don't know how to import extension '", f1e, "' ",
 			"(supported extensions are: ",
 			supported_extensions(import_table), ")")
 	end
 	
 	local exporter = export_table[f2e]
 	if not exporter then
-		usererror("don't know how to export extension '", f2e, "' ",
+		CLIError("don't know how to export extension '", f2e, "' ",
 			"(supported extensions are: ",
 			supported_extensions(export_table), ")")
 	end
 	
 	if not importer(f1) then
-		usererror("failed")
+		CLIError("failed")
 	end
 	
 	if (f1hs ~= "") then
@@ -112,7 +112,7 @@ function CliConvert(file1, file2)
 			
 			local dl = DocumentSet:getDocumentList()
 			if not dl[f1s] then
-				usererror("no such document '", f1s, "'")
+				CLIError("no such document '", f1s, "'")
 			end
 			DocumentSet:setCurrent(f1s)
 		else
@@ -125,8 +125,9 @@ function CliConvert(file1, file2)
 	end
 	
 	if not exporter(f2) then
-		usererror("failed")
+		CLIError("failed")
 	end
 	
 	os.exit(0)
 end
+

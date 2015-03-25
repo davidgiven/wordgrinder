@@ -379,22 +379,32 @@ MenuClass = {
 	
 	lookupAccelerator = function(self, c)
 		c = c:gsub("^KEY_", "")
-		local id = self.accelerators[c]
+
+		-- Check the overrides table and only then the documentset keymap.
+		
+		local id = CheckOverrideTable(c) or self.accelerators[c]
 		if not id then
 			return nil
 		end
 		
-		local item = menu_tab[id]
+		-- Found something? Find out what function the menu ID corresponds to.
+		-- (Or maybe it's a raw function.)
+		
 		local f
-		if not item then
-			f = function()
-				NonmodalMessage("Fnord: menu ID "..id.." not found.")
-			end
+		if (type(id) == "function") then
+			f = id
 		else
-			f = item.fn
+			local item = menu_tab[id]
+			if not item then
+				f = function()
+					NonmodalMessage("Menu item with ID "..id.." not found.")
+				end
+			else
+				f = item.fn
+			end
 		end
 		return f
-	end
+	end,
 }
 
 function CreateMenu()
@@ -467,3 +477,21 @@ function RebuildDocumentsMenu(documents)
 	
 	addmenu("Documents", m, DocumentsMenu)
 end
+
+function ListMenuItems()
+	local function list(menu)
+		for _, item in ipairs(menu) do
+			if (type(item) == "table") then
+				io.stdout:write(
+					string.format("%15s %s\n", item.id, item.label))
+				if (type(item.fn) == "table") then
+					list(item.fn)
+				end
+			end
+		end
+	end
+
+	io.stdout:write("All supported menu items:\n\n")
+	list(MainMenu)
+end
+

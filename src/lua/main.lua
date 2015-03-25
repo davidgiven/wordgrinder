@@ -16,6 +16,10 @@ local redrawpending = true
 
 HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
 
+-- Which config file are we loading?
+
+local configfile = HOME .. "/.wordgrinder.lua"
+
 function QueueRedraw()
 	redrawpending = true
 	if not Document.wrapwidth then
@@ -41,6 +45,17 @@ end
 -- loop.
 
 function WordProcessor(filename)
+	do
+		local f, e = loadfile(configfile)
+		if e and not e:find("No such file or directory") then
+			CLIError("config file compilation error: "..e)
+		end
+
+		if not e then
+			xpcall(f, CLIError)
+		end
+	end
+
 	wg.initscreen()
 	ResizeScreen()
 	RedrawScreen()
@@ -139,16 +154,6 @@ function Main(...)
 		local stdout = io.stdout
 		local stderr = io.stderr
 		
-		local function message(...)
-			stderr:write("wordgrinder: ", ...)
-			stderr:write("\n")
-		end
-	
-		local function usererror(...)
-			message(...)
-			os.exit(1)
-		end
-		
 		local function do_help(opt)
 			stdout:write("WordGrinder version ", VERSION, " © 2007-2008 David Given\n")
 			if DEBUG then
@@ -158,9 +163,11 @@ function Main(...)
 			stdout:write([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
-   -h    --help              Displays this message.
-         --lua file.lua      Loads and executes file.lua before startup
-   -c    --convert src dest  Converts from one file format to another
+   -h    --help                Displays this message.
+         --lua file.lua        Loads and executes file.lua and then exits
+		                       (or file.lua can be some Lua statements)
+   -c    --convert src dest    Converts from one file format to another
+         --config file.lua     Sets the name of the user config file
 
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
@@ -169,6 +176,13 @@ To convert documents, use --convert. The file type is autodetected from the
 extension. To specify a document name, use :name as a suffix. e.g.:
 
     wordgrinder --convert filename.wg:"Chapter 1" chapter1.odt
+
+The user config file is a Lua file which is loaded and executed before
+the program starts up (but after any --lua files). It defaults to:
+
+    ]] .. configfile .. [[
+
+
 ]])
 			if DEBUG then
 				-- List debugging options here.
@@ -179,27 +193,41 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 		
 		local function do_lua(opt1, opt2)
 			if not opt1 then
-				usererror("--lua must have an argument")
+				CLIError("--lua must have an argument")
 			end
-			
+
 			local f, e = loadfile(opt1)
-			if e then
-				usererror("user script compilation error: "..e)
+			if e and e:find("No such file or directory") then
+				f, e = loadstring(opt1)
 			end
-			return f(opt2) or 1
+			if e then
+				CLIError("user script compilation error: "..e)
+			end
+
+			f(opt2)
+			os.exit(0)
 		end
 		
 		local function do_convert(opt1, opt2)
 			if not opt1 or not opt2 then
-				usererror("--convert must have two arguments")
+				CLIError("--convert must have two arguments")
 			end
 			
 			CliConvert(opt1, opt2)
 		end
 		
+		local function do_config(opt1, opt2)
+			if not opt1 then
+				CLIError("--config must have an argument")
+			end
+
+			configfile = opt1
+			return 1
+		end
+
 		local function needarg(opt)
 			if not opt then
-				usererror("missing option parameter")
+				CLIError("missing option parameter")
 			end
 		end
 		
@@ -209,6 +237,7 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 			["lua"]         = do_lua,
 			["c"]           = do_convert,
 			["convert"]     = do_convert,
+			["config"]      = do_config,
 		}
 		
 		if DEBUG then
@@ -219,7 +248,7 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 		-- Called on an unrecognised option.
 		
 		local function unrecognisedarg(arg)
-			usererror("unrecognised option '", arg, "' --- try --help for help")
+			CLIError("unrecognised option '", arg, "' --- try --help for help")
 		end
 		
 		-- Do the actual argument parsing.
@@ -256,7 +285,7 @@ extension. To specify a document name, use :name as a suffix. e.g.:
 				end
 			else
 				if filename then
-					usererror("you may only specify one filename")
+					CLIError("you may only specify one filename")
 				end
 				filename = o
 			end	

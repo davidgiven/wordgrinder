@@ -39,7 +39,7 @@ else
 all: unix
 endif
 
-VERSION := 0.5.2.1
+VERSION := 0.5.3
 FILEFORMAT := 4
 DATE := $(shell date +'%-d %B %Y')
 
@@ -114,9 +114,10 @@ LUASCRIPTS := \
 	src/lua/addons/scrapbook.lua \
 	src/lua/addons/pagecount.lua \
 	src/lua/addons/widescreen.lua \
+	src/lua/addons/keymapoverride.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
-	src/lua/main.lua
+	src/lua/main.lua \
 
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
