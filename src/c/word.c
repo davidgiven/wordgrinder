@@ -121,8 +121,9 @@ static int writestyled_cb(lua_State* L)
 		}
 		else
 		{
-			if (first && oattr && ((attr | mark) == oattr))
-				dpy_writechar(x-1, y, 160); /* non-breaking space */
+			if (first && (oattr & (DPY_REVERSE|DPY_UNDERLINE))
+				&& ((attr | mark) == oattr))
+				dpy_writechar(x-1, y, '_');
 
 			dpy_writechar(x, y, c);
 			x += emu_wcwidth(c);
