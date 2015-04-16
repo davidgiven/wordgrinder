@@ -9,7 +9,7 @@
 #ifndef GDI_H
 #define GDI_H
 
-#include "uthash.h"
+#include "utils/uthash.h"
 
 #define VKM_SHIFT      0x100
 #define VKM_CTRL       0x200
