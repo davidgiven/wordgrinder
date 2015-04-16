@@ -31,12 +31,14 @@ else
 	LIBROOT := /usr/lib
 	INCROOT := /usr
 	LUA_INCLUDE := $(INCROOT)/include/lua5.2
-	NCURSES_INCLUDE := $(INCROOT)/include/ncursesw
 	LUA_LIB := -llua5.2
-	NCURSES_LIB := -lncursesw
+	NCURSES_CFLAGS := $(shell pkg-config ncursesw --cflags)
+	NCURSES_LIB := $(shell pkg-config ncursesw --libs)
+	X11_CFLAGS := $(shell pkg-config freetype2 --cflags) -I/usr/include/X11
+	X11_LIB := -lX11 -lXft $(shell pkg-config freetype2 --libs) 
 
 	OS = unix
-all: unix
+all: unix x11unix
 endif
 
 VERSION := 0.5.3
@@ -62,7 +64,12 @@ unix: \
 	bin/wordgrinder \
 	bin/wordgrinder-debug \
 	bin/wordgrinder-static
-.PHONY: unix
+
+x11unix: \
+	bin/xwordgrinder \
+	bin/xwordgrinder-debug \
+	bin/xwordgrinder-static
+.PHONY: unix x11unix
 	
 windows: \
 	bin/wordgrinder.exe \
@@ -224,6 +231,14 @@ $(call cfile, src/c/arch/unix/cursesw/dpy.c)
 
 endef
 
+# --- Builds the X11 front end ----------------------------------------------
+
+define build-wordgrinder-x11
+
+$(call cfile, src/c/arch/unix/x11/x11.c)
+
+endef
+
 # --- Builds the Windows front end ------------------------------------------
 
 define build-wordgrinder-windows
@@ -243,7 +258,7 @@ endef
 ifeq ($(OS),unix)
 
 cc := gcc
-INCLUDES := -I$(LUA_INCLUDE) -I$(NCURSES_INCLUDE)
+INCLUDES := -I$(LUA_INCLUDE)
 
 UNIXCFLAGS := \
 	-D_XOPEN_SOURCE_EXTENDED \
@@ -251,34 +266,36 @@ UNIXCFLAGS := \
 	-D_GNU_SOURCE \
 	-DARCH=\"unix\"
 	
-ldflags := \
+UNIXLDFLAGS := \
 	$(addprefix -L,$(LIBROOT)) \
-	$(NCURSES_LIB) \
 	$(LUA_LIB) \
 	-lz
 
-cflags := $(UNIXCFLAGS) -Os -DNDEBUG
+cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -Os -DNDEBUG
 objdir := .obj/release
 exe := bin/wordgrinder
 objs :=
+ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
 $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
-cflags := $(UNIXCFLAGS) -g
+cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g
 objdir := .obj/debug
 exe := bin/wordgrinder-debug
 objs :=
+ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
 $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
-cflags := $(UNIXCFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
+cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
 objdir := .obj/debug-static
 exe := bin/wordgrinder-static
 objs :=
+ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
 $(eval $(build-wordgrinder-minizip))
@@ -286,6 +303,37 @@ $(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder))
 
+cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -Os -DNDEBUG
+objdir := .obj/release-x11
+exe := bin/xwordgrinder
+objs :=
+ldflags := $(UNIXLDFLAGS) $(X11_LIB)
+$(eval $(build-wordgrinder-core))
+$(eval $(build-wordgrinder-x11))
+$(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder))
+
+cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g
+objdir := .obj/debug-x11
+exe := bin/xwordgrinder-debug
+objs :=
+ldflags := $(UNIXLDFLAGS) $(X11_LIB)
+$(eval $(build-wordgrinder-core))
+$(eval $(build-wordgrinder-x11))
+$(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder))
+
+cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
+objdir := .obj/debug-static-x11
+exe := bin/xwordgrinder-static
+objs :=
+ldflags := $(UNIXLDFLAGS) $(X11_LIB)
+$(eval $(build-wordgrinder-core))
+$(eval $(build-wordgrinder-x11))
+$(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder-lfs))
+$(eval $(build-wordgrinder-emu))
+$(eval $(build-wordgrinder))
 
 bin/wordgrinder.1: wordgrinder.man
 	@echo MANPAGE
