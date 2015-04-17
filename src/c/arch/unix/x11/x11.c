@@ -135,7 +135,7 @@ static void load_fonts(void)
 
 static XftColor load_colour(const char* name, const char* fallback)
 {
-	lua_getglobal(L, "X11_BLACK");
+	lua_getglobal(L, name);
 	const char* value = lua_tostring(L, -1);
 	if (!value)
 		value = fallback;
