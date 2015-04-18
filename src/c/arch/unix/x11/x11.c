@@ -292,6 +292,21 @@ static void redraw(void)
 		for (int x = 0; x<screenwidth; x++)
 			render_glyph(&p[x], x, y);
 	}
+
+	/* Draw a caret where the cursor should be. */
+
+	int x = cursorx*fontwidth - 1;
+	if (x < 0)
+		x = 0;
+	int y = cursory*fontheight;
+	int h = fontheight;
+	XftColor* c = &colours[BRIGHT];
+
+	XftDrawRect(draw, c, x,   y,   1, h);
+	XftDrawRect(draw, c, x-1, y-1, 1, 1);
+	XftDrawRect(draw, c, x+1, y-1, 1, 1);
+	XftDrawRect(draw, c, x-1, y+h, 1, 1);
+	XftDrawRect(draw, c, x+1, y+h, 1, 1);
 }
 
 uni_t dpy_getchar(int timeout)
