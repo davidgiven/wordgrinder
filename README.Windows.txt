@@ -73,7 +73,8 @@ REVISION HISTORY
 
 WordGrinder 0.5.3: 2015-04-18: New X11 frontend (actual bold and italic on
 Linux machines!); shift+cursor keys starts a selection; more HTML emission
-fixes.
+fixes; non-document persistent settings; global key maps (currently via a
+configurationfile).
 
 WordGrinder 0.5.2.1: 2015-02-18: Minor bugfixes: build system fixes; updated
 minizip to a version which builds better on Ubuntu; OSX Homebrew build system;
