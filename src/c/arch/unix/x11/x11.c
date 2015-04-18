@@ -12,7 +12,7 @@
 #include <X11/Xlib.h>
 #include <Xft/Xft.h>
 #include <ctype.h>
-#include "utils/uthash.h"
+#include <poll.h>
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
 
@@ -298,6 +298,22 @@ uni_t dpy_getchar(int timeout)
 {
 	while (numqueued == 0)
 	{
+		/* If a timeout was asked for, wait that long for an event. */
+
+		if ((timeout != -1) && !XPending(display))
+		{
+			struct pollfd pfd =
+			{
+				.fd = ConnectionNumber(display),
+				.events = POLLIN,
+				.revents = 0
+			};
+
+			poll(&pfd, 1, timeout*1000);
+			if (!pfd.revents)
+				return -VK_TIMEOUT;
+		}
+
 		XEvent e;
 		XNextEvent(display, &e);
 
