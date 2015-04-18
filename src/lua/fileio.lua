@@ -498,6 +498,12 @@ do
 		local fileformat = DocumentSet.fileformat or 1
 		
 		if (fileformat ~= FILEFORMAT) then
+			-- This is vile, but some addons may have registered hooks
+			-- which will fire when we call ModalMessage. They're going
+			-- to assume the addons table exists. So we ensure that here,
+			-- rather than later during the formal upgrade process.
+			DocumentSet.addons = DocumentSet.addons or {}
+
 			ModalMessage("Upgrading document",
 				"You are trying to open a file belonging to an earlier "..
 				"version of WordGrinder. That's not a problem, but if you "..
@@ -554,10 +560,6 @@ do
 			-- Idle time defaults to 3.
 			
 			DocumentSet.idletime = 3
-			
-			-- Add the addons setting table.
-			
-			DocumentSet.addons = {}
 		end
 	end
 	
