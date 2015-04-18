@@ -274,12 +274,76 @@ static void render_glyph(struct glyph* g, int x, int y)
 	if (g->attr & DPY_ITALIC)
 		style |= ITALIC;
 
-	XftDrawRect(draw, bg,
-		x*fontwidth, y*fontheight,
-		fontwidth, fontheight);
-	if (c)
-		XftDrawString32(draw, fg, fonts[style],
-			x*fontwidth, fontascent + y*fontheight, &c, 1);
+	int ox = x*fontwidth;
+	int oy = y*fontheight;
+	int w = (fontwidth+1) & ~1;
+	int w2 = w/2;
+	int h = (fontheight+1) & ~1;
+	int h2 = h/2;
+
+	XftDrawRect(draw, bg, ox, oy, w, h);
+
+	switch (c)
+	{
+		case 32:
+		case 160: /* Non-breaking space */
+			break;
+
+		case 0x2500: /* ─ */
+		case 0x2501: /* ━ */
+			XftDrawRect(draw, fg, ox, oy+h2, w, 1);
+			break;
+
+		case 0x2502: /* │ */
+		case 0x2503: /* ┃ */
+			XftDrawRect(draw, fg, ox+w2, oy, 1, h);
+			break;
+
+		case 0x250c: /* ┌ */
+		case 0x250d: /* ┍ */
+		case 0x250e: /* ┎ */
+		case 0x250f: /* ┏ */
+			XftDrawRect(draw, fg, ox+w2, oy+h2, 1, h2);
+			XftDrawRect(draw, fg, ox+w2, oy+h2, w2, 1);
+			break;
+
+		case 0x2510: /* ┐ */
+		case 0x2511: /* ┑ */
+		case 0x2512: /* ┒ */
+		case 0x2513: /* ┓ */
+			XftDrawRect(draw, fg, ox+w2, oy+h2, 1, h2);
+			XftDrawRect(draw, fg, ox, oy+h2, w2, 1);
+			break;
+
+		case 0x2514: /* └ */
+		case 0x2515: /* ┕ */
+		case 0x2516: /* ┖ */
+		case 0x2517: /* ┗ */
+			XftDrawRect(draw, fg, ox+w2, oy, 1, h2);
+			XftDrawRect(draw, fg, ox+w2, oy+h2, w2, 1);
+			break;
+
+		case 0x2518: /* ┘ */
+		case 0x2519: /* ┙ */
+		case 0x251a: /* ┚ */
+		case 0x251b: /* ┛ */
+			XftDrawRect(draw, fg, ox+w2, oy, 1, h2);
+			XftDrawRect(draw, fg, ox, oy+h2, w2+1, 1);
+			break;
+
+		case 0x2551: /* ║ */
+			XftDrawRect(draw, fg, ox+w2-1, oy, 1, h);
+			XftDrawRect(draw, fg, ox+w2+1, oy, 1, h);
+			break;
+
+		case 0x2594: /* ▔ */
+			XftDrawRect(draw, fg, ox, oy+2, w, 1);
+			break;
+	
+		default:
+			XftDrawString32(draw, fg, fonts[style], ox, oy+fontascent, &c, 1);
+			break;
+	}
 
 	if (g->attr & DPY_UNDERLINE)
 		XftDrawRect(draw, fg,
