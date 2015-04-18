@@ -14,22 +14,34 @@ end
 
 local style_tab =
 {
-	["H1"] = {false, '<h1>', '</h1>'},
-	["H2"] = {false, '<h2>', '</h2>'},
-	["H3"] = {false, '<h3>', '</h3>'},
-	["H4"] = {false, '<h4>', '</h4>'},
-	["P"] =  {false, '<p>', '</p>'},
-	["L"] =  {false, '<li style="list-style-type: none;">', '</li>'},
-	["LB"] = {false, '<li>', '</li>'},
-	["Q"] =  {false, '<blockquote>', '</blockquote>'},
-	["V"] =  {false, '<blockquote>', '</blockquote>'},
-	["RAW"] = {false, '', ''},
-	["PRE"] = {true, '<pre>', '</pre>'}
+	["H1"] = {pre=false, list=false,
+		on='<h1>', off='</h1>'},
+	["H2"] = {pre=false, list=false,
+		on='<h2>', off='</h2>'},
+	["H3"] = {pre=false, list=false,
+		on='<h3>', off='</h3>'},
+	["H4"] = {pre=false, list=false,
+		on='<h4>', off='</h4>'},
+	["P"] =  {pre=false, list=false,
+		on='<p>', off='</p>'},
+	["L"] =  {pre=false, list=true,
+		on='<li style="list-style-type: none;">', off='</li>'},
+	["LB"] = {pre=false, list=true,
+		on='<li>', off='</li>'},
+	["Q"] =  {pre=false, list=false,
+		on='<blockquote>', off='</blockquote>'},
+	["V"] =  {pre=false, list=false,
+		on='<blockquote>', off='</blockquote>'},
+	["RAW"] = {pre=false, list=false,
+		on='', off=''},
+	["PRE"] = {pre=true, list=false,
+		on='<pre>', off='</pre>'}
 }
 
 local function callback(writer, document)
 	local settings = DocumentSet.addons.htmlexport
 	local currentpara = nil
+	local islist = false
 	
 	function changepara(newpara)
 		local currentstyle = style_tab[currentpara]
@@ -37,15 +49,25 @@ local function callback(writer, document)
 		
 		if (newpara ~= currentpara) or
 			not newpara or
-			not currentstyle[1] or
-			not newstyle[1] 
+			not currentstyle.pre or
+			not newstyle.pre
 		then
 			if currentstyle then
-				writer(currentstyle[3])
+				writer(currentstyle.off)
 			end
 			writer("\n")
+
+			if (not newstyle or not newstyle.list) and islist then
+				writer("</ul>\n")
+				islist = false
+			end
+			if (newstyle and newstyle.list) and not islist then
+				writer("<ul>\n")
+				islist = true
+			end
+
 			if newstyle then
-				writer(newstyle[2])
+				writer(newstyle.on)
 			end
 			currentpara = newpara
 		else
@@ -56,10 +78,9 @@ local function callback(writer, document)
 	return ExportFileUsingCallbacks(document,
 	{
 		prologue = function()
-			writer('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n')
-			writer('<html><head>\n')
-			writer('<meta http-equiv="Content-Type" content="text/html;charset=utf-8">\n')
-			writer('<meta name="generator" content="WordGrinder '..VERSION..'">\n')
+			writer('<html xmlns="http://www.w3.org/1999/xhtml"><head>\n')
+			writer('<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>\n')
+			writer('<meta name="generator" content="WordGrinder '..VERSION..'"/>\n')
 			writer('<title>', unhtml(document.name), '</title>\n')
 			writer('</head><body>\n')
 		end,
@@ -103,11 +124,9 @@ local function callback(writer, document)
 		end,
 		
 		list_start = function()
-			writer('<ul>')
 		end,
 		
 		list_end = function()
-			writer('</ul>')
 		end,
 		
 		paragraph_start = function(style)
