@@ -6,8 +6,7 @@
 -- Fetch the maximum allowed width.
 
 function GetMaximumAllowedWidth(screenwidth)
-	local addons = DocumentSet.addons or {}
-	local settings = addons.widescreen
+	local settings = GlobalSettings.widescreen
 	if not settings or not settings.enabled then
 		return screenwidth
 	end
@@ -19,7 +18,7 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.widescreen = DocumentSet.addons.widescreen or {
+		GlobalSettings.widescreen = GlobalSettings.widescreen or {
 			enabled = false,
 			maxwidth = 80
 		}
@@ -32,7 +31,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureWidescreen()
-	local settings = DocumentSet.addons.widescreen
+	local settings = GlobalSettings.widescreen
 
 	local enabled_checkbox =
 		Form.Checkbox {
@@ -86,7 +85,7 @@ function Cmd.ConfigureWidescreen()
 		else
 			settings.enabled = enabled
 			settings.maxwidth = maxwidth
-			DocumentSet:touch()
+			SaveGlobalSettings()
 
 			return true
 		end

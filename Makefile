@@ -91,12 +91,16 @@ install: bin/wordgrinder bin/wordgrinder.1
 	
 # --- Builds the script blob ------------------------------------------------
 
+# Each script is loaded in this order, which is important.
 LUASCRIPTS := \
 	src/lua/_prologue.lua \
+	src/lua/main.lua \
+	src/lua/cli.lua \
 	src/lua/xml.lua \
 	src/lua/utils.lua \
 	src/lua/events.lua \
 	src/lua/redraw.lua \
+	src/lua/settings.lua \
 	src/lua/document.lua \
 	src/lua/forms.lua \
 	src/lua/ui.lua \
@@ -123,8 +127,6 @@ LUASCRIPTS := \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/menu.lua \
-	src/lua/cli.lua \
-	src/lua/main.lua \
 
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
