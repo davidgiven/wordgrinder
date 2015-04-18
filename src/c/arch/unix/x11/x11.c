@@ -101,17 +101,17 @@ static void check_font(XftFont* font, const char* name)
 
 static void load_fonts(void)
 {
-	lua_getglobal(L, "X11_FONT_BOLD");
+	lua_getglobal(L, "X11_BOLD_MODIFIER");
 	const char* bold = lua_tostring(L, -1);
 	if (!bold)
 		bold = ":bold";
 
-	lua_getglobal(L, "X11_FONT_ITALIC");
+	lua_getglobal(L, "X11_ITALIC_MODIFIER");
 	const char* italic = lua_tostring(L, -1);
 	if (!italic)
 		italic = ":italic";
 
-	lua_getglobal(L, "X11_FONT_BASENAME");
+	lua_getglobal(L, "X11_FONT");
 	const char* normalfont = lua_tostring(L, -1);
 	if (!normalfont)
 		normalfont = "monospace";
@@ -169,10 +169,10 @@ void dpy_start(void)
 	XMapWindow(display, window);
 
 	load_fonts();
-	colours[BLACK]  = load_colour("X11_BLACK",  "#000000");
-	colours[DIM]    = load_colour("X11_DIM",    "#555555");
-	colours[NORMAL] = load_colour("X11_NORMAL", "#888888");
-	colours[BRIGHT] = load_colour("X11_BRIGHT", "#ffffff");
+	colours[BLACK]  = load_colour("X11_BLACK_COLOUR",  "#000000");
+	colours[DIM]    = load_colour("X11_DIM_COLOUR",    "#555555");
+	colours[NORMAL] = load_colour("X11_NORMAL_COLOUR", "#888888");
+	colours[BRIGHT] = load_colour("X11_BRIGHT_COLOUR", "#ffffff");
 
 	{
 		XGlyphInfo xgi;
