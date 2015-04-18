@@ -145,8 +145,8 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		
 		["KEY_UP"] = navigate,
 		["KEY_DOWN"] = navigate,
-		["KEY_NPAGE"] = navigate,
-		["KEY_PPAGE"] = navigate,
+		["KEY_PGDN"] = navigate,
+		["KEY_PGUP"] = navigate,
 			
 		Form.Label {
 			x1 = 1, y1 = 1,
