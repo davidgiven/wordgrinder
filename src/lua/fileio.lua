@@ -105,13 +105,11 @@ local function writetostream(object, writes, writei)
 	return true
 end
 
-function SaveDocumentSetRaw(filename)
+function SaveToStream(filename, object)
 	local fp, e = io.open(filename, "wb")
 	if not fp then
 		return false, e
 	end
-	
-	DocumentSet:purge()
 	
 	local fpw = fp.write
 	
@@ -127,14 +125,24 @@ function SaveDocumentSetRaw(filename)
 		s = writeu8(s)
 		ss[#ss+1] = s
 	end
-	
-	fp:write(ZMAGIC, "\n")
-	local r = writetostream(DocumentSet, writes, writei)
+
+	local r = writetostream(object, writes, writei)
 	local s = compress(table.concat(ss))	
-	fp:write(s)
-	fp:close()
-	
-	return r
+
+	local e
+	if r then
+		r, e = fp:write(ZMAGIC, "\n", s)
+	end
+	if r then
+		r, e = fp:close()
+	end
+
+	return r, e
+end
+
+function SaveDocumentSetRaw(filename)
+	DocumentSet:purge()
+	return SaveToStream(filename, DocumentSet)
 end
 
 function Cmd.SaveCurrentDocumentAs(filename)
@@ -285,7 +293,7 @@ local function loadfromstream(fp)
 	return load()		
 end
 
-local function loadfromstreamz(fp)
+function loadfromstreamz(fp)
 	local cache = {}
 	local load
 	local data = decompress(fp:read("*a"))
@@ -420,7 +428,7 @@ local function loadfromstreamz(fp)
 	return load()		
 end
 
-local function loaddocument(filename)
+function LoadFromStream(filename)
 	local fp, e = io.open(filename, "rb")
 	if not fp then
 		return nil, ("'"..filename.."' could not be opened: "..e)
@@ -439,10 +447,12 @@ local function loaddocument(filename)
 	local d, e = loader(fp)
 	fp:close()
 	
-	if not d then
-		return nil, e
-	end
-	
+	return d, e 
+end
+
+local function loaddocument(filename)
+	local d = LoadFromStream(filename)
+
 	-- This should not be necessary, but we do it anyway just to be sure.
 	
 	d:purge()

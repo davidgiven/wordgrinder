@@ -45,6 +45,8 @@ end
 -- loop.
 
 function WordProcessor(filename)
+	LoadGlobalSettings()
+
 	do
 		local f, e = loadfile(configfile)
 		if e and not e:find("No such file or directory") then

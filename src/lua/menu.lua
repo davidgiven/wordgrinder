@@ -94,13 +94,17 @@ local ExportMenu = addmenu("Export current document",
 --	{"FErtf",  "R", "Export to Rtf...",        nil,         Cmd.ExportRTFFile},
 })
 
-local SettingsMenu = addmenu("Settings",
+local DocumentSettingsMenu = addmenu("Document settings",
 {
     {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
     {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
     {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
 	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
-	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},ConfigureWidescreen
+})
+
+local GlobalSettingsMenu = addmenu("Global settings",
+{
+	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},
 })
 
 local FileMenu = addmenu("File",
@@ -115,7 +119,8 @@ local FileMenu = addmenu("File",
 	{"FE",         "E", "Export current document ▷", nil,         ExportMenu},
 	{"Fdocman",    "D", "Manage documents...",       nil,         Cmd.ManageDocumentsUI},
 	"-",
-	{"Fsettings",  "T", "Settings ▷",                nil,         SettingsMenu},
+	{"Fsettings",  "T", "Document settings ▷",       nil,         DocumentSettingsMenu},
+	{"Fglobals",   "G", "Global settings ▷",         nil,         GlobalSettingsMenu},
 	"-",
 	{"Fabout",     "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
 	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
