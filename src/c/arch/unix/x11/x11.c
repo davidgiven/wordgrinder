@@ -14,8 +14,6 @@
 #include <ctype.h>
 #include <poll.h>
 
-#define KEY_TIMEOUT (KEY_MAX + 1)
-
 #define VKM_SHIFT     0x02000000
 #define VKM_CTRL      0x04000000
 #define VKM_CTRLASCII 0x08000000
@@ -282,6 +280,11 @@ static void render_glyph(struct glyph* g, int x, int y)
 	if (c)
 		XftDrawString32(draw, fg, fonts[style],
 			x*fontwidth, fontascent + y*fontheight, &c, 1);
+
+	if (g->attr & DPY_UNDERLINE)
+		XftDrawRect(draw, fg,
+			x*fontwidth, y*fontheight + fontascent + 2,
+			fontwidth, 1);
 }
 
 static void redraw(void)
