@@ -567,6 +567,13 @@ function Cmd.ToggleMark()
 	return true
 end
 
+function Cmd.SetMark()
+	if not Document.mp then
+		return Cmd.ToggleMark()
+	end
+	return true
+end
+
 function Cmd.UnsetMark()
 	Document.mp = nil
 	Document.mw = nil
@@ -574,6 +581,13 @@ function Cmd.UnsetMark()
 	
 	QueueRedraw()
 	return true
+end
+
+function Cmd.SelectWord()
+	return Cmd.UnsetMark() and
+		Cmd.GotoBeginningOfWord() and
+		Cmd.SetMark() and
+		Cmd.GotoEndOfWord()
 end
 
 function Cmd.ChangeDocument(name)

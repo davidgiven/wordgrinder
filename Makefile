@@ -42,7 +42,7 @@ all: unix x11unix
 endif
 
 VERSION := 0.5.3
-FILEFORMAT := 4
+FILEFORMAT := 5
 DATE := $(shell date +'%-d %B %Y')
 
 override CFLAGS += \
