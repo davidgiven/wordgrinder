@@ -47,7 +47,8 @@ enum
 
 static Display* display;
 static Window window;
-static XComposeStatus compose;
+static XIC xic;
+static XIM xim;
 static XftFont* fonts[4];
 static XftDraw* draw;
 static int fontwidth, fontheight, fontascent;
@@ -163,7 +164,7 @@ void dpy_start(void)
 	window = XCreateSimpleWindow(display, RootWindow(display, 0),
 					  0, 0, 800, 600, 0, 0, BlackPixel(display, 0));
 	XSelectInput(display, window,
-		StructureNotifyMask | ExposureMask | KeyPressMask);
+		StructureNotifyMask | ExposureMask | KeyPressMask | KeymapStateMask);
 	XMapWindow(display, window);
 
 	load_fonts();
@@ -185,6 +186,17 @@ void dpy_start(void)
 	draw = XftDrawCreate(display, window,
 		DefaultVisual(display, DefaultScreen(display)),
 		DefaultColormap(display, DefaultScreen(display)));
+
+	xim = XOpenIM(display, NULL, NULL, NULL);
+	if (xim)
+		xic = XCreateIC(xim, XNInputStyle,
+			XIMPreeditNothing | XIMStatusNothing, XNClientWindow, window, NULL);
+	if (!xim || !xic)
+	{
+		fprintf(stderr, "Error: couldn't set up input methods\n");
+		exit(1);
+	}
+	XSetICFocus(xic);
 
 	screenwidth = screenheight = -1;
 	cursorx = cursory = 0;
@@ -399,6 +411,9 @@ uni_t dpy_getchar(int timeout)
 		XEvent e;
 		XNextEvent(display, &e);
 
+		if (XFilterEvent(&e, window))
+			continue;
+
 		switch (e.type)
 		{
 			case MapNotify:
@@ -429,20 +444,18 @@ uni_t dpy_getchar(int timeout)
 			}
 
 			case MappingNotify:
+			case KeymapNotify:
 				XRefreshKeyboardMapping(&e.xmapping);
 				break;
 
 			case KeyPress:
 			{
-				XKeyEvent* xke = &e.xkey;
+				XKeyPressedEvent* xke = &e.xkey;
 				KeySym keysym;
 				char buffer[32];
-				int charcount = XLookupString(xke, buffer, sizeof(buffer)-1,
-					&keysym, &compose);
-				buffer[charcount] = '\0';
-
-				const char* p = buffer;
-				uni_t c = readu8(&p);
+				Status status = 0;
+                int charcount = Xutf8LookupString(xic, xke,
+					buffer, sizeof(buffer)-1, &keysym, &status);
 
 				int mods = 0;
 				if (xke->state & ShiftMask)
@@ -456,16 +469,26 @@ uni_t dpy_getchar(int timeout)
 					if (!IsModifierKey(keysym))
 						push_key(-(keysym | mods));
 				}
-				else if (c < 32)
-				{
-					/* Ctrl + letter key */
-					push_key(-(VKM_CTRLASCII | c | mods));
-				}
 				else
 				{
-					if (xke->state & Mod1Mask)
-						push_key(-XK_Escape);
-					push_key(c);
+					const char* p = buffer;
+
+					while ((p-buffer) < charcount)
+					{
+						uni_t c = readu8(&p);
+
+						if (c < 32)
+						{
+							/* Ctrl + letter key */
+							push_key(-(VKM_CTRLASCII | c | mods));
+						}
+						else
+						{
+							if (xke->state & Mod1Mask)
+								push_key(-XK_Escape);
+							push_key(c);
+						}
+					}
 				}
 				break;
 			}
