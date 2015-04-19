@@ -1,0 +1,10 @@
+/* © 2008 David Given.
+ * WordGrinder is licensed under the MIT open source license. See the COPYING
+ * file in this distribution for the full text.
+ */
+
+#include "winuser.h"
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "src/c/arch/win32/manifest.xml"
+101 ICON DISCARDABLE "src/c/arch/win32/icon.ico"
+
