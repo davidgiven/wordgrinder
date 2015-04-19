@@ -805,12 +805,12 @@ function Cmd.Find(findtext, replacetext)
 	end
 	
 	for i = 2, (#patterns - 1) do
-		patterns[i] = "^"..patterns[i].."$"
+		patterns[i] = "^%c*"..patterns[i].."%c*$"
 	end
 	
 	if (#patterns > 1) then
-		patterns[1] = patterns[1].."$"
-		patterns[#patterns] = "^"..patterns[#patterns]
+		patterns[1] = patterns[1].."%c*$"
+		patterns[#patterns] = "^%c*"..patterns[#patterns]
 	end
 	
 	DocumentSet.findtext = patterns
