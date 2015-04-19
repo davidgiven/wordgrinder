@@ -163,6 +163,9 @@ void dpy_start(void)
 
 	window = XCreateSimpleWindow(display, RootWindow(display, 0),
 					  0, 0, 800, 600, 0, 0, BlackPixel(display, 0));
+	XStoreName(display, window, "WordGrinder " VERSION);
+	XSetClassHint(display, window,
+		&((XClassHint) { "WordGrinder", "WordGrinder" }));
 	XSelectInput(display, window,
 		StructureNotifyMask | ExposureMask | KeyPressMask | KeymapStateMask);
 	XMapWindow(display, window);
