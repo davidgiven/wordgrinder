@@ -5,14 +5,12 @@
 
 #include "globals.h"
 #include <string.h>
-#include <curses.h>
 #include <wctype.h>
 #include <sys/time.h>
 #include <time.h>
-#include <X11/Xlib.h>
-#include <Xft/Xft.h>
 #include <ctype.h>
 #include <poll.h>
+#include "x11.h"
 
 #define VKM_SHIFT     0x02000000
 #define VKM_CTRL      0x04000000
@@ -22,20 +20,10 @@
 #define VK_TIMEOUT    0x20000000
 #define VK_REDRAW     0x30000000
 
-struct glyph
+struct gg
 {
 	unsigned c : 24;
 	unsigned attr : 8; 
-};
-
-enum
-{
-	BLACK = 0,
-	DIM,
-	NORMAL,
-	BRIGHT,
-
-	NUM_COLOURS
 };
 
 enum
@@ -45,20 +33,21 @@ enum
 	BOLD = (1<<1),
 };
 
-static Display* display;
-static Window window;
+Display* display;
+Window window;
+XftColor colours[NUM_COLOURS];
+int fontwidth, fontheight, fontascent;
+
 static XIC xic;
 static XIM xim;
-static XftFont* fonts[4];
 static XftDraw* draw;
-static int fontwidth, fontheight, fontascent;
+static GC gc;
 
 static int screenwidth, screenheight;
 static int cursorx, cursory;
-static struct glyph* frontbuffer = NULL;
+static unsigned int* frontbuffer = NULL;
+static unsigned int* backbuffer = NULL;
 static int defaultattr = 0;
-
-static XftColor colours[NUM_COLOURS];
 
 static uni_t queued[4];
 static int numqueued = 0;
@@ -84,52 +73,20 @@ void push_key(uni_t c)
 	numqueued++;
 }
 
+static void sput(unsigned int* screen, int x, int y, unsigned int id)
+{
+	if (!screen)
+		return;
+	if ((x < 0) || (x >= screenwidth))
+		return;
+	if ((y < 0) || (y >= screenheight))
+		return;
+
+	screen[y*screenwidth + x] = id;
+}
 
 void dpy_init(const char* argv[])
 {
-}
-
-static void check_font(XftFont* font, const char* name)
-{
-	if (!font)
-	{
-		fprintf(stderr, "Error: font variant '%s' could not be loaded\n", name);
-		exit(1);
-	}
-}
-
-static void load_fonts(void)
-{
-	lua_getglobal(L, "X11_BOLD_MODIFIER");
-	const char* bold = lua_tostring(L, -1);
-	if (!bold)
-		bold = ":bold";
-
-	lua_getglobal(L, "X11_ITALIC_MODIFIER");
-	const char* italic = lua_tostring(L, -1);
-	if (!italic)
-		italic = ":italic";
-
-	lua_getglobal(L, "X11_FONT");
-	const char* normalfont = lua_tostring(L, -1);
-	if (!normalfont)
-		normalfont = "monospace";
-	char buffer[strlen(normalfont) + strlen(bold) + strlen(italic)];
-
-	fonts[REGULAR] = XftFontOpenName(display, DefaultScreen(display), normalfont);
-	check_font(fonts[REGULAR], normalfont);
-
-	sprintf(buffer, "%s%s", normalfont, bold);
-	fonts[BOLD] = XftFontOpenName(display, DefaultScreen(display), buffer);
-	check_font(fonts[BOLD], buffer);
-
-	sprintf(buffer, "%s%s", normalfont, italic);
-	fonts[ITALIC] = XftFontOpenName(display, DefaultScreen(display), buffer);
-	check_font(fonts[ITALIC], buffer);
-
-	sprintf(buffer, "%s%s%s", normalfont, bold, italic);
-	fonts[BOLD|ITALIC] = XftFontOpenName(display, DefaultScreen(display), buffer);
-	check_font(fonts[BOLD|ITALIC], buffer);
 }
 
 static XftColor load_colour(const char* name, const char* fallback)
@@ -167,22 +124,13 @@ void dpy_start(void)
 		StructureNotifyMask | ExposureMask | KeyPressMask | KeymapStateMask);
 	XMapWindow(display, window);
 
-	load_fonts();
-	colours[BLACK]  = load_colour("X11_BLACK_COLOUR",  "#000000");
-	colours[DIM]    = load_colour("X11_DIM_COLOUR",    "#555555");
-	colours[NORMAL] = load_colour("X11_NORMAL_COLOUR", "#888888");
-	colours[BRIGHT] = load_colour("X11_BRIGHT_COLOUR", "#ffffff");
+	glyphcache_init();
 
-	{
-		XGlyphInfo xgi;
-		XftFont* font = fonts[BOLD|ITALIC];
-		XftTextExtents8(display, font, (FcChar8*) "M", 1, &xgi);
-		fontwidth = xgi.xOff;
-		fontheight = font->height + 1;
-		fontascent = font->ascent;
-	}
+	colours[COLOUR_BLACK]  = load_colour("X11_BLACK_COLOUR",  "#000000");
+	colours[COLOUR_DIM]    = load_colour("X11_DIM_COLOUR",    "#555555");
+	colours[COLOUR_NORMAL] = load_colour("X11_NORMAL_COLOUR", "#888888");
+	colours[COLOUR_BRIGHT] = load_colour("X11_BRIGHT_COLOUR", "#ffffff");
 
-	
 	draw = XftDrawCreate(display, window,
 		DefaultVisual(display, DefaultScreen(display)),
 		DefaultColormap(display, DefaultScreen(display)));
@@ -198,7 +146,16 @@ void dpy_start(void)
 	}
 	XSetICFocus(xic);
 
-	screenwidth = screenheight = -1;
+	{
+		XGCValues gcv =
+		{
+			.graphics_exposures = false
+		};
+
+		gc = XCreateGC(display, window, GCGraphicsExposures, &gcv);
+	}
+
+	screenwidth = screenheight = 0;
 	cursorx = cursory = 0;
 }
 
@@ -219,11 +176,20 @@ void dpy_getscreensize(int* x, int* y)
 
 void dpy_sync(void)
 {
+	if (!frontbuffer)
+		frontbuffer = calloc(screenwidth * screenheight, sizeof(unsigned int));
 	redraw();
 }
 
 void dpy_setcursor(int x, int y)
 {
+	if (frontbuffer)
+	{
+		for (int xx=(cursorx-1); xx<=(cursorx+1); xx++)
+			for (int yy=(cursory-1); yy<=(cursory+1); yy++)
+				sput(frontbuffer, xx, yy, 0);
+	}
+
 	cursorx = x;
 	cursory = y;
 }
@@ -236,140 +202,48 @@ void dpy_setattr(int andmask, int ormask)
 
 void dpy_writechar(int x, int y, uni_t c)
 {
-	if (!frontbuffer
-			|| (x < 0) || (y < 0) || (x >= screenwidth) || (y >= screenheight))
-		return;
-
-	struct glyph* g = &frontbuffer[x + y*screenwidth];
-	g->c = c;
-	g->attr = defaultattr;
+	unsigned int id = glyphcache_id(c, defaultattr);
+	sput(backbuffer, x, y, id);
+	if (emu_wcwidth(c) == 2)
+		sput(backbuffer, x+1, y, 0);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
 	for (int y=y1; y<=y2; y++)
 	{
-		struct glyph* p = &frontbuffer[y * screenwidth];
+		unsigned int* p = &backbuffer[y * screenwidth];
 		for (int x=x1; x<=x2; x++)
-		{
-			struct glyph* g = &p[x];
-			g->c = ' ';
-			g->attr = defaultattr;
-		}
+			p[x] = glyphcache_id(' ' , defaultattr);
 	}
 }
 
-static void render_glyph(struct glyph* g, int x, int y)
+static void render_glyph(unsigned int id, int x, int y)
 {
-	FcChar32 c = g->c;
-	XftColor* fg;
-	XftColor* bg;
-
-	if (g->attr & DPY_BRIGHT)
-		fg = &colours[BRIGHT];
-	else if (g->attr & DPY_DIM)
-		fg = &colours[DIM];
-	else
-		fg = &colours[NORMAL];
-
-	if (g->attr & DPY_REVERSE)
-	{
-		bg = fg;
-		fg = &colours[BLACK];
-	}
-	else
-		bg = &colours[BLACK];
-
-	int style = REGULAR;
-	if (g->attr & DPY_BOLD)
-		style |= BOLD;
-	if (g->attr & DPY_ITALIC)
-		style |= ITALIC;
-
-	int ox = x*fontwidth;
-	int oy = y*fontheight;
-	int w = (fontwidth+1) & ~1;
-	int w2 = w/2;
-	int h = (fontheight+1) & ~1;
-	int h2 = h/2;
-
-	XftDrawRect(draw, bg, ox, oy, w, h);
-
-	switch (c)
-	{
-		case 32:
-		case 160: /* Non-breaking space */
-			break;
-
-		case 0x2500: /* ─ */
-		case 0x2501: /* ━ */
-			XftDrawRect(draw, fg, ox, oy+h2, w, 1);
-			break;
-
-		case 0x2502: /* │ */
-		case 0x2503: /* ┃ */
-			XftDrawRect(draw, fg, ox+w2, oy, 1, h);
-			break;
-
-		case 0x250c: /* ┌ */
-		case 0x250d: /* ┍ */
-		case 0x250e: /* ┎ */
-		case 0x250f: /* ┏ */
-			XftDrawRect(draw, fg, ox+w2, oy+h2, 1, h2);
-			XftDrawRect(draw, fg, ox+w2, oy+h2, w2, 1);
-			break;
-
-		case 0x2510: /* ┐ */
-		case 0x2511: /* ┑ */
-		case 0x2512: /* ┒ */
-		case 0x2513: /* ┓ */
-			XftDrawRect(draw, fg, ox+w2, oy+h2, 1, h2);
-			XftDrawRect(draw, fg, ox, oy+h2, w2, 1);
-			break;
-
-		case 0x2514: /* └ */
-		case 0x2515: /* ┕ */
-		case 0x2516: /* ┖ */
-		case 0x2517: /* ┗ */
-			XftDrawRect(draw, fg, ox+w2, oy, 1, h2);
-			XftDrawRect(draw, fg, ox+w2, oy+h2, w2, 1);
-			break;
-
-		case 0x2518: /* ┘ */
-		case 0x2519: /* ┙ */
-		case 0x251a: /* ┚ */
-		case 0x251b: /* ┛ */
-			XftDrawRect(draw, fg, ox+w2, oy, 1, h2);
-			XftDrawRect(draw, fg, ox, oy+h2, w2+1, 1);
-			break;
-
-		case 0x2551: /* ║ */
-			XftDrawRect(draw, fg, ox+w2-1, oy, 1, h);
-			XftDrawRect(draw, fg, ox+w2+1, oy, 1, h);
-			break;
-
-		case 0x2594: /* ▔ */
-			XftDrawRect(draw, fg, ox, oy+2, w, 1);
-			break;
-	
-		default:
-			XftDrawString32(draw, fg, fonts[style], ox, oy+fontascent, &c, 1);
-			break;
-	}
-
-	if (g->attr & DPY_UNDERLINE)
-		XftDrawRect(draw, fg,
-			x*fontwidth, y*fontheight + fontascent + 2,
-			fontwidth, 1);
+	struct glyph* glyph = glyphcache_getglyph(id);
+	if (glyph && glyph->pixmap)
+		XCopyArea(display, glyph->pixmap, window, gc,
+			0, 0, glyph->width, fontheight,
+			x*fontwidth, y*fontheight);
 }
 
 static void redraw(void)
 {
+	if (!frontbuffer || !backbuffer)
+		return;
+
 	for (int y = 0; y<screenheight; y++)
 	{
-		struct glyph* p = &frontbuffer[y * screenwidth];
+		unsigned int* frontp = &frontbuffer[y * screenwidth];
+		unsigned int* backp = &backbuffer[y * screenwidth];
 		for (int x = 0; x<screenwidth; x++)
-			render_glyph(&p[x], x, y);
+		{
+			if (frontp[x] != backp[x])
+			{
+				frontp[x] = backp[x];
+				render_glyph(frontp[x], x, y);
+			}
+		}
 	}
 
 	/* Draw a caret where the cursor should be. */
@@ -379,7 +253,7 @@ static void redraw(void)
 		x = 0;
 	int y = cursory*fontheight;
 	int h = fontheight;
-	XftColor* c = &colours[BRIGHT];
+	XftColor* c = &colours[COLOUR_BRIGHT];
 
 	XftDrawRect(draw, c, x,   y,   1, h);
 	XftDrawRect(draw, c, x-1, y-1, 1, 1);
@@ -420,8 +294,21 @@ uni_t dpy_getchar(int timeout)
 				break;
 
 			case Expose:
+			{
+				/* Mark some of the screen as needing redrawing. */
+
+				if (frontbuffer)
+				{
+					for (int y=0; y<screenheight; y++)
+					{
+						unsigned int* p = &frontbuffer[y * screenwidth];
+						for (int x=0; x<screenwidth; x++)
+							p[x] = 0;
+					}
+				}
 				redraw();
 				break;
+			}
 
 			case ConfigureNotify:
 			{
@@ -436,7 +323,10 @@ uni_t dpy_getchar(int timeout)
 
 					if (frontbuffer)
 						free(frontbuffer);
-					frontbuffer = calloc(screenwidth * screenheight, sizeof(struct glyph));
+					frontbuffer = NULL;
+					if (backbuffer)
+						free(backbuffer);
+					backbuffer = calloc(screenwidth * screenheight, sizeof(unsigned int));
 					push_key(-VK_RESIZE);
 				}
 
