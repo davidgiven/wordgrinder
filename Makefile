@@ -238,6 +238,7 @@ endef
 define build-wordgrinder-x11
 
 $(call cfile, src/c/arch/unix/x11/x11.c)
+$(call cfile, src/c/arch/unix/x11/glyphcache.c)
 
 endef
 
