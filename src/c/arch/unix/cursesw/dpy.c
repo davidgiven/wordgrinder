@@ -63,7 +63,14 @@ void dpy_setattr(int andmask, int ormask)
 	attr |= ormask;
 
 	int cattr = 0;
-	if (attr & (DPY_ITALIC|DPY_BOLD|DPY_BRIGHT))
+#if defined A_ITALIC
+	if (attr & DPY_ITALIC)
+		cattr |= A_ITALIC;
+#else
+	if (attr & DPY_ITALIC)
+		cattr |= A_BOLD;
+#endif
+	if (attr & (DPY_BOLD|DPY_BRIGHT))
 		cattr |= A_BOLD;
 	if (attr & DPY_DIM)
 		cattr |= A_DIM;
