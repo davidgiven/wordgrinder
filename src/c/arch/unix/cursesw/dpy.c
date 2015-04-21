@@ -12,6 +12,10 @@
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
 
+#if defined A_ITALIC
+static bool has_italics = false;
+#endif
+
 void dpy_init(const char* argv[])
 {
 }
@@ -29,6 +33,10 @@ void dpy_start(void)
 	intrflush(stdscr, FALSE);
 	//notimeout(stdscr, TRUE);
 	keypad(stdscr, TRUE);
+
+	#if defined A_ITALIC
+		has_italics = !!tigetstr("sitm");
+	#endif
 }
 
 void dpy_shutdown(void)
@@ -63,13 +71,17 @@ void dpy_setattr(int andmask, int ormask)
 	attr |= ormask;
 
 	int cattr = 0;
-#if defined A_ITALIC
 	if (attr & DPY_ITALIC)
-		cattr |= A_ITALIC;
-#else
-	if (attr & DPY_ITALIC)
-		cattr |= A_BOLD;
-#endif
+	{
+		#if defined A_ITALIC
+			if (has_italics)
+				cattr |= A_ITALIC;
+			else
+				cattr |= A_BOLD;
+		#else
+			cattr |= A_BOLD;
+		#endif
+	}
 	if (attr & (DPY_BOLD|DPY_BRIGHT))
 		cattr |= A_BOLD;
 	if (attr & DPY_DIM)
