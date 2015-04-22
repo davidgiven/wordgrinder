@@ -20,8 +20,17 @@ HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
 
 local configfile = HOME .. "/.wordgrinder.lua"
 
+local oldcp, oldcw, oldco
 function QueueRedraw()
 	redrawpending = true
+	if (oldcp ~= Document.cp) or (oldcw ~= Document.cw) or
+			(oldco ~= Document.co) then
+		oldcp = Document.cp
+		oldcw = Document.cw
+		oldco = Document.co
+		FireAsyncEvent(Event.Moved)
+	end
+
 	if not Document.wrapwidth then
 		ResizeScreen()
 	end
@@ -41,6 +50,17 @@ function ResetDocumentSet()
 	FireEvent(Event.RegisterAddons)
 end
 
+do
+	local function cb(event, token)
+		oldcp = nil
+		oldcw = nil
+		oldco = nil
+	end
+
+	AddEventListener(Event.DocumentLoaded, cb)
+	AddEventListener(Event.DocumentCreated, cb)
+end
+	
 -- This function contains the word processor proper, including the main event
 -- loop.
 
@@ -61,6 +81,7 @@ function WordProcessor(filename)
 	wg.initscreen()
 	ResizeScreen()
 	RedrawScreen()
+	FireEvent(Event.DocumentLoaded)
 	
 	if filename then
 		Cmd.LoadDocumentSet(filename)
@@ -89,6 +110,7 @@ function WordProcessor(filename)
 				DocumentSet.justchanged = false
 			end
 			
+			FlushAsyncEvents()
 			FireEvent(Event.WaitingForUser)
 			local c = "KEY_TIMEOUT"
 			while (c == "KEY_TIMEOUT") do
