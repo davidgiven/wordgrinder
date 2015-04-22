@@ -96,7 +96,6 @@ LUASCRIPTS := \
 	src/lua/_prologue.lua \
 	src/lua/events.lua \
 	src/lua/main.lua \
-	src/lua/cli.lua \
 	src/lua/xml.lua \
 	src/lua/utils.lua \
 	src/lua/redraw.lua \
@@ -130,6 +129,7 @@ LUASCRIPTS := \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/menu.lua \
+	src/lua/cli.lua \
 
 .obj/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
