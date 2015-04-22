@@ -8,6 +8,8 @@
 #include "unzip.h"
 #include "zip.h"
 
+static const int STACKSIZE = 64;
+
 static int decompress_cb(lua_State* L)
 {
 	size_t srcsize;
@@ -24,6 +26,7 @@ static int decompress_cb(lua_State* L)
 	zs.avail_in = srcsize;
 	zs.next_in = (uint8_t*) srcbuffer;
 
+	luaL_checkstack(L, STACKSIZE, "out of memory");
 	do
 	{
 		zs.avail_out = sizeof(outputbuffer);
@@ -42,6 +45,14 @@ static int decompress_cb(lua_State* L)
 		int have = sizeof(outputbuffer) - zs.avail_out;
 		lua_pushlstring(L, (char*) outputbuffer, have);
 		outputchunks++;
+
+		if (outputchunks == (STACKSIZE-1))
+		{
+			/* Stack full! Concatenate what we've got, to empty the stack, and
+			 * keep going. This will only happen on very large input files. */
+			lua_concat(L, outputchunks);
+			outputchunks = 1;
+		}
 	}
 	while (i != Z_STREAM_END);
 
@@ -67,6 +78,7 @@ static int compress_cb(lua_State* L)
 	zs.avail_in = srcsize;
 	zs.next_in = (uint8_t*) srcbuffer;
 
+	luaL_checkstack(L, STACKSIZE, "out of memory");
 	do
 	{
 		zs.avail_out = sizeof(outputbuffer);
@@ -77,6 +89,14 @@ static int compress_cb(lua_State* L)
 		int have = sizeof(outputbuffer) - zs.avail_out;
 		lua_pushlstring(L, (char*) outputbuffer, have);
 		outputchunks++;
+
+		if (outputchunks == (STACKSIZE-1))
+		{
+			/* Stack full! Concatenate what we've got, to empty the stack, and
+			 * keep going. This will only happen on very large input files. */
+			lua_concat(L, outputchunks);
+			outputchunks = 1;
+		}
 	}
 	while (i != Z_STREAM_END);
 
