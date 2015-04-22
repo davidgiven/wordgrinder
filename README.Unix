@@ -30,6 +30,9 @@ WordGrinder needs the following packages installed:
  - ncursesw, the wide-character version of curses. This is supplied with
    most systems.
    
+ - an X development kit including Xft (if you want the X frontend). This
+   is supplied with most systems.
+
  - Lua 5.2, the programming language. This is available from:
      http://www.lua.org/
      
@@ -48,11 +51,11 @@ WordGrinder needs the following packages installed:
 If you have Debian, you've already got all these. Merely install these
 packages:
 
-  libncursesw5-dev liblua5.2-dev lua-filesystem-dev zlib1g-dev
+  libncursesw5-dev liblua5.2-dev lua-filesystem-dev zlib1g-dev libxft-dev
 
 To build, simply do:
 
-  make
+  make -j
   
 To install, do:
 
@@ -117,7 +120,9 @@ WordGrinder 0.5.3: 2015-04-18: New X11 frontend (actual bold and italic on
 Linux machines!); shift+cursor keys starts a selection; more HTML emission
 fixes; non-document persistent settings; global key maps (currently via a
 configurationfile); search works properly across words with markup; italic
-display in a terminal (if you have a new enough version of ncurses).
+display in a terminal (if you have a new enough version of ncurses); more
+traditional charstyle selection (you can press ^B at the beginning of words
+now!).
 
 WordGrinder 0.5.2.1: 2015-02-21: Minor bugfixes: build system fixes; updated
 minizip to a version which builds better on Ubuntu; OSX Homebrew build system;

@@ -279,6 +279,7 @@ static int insertintoword_cb(lua_State* L)
 	size_t insbytes;
 	const char* ins = luaL_checklstring(L, 2, &insbytes);
 	int offset = luaL_checkint(L, 3) - 1;
+	int newstate = luaL_checkint(L, 4);
 
 	char dest[srcbytes + insbytes + OVERHEAD];
 	char* p = dest;
@@ -295,8 +296,7 @@ static int insertintoword_cb(lua_State* L)
 
 		if (!copied && ((s - src) >= offset))
 		{
-			int ss = 0;
-			while (copy(&p, &dstate, &ins, &ss, 0, STYLE_ALL))
+			while (copy(&p, &dstate, &ins, &newstate, 0, STYLE_ALL))
 				;
 
 			insend = p - dest;

@@ -23,16 +23,18 @@ local configfile = HOME .. "/.wordgrinder.lua"
 local oldcp, oldcw, oldco
 function QueueRedraw()
 	redrawpending = true
-	if (oldcp ~= Document.cp) or (oldcw ~= Document.cw) or
-			(oldco ~= Document.co) then
-		oldcp = Document.cp
-		oldcw = Document.cw
-		oldco = Document.co
-		FireAsyncEvent(Event.Moved)
-	end
+	if Document then
+		if (oldcp ~= Document.cp) or (oldcw ~= Document.cw) or
+				(oldco ~= Document.co) then
+			oldcp = Document.cp
+			oldcw = Document.cw
+			oldco = Document.co
+			FireAsyncEvent(Event.Moved)
+		end
 
-	if not Document.wrapwidth then
-		ResizeScreen()
+		if not Document.wrapwidth then
+			ResizeScreen()
+		end
 	end
 end
 

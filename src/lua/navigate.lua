@@ -169,7 +169,8 @@ function Cmd.InsertStringIntoWord(c)
 	local paragraph = Document[Document.cp]
 	local word = paragraph[Document.cw]
 	
-	local s, co = InsertIntoWord(word.text, c, Document.co)
+	local s, co = InsertIntoWord(word.text, c, Document.co,
+		GetCurrentStyleHint())
 	if not co then
 		return false
 	end
@@ -241,7 +242,7 @@ function Cmd.JoinWithNextWord()
 	end
 
 	if (Document.cw ~= #paragraph) then
-		word.text = InsertIntoWord(paragraph[Document.cw+1].text, word.text, 1)
+		word.text = InsertIntoWord(paragraph[Document.cw+1].text, word.text, 1, 0)
 		paragraph:deleteWordAt(Document.cw+1)
 	end
 	
@@ -471,6 +472,17 @@ function Cmd.ToggleStyle(s)
 	DocumentSet:touch()
 	QueueRedraw()
 	return true
+end
+
+function Cmd.SetStyle(s)
+	if Document.mp then
+		return Cmd.ToggleStyle(s)
+	end
+
+	local sor, sand = unpack(style_tab[s])
+	SetCurrentStyleHint(sor, sand)
+	QueueRedraw()
+	return true;
 end
 
 function GetStyleToLeftOfCursor()
