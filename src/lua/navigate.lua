@@ -10,6 +10,7 @@ local PrevCharInWord = wg.prevcharinword
 local InsertIntoWord = wg.insertintoword
 local DeleteFromWord = wg.deletefromword
 local ApplyStyleToWord = wg.applystyletoword
+local GetStyleFromWord = wg.getstylefromword
 local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
 local table_concat = table.concat
@@ -470,6 +471,22 @@ function Cmd.ToggleStyle(s)
 	DocumentSet:touch()
 	QueueRedraw()
 	return true
+end
+
+function GetStyleToLeftOfCursor()
+	local cp = Document.cp
+	local cw = Document.cw
+	local co = Document.co
+
+	if (co == 1) then
+		if (cw == 1) then
+			return 0
+		end
+		cw = cw - 1
+		co = Document[cp][cw].text:len()
+	end
+
+	return GetStyleFromWord(Document[cp][cw].text, co)
 end
 
 function Cmd.ActivateMenu(menu)

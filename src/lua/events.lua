@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local listeners = {}
+local batched = {}
 
 Event = {}
 Event.Redraw = {}            --- the screen has just been redrawn
@@ -14,6 +15,7 @@ Event.DocumentLoaded = {}    --- a new documentset has just been loaded
 Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
 Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
 Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
+Event.Moved = {}             --- the cursor has moved
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.
@@ -66,5 +68,31 @@ function FireEvent(event, ...)
 	
 	for token, callback in pairs(l) do
 		callback(event, token, ...)
+	end
+end
+
+--- Fires an asynchronous event.
+-- These are batched up and fired at the end of the event loop. No event
+-- parameters are allowed; the order of event delivery is undefined.
+--
+-- @param event              the event to fire
+
+function FireAsyncEvent(event)
+	batched[event] = true
+end
+
+--- Flushed any pending asynchronous events.
+-- It is safe for an event handler to insert more asynchronous events
+-- (including the one which is currently firing).
+
+function FlushAsyncEvents()
+	while true do
+		local e = next(batched)
+		if not e then
+			break
+		end
+		batched[e] = nil
+
+		FireEvent(e)
 	end
 end

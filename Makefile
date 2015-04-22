@@ -94,11 +94,11 @@ install: bin/wordgrinder bin/wordgrinder.1
 # Each script is loaded in this order, which is important.
 LUASCRIPTS := \
 	src/lua/_prologue.lua \
+	src/lua/events.lua \
 	src/lua/main.lua \
 	src/lua/cli.lua \
 	src/lua/xml.lua \
 	src/lua/utils.lua \
-	src/lua/events.lua \
 	src/lua/redraw.lua \
 	src/lua/settings.lua \
 	src/lua/document.lua \
@@ -124,6 +124,9 @@ LUASCRIPTS := \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
 	src/lua/addons/pagecount.lua \
+	src/lua/addons/statusbar_charstyle.lua \
+	src/lua/addons/statusbar_position.lua \
+	src/lua/addons/statusbar_wordcount.lua \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/menu.lua \

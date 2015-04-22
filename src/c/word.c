@@ -404,6 +404,29 @@ static int applystyletoword_cb(lua_State* L)
 	return 2;
 }
 
+/* Fetch the style at a particular offset into a word. */
+
+static int getstylefromword_cb(lua_State* L)
+{
+	size_t srcbytes;
+	const char* src = luaL_checklstring(L, 1, &srcbytes);
+	const char* offset = src + luaL_checkint(L, 2) - 1;
+
+	int state = 0;
+	while (src < offset)
+	{
+		int c = readu8(&src);
+		if (c == '\0')
+			break;
+
+		if (iswcntrl(c))
+			state = c & STYLE_ALL;
+	}
+
+	lua_pushnumber(L, state);
+	return 1;
+}
+
 void word_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -416,6 +439,7 @@ void word_init(void)
 		{ "insertintoword",            insertintoword_cb },
 		{ "deletefromword",            deletefromword_cb },
 		{ "applystyletoword",          applystyletoword_cb },
+		{ "getstylefromword",          getstylefromword_cb },
 		{ NULL,                        NULL }
 	};
 
