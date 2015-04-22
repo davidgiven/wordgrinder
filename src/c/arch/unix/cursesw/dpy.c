@@ -172,8 +172,8 @@ const char* dpy_getkeyname(uni_t k)
 		case KEY_NPAGE: return "KEY_PGDN";
 		case KEY_PPAGE: return "KEY_PGUP";
 		case KEY_STAB: return "KEY_STAB";
-		case KEY_CTAB: return "KEY_CTAB";
-		case KEY_CATAB: return "KEY_CATAB";
+		case KEY_CTAB: return "KEY_^TAB";
+		case KEY_CATAB: return "KEY_^ATAB";
 		case KEY_ENTER: return "KEY_RETURN";
 		case KEY_SIC: return "KEY_SINSERT";
 		case KEY_SDC: return "KEY_SDELETE";
@@ -208,14 +208,26 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		if (strcmp(name, "kUP5") == 0)  return "KEY_^UP";
 		if (strcmp(name, "kRIT5") == 0) return "KEY_^RIGHT";
+		if (strcmp(name, "kUP6") == 0)  return "KEY_S^UP";
+		if (strcmp(name, "kRIT6") == 0) return "KEY_S^RIGHT";
 		if (strcmp(name, "kDN5") == 0)  return "KEY_^DOWN";
 		if (strcmp(name, "kLFT5") == 0) return "KEY_^LEFT";
-		if (strcmp(name, "kUP6") == 0)  return "KEY_^SUP";
-		if (strcmp(name, "kRIT6") == 0) return "KEY_^SRIGHT";
-		if (strcmp(name, "kDN6") == 0)  return "KEY_^SDOWN";
-		if (strcmp(name, "kLFT6") == 0) return "KEY_^SLEFT";
+		if (strcmp(name, "kDN6") == 0)  return "KEY_S^DOWN";
+		if (strcmp(name, "kLFT6") == 0) return "KEY_S^LEFT";
+		if (strcmp(name, "kPRV5") == 0) return "KEY_^PGUP";
+		if (strcmp(name, "kNXT5") == 0) return "KEY_^PGDN";
+		if (strcmp(name, "kPRV6") == 0) return "KEY_S^PGUP";
+		if (strcmp(name, "kNXT6") == 0) return "KEY_S^PGDN";
+		if (strcmp(name, "kHOM5") == 0) return "KEY_^HOME";
+		if (strcmp(name, "kEND5") == 0) return "KEY_^END";
+		if (strcmp(name, "kHOM6") == 0) return "KEY_S^HOME";
+		if (strcmp(name, "kEND6") == 0) return "KEY_S^END";
+		if (strcmp(name, "kIC5") == 0)  return "KEY_^INSERT";
+		if (strcmp(name, "kDC5") == 0)  return "KEY_^DELETE";
+		if (strcmp(name, "kIC6") == 0)  return "KEY_S^INSERT";
+		if (strcmp(name, "kDC6") == 0)  return "KEY_S^DELETE";
 	}
 
-	sprintf(buffer, "KEY_UNKNOWN_%d", k);
+	sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");
 	return buffer;
 }
