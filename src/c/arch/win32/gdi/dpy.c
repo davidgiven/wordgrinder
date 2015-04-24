@@ -29,8 +29,6 @@ static int screenwidth = 0;
 static int screenheight = 0;
 static int defaultattr = 0;
 
-static UINT_PTR timer = 0;
-static bool cursor_visible = false;
 static int cursorx = 0;
 static int cursory = 0;
 
@@ -43,7 +41,6 @@ static void resize_buffer(void);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
 static void switch_to_windowed(void);
-static void reset_cursor(void);
 
 static HKEY make_key(const char* keystring)
 {
@@ -185,8 +182,6 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
-	struct glyph* cursorglyph = NULL;
-
 	int x1 = ps->rcPaint.left / textwidth;
 	x1 -= 1; /* because of overlapping characters */
 	if (x1 < 0)
@@ -253,9 +248,6 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 					LineTo(dc, sx+glyph->width, sy+textheight-1);
 				}
 			}
-
-			if ((x == cursorx) && (y == cursory))
-				cursorglyph = glyph;
 		}
 
 		/* Now go through and invert any characters which are in reverse. */
@@ -280,11 +272,21 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 		}
 	}
 
-	/* Invert the square containing the cursor. */
+	/* Draw the cursor caret. */
 
-	if (cursor_visible && cursorglyph)
-		BitBlt(dc, cursorx*textwidth, cursory*textheight, cursorglyph->width, textheight,
-				NULL, 0, 0, DSTINVERT);
+	{
+		int x = cursorx*textwidth;
+		int y = cursory*textheight;
+
+		SelectObject(dc, brightpen);
+		MoveToEx(dc, x, y, NULL);
+		LineTo(dc, x, y+textheight);
+		SetPixelV(dc, x-1, y-1, 0xffffff);
+		SetPixelV(dc, x+1, y-1, 0xffffff);
+		SetPixelV(dc, x-1, y+textheight, 0xffffff);
+		SetPixelV(dc, x+1, y+textheight, 0xffffff);
+	}
+
 
 	DeleteObject(brightpen);
 	DeleteObject(normalpen);
@@ -441,7 +443,6 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 
 		case WM_CHAR:
 		{
-			reset_cursor();
 			unicode_key(wparam, lparam);
 			break;
 		}
@@ -449,8 +450,6 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 		case WM_KEYDOWN:
 		case WM_SYSKEYDOWN:
 		{
-			reset_cursor();
-
 			if (special_key(wparam, lparam))
 				return 1;
 			break;
@@ -586,32 +585,19 @@ static void switch_to_full_screen(void)
 	ShowWindow(window, SW_SHOWDEFAULT);
 }
 
+/* Actually invalidates a 3x3 square around the character, to deal with
+ * overdraw. */
 static void invalidate_character_at(int x, int y)
 {
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
 
 	RECT r;
-	r.left = cursorx * textwidth;
-	r.top = cursory * textheight;
-	r.right = r.left + textwidth;
-	r.bottom = r.top + textheight;
+	r.left = cursorx * textwidth - 1;
+	r.top = cursory * textheight - 1;
+	r.right = r.left + textwidth + 2;
+	r.bottom = r.top + textheight + 2;
 	InvalidateRect(window, &r, 0);
-}
-
-static VOID CALLBACK cursor_blink_cb(HWND hwnd, UINT message,
-    UINT_PTR timer, DWORD time)
-{
-	cursor_visible = !cursor_visible;
-
-	invalidate_character_at(cursorx, cursory);
-	UpdateWindow(window);
-}
-
-static void reset_cursor(void)
-{
-	timer = SetTimer(NULL, timer, 500, cursor_blink_cb);
-	cursor_visible = true;
 }
 
 static void switch_to_windowed(void)
@@ -698,7 +684,6 @@ void dpy_start(void)
 		}
 	}
 
-	reset_cursor();
 	switch_to_windowed();
 }
 
