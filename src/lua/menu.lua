@@ -2,6 +2,7 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local int = math.floor
 local Write = wg.write
 local ClearToEOL = wg.cleartoeol
 local GetChar = wg.getchar
@@ -170,29 +171,39 @@ local StyleMenu = addmenu("Style",
 
 local NavigationMenu = addmenu("Navigation",
 {
-	{"ZU",     nil, "Cursor up",                  "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
-	{"ZR",     nil, "Cursor right",               "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
-	{"ZD",     nil, "Cursor down",                "DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
-	{"ZL",     nil, "Cursor left",                "LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
-	{"ZSU",    nil, "Selection up",               "SUP",       { Cmd.SetMark, Cmd.GotoPreviousLine }},
-	{"ZSR",    nil, "Selection right",            "SRIGHT",    { Cmd.SetMark, Cmd.GotoNextCharW }},
-	{"ZSD",    nil, "Selection down",             "SDOWN",     { Cmd.SetMark, Cmd.GotoNextLine }},
-	{"ZSL",    nil, "Selection left",             "SLEFT",     { Cmd.SetMark, Cmd.GotoPreviousCharW }},
-	{"ZSW",    nil, "Select word",                "^W",        Cmd.SelectWord },
-	{"ZWL",    nil, "Goto previous word",         "^LEFT",     { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
-	{"ZWR",    nil, "Goto next word",             "^RIGHT",    { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
-	{"ZNP",    nil, "Goto next paragraph",        "^DOWN",     { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
-	{"ZPP",    nil, "Goto previous paragraph",    "^UP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
-	{"ZH",     nil, "Goto beginning of line",     "HOME",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
-	{"ZE",     nil, "Goto end of line",           "END",       { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
-	{"ZBD",    nil, "Goto beginning of document", "^PGUP",     { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
-	{"ZED",    nil, "Goto end of document",       "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
-	{"ZPGUP",  nil, "Page up",                    "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
-	{"ZPGDN",  nil, "Page down",                  "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
-	{"ZDPC",   nil, "Delete previous character",  "BACKSPACE", Cmd.DeleteSelectionOrPreviousChar },
-	{"ZDNC",   nil, "Delete next character",      "DELETE",    Cmd.DeleteSelectionOrNextChar },
-	{"ZDW",    nil, "Delete word",                "^E",        { Cmd.TypeWhileSelected, Cmd.DeleteWord }},
-	{"ZM",     nil, "Toggle mark",                "^@",        Cmd.ToggleMark},
+	{"ZU",     nil, "Cursor up",                    "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZR",     nil, "Cursor right",                 "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
+	{"ZD",     nil, "Cursor down",                  "DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZL",     nil, "Cursor left",                  "LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
+	{"ZSU",    nil, "Selection up",                 "SUP",       { Cmd.SetMark, Cmd.GotoPreviousLine }},
+	{"ZSR",    nil, "Selection right",              "SRIGHT",    { Cmd.SetMark, Cmd.GotoNextCharW }},
+	{"ZSD",    nil, "Selection down",               "SDOWN",     { Cmd.SetMark, Cmd.GotoNextLine }},
+	{"ZSL",    nil, "Selection left",               "SLEFT",     { Cmd.SetMark, Cmd.GotoPreviousCharW }},
+	{"ZSW",    nil, "Select word",                  "^W",        Cmd.SelectWord },
+	{"ZWL",    nil, "Goto previous word",           "^LEFT",     { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
+	{"ZWR",    nil, "Goto next word",               "^RIGHT",    { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
+	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",     { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
+	{"ZPP",    nil, "Goto previous paragraph",      "^UP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
+	{"ZSWL",   nil, "Select to previous word",      "S^LEFT",    { Cmd.SetMark, Cmd.GotoPreviousWordW }},
+	{"ZSWR",   nil, "Select to next word",          "S^RIGHT",   { Cmd.SetMark, Cmd.GotoNextWordW }},
+	{"ZSNP",   nil, "Select to next paragraph",     "S^DOWN",    { Cmd.SetMark, Cmd.GotoNextParagraphW }},
+	{"ZSPP",   nil, "Select to previous paragraph", "S^UP",      { Cmd.SetMark, Cmd.GotoPreviousParagraphW }},
+	{"ZH",     nil, "Goto beginning of line",       "HOME",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
+	{"ZE",     nil, "Goto end of line",             "END",       { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
+	{"ZSH",    nil, "Select to beginning of line",  "SHOME",     { Cmd.SetMark, Cmd.GotoBeginningOfLine }},
+	{"ZSE",    nil, "Select to end of line",        "SEND",      { Cmd.SetMark, Cmd.GotoEndOfLine }},
+	{"ZBD",    nil, "Goto beginning of document",   "^PGUP",     { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
+	{"ZED",    nil, "Goto end of document",         "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
+	{"ZSBD",   nil, "Select to beginning of document", "S^PGUP", { Cmd.SetMark, Cmd.GotoBeginningOfDocument }},
+	{"ZSED",   nil, "Select to end of document",    "S^PGDN",    { Cmd.SetMark, Cmd.GotoEndOfDocument }},
+	{"ZPGUP",  nil, "Page up",                      "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
+	{"ZPGDN",  nil, "Page down",                    "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
+	{"ZSPGUP", nil, "Selection page up",            "SPGUP",     { Cmd.SetMark, Cmd.GotoPreviousPage }},
+	{"ZSPGDN", nil, "Selection page down",          "SPGDN",     { Cmd.SetMark, Cmd.GotoNextPage }},
+	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE", Cmd.DeleteSelectionOrPreviousChar },
+	{"ZDNC",   nil, "Delete next character",        "DELETE",    Cmd.DeleteSelectionOrNextChar },
+	{"ZDW",    nil, "Delete word",                  "^E",        { Cmd.TypeWhileSelected, Cmd.DeleteWord }},
+	{"ZM",     nil, "Toggle mark",                  "^@",        Cmd.ToggleMark},
 })
 
 local MainMenu = addmenu("Main Menu",
@@ -218,7 +229,7 @@ MenuClass = {
 		SetNormal()
 	end,
 	
-	drawmenu = function(self, x, y, menu, n)
+	drawmenu = function(self, x, y, menu, n, top)
 		local akw = 0
 		for _, item in ipairs(menu) do
 			local ak = self.accelerators[item.id]
@@ -234,34 +245,49 @@ MenuClass = {
 		end
 		
 		local w = menu.maxwidth + 4 + akw
-		DrawTitledBox(x, y, w, #menu, menu.label)
+		local visiblelen = min(#menu, ScreenHeight-y-3)
+		DrawTitledBox(x, y, w, visiblelen, menu.label)
+
+		if (visiblelen < #menu) then
+			local f1 = (top - 1) / #menu
+			local f2 = (top + visiblelen - 1) / #menu
+			local y1 = f1 * visiblelen + y + 1
+			local y2 = f2 * visiblelen + y + 1
+			SetBright()
+			for yy = y1, y2 do
+				Write(x+w+1, yy, "║")
+			end
+		end
 		
-		for i, item in ipairs(menu) do
+		for i = top, top+visiblelen-1 do
+			local item = menu[i]
 			local ak = self.accelerators[item.id]
+			local yy = y+i-top+1
 			
 			if (item == "-") then
 				if (i == n) then
 					SetReverse()
 				end
 				SetBright()
-				Write(x+1, y+i, string.rep("─", w))
+				Write(x+1, yy, string.rep("─", w))
 			else
+				SetNormal()
 				if (i == n) then
 					SetReverse()
-					Write(x+1, y+i, string.rep(" ", w))
+					Write(x+1, yy, string.rep(" ", w))
 				end
 				
-				Write(x+4, y+i, item.label)
+				Write(x+4, yy, item.label)
 
 				SetBold()
 				SetBright()
 				if ak then
 					local l = GetStringWidth(ak)
-					Write(x+w-l, y+i, ak)
+					Write(x+w-l, yy, ak)
 				end
 		
 				if item.mk then
-					Write(x+2, y+i, item.mk)
+					Write(x+2, yy, item.mk)
 				end
 			end
 			
@@ -279,26 +305,43 @@ MenuClass = {
 		DocumentSet.statusbar = osb
 		
 		local o = 0
-		for _, menu in ipairs(menu_stack) do
-			self:drawmenu(o*4, o*2, menu.menu, menu.n)
+		for _, m in ipairs(menu_stack) do
+			self:drawmenu(o*4, o*2, m.menu, m.n, m.top)
 			o = o + 1
 		end
 	end,
 	
 	runmenu = function(self, x, y, menu)
 		local n = 1
+		local top = 1
 		
 		while true do
 			local id
 			
 			while true do
-				self:drawmenu(x, y, menu, n)
+				local visiblelen = min(#menu, ScreenHeight-y-3)
+				if (n < top) then
+					top = n
+				end
+				if (n > (top+visiblelen-1)) then
+					top = n - visiblelen + 1
+				end
+
+				self:drawmenu(x, y, menu, n, top)
 				
 				local c = GetChar():upper()
-				if (c == "KEY_UP") and (n > 1) then
+				if (c == "KEY_RESIZE") then
+					ResizeScreen()
+					RedrawScreen()
+					self:drawmenustack()
+				elseif (c == "KEY_UP") and (n > 1) then
 					n = n - 1
 				elseif (c == "KEY_DOWN") and (n < #menu) then
 					n = n + 1
+				elseif (c == "KEY_PGDN") then
+					n = int(min(n + visiblelen/2, #menu))
+				elseif (c == "KEY_PGUP") then
+					n = int(max(n - visiblelen/2, 1))
 				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
 					if (type(menu[n]) ~= "string") then
 						id = menu[n].id
@@ -363,7 +406,8 @@ MenuClass = {
 			if IsMenu(f) then
 				menu_stack[#menu_stack+1] = {
 					menu = menu,
-					n = n
+					n = n,
+					top = top
 				}
 				
 				local r = self:runmenu(x+4, y+2, f)
