@@ -217,7 +217,7 @@ local MainMenu = addmenu("Main Menu",
 })
 
 function IsMenu(m)
-	return (type(m) == "table") and (type(m[1]) == "table")
+	return (type(m) == "table") and (type(m[1]) ~= "function")
 end
 
 --- MENU DRIVER CLASS ---

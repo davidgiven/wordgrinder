@@ -777,7 +777,9 @@ function Cmd.Paste()
 	Cmd.SplitCurrentWord()
 	local paragraph = Document[Document.cp]
 	for _, word in ipairs(buffer[1]) do
-		paragraph:insertWordBefore(Document.cw, word:copy())
+		local w = word:copy()
+		paragraph:insertWordBefore(Document.cw, w)
+		FireEvent(Event.WordModified, w, paragraph)
 		Document.cw = Document.cw + 1
 	end
 	
@@ -799,8 +801,12 @@ function Cmd.Paste()
 		
 		local p = 2
 		for p = 2, #buffer do	
-			local copy = buffer[p]:copy()
-			Document:insertParagraphBefore(copy, Document.cp)
+			local paragraph = buffer[p]:copy()
+			Document:insertParagraphBefore(paragraph, Document.cp)
+			for _, word in ipairs(paragraph) do
+				FireEvent(Event.WordModified, word, paragraph)
+			end
+
 			Document.cp = Document.cp + 1
 			Document.cw = 1
 			Document.co = 1
