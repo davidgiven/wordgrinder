@@ -1,7 +1,7 @@
 function AssertEquals(want, got)
 	if (want ~= got) then
 		error(
-			string.format("Assertion failed: wanted '%s'; got '%s'\n",
+			string.format("Assertion failed: wanted %q; got %q\n",
 				want, got))
 	end
 end

@@ -428,6 +428,7 @@ tests: .obj/$(strip $1).passed
 endef
 
 $(eval $(call run-test, tests/get-style-from-word.lua))
+$(eval $(call run-test, tests/insert-space-with-style-hint.lua))
 
 .phony: tests
 

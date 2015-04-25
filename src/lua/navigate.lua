@@ -11,6 +11,7 @@ local InsertIntoWord = wg.insertintoword
 local DeleteFromWord = wg.deletefromword
 local ApplyStyleToWord = wg.applystyletoword
 local GetStyleFromWord = wg.getstylefromword
+local CreateStyleByte = wg.createstylebyte
 local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
 local table_concat = table.concat
@@ -207,11 +208,27 @@ function Cmd.SplitCurrentWord()
 	local left = DeleteFromWord(text, co, text:len()+1)
 	local newword = CreateWord(left)
 
-	word.text = DeleteFromWord(text, 1, co)
+	local styleprime = ""
+	if not Document.mp then
+		local stylehint = GetCurrentStyleHint()
+		-- This is a bit evil. We want to prime the new word with the current
+		-- style hint, so that when the cursor moves we don't lose the user's
+		-- style hint in favour of the one read from the old word, which will
+		-- be stale.
+		--
+		-- However, we don't want to insert any actual *text* in the new style.
+		-- This means that the frameworks we have for applying style won't
+		-- work. Instead, we exploit our knowledge of how the style bytes
+		-- are implemented to do it manually.
+		
+		styleprime = CreateStyleByte(stylehint)
+	end
+
+	word.text = styleprime .. DeleteFromWord(text, 1, co)
 	
 	paragraph:insertWordBefore(Document.cw, newword)
 	Document.cw = Document.cw + 1
-	Document.co = 1
+	Document.co = 1 + #styleprime
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -483,6 +500,14 @@ function Cmd.SetStyle(s)
 	SetCurrentStyleHint(sor, sand)
 	QueueRedraw()
 	return true;
+end
+
+function GetStyleAtCursor()
+	local cp = Document.cp
+	local cw = Document.cw
+	local co = Document.co
+
+	return GetStyleFromWord(Document[cp][cw].text, co)
 end
 
 function GetStyleToLeftOfCursor()
