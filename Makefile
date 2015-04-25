@@ -427,7 +427,7 @@ tests: .obj/$(strip $1).passed
 
 endef
 
-$(eval $(call run-test, tests/insert-attributes-into-word.lua))
+$(eval $(call run-test, tests/get-style-from-word.lua))
 
 .phony: tests
 
