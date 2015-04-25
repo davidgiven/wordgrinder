@@ -14,6 +14,7 @@ MAKENSIS = makensis
 
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
+	TESTER = bin/wordgrinder-debug.exe
 all: windows
 else ifneq ($(Apple_PubSub_Socket_Render),)
 	BREWPREFIX := $(shell brew --prefix 2>/dev/null || echo)
@@ -26,6 +27,7 @@ else ifneq ($(Apple_PubSub_Socket_Render),)
 	LUA_LIB := -llua.5.2
 
 	OS = unix
+	TESTER = bin/wordgrinder-debug
 all: unix
 else
 	LIBROOT := /usr/lib
@@ -38,6 +40,7 @@ else
 	X11_LIB := -lX11 -lXft $(shell pkg-config freetype2 --libs) 
 
 	OS = unix
+	TESTER = bin/wordgrinder-debug
 all: unix x11unix
 endif
 
@@ -63,6 +66,7 @@ WININSTALLER := bin/WordGrinder\ $(VERSION)\ setup.exe
 unix: \
 	bin/wordgrinder \
 	bin/wordgrinder-debug \
+	tests \
 	bin/wordgrinder-static
 
 x11unix: \
@@ -74,6 +78,7 @@ x11unix: \
 windows: \
 	bin/wordgrinder.exe \
 	bin/wordgrinder-debug.exe \
+	tests \
 	$(WININSTALLER)
 .PHONY: windows
 
@@ -406,6 +411,25 @@ clean::
 	@rm -f $(WININSTALLER)
 	
 endif
+
+# --- Tests -----------------------------------------------------------------
+
+define run-test
+
+.obj/$(strip $1).passed: $(TESTER) $1
+	@echo TEST $1
+	@mkdir -p $$(dir $$@)
+	@rm -f $$@
+	$(hide) $(TESTER) --lua $1
+	@touch $$@
+
+tests: .obj/$(strip $1).passed
+
+endef
+
+$(eval $(call run-test, tests/insert-attributes-into-word.lua))
+
+.phony: tests
 
 # --- Final setup -----------------------------------------------------------
 
