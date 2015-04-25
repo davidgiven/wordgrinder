@@ -170,50 +170,28 @@ local StyleMenu = addmenu("Style",
 
 local NavigationMenu = addmenu("Navigation",
 {
-	{"ZU",     nil, "Cursor up",                  "UP",       
-						function() Cmd.MoveWhileSelected() Cmd.GotoPreviousLine() end},
-	{"ZR",     nil, "Cursor right",               "RIGHT",    
-						function() Cmd.MoveWhileSelected() Cmd.GotoNextCharW() end},
-	{"ZD",     nil, "Cursor down",                "DOWN",     
-						function() Cmd.MoveWhileSelected() Cmd.GotoNextLine() end},
-	{"ZL",     nil, "Cursor left",                "LEFT",     
-						function() Cmd.MoveWhileSelected() Cmd.GotoPreviousCharW() end},
-	{"ZSU",    nil, "Selection up",               "SUP",      
-						function() Cmd.SetMark() Cmd.GotoPreviousLine() end},
-	{"ZSR",    nil, "Selection right",            "SRIGHT",   
-						function() Cmd.SetMark() Cmd.GotoNextCharW() end},
-	{"ZSD",    nil, "Selection down",             "SDOWN",    
-						function() Cmd.SetMark() Cmd.GotoNextLine() end},
-	{"ZSL",    nil, "Selection left",             "SLEFT",    
-						function() Cmd.SetMark() Cmd.GotoPreviousCharW() end},
-	{"ZSW",    nil, "Select word",                "^W",       
-						Cmd.SelectWord},
-	{"ZWL",    nil, "Goto previous word",         "^LEFT",    
-						function() Cmd.MoveWhileSelected() Cmd.GotoPreviousWordW() end},
-	{"ZWR",    nil, "Goto next word",             "^RIGHT",   
-						function() Cmd.MoveWhileSelected() Cmd.GotoNextWordW() end},
-	{"ZNP",    nil, "Goto next paragraph",        "^DOWN",    
-						function() Cmd.MoveWhileSelected() Cmd.GotoNextParagraphW() end},
-	{"ZPP",    nil, "Goto previous paragraph",    "^UP",      
-						function() Cmd.MoveWhileSelected() Cmd.GotoPreviousParagraphW() end},
-	{"ZH",     nil, "Goto beginning of line",     "HOME",     
-						function() Cmd.MoveWhileSelected() Cmd.GotoBeginningOfLine() end},
-	{"ZE",     nil, "Goto end of line",           "END",      
-						function() Cmd.MoveWhileSelected() Cmd.GotoEndOfLine() end},
-	{"ZBD",    nil, "Goto beginning of document", "^PGUP",    
-						function() Cmd.MoveWhileSelected() Cmd.GotoBeginningOfDocument() end},
-	{"ZED",    nil, "Goto end of document",       "^PGDN",    
-						function() Cmd.MoveWhileSelected() Cmd.GotoEndOfDocument() end},
-	{"ZPGUP",  nil, "Page up",                    "PGUP",      
-						function() Cmd.MoveWhileSelected() Cmd.GotoPreviousPage() end},
-	{"ZPGDN",  nil, "Page down",                  "PGDN",      
-						function() Cmd.MoveWhileSelected() Cmd.GotoNextPage() end},
-	{"ZDPC",   nil, "Delete previous character",  "BACKSPACE",
-						function() Cmd.TypeWhileSelected() Cmd.DeletePreviousChar() end},
-	{"ZDNC",   nil, "Delete next character",      "DELETE",    
-						function() Cmd.TypeWhileSelected() Cmd.DeleteNextChar() end},
-	{"ZDW",    nil, "Delete word",                "^E",        
-						function() Cmd.TypeWhileSelected() Cmd.DeleteWord() end},
+	{"ZU",     nil, "Cursor up",                  "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZR",     nil, "Cursor right",               "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
+	{"ZD",     nil, "Cursor down",                "DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZL",     nil, "Cursor left",                "LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
+	{"ZSU",    nil, "Selection up",               "SUP",       { Cmd.SetMark, Cmd.GotoPreviousLine }},
+	{"ZSR",    nil, "Selection right",            "SRIGHT",    { Cmd.SetMark, Cmd.GotoNextCharW }},
+	{"ZSD",    nil, "Selection down",             "SDOWN",     { Cmd.SetMark, Cmd.GotoNextLine }},
+	{"ZSL",    nil, "Selection left",             "SLEFT",     { Cmd.SetMark, Cmd.GotoPreviousCharW }},
+	{"ZSW",    nil, "Select word",                "^W",        Cmd.SelectWord },
+	{"ZWL",    nil, "Goto previous word",         "^LEFT",     { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
+	{"ZWR",    nil, "Goto next word",             "^RIGHT",    { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
+	{"ZNP",    nil, "Goto next paragraph",        "^DOWN",     { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
+	{"ZPP",    nil, "Goto previous paragraph",    "^UP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
+	{"ZH",     nil, "Goto beginning of line",     "HOME",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
+	{"ZE",     nil, "Goto end of line",           "END",       { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
+	{"ZBD",    nil, "Goto beginning of document", "^PGUP",     { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
+	{"ZED",    nil, "Goto end of document",       "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
+	{"ZPGUP",  nil, "Page up",                    "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
+	{"ZPGDN",  nil, "Page down",                  "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
+	{"ZDPC",   nil, "Delete previous character",  "BACKSPACE", { Cmd.TypeWhileSelected, Cmd.DeletePreviousChar }},
+	{"ZDNC",   nil, "Delete next character",      "DELETE",    { Cmd.TypeWhileSelected, Cmd.DeleteNextChar }},
+	{"ZDW",    nil, "Delete word",                "^E",        { Cmd.TypeWhileSelected, Cmd.DeleteWord }},
 	{"ZM",     nil, "Toggle mark",                "^@",        Cmd.ToggleMark},
 })
 
@@ -225,6 +203,10 @@ local MainMenu = addmenu("Main Menu",
 	{"D",  "D", "Documents ▷",      nil,  DocumentsMenu},
 	{"Z",  "Z", "Navigation ▷",     nil,  NavigationMenu}
 })
+
+function IsMenu(m)
+	return (type(m) == "table") and (type(m[1]) == "table")
+end
 
 --- MENU DRIVER CLASS ---
 
@@ -378,7 +360,7 @@ MenuClass = {
 			local item = menu_tab[id]
 			local f = item.fn
 			
-			if (type(f) == "table") then
+			if IsMenu(f) then
 				menu_stack[#menu_stack+1] = {
 					menu = menu,
 					n = n
@@ -435,7 +417,18 @@ MenuClass = {
 				f = item.fn
 			end
 		end
-		return f
+
+		if (type(f) == "table") then
+			return function()
+				local r = true
+				for _, n in ipairs(f) do
+					r = r and n()
+				end
+				return r
+			end
+		else
+			return f
+		end
 	end,
 }
 
@@ -513,10 +506,10 @@ end
 function ListMenuItems()
 	local function list(menu)
 		for _, item in ipairs(menu) do
-			if (type(item) == "table") then
+			if IsMenu(item) then
 				io.stdout:write(
 					string.format("%15s %s\n", item.id, item.label))
-				if (type(item.fn) == "table") then
+				if IsMenu(item.fn) then
 					list(item.fn)
 				end
 			end

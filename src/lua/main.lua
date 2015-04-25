@@ -143,10 +143,10 @@ function WordProcessor(filename)
 				else
 					f = DocumentSet.menu:lookupAccelerator(c)
 					if f then
-						if (type(f) == "function") then
-							f()
-						else
+						if IsMenu(f) then
 							Cmd.ActivateMenu(f)
+						else
+							f()
 						end
 					else
 						NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
