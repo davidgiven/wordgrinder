@@ -107,8 +107,8 @@ function WordProcessor(filename)
 	local function runaction(ff)
 		if (type(ff) == "function") then
 			return ff()
-		elseif IsMenu(f) then
-			Cmd.ActivateMenu(f)
+		elseif IsMenu(ff) then
+			Cmd.ActivateMenu(ff)
 		else
 			local r = true
 			for _, f in ipairs(ff) do
