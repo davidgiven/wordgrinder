@@ -189,8 +189,8 @@ local NavigationMenu = addmenu("Navigation",
 	{"ZED",    nil, "Goto end of document",       "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
 	{"ZPGUP",  nil, "Page up",                    "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
 	{"ZPGDN",  nil, "Page down",                  "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
-	{"ZDPC",   nil, "Delete previous character",  "BACKSPACE", { Cmd.TypeWhileSelected, Cmd.DeletePreviousChar }},
-	{"ZDNC",   nil, "Delete next character",      "DELETE",    { Cmd.TypeWhileSelected, Cmd.DeleteNextChar }},
+	{"ZDPC",   nil, "Delete previous character",  "BACKSPACE", Cmd.DeleteSelectionOrPreviousChar },
+	{"ZDNC",   nil, "Delete next character",      "DELETE",    Cmd.DeleteSelectionOrNextChar },
 	{"ZDW",    nil, "Delete word",                "^E",        { Cmd.TypeWhileSelected, Cmd.DeleteWord }},
 	{"ZM",     nil, "Toggle mark",                "^@",        Cmd.ToggleMark},
 })
@@ -418,17 +418,7 @@ MenuClass = {
 			end
 		end
 
-		if (type(f) == "table") then
-			return function()
-				local r = true
-				for _, n in ipairs(f) do
-					r = r and n()
-				end
-				return r
-			end
-		else
-			return f
-		end
+		return f
 	end,
 }
 

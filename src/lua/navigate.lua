@@ -272,6 +272,14 @@ function Cmd.DeletePreviousChar()
 	return Cmd.GotoPreviousCharW() and Cmd.DeleteNextChar()
 end
 
+function Cmd.DeleteSelectionOrPreviousChar()
+	if Document.mp then
+		return Cmd.Delete()
+	else
+		return Cmd.DeletePreviousChar()
+	end
+end
+
 function Cmd.DeleteNextChar()
 	local paragraph = Document[Document.cp]
 	local word = paragraph[Document.cw]
@@ -287,6 +295,14 @@ function Cmd.DeleteNextChar()
 	DocumentSet:touch()
 	QueueRedraw()
 	return true
+end
+
+function Cmd.DeleteSelectionOrNextChar()
+	if Document.mp then
+		return Cmd.Delete()
+	else
+		return Cmd.DeleteNextChar()
+	end
 end
 
 function Cmd.DeleteWordLeftOfCursor()

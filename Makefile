@@ -433,6 +433,7 @@ $(eval $(call run-test, tests/move-while-selected.lua))
 $(eval $(call run-test, tests/type-while-selected.lua))
 $(eval $(call run-test, tests/line-up.lua))
 $(eval $(call run-test, tests/line-down-into-style.lua))
+$(eval $(call run-test, tests/delete-selection.lua))
 
 .phony: tests
 
