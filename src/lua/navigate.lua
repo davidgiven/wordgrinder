@@ -440,7 +440,7 @@ local style_tab =
 	["o"] = {0, 0},
 }
 
-function Cmd.ToggleStyle(s)
+function Cmd.ApplyStyleToSelection(s)
 	if not Document.mp then
 		return false
 	end
@@ -493,7 +493,7 @@ end
 
 function Cmd.SetStyle(s)
 	if Document.mp then
-		return Cmd.ToggleStyle(s)
+		return Cmd.ApplyStyleToSelection(s)
 	end
 
 	local sor, sand = unpack(style_tab[s])
