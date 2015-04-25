@@ -177,7 +177,8 @@ function Cmd.InsertStringIntoWord(c)
 	end
 	
 	word.text = s
-	Document.co = co
+	FireEvent(Event.WordModified, word, paragraph)
+	Document.co = co + (#word.text - #s)
 	paragraph:touch()
 	
 	DocumentSet:touch()

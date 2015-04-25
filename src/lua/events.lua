@@ -6,16 +6,17 @@ local listeners = {}
 local batched = {}
 
 Event = {}
-Event.Redraw = {}            --- the screen has just been redrawn
-Event.Idle = {}              --- the user isn't touching the keyboard
-Event.WaitingForUser = {}    --- we're about to wait for a keypress
+Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
 Event.Changed = {}           --- the document's been changed
 Event.DocumentCreated = {}   --- a new documentset has just been created
 Event.DocumentLoaded = {}    --- a new documentset has just been loaded
 Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
-Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
-Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
+Event.Idle = {}              --- the user isn't touching the keyboard
+Event.WordModified = {}      --- (word, paragraph) a word has been changed
 Event.Moved = {}             --- the cursor has moved
+Event.Redraw = {}            --- the screen has just been redrawn
+Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
+Event.WaitingForUser = {}    --- we're about to wait for a keypress
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.

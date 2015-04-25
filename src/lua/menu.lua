@@ -101,6 +101,7 @@ local DocumentSettingsMenu = addmenu("Document settings",
     {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
     {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
 	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
+	{"FSSmartquotes", "Q", "Smart quotes...",        nil,         Cmd.ConfigureSmartQuotes},
 })
 
 local GlobalSettingsMenu = addmenu("Global settings",

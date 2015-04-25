@@ -133,6 +133,7 @@ LUASCRIPTS := \
 	src/lua/addons/statusbar_wordcount.lua \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
+	src/lua/addons/smartquotes.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 
@@ -427,13 +428,14 @@ tests: .obj/$(strip $1).passed
 
 endef
 
+$(eval $(call run-test, tests/delete-selection.lua))
 $(eval $(call run-test, tests/get-style-from-word.lua))
 $(eval $(call run-test, tests/insert-space-with-style-hint.lua))
-$(eval $(call run-test, tests/move-while-selected.lua))
-$(eval $(call run-test, tests/type-while-selected.lua))
-$(eval $(call run-test, tests/line-up.lua))
 $(eval $(call run-test, tests/line-down-into-style.lua))
-$(eval $(call run-test, tests/delete-selection.lua))
+$(eval $(call run-test, tests/line-up.lua))
+$(eval $(call run-test, tests/move-while-selected.lua))
+$(eval $(call run-test, tests/smartquotes-typing.lua))
+$(eval $(call run-test, tests/type-while-selected.lua))
 
 .phony: tests
 
