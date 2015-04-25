@@ -427,6 +427,16 @@ static int getstylefromword_cb(lua_State* L)
 	return 1;
 }
 
+/* Create a raw style byte. */
+
+static int createstylebyte_cb(lua_State* L)
+{
+	int style = luaL_checkint(L, 1);
+	char buffer = style | STYLE_MARKER;
+	lua_pushlstring(L, &buffer, 1);
+	return 1;
+}
+	
 void word_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -440,6 +450,7 @@ void word_init(void)
 		{ "deletefromword",            deletefromword_cb },
 		{ "applystyletoword",          applystyletoword_cb },
 		{ "getstylefromword",          getstylefromword_cb },
+		{ "createstylebyte",           createstylebyte_cb },
 		{ NULL,                        NULL }
 	};
 
