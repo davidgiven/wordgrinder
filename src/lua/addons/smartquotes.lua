@@ -19,8 +19,8 @@ do
 				word.text = word.text:gsub('"', escape(settings.rightdouble))
 			end
 			if settings.singlequotes then
-				word.text = word.text:gsub("^'", settings.leftsingle)
-				word.text = word.text:gsub("'", settings.rightsingle)
+				word.text = word.text:gsub("^'", escape(settings.leftsingle))
+				word.text = word.text:gsub("'", escape(settings.rightsingle))
 			end
 		end
 	end
@@ -109,7 +109,7 @@ function Cmd.ConfigureSmartQuotes()
 	{
 		title = "Configure Smart Quotes",
 		width = Form.Large,
-		height = 11,
+		height = 13,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -166,6 +166,12 @@ function Cmd.ConfigureSmartQuotes()
 			value = "R:"
 		},
 
+		Form.Label {
+			x1 = 1, y1 = 11,
+			x2 = -1, y2 = 11,
+			align = Form.Centre,
+			value = "To apply to existing text, copy and then paste it."
+		}
 	}
 	
 	local result = Form.Run(dialogue, RedrawScreen,

@@ -20,11 +20,19 @@ Cmd.ChangeParagraphStyle("RAW")
 Cmd.InsertStringIntoParagraph("not'd")
 FlushAsyncEvents()
 
+DocumentSet.addons.smartquotes.rightsingle = "%"
+Cmd.SplitCurrentParagraph()
+FlushAsyncEvents()
+Cmd.ChangeParagraphStyle("P")
+Cmd.InsertStringIntoParagraph("blorb's")
+FlushAsyncEvents()
+
 AssertEquals("‘Hello,", Document[1][1].text)
 AssertEquals("world!’", Document[1][2].text)
 AssertEquals("“Hello,", Document[2][1].text)
 AssertEquals("world!”", Document[2][2].text)
 AssertEquals("flob’s", Document[3][1].text)
 AssertEquals("not'd", Document[4][1].text)
+AssertEquals("blorb%s", Document[5][1].text)
 
 
