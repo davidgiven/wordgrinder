@@ -429,6 +429,8 @@ endef
 
 $(eval $(call run-test, tests/get-style-from-word.lua))
 $(eval $(call run-test, tests/insert-space-with-style-hint.lua))
+$(eval $(call run-test, tests/move-while-selected.lua))
+$(eval $(call run-test, tests/type-while-selected.lua))
 
 .phony: tests
 

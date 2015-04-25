@@ -611,10 +611,12 @@ function Cmd.ToggleMark()
 		Document.mp = nil
 		Document.mw = nil
 		Document.mo = nil
+		Document.sticky_selection = false
 	else
 		Document.mp = Document.cp
 		Document.mw = Document.cw
 		Document.mo = Document.co
+		Document.sticky_selection = true
 	end
 	
 	QueueRedraw()
@@ -623,7 +625,10 @@ end
 
 function Cmd.SetMark()
 	if not Document.mp then
-		return Cmd.ToggleMark()
+		Document.mp = Document.cp
+		Document.mw = Document.cw
+		Document.mo = Document.co
+		Document.sticky_selection = false
 	end
 	return true
 end
@@ -634,6 +639,20 @@ function Cmd.UnsetMark()
 	Document.mo = nil
 	
 	QueueRedraw()
+	return true
+end
+
+function Cmd.MoveWhileSelected()
+	if Document.mp and not Document.sticky_selection then
+		return Cmd.UnsetMark()
+	end
+	return true
+end
+
+function Cmd.TypeWhileSelected()
+	if Document.mp then
+		return Cmd.Delete()
+	end
 	return true
 end
 

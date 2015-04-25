@@ -138,6 +138,7 @@ function WordProcessor(filename)
 				-- not, look it up in the menu hierarchy.
 				
 				if not c:match("^KEY_") then
+					Cmd.TypeWhileSelected()
 					Cmd.InsertStringIntoWord(c)
 				else
 					f = DocumentSet.menu:lookupAccelerator(c)
