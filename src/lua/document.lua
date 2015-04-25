@@ -484,10 +484,14 @@ WordClass =
 		local len = text:len()
 		local o = 1
 		while (o <= len) do
+			if (x == 0) then
+				return o
+			end
+
 			local charlen = GetBytesOfCharacter(string.byte(text, o))
 			local char = text:sub(o, o+charlen-1)
 			local ww = GetStringWidth(char)
-			if (ww >= x) then
+			if (ww > x) then
 				return o
 			end
 			
