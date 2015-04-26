@@ -208,10 +208,7 @@ function Cmd.InsertStringIntoParagraph(c)
 end
 
 function Cmd.SplitCurrentWord()
-	local paragraph = Document[Document.cp]
-	local cw = Document.cw
-	local co = Document.co
-	local word = paragraph[cw]
+	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local styleprime = ""
 
 	if not Document.mp then
@@ -229,11 +226,16 @@ function Cmd.SplitCurrentWord()
 		styleprime = CreateStyleByte(stylehint)
 	end
 
+	local paragraph = Document[cp]
+	local word = paragraph[cw]
 	local left = DeleteFromWord(word, co, #word+1)
 	local right = DeleteFromWord(word, 1, co)
 
-	paragraph[cw] = styleprime .. right
-	paragraph:insertWordBefore(cw, left)
+	Document[cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw-1),
+		left,
+		styleprime..right,
+		paragraph:sub(cw+1))
 
 	Document.cw = cw + 1
 	Document.co = 1 + #styleprime

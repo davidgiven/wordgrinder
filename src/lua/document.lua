@@ -421,11 +421,6 @@ ParagraphClass =
 		return t
 	end,
 
-	insertWordBefore = function(self, pos, word)
-		table.insert(self, pos, word)
-		self:touch()
-	end,
-	
 	appendWord = function(self, word)
 		self[#self+1] = word
 		self:touch()
