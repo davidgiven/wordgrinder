@@ -375,7 +375,7 @@ ParagraphClass =
 				end
 			end
 			
-			ostyle = WriteStyled(x+self.xs[wn], y, w, ostyle, s, e, cstyle)
+			ostyle = WriteStyled(x+self.xs[w], y, self[w], ostyle, s, e, cstyle)
 		end
 	end,
 
