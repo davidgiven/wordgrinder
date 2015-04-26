@@ -246,12 +246,15 @@ function Cmd.SplitCurrentWord()
 end
 
 function Cmd.JoinWithNextParagraph()
-	if (Document.cp == #Document) then
+	local cp, cw, co = Document.cp, Document.cw, Document.co
+	if (cp == #Document) then
 		return false
 	end
 	
-	Document[Document.cp]:appendWords(Document[Document.cp+1])
-	Document:deleteParagraphAt(Document.cp+1)
+	Document[cp] = CreateParagraph(Document[cp].style,
+		Document[cp],
+		Document[cp+1])
+	Document:deleteParagraphAt(cp+1)
 	
 	DocumentSet:touch()
 	QueueRedraw()
