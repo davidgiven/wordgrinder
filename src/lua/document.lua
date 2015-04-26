@@ -426,13 +426,6 @@ ParagraphClass =
 		self:touch()
 	end,
 	
-	appendWords = function(self, words)
-		for _, w in ipairs(words) do
-			self:appendWord(w)
-		end
-		self:touch()
-	end,
-	
 	split = function(self, wn)
 		local p1 = CreateParagraph(self.style)
 		local p2 = CreateParagraph(self.style)
