@@ -257,8 +257,8 @@ function Cmd.JoinWithNextParagraph()
 end
 
 function Cmd.JoinWithNextWord()
-	local paragraph = Document[Document.cp]
-	local cw = Document.cw
+	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local paragraph = Document[cp]
 
 	if (cw == #paragraph) then
 		if not Cmd.JoinWithNextParagraph() then
@@ -267,8 +267,10 @@ function Cmd.JoinWithNextWord()
 	end
 
 	if (cw ~= #paragraph) then
-		paragraph[cw] = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
-		paragraph:deleteWordAt(cw+1)
+		Document[cp] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, cw-1),
+			{(InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0))},
+			paragraph:sub(cw+2))
 	end
 	
 	DocumentSet:touch()
@@ -340,7 +342,15 @@ function Cmd.DeleteWord()
 end
 
 function Cmd.SplitCurrentParagraph()
-	Cmd.SplitCurrentWord()
+	if (Document.co == 1) and (Document.cw == 1) then
+		-- Beginning of paragraph; we're going to create a new, empty paragraph
+		-- so we need to split to make sure there's an empty word for it to
+		-- contain.
+		Cmd.SplitCurrentWord()
+	elseif (Document.co > 1) then
+		-- Otherwise, only split if we're not at the beginning of a word.
+		Cmd.SplitCurrentWord()
+	end
 	
 	local p1, p2 = Document[Document.cp]:split(Document.cw)
 	
@@ -724,20 +734,22 @@ function Cmd.Copy(keepselection)
 	
 	-- Remove any words in the first paragraph that weren't copied.
 	
-	local paragraph = buffer[1]
-	while (mw1 > 1) do
-		paragraph:deleteWordAt(1)
-		mw1 = mw1 - 1
+	local paragraph
+	if (mw1 > 1) then
+		paragraph = buffer[1]
+		buffer[1] = CreateParagraph(paragraph.style,
+			paragraph:sub(mw1))
 		if (mp1 == mp2) then
-			mw2 = mw2 - 1
+			mw2 = mw2 - mw1
 		end
 	end
 	
 	-- Remove any words in the last paragraph that weren't copied.
 	
 	paragraph = buffer[#buffer]
-	while (mw2 < #paragraph) do
-		paragraph:deleteWordAt(#paragraph)
+	if (mw2 < #paragraph) then
+		buffer[#buffer] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, mw2))
 	end
 	
 	-- Remove any characters in the leading word that weren't copied.
@@ -745,7 +757,9 @@ function Cmd.Copy(keepselection)
 	paragraph = buffer[1]
 	word = paragraph[1]
 	if word then
-		word = DeleteFromWord(word, 1, mo1)
+		buffer[1] = CreateParagraph(paragraph.style,
+			{DeleteFromWord(word, 1, mo1)},
+			paragraph:sub(2))
 		if (mp1 == mp2) and (mw1 == mw2) then
 			mo2 = mo2 - mo1 + 1
 		end
@@ -756,7 +770,9 @@ function Cmd.Copy(keepselection)
 	paragraph = buffer[#buffer]
 	word = paragraph[#paragraph]
 	if word then
-		word = DeleteFromWord(word, mo2, word:len()+1)
+		buffer[#buffer] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, #paragraph-1),
+			DeleteFromWord(word, mo2, word:len()+1))
 	end
 	
 	NonmodalMessage("Selected area copied to clipboard.")
@@ -783,6 +799,8 @@ function Cmd.Paste()
 	local cw = Document.cw
 	Cmd.SplitCurrentWord()
 	local paragraph = Document[Document.cp]
+
+	local newwords = {}
 	for wn, word in ipairs(buffer[1]) do
 		local payload = {
 			word = word,
@@ -790,10 +808,15 @@ function Cmd.Paste()
 			paragraph = paragraph
 		}
 		FireEvent(Event.WordModified, payload)
-
-		paragraph:insertWordBefore(Document.cw, payload.word)
-		Document.cw = Document.cw + 1
+		newwords[#newwords+1] = payload.word
 	end
+
+	Document[Document.cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw),
+		newwords,
+		paragraph:sub(cw+1))
+	Document.cw = Document.cw + #newwords
+	Document.co = 1
 	
 	-- Splice the first word of the section just pasted.
 	
@@ -835,7 +858,8 @@ function Cmd.Paste()
 	-- Splice the last word of the section just pasted.
 	
 	NonmodalMessage("Clipboard copied to cursor position.")
-	return Cmd.GotoPreviousCharW() and Cmd.JoinWithNextWord()
+	return Cmd.GotoBeginningOfWord() and Cmd.GotoPreviousCharW()
+		and Cmd.JoinWithNextWord()
 end
 
 function Cmd.Delete()
@@ -873,7 +897,8 @@ function Cmd.Delete()
 	-- And merge the two areas together again.
 	
 	NonmodalMessage("Selected area deleted.")
-	return Cmd.GotoPreviousCharW() and
+	return Cmd.GotoPreviousWordW() and
+	       Cmd.GotoEndOfWord() and
 	       Cmd.JoinWithNextWord() and
 	       Cmd.UnsetMark()
 end
