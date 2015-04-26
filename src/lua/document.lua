@@ -426,13 +426,6 @@ ParagraphClass =
 		self:touch()
 	end,
 	
-	truncateAtWord = function(self, wn)
-		while (self[wn]) do
-			table.remove(self, wn)
-		end
-		self:touch()
-	end,
-	
 	changeStyle = function(self, style)
 		self.style = style
 		self:touch()
