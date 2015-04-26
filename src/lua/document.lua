@@ -432,8 +432,8 @@ ParagraphClass =
 	end
 }
 
-function CreateParagraph(style, words, ...)
-	words = words or {}
+function CreateParagraph(style, ...)
+	words = {}
 
 	for _, t in ipairs({...}) do
 		if (type(t) == "table") then
@@ -447,7 +447,11 @@ function CreateParagraph(style, words, ...)
 
 	words.style = style or DocumentSet.styles["P"]
 	setmetatable(words, {__index = ParagraphClass})
-	return words
+	if DEBUG then
+		return ImmutabliseArray(words)
+	else
+		return words
+	end
 end
 
 -- Returns how many screen spaces a portion of a string takes up.
