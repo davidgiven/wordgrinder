@@ -426,21 +426,6 @@ ParagraphClass =
 		self:touch()
 	end,
 	
-	split = function(self, wn)
-		local p1 = CreateParagraph(self.style)
-		local p2 = CreateParagraph(self.style)
-		
-		for i=1, wn-1 do
-			p1:appendWord(self[i])
-		end
-		
-		for i=wn, #self do
-			p2:appendWord(self[i])
-		end
-		
-		return p1, p2
-	end,
-	
 	truncateAtWord = function(self, wn)
 		while (self[wn]) do
 			table.remove(self, wn)

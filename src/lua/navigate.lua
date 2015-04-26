@@ -357,11 +357,13 @@ function Cmd.SplitCurrentParagraph()
 		Cmd.SplitCurrentWord()
 	end
 	
-	local p1, p2 = Document[Document.cp]:split(Document.cw)
+	local cp, cw = Document.cp, Document.cw
+	local paragraph = Document[cp]
+	local p1 = CreateParagraph(paragraph.style, paragraph:sub(1, cw-1))
+	local p2 = CreateParagraph(paragraph.style, paragraph:sub(cw))
 	
-	Document:deleteParagraphAt(Document.cp)
-	Document:insertParagraphBefore(p2, Document.cp)
-	Document:insertParagraphBefore(p1, Document.cp)
+	Document[cp] = p2
+	Document:insertParagraphBefore(p1, cp)
 	Document.cp = Document.cp + 1
 	Document.cw = 1
 	Document.co = 1
