@@ -131,4 +131,37 @@ function TableToString(t)
 	return "{"..table.concat(ts, ", ").."}"
 end
 
+--- Return a partially immutable proxy for an object.
+-- This only handles direct assignment to array members.
+--
+-- @param o                  object
+-- @return                   the proxy
+
+function ImmutabliseArray(o)
+	local p = {}
+	setmetatable(p,
+		{
+			__index = function(self, k)
+				return o[k]
+			end,
+
+			__newindex = function(self, k, v)
+				if (type(k) == "number") then
+					error("write to immutable table")
+				else
+					o[k] = v
+				end
+			end,
+
+			__len = function(self)
+				return #o
+			end,
+
+			__ipairs = function(self)
+				return ipairs(o)
+			end
+		}
+	)
+	return p
+end
 

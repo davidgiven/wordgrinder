@@ -167,10 +167,11 @@ function Cmd.GotoNextCharW()
 end
 
 function Cmd.InsertStringIntoWord(c)
-	local paragraph = Document[Document.cp]
-	local word = paragraph[Document.cw]
+	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local paragraph = Document[cp]
+	local word = paragraph[cw]
 	
-	local s, co = InsertIntoWord(word, c, Document.co, GetCurrentStyleHint())
+	local s, co = InsertIntoWord(word, c, co, GetCurrentStyleHint())
 	if not co then
 		return false
 	end
@@ -184,9 +185,11 @@ function Cmd.InsertStringIntoWord(c)
 	FireEvent(Event.WordModified, payload)
 	local news = payload.word
 
-	paragraph[Document.cw] = news
+	Document[cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw-1),
+		news,
+		paragraph:sub(cw+1))
 	Document.co = co + (#news - #s)
-	paragraph:touch()
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -269,14 +272,14 @@ function Cmd.JoinWithNextWord()
 		if not Cmd.JoinWithNextParagraph() then
 			return false
 		end
+		paragraph = Document[cp]
 	end
 
-	if (cw ~= #paragraph) then
-		Document[cp] = CreateParagraph(paragraph.style,
-			paragraph:sub(1, cw-1),
-			{(InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0))},
-			paragraph:sub(cw+2))
-	end
+	local word = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
+	Document[cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw-1),
+		word,
+		paragraph:sub(cw+2))
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -296,17 +299,18 @@ function Cmd.DeleteSelectionOrPreviousChar()
 end
 
 function Cmd.DeleteNextChar()
-	local paragraph = Document[Document.cp]
-	local cw = Document.cw
-	local co = Document.co
+	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local paragraph = Document[cp]
 	local word = paragraph[cw]
 	local nextco = NextCharInWord(word, co)
 	if not nextco then
 		return Cmd.JoinWithNextWord()
 	end
 	
-	paragraph[cw] = DeleteFromWord(word, co, nextco)
-	paragraph:touch()
+	Document[cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw-1),
+		DeleteFromWord(word, co, nextco),
+		paragraph:sub(cw+1))
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -503,6 +507,7 @@ function Cmd.ApplyStyleToSelection(s)
 			lastword = mw2
 		end
 		
+		local words = {}
 		for wn = firstword, lastword do
 			local word = paragraph[wn]
 			
@@ -523,10 +528,13 @@ function Cmd.ApplyStyleToSelection(s)
 				word = ApplyStyleToWord(word, sor, sand, fo, lo, 0)
 			end
 
-			paragraph[wn] = word
+			words[#words+1] = word
 		end
 		
-		paragraph:touch()
+		Document[p] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, firstword-1),
+			words,
+			paragraph:sub(lastword+1))
 	end
 	
 	Cmd.UnsetMark()
@@ -619,30 +627,23 @@ local function styles()
 end
 	
 function Cmd.ChangeParagraphStyle(style)
-	if not style then
-		-- style = PromptForString("Change paragraph style", "Please enter the new paragraph style:", paragraph.style.name)
-		style = Browser("Change paragraph style", "Please select the new paragraph style from the list, or enter a style name:", "Style:", styles())
-		
-	end
-	if not style then
-		return false
-	end
-	
 	style = DocumentSet.styles[style]
 	if not style then
 		ModalMessage("Unknown paragraph style", "Sorry! I don't recognise that style. (This user interface will be improved.)")
 		return false
 	end
 
+	local first, last
 	if Document.mp then	
-		local mp1, _, _, mp2, _, _ = Document:getMarks()
-		
-		for p = mp1, mp2 do
-			Document[p] = CreateParagraph(style, Document[p])
-		end
+		local _
+		first, _, _, last, _, _ = Document:getMarks()
 	else
-		local cp = Document.cp
-		Document[cp] = CreateParagraph(style, Document[cp])
+		first = Document.cp
+		last = first
+	end
+		
+	for p = first, last do
+		Document[p] = CreateParagraph(style, Document[p])
 	end
 	
 	DocumentSet:touch()
@@ -846,9 +847,9 @@ function Cmd.Paste()
 		
 		local p = 2
 		for p = 2, #buffer do	
-			local paragraph = buffer[p]:copy()
-			Document:insertParagraphBefore(paragraph, Document.cp)
-			for wn, word in ipairs(paragraph) do
+			local paragraph = buffer[p]
+			local words = {}
+			for wn, word in ipairs(buffer[p]) do
 				local payload =
 				{
 					word = word,
@@ -856,15 +857,18 @@ function Cmd.Paste()
 					paragraph = paragraph
 				}
 				FireEvent(Event.WordModified, payload)
-				paragraph[wn] = payload.word
+				words[#words+1] = payload.word
 			end
+			Document:insertParagraphBefore(
+				CreateParagraph(paragraph.style, words),
+				Document.cp)
 
 			Document.cp = Document.cp + 1
 			Document.cw = 1
 			Document.co = 1
 		end
 	end
-	
+
 	-- Splice the last word of the section just pasted.
 	
 	NonmodalMessage("Clipboard copied to cursor position.")
