@@ -355,6 +355,9 @@ function Cmd.SplitCurrentParagraph()
 	elseif (Document.co > 1) then
 		-- Otherwise, only split if we're not at the beginning of a word.
 		Cmd.SplitCurrentWord()
+	else
+		DocumentSet:touch()
+		QueueRedraw()
 	end
 	
 	local cp, cw = Document.cp, Document.cw
