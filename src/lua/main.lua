@@ -83,10 +83,11 @@ function WordProcessor(filename)
 	wg.initscreen()
 	ResizeScreen()
 	RedrawScreen()
-	FireEvent(Event.DocumentLoaded)
 	
 	if filename then
 		Cmd.LoadDocumentSet(filename)
+	else
+		FireEvent(Event.DocumentLoaded)
 	end
 	
 	--ModalMessage("Welcome!", "Welcome to WordGrinder! While editing, you may press ESC for the menu, or ESC, F, X to exit (or ALT+F, X if your terminal supports it).")

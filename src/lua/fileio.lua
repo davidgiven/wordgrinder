@@ -37,7 +37,6 @@ local function writetostream(object, writes, writei)
 		[DocumentSetClass] = DOCUMENTSETCLASS,
 		[DocumentClass] = DOCUMENTCLASS,
 		[ParagraphClass] = PARAGRAPHCLASS,
-		[WordClass] = WORDCLASS,
 		[MenuClass] = MENUCLASS,
 	}
 	
@@ -61,7 +60,7 @@ local function writetostream(object, writes, writei)
 			end
 			if (m == WORDCLASS) then
 				writei(BRIEFWORD)
-				save(t.text)
+				save(t)
 			else
 				writei(m)
 				writei(#t)
@@ -229,10 +228,20 @@ local function loadfromstream(fp)
 		end,
 		
 		["W"] = function()
+			-- Words used to be objects of their own; they've been replaced
+			-- with simple strings.
 			local t = {}
-			setmetatable(t, {__index = WordClass})
-			cache[#cache + 1] = t
-			return populate_table(t)
+
+			-- Ensure we allocate a cache entry *before* calling
+			-- populate_table(), or else the numbers will go all wrong; the
+			-- original implementation put t here.
+			local cn = #cache + 1
+			cache[cn] = {}
+
+			populate_table(t)
+
+			cache[cn] = t.text
+			return t.text
 		end,
 		
 		["M"] = function()
@@ -347,17 +356,27 @@ function loadfromstreamz(fp)
 		end,
 		
 		[WORDCLASS] = function()
+			-- Words used to be objects of their own; they've been replaced
+			-- with simple strings.
 			local t = {}
-			setmetatable(t, {__index = WordClass})
-			cache[#cache + 1] = t
-			return populate_table(t)
+
+			-- Ensure we allocate a cache slot *before* calling populate_table,
+			-- or else the numbers all go wrong.
+			local cn = #cache + 1
+			cache[cn] = {}
+
+			populate_table(t)
+
+			cache[cn] = t.text
+			return t.text
 		end,
 		
 		[BRIEFWORD] = function()
-			local t = {}
-			setmetatable(t, {__index = WordClass})
-			cache[#cache + 1] = t
-			t.text = load()
+			-- Words used to be objects of their own; they've been replaced
+			-- with simple strings.
+
+			local t = load()
+			cache[#cache+1] = t
 			return t
 		end,
 		
@@ -453,10 +472,6 @@ end
 local function loaddocument(filename)
 	local d = LoadFromStream(filename)
 
-	-- This should not be necessary, but we do it anyway just to be sure.
-	
-	d:purge()
-	
 	-- Even if the changed flag was set in the document on disk, remove it.
 	
 	d:clean()
@@ -488,90 +503,82 @@ function Cmd.LoadDocumentSet(filename)
 		return false
 	end
 		
+	-- Downgrading documents is not supported.
+	local fileformat = d.fileformat or 1
+	if (fileformat > FILEFORMAT) then
+		ModalMessage(nil, "This document belongs to a newer version of " ..
+			"WordGrinder and cannot be loaded. Sorry.")
+		QueueRedraw()
+		return false
+	end
+
 	DocumentSet = d
 	Document = d.current
 	
+	if (fileformat < FILEFORMAT) then
+		UpgradeDocument(fileformat)
+		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
+		FireEvent(Event.RegisterAddons)
+				
+		DocumentSet.fileformat = FILEFORMAT
+		DocumentSet.menu = CreateMenu()
+		DocumentSet:touch()
+	end
+
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 	
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	QueueRedraw()
+
+	if (fileformat < FILEFORMAT) then
+		ModalMessage("Document upgraded",
+			"You are trying to open a file belonging to an earlier "..
+			"version of WordGrinder. That's not a problem, but if you "..
+			"save the file again it may not work on the old version. "..
+			"Also, all keybindings defined in this file will get reset "..
+			"to their default values.")
+	end
 	return true
 end
 
------------------------------------------------------------------------------
--- Cause the document to get upgraded, if necessary.
+function UpgradeDocument(oldversion)
+	DocumentSet.addons = DocumentSet.addons or {}
 
-do
-	local function cb(event, token)	
-		local fileformat = DocumentSet.fileformat or 1
-		
-		if (fileformat ~= FILEFORMAT) then
-			-- This is vile, but some addons may have registered hooks
-			-- which will fire when we call ModalMessage. They're going
-			-- to assume the addons table exists. So we ensure that here,
-			-- rather than later during the formal upgrade process.
-			DocumentSet.addons = DocumentSet.addons or {}
-
-			ModalMessage("Upgrading document",
-				"You are trying to open a file belonging to an earlier "..
-				"version of WordGrinder. That's not a problem, but if you "..
-				"save the file again it may not work on the old version. "..
-				"Also, all keybindings defined in this file will get reset "..
-				"to their default values.")
-			
-			ImmediateMessage("Upgrading...")
-			FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
-				
-			DocumentSet.fileformat = FILEFORMAT
-			DocumentSet.menu = CreateMenu()
-			DocumentSet:touch()
-		end
-		
-		-- This happens here because it must happen before the result of the
-		-- DocumentLoaded handlers fire, but after the DocumentUpgrade
-		-- handlers. It's not really a very elegant place for it.
-		
-		FireEvent(Event.RegisterAddons)
-	end
+	-- Upgrade version 1 to 2.
 	
-	AddEventListener(Event.DocumentLoaded, cb)
-end
+	if (oldversion < 2) then
+		-- Update wordcount.
 
------------------------------------------------------------------------------
--- Upgrade the document, if necessary.
-
-do
-	local function cb(event, token, oldversion, newversion)
-		-- Upgrade version 1 to 2.
-		
-		if (oldversion < 2) then
-			-- Update wordcount.
-
-			for _, document in ipairs(DocumentSet) do
-				local wc = 0
-				
-				for _, p in ipairs(document) do
-					wc = wc + #p
-				end
-				
-				document.wordcount = wc
+		for _, document in ipairs(DocumentSet) do
+			local wc = 0
+			
+			for _, p in ipairs(document) do
+				wc = wc + #p
 			end
-	
-			-- Status bar defaults to on.
-
-			DocumentSet.statusbar = true
-		end
-		
-		-- Upgrade version 2 to 3.
-		
-		if (oldversion < 3) then
-			-- Idle time defaults to 3.
 			
-			DocumentSet.idletime = 3
+			document.wordcount = wc
 		end
+
+		-- Status bar defaults to on.
+
+		DocumentSet.statusbar = true
 	end
 	
-	AddEventListener(Event.DocumentUpgrade, cb)
+	-- Upgrade version 2 to 3.
+	
+	if (oldversion < 3) then
+		-- Idle time defaults to 3.
+		
+		DocumentSet.idletime = 3
+	end
+
+	-- Upgrade version 5 to 6.
+
+	if (oldversion < 6) then
+		-- This is the version which made WordClass disappear. The
+		-- conversion's actually done as part of the stream loader
+		-- (where WORDCLASS and BRIEFWORD are parsed).
+	end
 end

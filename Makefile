@@ -44,8 +44,8 @@ else
 all: unix x11unix
 endif
 
-VERSION := 0.5.3
-FILEFORMAT := 5
+VERSION := 0.6.0
+FILEFORMAT := 6
 DATE := $(shell date +'%-d %B %Y')
 
 override CFLAGS += \
@@ -428,12 +428,21 @@ tests: .obj/$(strip $1).passed
 
 endef
 
+$(eval $(call run-test, tests/apply-markup.lua))
 $(eval $(call run-test, tests/delete-selection.lua))
 $(eval $(call run-test, tests/get-style-from-word.lua))
 $(eval $(call run-test, tests/insert-space-with-style-hint.lua))
 $(eval $(call run-test, tests/line-down-into-style.lua))
 $(eval $(call run-test, tests/line-up.lua))
+$(eval $(call run-test, tests/line-wrapping.lua))
+$(eval $(call run-test, tests/load-0.1.lua))
+$(eval $(call run-test, tests/load-0.2.lua))
+$(eval $(call run-test, tests/load-0.3.3.lua))
+$(eval $(call run-test, tests/load-0.4.1.lua))
+$(eval $(call run-test, tests/load-0.5.3.lua))
 $(eval $(call run-test, tests/move-while-selected.lua))
+$(eval $(call run-test, tests/parse-string-into-words.lua))
+$(eval $(call run-test, tests/simple-editing.lua))
 $(eval $(call run-test, tests/smartquotes-selection.lua))
 $(eval $(call run-test, tests/smartquotes-typing.lua))
 $(eval $(call run-test, tests/type-while-selected.lua))

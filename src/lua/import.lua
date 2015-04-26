@@ -18,10 +18,10 @@ local table_concat = table.concat
 function ParseStringIntoWords(s)
 	local words = {}
 	for w in s:gmatch("[^ \t\r\n]+") do
-		words[#words + 1] = CreateWord(w)
+		words[#words + 1] = w
 	end
 	if (#words == 0) then
-		return {CreateWord()}
+		return {""}
 	end
 	return words
 end
@@ -63,7 +63,7 @@ function CreateImporter(document)
 		flushword = function(self, force)
 			if (#wbuffer > 0) or force then
 				local s = table_concat(wbuffer)
-				pbuffer[#pbuffer + 1] = CreateWord(s)
+				pbuffer[#pbuffer + 1] = s
 				wbuffer = {}
 				oldattr = 0
 			end
