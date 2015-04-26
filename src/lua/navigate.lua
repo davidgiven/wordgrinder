@@ -619,7 +619,6 @@ local function styles()
 end
 	
 function Cmd.ChangeParagraphStyle(style)
-	local paragraph = Document[Document.cp]
 	if not style then
 		-- style = PromptForString("Change paragraph style", "Please enter the new paragraph style:", paragraph.style.name)
 		style = Browser("Change paragraph style", "Please select the new paragraph style from the list, or enter a style name:", "Style:", styles())
@@ -639,10 +638,11 @@ function Cmd.ChangeParagraphStyle(style)
 		local mp1, _, _, mp2, _, _ = Document:getMarks()
 		
 		for p = mp1, mp2 do
-			Document[p]:changeStyle(style)
+			Document[p] = CreateParagraph(style, Document[p])
 		end
 	else
-		paragraph:changeStyle(style)
+		local cp = Document.cp
+		Document[cp] = CreateParagraph(style, Document[cp])
 	end
 	
 	DocumentSet:touch()

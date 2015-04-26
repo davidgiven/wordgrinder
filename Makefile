@@ -429,6 +429,7 @@ tests: .obj/$(strip $1).passed
 endef
 
 $(eval $(call run-test, tests/apply-markup.lua))
+$(eval $(call run-test, tests/change-paragraph-style.lua))
 $(eval $(call run-test, tests/clipboard.lua))
 $(eval $(call run-test, tests/delete-selection.lua))
 $(eval $(call run-test, tests/get-style-from-word.lua))
