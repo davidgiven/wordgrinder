@@ -421,11 +421,6 @@ ParagraphClass =
 		return t
 	end,
 
-	changeStyle = function(self, style)
-		self.style = style
-		self:touch()
-	end,
-	
 	-- return an unstyled string containing the contents of the paragraph.
 	asString = function(self)
 		local s = {}
