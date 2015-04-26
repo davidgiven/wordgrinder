@@ -10,17 +10,17 @@ do
 		return (s:gsub("%%", "%%%%"))
 	end
 
-	local function cb(event, token, word, paragraph)
+	local function cb(event, token, payload)
 		local settings = DocumentSet.addons.smartquotes or {}
 
-		if settings.notinraw and (paragraph.style.name ~= "RAW") then
+		if settings.notinraw and (payload.paragraph.style.name ~= "RAW") then
 			if settings.doublequotes then
-				word.text = word.text:gsub('^"', escape(settings.leftdouble))
-				word.text = word.text:gsub('"', escape(settings.rightdouble))
+				payload.word = payload.word:gsub('^"', escape(settings.leftdouble))
+				payload.word = payload.word:gsub('"', escape(settings.rightdouble))
 			end
 			if settings.singlequotes then
-				word.text = word.text:gsub("^'", escape(settings.leftsingle))
-				word.text = word.text:gsub("'", escape(settings.rightsingle))
+				payload.word = payload.word:gsub("^'", escape(settings.leftsingle))
+				payload.word = payload.word:gsub("'", escape(settings.rightsingle))
 			end
 		end
 	end

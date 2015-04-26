@@ -89,7 +89,7 @@ function ExportFileUsingCallbacks(document, cb)
 		
 		cb.paragraph_start(name)
 	
-		if (#paragraph == 1) and (#paragraph[1].text == 0) then
+		if (#paragraph == 1) and (#paragraph[1] == 0) then
 			cb.notext()
 		else
 			firstword = true
@@ -109,7 +109,7 @@ function ExportFileUsingCallbacks(document, cb)
 				italic = false
 				underline = false
 				bold = false
-				ParseWord(word.text, 0, wordwriter) -- FIXME
+				ParseWord(word, 0, wordwriter) -- FIXME
 				if emptyword then
 					wordwriter(0, "")
 				end

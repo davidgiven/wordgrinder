@@ -21,7 +21,7 @@ FlushAsyncEvents()
 Cmd.InsertStringIntoWord("baz")
 
 AssertEquals(3, #Document[1])
-AssertEquals("\024foo", Document[1][1].text)
-AssertEquals("bar", Document[1][2].text)
-AssertEquals("baz", Document[1][3].text)
+AssertEquals("\024foo", Document[1][1])
+AssertEquals("bar", Document[1][2])
+AssertEquals("baz", Document[1][3])
 

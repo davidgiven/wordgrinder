@@ -24,7 +24,7 @@ function Cmd.GotoBeginningOfWord()
 end
 
 function Cmd.GotoEndOfWord()
-	Document.co = Document[Document.cp][Document.cw].text:len() + 1
+	Document.co = #Document[Document.cp][Document.cw] + 1
 	QueueRedraw()
 	return true
 end
@@ -128,7 +128,7 @@ end
 
 function Cmd.GotoPreviousChar()
 	local word = Document[Document.cp][Document.cw]
-	local co = PrevCharInWord(word.text, Document.co)
+	local co = PrevCharInWord(word, Document.co)
 	if not co then
 		return false
 	end
@@ -141,7 +141,7 @@ end
 
 function Cmd.GotoNextChar()
 	local word = Document[Document.cp][Document.cw]
-	local co = NextCharInWord(word.text, Document.co)
+	local co = NextCharInWord(word, Document.co)
 	if not co then
 		return false
 	end
@@ -170,15 +170,22 @@ function Cmd.InsertStringIntoWord(c)
 	local paragraph = Document[Document.cp]
 	local word = paragraph[Document.cw]
 	
-	local s, co = InsertIntoWord(word.text, c, Document.co,
-		GetCurrentStyleHint())
+	local s, co = InsertIntoWord(word, c, Document.co, GetCurrentStyleHint())
 	if not co then
 		return false
 	end
 	
-	word.text = s
-	FireEvent(Event.WordModified, word, paragraph)
-	Document.co = co + (#word.text - #s)
+	local payload =
+	{
+		word = s,
+		wn = Document.cw,
+		paragraph = paragraph
+	}
+	FireEvent(Event.WordModified, payload)
+	local news = payload.word
+
+	paragraph[Document.cw] = news
+	Document.co = co + (#news - #s)
 	paragraph:touch()
 	
 	DocumentSet:touch()
@@ -202,14 +209,11 @@ end
 
 function Cmd.SplitCurrentWord()
 	local paragraph = Document[Document.cp]
-	local word = paragraph[Document.cw]
-	local text = word.text
+	local cw = Document.cw
 	local co = Document.co
-	
-	local left = DeleteFromWord(text, co, text:len()+1)
-	local newword = CreateWord(left)
-
+	local word = paragraph[cw]
 	local styleprime = ""
+
 	if not Document.mp then
 		local stylehint = GetCurrentStyleHint()
 		-- This is a bit evil. We want to prime the new word with the current
@@ -225,10 +229,13 @@ function Cmd.SplitCurrentWord()
 		styleprime = CreateStyleByte(stylehint)
 	end
 
-	word.text = styleprime .. DeleteFromWord(text, 1, co)
-	
-	paragraph:insertWordBefore(Document.cw, newword)
-	Document.cw = Document.cw + 1
+	local left = DeleteFromWord(word, co, #word+1)
+	local right = DeleteFromWord(word, 1, co)
+
+	paragraph[cw] = styleprime .. right
+	paragraph:insertWordBefore(cw, left)
+
+	Document.cw = cw + 1
 	Document.co = 1 + #styleprime
 	
 	DocumentSet:touch()
@@ -251,17 +258,17 @@ end
 
 function Cmd.JoinWithNextWord()
 	local paragraph = Document[Document.cp]
-	local word = paragraph[Document.cw]
+	local cw = Document.cw
 
-	if (Document.cw == #paragraph) then
+	if (cw == #paragraph) then
 		if not Cmd.JoinWithNextParagraph() then
 			return false
 		end
 	end
 
-	if (Document.cw ~= #paragraph) then
-		word.text = InsertIntoWord(paragraph[Document.cw+1].text, word.text, 1, 0)
-		paragraph:deleteWordAt(Document.cw+1)
+	if (cw ~= #paragraph) then
+		paragraph[cw] = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
+		paragraph:deleteWordAt(cw+1)
 	end
 	
 	DocumentSet:touch()
@@ -283,14 +290,15 @@ end
 
 function Cmd.DeleteNextChar()
 	local paragraph = Document[Document.cp]
-	local word = paragraph[Document.cw]
+	local cw = Document.cw
 	local co = Document.co
-	local nextco = NextCharInWord(word.text, co)
+	local word = paragraph[cw]
+	local nextco = NextCharInWord(word, co)
 	if not nextco then
 		return Cmd.JoinWithNextWord()
 	end
 	
-	word.text = DeleteFromWord(word.text, co, nextco)
+	paragraph[cw] = DeleteFromWord(word, co, nextco)
 	paragraph:touch()
 	
 	DocumentSet:touch()
@@ -308,10 +316,10 @@ end
 
 function Cmd.DeleteWordLeftOfCursor()
 	local paragraph = Document[Document.cp]
-	local word = paragraph[Document.cw]
+	local cw = Document.cw
 	local co = Document.co
 
-	word.text = DeleteFromWord(word.text, 1, Document.co)
+	paragraph[cw] = DeleteFromWord(paragraph[cw], 1, co)
 	Document.co = 1
 	paragraph:touch()
 	
@@ -352,7 +360,6 @@ function Cmd.GotoXPosition(pos)
 	
 	local l = lines[ln]
 	local wn = #l
-	local word
 
 	pos = pos - (paragraph.style.indent or 0)
 	if (pos < 0) then
@@ -360,9 +367,7 @@ function Cmd.GotoXPosition(pos)
 	end
 	
 	while (wn > 0) do
-		word = l[wn]
-		
-		if (word.x <= pos) then
+		if (paragraph.xs[wn] <= pos) then
 			break
 		end
 		wn = wn - 1
@@ -372,7 +377,7 @@ function Cmd.GotoXPosition(pos)
 		wn = 1
 	end
 
-	wo = word:getByteOfChar(pos - word.x) 
+	wo = GetOffsetFromWidth(paragraph[wn], pos - paragraph.xs[wn])
 	
 	Document.cw = paragraph:getWordOfLine(ln) + wn - 1
 	Document.co = wo
@@ -387,7 +392,7 @@ local function getpos()
 	local cw = Document.cw
 	local word = paragraph[cw]
 	local x, ln, wn = paragraph:getXOffsetOfWord(cw)
-	x = x + word:getXOffsetOfChar(Document.co)
+	x = x + GetWidthFromOffset(word, Document.co)
 	x = x + (paragraph.style.indent or 0)
 
 	return x, ln, lines
@@ -478,25 +483,27 @@ function Cmd.ApplyStyleToSelection(s)
 			lastword = mw2
 		end
 		
-		for w = firstword, lastword do
-			local word = paragraph[w]
+		for wn = firstword, lastword do
+			local word = paragraph[wn]
 			
 			local fo = 1
-			local lo = word.text:len() + 1
+			local lo = #word + 1
 			
-			if (p == mp1) and (w == mw1) then
+			if (p == mp1) and (wn == mw1) then
 				fo = mo1
 			end
 			
-			if (p == mp2) and (w == mw2) then
+			if (p == mp2) and (wn == mw2) then
 				lo = mo2
 			end
 			
-			if (p == cp) and (w == cw) then
-				word.text, Document.co = ApplyStyleToWord(word.text, sor, sand, fo, lo, co)
+			if (p == cp) and (wn == cw) then
+				word, Document.co = ApplyStyleToWord(word, sor, sand, fo, lo, co)
 			else
-				word.text = ApplyStyleToWord(word.text, sor, sand, fo, lo, 0)
+				word = ApplyStyleToWord(word, sor, sand, fo, lo, 0)
 			end
+
+			paragraph[wn] = word
 		end
 		
 		paragraph:touch()
@@ -524,7 +531,7 @@ function GetStyleAtCursor()
 	local cw = Document.cw
 	local co = Document.co
 
-	return GetStyleFromWord(Document[cp][cw].text, co)
+	return GetStyleFromWord(Document[cp][cw], co)
 end
 
 function GetStyleToLeftOfCursor()
@@ -537,10 +544,10 @@ function GetStyleToLeftOfCursor()
 			return 0
 		end
 		cw = cw - 1
-		co = Document[cp][cw].text:len()
+		co = #Document[cp][cw]
 	end
 
-	return GetStyleFromWord(Document[cp][cw].text, co)
+	return GetStyleFromWord(Document[cp][cw], co)
 end
 
 function Cmd.ActivateMenu(menu)
@@ -738,7 +745,7 @@ function Cmd.Copy(keepselection)
 	paragraph = buffer[1]
 	word = paragraph[1]
 	if word then
-		word.text = DeleteFromWord(word.text, 1, mo1)
+		word = DeleteFromWord(word, 1, mo1)
 		if (mp1 == mp2) and (mw1 == mw2) then
 			mo2 = mo2 - mo1 + 1
 		end
@@ -749,7 +756,7 @@ function Cmd.Copy(keepselection)
 	paragraph = buffer[#buffer]
 	word = paragraph[#paragraph]
 	if word then
-		word.text = DeleteFromWord(word.text, mo2, word.text:len()+1)
+		word = DeleteFromWord(word, mo2, word:len()+1)
 	end
 	
 	NonmodalMessage("Selected area copied to clipboard.")
@@ -776,10 +783,15 @@ function Cmd.Paste()
 	local cw = Document.cw
 	Cmd.SplitCurrentWord()
 	local paragraph = Document[Document.cp]
-	for _, word in ipairs(buffer[1]) do
-		local w = word:copy()
-		paragraph:insertWordBefore(Document.cw, w)
-		FireEvent(Event.WordModified, w, paragraph)
+	for wn, word in ipairs(buffer[1]) do
+		local payload = {
+			word = word,
+			wn = wn,
+			paragraph = paragraph
+		}
+		FireEvent(Event.WordModified, payload)
+
+		paragraph:insertWordBefore(Document.cw, payload.word)
 		Document.cw = Document.cw + 1
 	end
 	
@@ -803,8 +815,15 @@ function Cmd.Paste()
 		for p = 2, #buffer do	
 			local paragraph = buffer[p]:copy()
 			Document:insertParagraphBefore(paragraph, Document.cp)
-			for _, word in ipairs(paragraph) do
-				FireEvent(Event.WordModified, word, paragraph)
+			for wn, word in ipairs(paragraph) do
+				local payload =
+				{
+					word = word,
+					wn = wn,
+					paragraph = paragraph
+				}
+				FireEvent(Event.WordModified, payload)
+				paragraph[wn] = payload.word
 			end
 
 			Document.cp = Document.cp + 1
@@ -937,7 +956,7 @@ function Cmd.FindNext()
 	
 	while true do
 		local word = Document[cp][cw]
-		local s, e = word.text:find(pattern, co)
+		local s, e = word:find(pattern, co)
 		
 		if s then
 			-- We got a match! First, though, check to see if the remaining
@@ -955,7 +974,7 @@ function Cmd.FindNext()
 					break
 				end
 				
-				_, e = word.text:find(patterns[pi])
+				_, e = word:find(patterns[pi])
 				if not e then
 					found = false
 					break

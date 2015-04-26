@@ -72,6 +72,7 @@ end
 
 do
 	local function cb()
+		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {}
 		DocumentSet.addons.autosave.lastsaved = nil
 		announce()
 	end

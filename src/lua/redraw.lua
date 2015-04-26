@@ -165,9 +165,10 @@ function RedrawScreen()
 	-- Position the cursor.
 
 	do
-		local word = paragraph[Document.cw]
-		GotoXY(leftpadding + margin + word.x +
-			word:getXOffsetOfChar(Document.co) +
+		local cw = Document.cw
+		local word = paragraph[cw]
+		GotoXY(leftpadding + margin + paragraph.xs[cw] +
+			GetWidthFromOffset(word, Document.co) +
 			(paragraph.style.indent or 0), cy - 1)	
 	end
 	

@@ -266,7 +266,7 @@ ParagraphClass =
 	copy = function(self)
 		local words = {}
 		for _, w in ipairs(self) do
-			words[#words+1] = w:copy()
+			words[#words+1] = w
 		end
 		
 		return CreateParagraph(self.style, words)
@@ -275,6 +275,7 @@ ParagraphClass =
 	touch = function(self)
 		self.lines = nil
 		self.wrapwidth = nil
+		self.xs = nil
 	end,
 	
 	wrap = function(self, width)
@@ -285,19 +286,23 @@ ParagraphClass =
 			local lines = {}
 			local line = {wn = 1}
 			local w = 0
+			local xs = {}
+			self.xs = xs
 			
 			for wn, word in ipairs(self) do
-				word.x = w
-				local ww = word:getWidth()
+				-- get width of word (including space)
+				local ww = GetStringWidth(word) + 1
+	
+				xs[wn] = w
 				w = w + ww
 				if (w >= width) then
 					lines[#lines+1] = line
 					line = {wn = wn}
 					w = ww
-					word.x = 0
+					xs[wn] = 0
 				end
 				
-				line[#line+1] = word
+				line[#line+1] = wn
 			end
 			
 			if (#line > 0) then
@@ -316,10 +321,10 @@ ParagraphClass =
 
 		local cstyle = stylemarkup[self.style.name] or 0
 		local ostyle = 0
-		for wn, w in ipairs(line) do
-			local text = w.text
-			
-			ostyle = WriteStyled(x+w.x, y, text, ostyle, nil, nil, cstyle)
+		local xs = self.xs
+		for _, wn in ipairs(line) do
+			local w = self[wn]
+			ostyle = WriteStyled(x+xs[wn], y, w, ostyle, nil, nil, cstyle)
 		end
 	end,
 
@@ -370,7 +375,7 @@ ParagraphClass =
 				end
 			end
 			
-			ostyle = WriteStyled(x+w.x, y, w.text, ostyle, s, e, cstyle)
+			ostyle = WriteStyled(x+self.xs[wn], y, w, ostyle, s, e, cstyle)
 		end
 	end,
 
@@ -397,7 +402,7 @@ ParagraphClass =
 	-- returns: X offset, line number, word number in line
 	getXOffsetOfWord = function(self, wn)
 		local lines = self:wrap()
-		local x = self[wn].x
+		local x = self.xs[wn]
 		local ln, wn = self:getLineOfWord(wn)
 		return x, ln, wn
 	end,
@@ -455,41 +460,29 @@ ParagraphClass =
 	asString = function(self)
 		local s = {}
 		for _, w in ipairs(self) do
-			s[#s+1] = w:asString()
+			s[#s+1] = GetWordText(w)
 		end
 		
 		return table_concat(s, " ")
 	end
 }
 
-WordClass =
-{
-	copy = function(self)
-		return CreateWord(self.text)
-	end,
-			
-	getWidth = function(self)
-		return GetStringWidth(self.text) + 1
-	end,
-	
-	-- converts byte offset to X position
-	getXOffsetOfChar = function(self, o)
-		return GetStringWidth(self.text:sub(1, o-1))
-	end,
-	
-	-- converts X position to byte offset
-	getByteOfChar = function(self, x)
-		local text = self.text
-		
-		local len = text:len()
+-- Returns how many screen spaces a portion of a string takes up.
+function GetWidthFromOffset(s, o)
+	return GetStringWidth(s:sub(1, o-1))
+end
+
+-- Returns the offset into a string needed for a screen width.
+function GetOffsetFromWidth(s, x)
+		local len = #s
 		local o = 1
 		while (o <= len) do
 			if (x == 0) then
 				return o
 			end
 
-			local charlen = GetBytesOfCharacter(string.byte(text, o))
-			local char = text:sub(o, o+charlen-1)
+			local charlen = GetBytesOfCharacter(string.byte(s, o))
+			local char = s:sub(o, o+charlen-1)
 			local ww = GetStringWidth(char)
 			if (ww > x) then
 				return o
@@ -500,13 +493,7 @@ WordClass =
 		end
 		
 		return len + 1
-	end,
-	
-	-- returns an unstyled string containing the word contents
-	asString = function(self)
-		return GetWordText(self.text)
-	end,
-}
+end
 
 local function create_styles()
 	local styles =
@@ -632,7 +619,7 @@ function CreateDocument()
 	
 	setmetatable(d, {__index = DocumentClass})
 	
-	local p = CreateParagraph(DocumentSet.styles["P"], {CreateWord()})
+	local p = CreateParagraph(DocumentSet.styles["P"], {""})
 	d:appendParagraph(p)
 	return d
 end
@@ -644,12 +631,3 @@ function CreateParagraph(style, words)
 	return words
 end
 
-function CreateWord(text)
-	local w =
-	{
-		text = text or ""
-	}
-	
-	setmetatable(w, {__index = WordClass})
-	return w
-end

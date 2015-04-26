@@ -12,7 +12,7 @@ FlushAsyncEvents()
 Cmd.DeleteSelectionOrPreviousChar()
 FlushAsyncEvents()
 
-AssertEquals("f", Document[1][1].text)
+AssertEquals("f", Document[1][1])
 AssertEquals(2, Document.co)
 
 -- Doing it again will delete the remaining char.
@@ -20,7 +20,7 @@ AssertEquals(2, Document.co)
 Cmd.DeleteSelectionOrPreviousChar()
 FlushAsyncEvents()
 
-AssertEquals("", Document[1][1].text)
+AssertEquals("", Document[1][1])
 AssertEquals(1, Document.co)
 
 ResetDocumentSet()
@@ -38,7 +38,7 @@ FlushAsyncEvents()
 Cmd.DeleteSelectionOrNextChar()
 FlushAsyncEvents()
 
-AssertEquals("o", Document[1][1].text)
+AssertEquals("o", Document[1][1])
 AssertEquals(1, Document.co)
 
 -- Doing it again will delete the remaining char.
@@ -46,7 +46,7 @@ AssertEquals(1, Document.co)
 Cmd.DeleteSelectionOrNextChar()
 FlushAsyncEvents()
 
-AssertEquals("", Document[1][1].text)
+AssertEquals("", Document[1][1])
 AssertEquals(1, Document.co)
 
 
