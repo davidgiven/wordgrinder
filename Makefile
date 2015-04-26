@@ -429,9 +429,11 @@ tests: .obj/$(strip $1).passed
 endef
 
 $(eval $(call run-test, tests/apply-markup.lua))
+$(eval $(call run-test, tests/clipboard.lua))
 $(eval $(call run-test, tests/delete-selection.lua))
 $(eval $(call run-test, tests/get-style-from-word.lua))
 $(eval $(call run-test, tests/insert-space-with-style-hint.lua))
+$(eval $(call run-test, tests/immutable-paragraphs.lua))
 $(eval $(call run-test, tests/line-down-into-style.lua))
 $(eval $(call run-test, tests/line-up.lua))
 $(eval $(call run-test, tests/line-wrapping.lua))

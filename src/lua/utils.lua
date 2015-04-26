@@ -106,3 +106,29 @@ function SplitString(str, delim)
     end
     return result
 end
+
+--- Simple table renderer (no recursion).
+--
+-- @param t                  input table
+-- @return                   a string
+
+function TableToString(t)
+	local ts = {}
+	for _, n in ipairs(t) do
+		local s
+		if (type(n) == "string") then
+			s = string.format("%q", n)
+		elseif (type(n) == "number") then
+			s = tostring(n)
+		elseif (n == nil) then
+			s = nil
+		else
+			s = "unknown"
+		end
+		ts[#ts+1] = s
+	end
+
+	return "{"..table.concat(ts, ", ").."}"
+end
+
+

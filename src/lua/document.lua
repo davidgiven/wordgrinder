@@ -407,11 +407,20 @@ ParagraphClass =
 		return x, ln, wn
 	end,
 	
-	deleteWordAt = function(self, pos)
-		table.remove(self, pos)
-		self:touch()
+	sub = function(self, start, count)
+		if not count then
+			count = #self - start + 1
+		else
+			count = min(count, #self - start + 1)
+		end
+
+		local t = {}
+		for i = start, start+count-1 do
+			t[#t+1] = self[i]
+		end
+		return t
 	end,
-	
+
 	insertWordBefore = function(self, pos, word)
 		table.insert(self, pos, word)
 		self:touch()
@@ -466,6 +475,24 @@ ParagraphClass =
 		return table_concat(s, " ")
 	end
 }
+
+function CreateParagraph(style, words, ...)
+	words = words or {}
+
+	for _, t in ipairs({...}) do
+		if (type(t) == "table") then
+			for _, w in ipairs(t) do
+				words[#words+1] = w
+			end
+		else
+			words[#words+1] = t
+		end
+	end
+
+	words.style = style or DocumentSet.styles["P"]
+	setmetatable(words, {__index = ParagraphClass})
+	return words
+end
 
 -- Returns how many screen spaces a portion of a string takes up.
 function GetWidthFromOffset(s, o)
@@ -622,12 +649,5 @@ function CreateDocument()
 	local p = CreateParagraph(DocumentSet.styles["P"], {""})
 	d:appendParagraph(p)
 	return d
-end
-
-function CreateParagraph(style, words)
-	words = words or {}
-	words.style = style or DocumentSet.styles["P"]
-	setmetatable(words, {__index = ParagraphClass})
-	return words
 end
 
