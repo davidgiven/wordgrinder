@@ -421,11 +421,6 @@ ParagraphClass =
 		return t
 	end,
 
-	appendWord = function(self, word)
-		self[#self+1] = word
-		self:touch()
-	end,
-	
 	changeStyle = function(self, style)
 		self.style = style
 		self:touch()
