@@ -135,7 +135,7 @@ DocumentSetClass =
 	setCurrent = function(self, name)
 		-- Ensure any housekeeping on the current document gets done.
 		
-		if Document and Document.changed then
+		if Document.changed then
 			FireEvent(Event.Changed)
 		end
 
@@ -317,8 +317,6 @@ ParagraphClass =
 	end,
 
 	renderLine = function(self, line, x, y)
-		width = width or (ScreenWidth - x)
-
 		local cstyle = stylemarkup[self.style.name] or 0
 		local ostyle = 0
 		local xs = self.xs

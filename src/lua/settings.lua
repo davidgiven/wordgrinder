@@ -10,6 +10,7 @@ function LoadGlobalSettings()
 	local s = LoadFromStream(filename)
 	if s then
 		GlobalSettings = s
+		FireEvent(Event.RegisterAddons)
 	end
 end
 
