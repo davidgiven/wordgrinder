@@ -105,9 +105,20 @@ local function writetostream(object, writes, writei)
 end
 
 function SaveToStream(filename, object)
+	-- Ensure the destination file is writeable.
+
 	local fp, e = io.open(filename, "wb")
 	if not fp then
-		return false, e
+		return nil, e
+	end
+	fp:close()
+
+	-- However, write the file to a *different* filename
+	-- (so that crashes during writing doesn't corrupt the file).
+	
+	fp, e = io.open(filename..".new", "wb")
+	if not fp then
+		return nil, e
 	end
 	
 	local fpw = fp.write
@@ -134,6 +145,14 @@ function SaveToStream(filename, object)
 	end
 	if r then
 		r, e = fp:close()
+	end
+
+	-- Once done, rename the new file over the top of the old one.
+	-- Force the new one to be removed in case the rename fails.
+	
+	if r then
+		r, e = os.rename(filename..".new", filename)
+		os.remove(filename..".new")
 	end
 
 	return r, e
