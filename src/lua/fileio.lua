@@ -470,7 +470,10 @@ function LoadFromStream(filename)
 end
 
 local function loaddocument(filename)
-	local d = LoadFromStream(filename)
+	local d, e = LoadFromStream(filename)
+	if e then
+		return nil, e
+	end
 
 	-- Even if the changed flag was set in the document on disk, remove it.
 	
@@ -498,7 +501,7 @@ function Cmd.LoadDocumentSet(filename)
 		if not e then
 			e = "The load failed, probably because the file could not be opened."
 		end
-		ModalMessage(nil, e)
+		ModalMessage("Load failed", e)
 		QueueRedraw()
 		return false
 	end
@@ -506,7 +509,7 @@ function Cmd.LoadDocumentSet(filename)
 	-- Downgrading documents is not supported.
 	local fileformat = d.fileformat or 1
 	if (fileformat > FILEFORMAT) then
-		ModalMessage(nil, "This document belongs to a newer version of " ..
+		ModalMessage("Cannot load document", "This document belongs to a newer version of " ..
 			"WordGrinder and cannot be loaded. Sorry.")
 		QueueRedraw()
 		return false

@@ -26,4 +26,20 @@ function AssertTableEquals(want, got)
 	end
 end
 
+local hidemessages =
+{
+	["Document upgraded"] = true
+}
+
+function AddAllowedMessage(m)
+	hidemessages[m] = true
+end
+
+function ModalMessage(s1, s2)
+	if not hidemessages[s1] then
+		print(s1)
+		print(s2)
+	end
+end
+
 return {}
