@@ -107,6 +107,8 @@ local DocumentSettingsMenu = addmenu("Document settings",
 local GlobalSettingsMenu = addmenu("Global settings",
 {
 	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},
+	"-",
+	{"FSDebug",    "D", "Debugging options...",      nil,         Cmd.ConfigureDebug},
 })
 
 local FileMenu = addmenu("File",
