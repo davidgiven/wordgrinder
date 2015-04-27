@@ -81,7 +81,7 @@ local function redrawstatus()
 		FireEvent(Event.BuildStatusBar, ss)
 		table.sort(ss, function(x, y) return x.priority < y.priority end)
 
-		local s = {}
+		local s = {" "}
 		for _, v in ipairs(ss) do
 			s[#s+1] = v.value
 		end

@@ -131,6 +131,7 @@ LUASCRIPTS := \
 	src/lua/addons/statusbar_charstyle.lua \
 	src/lua/addons/statusbar_position.lua \
 	src/lua/addons/statusbar_wordcount.lua \
+	src/lua/addons/debug.lua \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/addons/smartquotes.lua \
