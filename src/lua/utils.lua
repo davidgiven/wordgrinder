@@ -123,7 +123,7 @@ function TableToString(t)
 		elseif (n == nil) then
 			s = nil
 		else
-			s = "unknown"
+			s = "unknown " .. type(n)
 		end
 		ts[#ts+1] = s
 	end

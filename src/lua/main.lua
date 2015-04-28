@@ -100,8 +100,10 @@ function WordProcessor(filename)
 		
 		["KEY_REDRAW"] = RedrawScreen,
 		
-		[" "] = { Cmd.TypeWhileSelected, Cmd.SplitCurrentWord },
-		["KEY_RETURN"] = { Cmd.TypeWhileSelected, Cmd.SplitCurrentParagraph },
+		[" "] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+			Cmd.SplitCurrentWord },
+		["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+			Cmd.SplitCurrentParagraph },
 		["KEY_ESCAPE"] = Cmd.ActivateMenu,
 	}	
 		
@@ -153,6 +155,7 @@ function WordProcessor(filename)
 				-- not, look it up in the menu hierarchy.
 				
 				if not c:match("^KEY_") then
+					Cmd.Checkpoint()
 					Cmd.TypeWhileSelected()
 					Cmd.InsertStringIntoWord(c)
 				else

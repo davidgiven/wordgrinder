@@ -135,6 +135,7 @@ LUASCRIPTS := \
 	src/lua/addons/widescreen.lua \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/addons/smartquotes.lua \
+	src/lua/addons/undo.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 
@@ -434,8 +435,8 @@ $(eval $(call run-test, tests/change-paragraph-style.lua))
 $(eval $(call run-test, tests/clipboard.lua))
 $(eval $(call run-test, tests/delete-selection.lua))
 $(eval $(call run-test, tests/get-style-from-word.lua))
-$(eval $(call run-test, tests/insert-space-with-style-hint.lua))
 $(eval $(call run-test, tests/immutable-paragraphs.lua))
+$(eval $(call run-test, tests/insert-space-with-style-hint.lua))
 $(eval $(call run-test, tests/line-down-into-style.lua))
 $(eval $(call run-test, tests/line-up.lua))
 $(eval $(call run-test, tests/line-wrapping.lua))
@@ -451,6 +452,8 @@ $(eval $(call run-test, tests/simple-editing.lua))
 $(eval $(call run-test, tests/smartquotes-selection.lua))
 $(eval $(call run-test, tests/smartquotes-typing.lua))
 $(eval $(call run-test, tests/type-while-selected.lua))
+$(eval $(call run-test, tests/undo.lua))
+$(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 
 .phony: tests
 
