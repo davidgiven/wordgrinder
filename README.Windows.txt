@@ -2,7 +2,7 @@
                               ==================
 
                            © 2007-2015 David Given
-                                 2015-01-18
+                                 2015-04-28
 
                                Windows version
 
@@ -71,7 +71,7 @@ http://www.keplerproject.org/luafilesystem for more information.
 REVISION HISTORY
 ================
 
-WordGrinder 0.5.3: 2015-04-18: New X11 frontend (actual bold and italic on
+WordGrinder 0.6: 2015-04-18: New X11 frontend (actual bold and italic on
 Linux machines!); shift+cursor keys starts a selection; more HTML emission
 fixes; non-document persistent settings; global key maps (currently via a
 configurationfile); search works properly across words with markup; italic
@@ -79,7 +79,7 @@ display in a terminal (if you have a new enough version of ncurses); more
 traditional charstyle selection (you can press ^B at the beginning of words
 now!); more traditional selection model (shift+cursor keys works now!); fix
 crash on loading very large .wg files; smart quote support; more efficient
-files.
+files; undo and redo.
 
 WordGrinder 0.5.2.1: 2015-02-18: Minor bugfixes: build system fixes; updated
 minizip to a version which builds better on Ubuntu; OSX Homebrew build system;

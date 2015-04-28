@@ -78,6 +78,8 @@ end
 local DocumentsMenu = addmenu("Documents", {})
 local ParagraphStylesMenu = addmenu("Paragraph Styles", {})
 
+local cp = Cmd.Checkpoint
+
 local ImportMenu = addmenu("Import new document",
 {
 	{"FIodt",  "O", "Import ODT file...",        nil,         Cmd.ImportODTFile},
@@ -132,21 +134,24 @@ local FileMenu = addmenu("File",
 
 local ScrapbookMenu = addmenu("Scrapbook",
 {
-	{"EScut",      "T", "Cut to scrapbook",          nil,         Cmd.CutToScrapbook},
+	{"EScut",      "T", "Cut to scrapbook",          nil,         { cp, Cmd.CutToScrapbook }},
 	{"EScopy",     "C", "Copy to scrapbook",         nil,         Cmd.CopyToScrapbook},
-	{"ESpaste",    "P", "Paste to scrapbook",        nil,         Cmd.PasteToScrapbook},
+	{"ESpaste",    "P", "Paste to scrapbook",        nil,         { cp, Cmd.PasteToScrapbook }},
 })
 
 local EditMenu = addmenu("Edit",
 {
-	{"ET",         "T", "Cut",                       "^X",        Cmd.Cut},
+	{"ET",         "T", "Cut",                       "^X",        { cp, Cmd.Cut }},
 	{"EC",         "C", "Copy",                      "^C",        Cmd.Copy},
-	{"EP",         "P", "Paste",                     "^V",        Cmd.Paste},
-	{"ED",         "D", "Delete",                    nil,         Cmd.Delete},
+	{"EP",         "P", "Paste",                     "^V",        { cp, Cmd.Paste }},
+	{"ED",         "D", "Delete",                    nil,         { cp, Cmd.Delete }},
+	"-",
+	{"Eundo",      "U", "Undo",                      "^Z",        Cmd.Undo},
+	{"Eredo",      "E", "Redo",                      "^Y",        Cmd.Redo},
 	"-",
 	{"EF",         "F", "Find and replace...",       "^F",        Cmd.Find},
 	{"EN",         "N", "Find next",                 "^K",        Cmd.FindNext},
-	{"ER",         "R", "Replace then find",         "^R",        Cmd.ReplaceThenFind},
+	{"ER",         "R", "Replace then find",         "^R",        { cp, Cmd.ReplaceThenFind }},
 	"-",
 	{"EG",         "G", "Go to...",                  "^G",        Cmd.Goto},
 	{"Escrapbook", "S", "Scrapbook ▷",               nil,         ScrapbookMenu},
@@ -162,10 +167,10 @@ local MarginMenu = addmenu("Margin",
 	
 local StyleMenu = addmenu("Style",
 {
-	{"SI",     "I", "Set italic",                 "^I",        function() Cmd.SetStyle("i") end},
-	{"SU",     "U", "Set underline",              "^U",        function() Cmd.SetStyle("u") end},
-	{"SB",     "B", "Set bold",                   "^B",        function() Cmd.SetStyle("b") end},
-	{"SO",     "O", "Set plain",                  "^O",        function() Cmd.SetStyle("o") end},
+	{"SI",     "I", "Set italic",                 "^I",        { cp, function() Cmd.SetStyle("i") end }},
+	{"SU",     "U", "Set underline",              "^U",        { cp, function() Cmd.SetStyle("u") end }},
+	{"SB",     "B", "Set bold",                   "^B",        { cp, function() Cmd.SetStyle("b") end }},
+	{"SO",     "O", "Set plain",                  "^O",        { cp, function() Cmd.SetStyle("o") end }},
 	"-",
 	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
 	{"SM",     "M", "Set margin mode ▷",          nil,         MarginMenu},
@@ -203,9 +208,9 @@ local NavigationMenu = addmenu("Navigation",
 	{"ZPGDN",  nil, "Page down",                    "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
 	{"ZSPGUP", nil, "Selection page up",            "SPGUP",     { Cmd.SetMark, Cmd.GotoPreviousPage }},
 	{"ZSPGDN", nil, "Selection page down",          "SPGDN",     { Cmd.SetMark, Cmd.GotoNextPage }},
-	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE", Cmd.DeleteSelectionOrPreviousChar },
-	{"ZDNC",   nil, "Delete next character",        "DELETE",    Cmd.DeleteSelectionOrNextChar },
-	{"ZDW",    nil, "Delete word",                  "^E",        { Cmd.TypeWhileSelected, Cmd.DeleteWord }},
+	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE", { cp, Cmd.DeleteSelectionOrPreviousChar }},
+	{"ZDNC",   nil, "Delete next character",        "DELETE",    { cp, Cmd.DeleteSelectionOrNextChar }},
+	{"ZDW",    nil, "Delete word",                  "^E",        { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
 	{"ZM",     nil, "Toggle mark",                  "^@",        Cmd.ToggleMark},
 })
 

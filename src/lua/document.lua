@@ -214,9 +214,15 @@ DocumentClass =
 	
 	-- remove any cached data prior to saving
 	purge = function(self)
-		for _, l in ipairs(self) do
-			l:touch()
+		local topurge = {{self}, self.undostack or {}, self.redostack or {}}
+		for _, collections in ipairs(topurge) do
+			for _, document in ipairs(collections) do
+				for _, paragraph in ipairs(document) do
+					paragraph:touch()
+				end
+			end
 		end
+
 		self.topp = nil
 		self.topw = nil
 		self.botp = nil
@@ -328,7 +334,6 @@ ParagraphClass =
 
 	renderMarkedLine = function(self, line, x, y, width, pn)
 		width = width or (ScreenWidth - x)
-		marked = marked or false
 		
 		local lwn = line.wn		
 		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
