@@ -379,31 +379,34 @@ end
 
 function Cmd.GotoXPosition(pos)
 	local paragraph = Document[Document.cp]
-	local lines = paragraph:wrap()
+	local lines = paragraph:wrap(Document.wrapwidth)
 	local ln = paragraph:getLineOfWord(Document.cw)
 	
-	local l = lines[ln]
-	local wn = #l
+	local line = lines[ln]
+	local wordofline = #line
 
 	pos = pos - (paragraph.style.indent or 0)
 	if (pos < 0) then
 		pos = 0
 	end
 	
-	while (wn > 0) do
-		if (paragraph.xs[wn] <= pos) then
+	while (wordofline > 0) do
+		if (paragraph.xs[line[wordofline]] <= pos) then
 			break
 		end
-		wn = wn - 1
+		wordofline = wordofline - 1
 	end
 	
-	if (wn == 0) then
-		wn = 1
+	if (wordofline == 0) then
+		wordofline = 1
 	end
 
-	wo = GetOffsetFromWidth(paragraph[wn], pos - paragraph.xs[wn])
+	local wn = line[wordofline]
+	local word = paragraph[wn]
+	local wordx = paragraph.xs[wn]
+	wo = GetOffsetFromWidth(word, pos - wordx)
 	
-	Document.cw = paragraph:getWordOfLine(ln) + wn - 1
+	Document.cw = paragraph:getWordOfLine(ln) + wordofline - 1
 	Document.co = wo
 
 	QueueRedraw()
