@@ -200,21 +200,28 @@ static int prevcharinword_cb(lua_State* L)
 	int offset = luaL_checkint(L, 2) - 1;
 	const char* p = src + offset;
 
-	/* At the beginning of the string? */
+	/* Back up over any control codes; give up if we find ourselves at
+	 * the beginning of the string. */
 
-	if (p == src)
+	do
 	{
-		lua_pushnil(L);
-		return 1;
+		if (p == src)
+		{
+			lua_pushnil(L);
+			return 1;
+		}
+
+		p--;
 	}
+	while (iscntrl(*p));
 
-	/* Back up, and then skip any UTF-8 trailing bytes. */
+	/* We now know that there is a character, and it's definitively not a
+	 * control code. Skip any UTF-8 trailing bytes. */
 
-	p--;
 	while ((p != src) && (getu8bytes(*p) == 0))
 		p--;
 
-	/* Back up over any control codes. */
+	/* Back up over any additional control codes. */
 
 	while (p != src)
 	{
