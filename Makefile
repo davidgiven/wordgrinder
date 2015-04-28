@@ -453,6 +453,7 @@ $(eval $(call run-test, tests/smartquotes-selection.lua))
 $(eval $(call run-test, tests/smartquotes-typing.lua))
 $(eval $(call run-test, tests/type-while-selected.lua))
 $(eval $(call run-test, tests/undo.lua))
+$(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 
 .phony: tests
