@@ -10,8 +10,7 @@
 
 int main(int argc, const char* argv[])
 {
-	setlocale(LC_ALL, "");
-	setlocale(LC_COLLATE, "C");
+	setlocale(LC_ALL, "C.UTF-8");
 	script_init();
 	screen_init(argv);
 	word_init();
