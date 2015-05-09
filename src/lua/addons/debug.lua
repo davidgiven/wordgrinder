@@ -11,7 +11,6 @@ do
 	local function cb(event, token, terms)
 		local settings = GlobalSettings.debug
 		if settings.memory then
-			collectgarbage("collect")
 			local mem = collectgarbage("count")
 			terms[#terms+1] = 
 				{
