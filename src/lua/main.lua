@@ -63,6 +63,18 @@ do
 	AddEventListener(Event.DocumentCreated, cb)
 end
 	
+-- Kick the garbage collector whenever we're idle, just to keep
+-- memory usage down.
+
+do
+	local function cb(event)
+		collectgarbage("collect")
+		QueueRedraw()
+	end
+
+	AddEventListener(Event.Idle, cb)
+end
+
 -- This function contains the word processor proper, including the main event
 -- loop.
 
