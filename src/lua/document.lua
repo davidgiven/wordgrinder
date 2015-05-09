@@ -215,12 +215,17 @@ DocumentClass =
 	-- remove any cached data prior to saving
 	purge = function(self)
 		local topurge = {{self}, self.undostack or {}, self.redostack or {}}
+		local paras = {}
 		for _, collections in ipairs(topurge) do
 			for _, document in ipairs(collections) do
 				for _, paragraph in ipairs(document) do
-					paragraph:touch()
+					paras[paragraph] = true
 				end
 			end
+		end
+
+		for paragraph in pairs(paras) do
+			paragraph:touch()
 		end
 
 		self.topp = nil
