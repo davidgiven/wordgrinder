@@ -227,6 +227,22 @@ function IsMenu(m)
 	return (type(m) == "table") and (type(m[1]) ~= "function")
 end
 
+function RunMenuAction(ff)
+	if (type(ff) == "function") then
+		return ff()
+	elseif IsMenu(ff) then
+		Cmd.ActivateMenu(ff)
+	else
+		for _, f in ipairs(ff) do
+			local result, e = f()
+			if not result then
+				return false, e
+			end
+		end
+		return true
+	end
+end
+
 --- MENU DRIVER CLASS ---
 
 MenuClass = {
@@ -432,7 +448,7 @@ MenuClass = {
 				if not f then
 					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
 				else
-					local _, msg = f()
+					local _, msg = RunMenuAction(f)
 					if msg then
 						NonmodalMessage(msg)
 					end

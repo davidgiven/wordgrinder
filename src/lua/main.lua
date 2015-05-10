@@ -119,20 +119,6 @@ function WordProcessor(filename)
 		["KEY_ESCAPE"] = Cmd.ActivateMenu,
 	}	
 		
-	local function runaction(ff)
-		if (type(ff) == "function") then
-			return ff()
-		elseif IsMenu(ff) then
-			Cmd.ActivateMenu(ff)
-		else
-			local r = true
-			for _, f in ipairs(ff) do
-				r = r and f()
-			end
-			return r
-		end
-	end
-
 	local function eventloop()
 		local nl = string.char(13)
 		while true do
@@ -161,7 +147,7 @@ function WordProcessor(filename)
 			-- Anything in masterkeymap overrides everything else.
 			local f = masterkeymap[c]
 			if f then
-				runaction(f)
+				RunMenuAction(f)
 			else
 				-- It's not in masterkeymap. If it's printable, insert it; if it's
 				-- not, look it up in the menu hierarchy.
@@ -173,7 +159,7 @@ function WordProcessor(filename)
 				else
 					f = DocumentSet.menu:lookupAccelerator(c)
 					if f then
-						runaction(f)
+						RunMenuAction(f)
 					else
 						NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
 					end
