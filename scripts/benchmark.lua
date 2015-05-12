@@ -27,6 +27,7 @@ print(#words.." words of source text")
 
 -- Generate some source text.
 
+math.randomseed(0) -- predictable pseudorandom numbers
 while ((Document.wordcount or 0) < 10000) do
 	local a = math.random(#words)
 	local b = math.random(#words)
@@ -66,8 +67,23 @@ local function time(name, cb)
 	print(name..": "..math.floor((after-before)*1000).."ms")
 end
 
-time("Save .wg file", function() Cmd.SaveCurrentDocumentAs("/tmp/temp") end)
-time("Save .html file", function() Cmd.ExportHTMLFile("/tmp/temp") end)
-time("Save .odf file", function() Cmd.ExportODTFile("/tmp/temp") end)
-time("Save .txt file", function() Cmd.ExportTextFile("/tmp/temp") end)
+local function getfilesize(filename)
+	local fp = io.open(filename, "r")
+	local size = fp:seek("end")
+	fp:close()
+	return size
+end
+
+time("Save .wg file", function() Cmd.SaveCurrentDocumentAs("/tmp/temp.wg") end)
+print("(size of file: "..getfilesize("/tmp/temp.wg")..")")
+time("Save .html file", function() Cmd.ExportHTMLFile("/tmp/temp.html") end)
+time("Save .odt file", function() Cmd.ExportODTFile("/tmp/temp.odt") end)
+time("Save .txt file", function() Cmd.ExportTextFile("/tmp/temp.txt") end)
+
+print("Performing save/load test...")
+Cmd.LoadDocumentSet("/tmp/temp.wg")
+Cmd.SaveCurrentDocumentAs("/tmp/temq.wg")
+if (getfilesize("/tmp/temp.wg") ~= getfilesize("/tmp/temq.wg")) then
+	print("*** File sizes do not match in save/load test!")
+end
 

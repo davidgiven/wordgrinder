@@ -55,6 +55,12 @@ local function writetostream(object, writes, writei)
 			local m = getmetatable(t)
 			if m then
 				m = type_lookup[m.__index]
+				if not m then
+					-- This only happens in debug code; it means we're trying
+					-- to save an immutablised array. Cheat profusely.
+					t = getmetatable(t):getRawArray()
+					m = TABLE
+				end
 			else
 				m = TABLE
 			end
@@ -68,11 +74,20 @@ local function writetostream(object, writes, writei)
 				for _, i in ipairs(t) do
 					save(i)
 				end
-				for k, v in pairs(t) do
+
+				-- Save the keys in alphabetical order, so we get repeatable
+				-- files.
+				local keys = {}
+				for k in pairs(t) do
 					if (type(k) ~= "number") then
-						save(k)
-						save(v)
+						keys[#keys+1] = k
 					end
+				end
+				table.sort(keys)
+
+				for _, k in ipairs(keys) do
+					save(k)
+					save(t[k])
 				end
 				writei(STOP)
 			end
