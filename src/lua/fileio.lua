@@ -80,7 +80,9 @@ local function writetostream(object, writes, writei)
 				local keys = {}
 				for k in pairs(t) do
 					if (type(k) ~= "number") then
-						keys[#keys+1] = k
+						if not k:find("^_") then
+							keys[#keys+1] = k
+						end
 					end
 				end
 				table.sort(keys)

@@ -214,17 +214,7 @@ DocumentClass =
 	
 	-- remove any cached data prior to saving
 	purge = function(self)
-		local topurge = {{self}, self.undostack or {}, self.redostack or {}}
-		local paras = {}
-		for _, collections in ipairs(topurge) do
-			for _, document in ipairs(collections) do
-				for _, paragraph in ipairs(document) do
-					paras[paragraph] = true
-				end
-			end
-		end
-
-		for paragraph in pairs(paras) do
+		for _, paragraph in ipairs(self) do
 			paragraph:touch()
 		end
 
@@ -233,6 +223,12 @@ DocumentClass =
 		self.botp = nil
 		self.botw = nil
 		self.wrapwidth = nil
+
+		-- These should no longer exist; this dates from a previous attempt
+		-- at undo with file version 6. We're not storing the undo buffer
+		-- in files any more.
+		self.undostack = nil
+		self.redostack = nil
 	end,
 	
 	-- calculate space above this paragraph

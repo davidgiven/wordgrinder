@@ -63,8 +63,8 @@ end
 -- Commit an undo checkpoint
 
 function Cmd.Checkpoint()
-	local undostack = Document.undostack or {}
-	Document.undostack = undostack
+	local undostack = Document._undostack or {}
+	Document._undostack = undostack
 
 	local top = undostack[1]
 	if not top or not shallowequals(Document, top) then
@@ -73,7 +73,7 @@ function Cmd.Checkpoint()
 		undostack[STACKSIZE] = nil
 
 		-- Nuke the redo stack.
-		Document.redostack = {}
+		Document._redostack = {}
 	end
 	
 	return true
@@ -83,9 +83,9 @@ end
 -- Undo a change.
 
 function Cmd.Undo()
-	Document.undostack = Document.undostack or {}
-	Document.redostack = Document.redostack or {}
-	if not movechange(Document.undostack, Document.redostack) then
+	Document._undostack = Document._undostack or {}
+	Document._redostack = Document._redostack or {}
+	if not movechange(Document._undostack, Document._redostack) then
 		NonmodalMessage("Nothing left to undo")
 		return false
 	end
@@ -96,9 +96,9 @@ end
 -- Redo an undone change.
 
 function Cmd.Redo()
-	Document.undostack = Document.undostack or {}
-	Document.redostack = Document.redostack or {}
-	if not movechange(Document.redostack, Document.undostack) then
+	Document._undostack = Document._undostack or {}
+	Document._redostack = Document._redostack or {}
+	if not movechange(Document._redostack, Document._undostack) then
 		NonmodalMessage("Nothing left to redo")
 		return false
 	end
