@@ -55,6 +55,11 @@ extern void script_load(const char* filename);
 extern void script_load_from_table(const FileDescriptor* table);
 extern void script_run(const char* argv[]);
 
+#if !defined LUA_VERSION_NUM || LUA_VERSION_NUM==501
+extern void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup);
+#define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX)
+#endif
+
 /* --- Screen management ------------------------------------------------- */
 
 extern void screen_init(const char* argv[]);

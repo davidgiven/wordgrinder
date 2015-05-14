@@ -12,6 +12,8 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
+USE_LUAJIT = n
+
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
 	TESTER = bin/wordgrinder-debug.exe
@@ -32,21 +34,33 @@ all: unix
 else
 	LIBROOT := /usr/lib
 	INCROOT := /usr
-	LUA_INCLUDE := $(INCROOT)/include/lua5.2
-	LUA_LIB := -llua5.2
+	ifeq ($(USE_LUAJIT),y)
+		LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
+		LUA_LIB := -lluajit-5.1
+		# The ImmutabliseArray() code, used by the debug version of
+		# WordGrinder to ensure we don't modify stuff we shouldn't,
+		# uses new 5.2 metamethods and doesn't work on LuaJIT.
+		TESTER = bin/wordgrinder
+	else
+		LUA_INCLUDE := $(INCROOT)/include/lua5.2
+		LUA_LIB := -llua5.2
+		TESTER = bin/wordgrinder-debug
+	endif
+
 	NCURSES_CFLAGS := $(shell pkg-config ncursesw --cflags)
 	NCURSES_LIB := $(shell pkg-config ncursesw --libs)
 	X11_CFLAGS := $(shell pkg-config freetype2 --cflags) -I/usr/include/X11
 	X11_LIB := -lX11 -lXft $(shell pkg-config freetype2 --libs) 
 
 	OS = unix
-	TESTER = bin/wordgrinder-debug
 all: unix x11unix
 endif
 
 VERSION := 0.6.0
 FILEFORMAT := 6
 DATE := $(shell date +'%-d %B %Y')
+
+OBJ = .obj/lj_$(USE_LUAJIT)
 
 override CFLAGS += \
 	-DVERSION='"$(VERSION)"' \
@@ -56,6 +70,7 @@ override CFLAGS += \
 	-Isrc/c/minizip \
 	-Wall \
 	-ffunction-sections \
+	-Werror=implicit-function-declaration \
 	-fdata-sections \
 	--std=gnu99
 
@@ -139,14 +154,14 @@ LUASCRIPTS := \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 
-.obj/luascripts.c: $(LUASCRIPTS)
+$(OBJ)/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
-	@mkdir -p .obj
+	@mkdir -p $(OBJ)
 	$(hide)lua tools/multibin2c.lua script_table $^ > $@
 	
 clean::
-	@echo CLEAN .obj/luascripts.c
-	@rm -f .obj/luascripts.c
+	@echo CLEAN $(OBJ)/luascripts.c
+	@rm -f $(OBJ)/luascripts.c
 	
 # --- Builds a single C file ------------------------------------------------
 
@@ -206,7 +221,7 @@ $(call cfile, src/c/main.c)
 $(call cfile, src/c/lua.c)
 $(call cfile, src/c/word.c)
 $(call cfile, src/c/screen.c)
-$(call cfile, .obj/luascripts.c)
+$(call cfile, $(OBJ)/luascripts.c)
 
 endef
 
@@ -286,7 +301,7 @@ UNIXLDFLAGS := \
 	-lz
 
 cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -Os -DNDEBUG
-objdir := .obj/release
+objdir := $(OBJ)/release
 exe := bin/wordgrinder
 objs :=
 ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
@@ -296,7 +311,7 @@ $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g
-objdir := .obj/debug
+objdir := $(OBJ)/debug
 exe := bin/wordgrinder-debug
 objs :=
 ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
@@ -306,7 +321,7 @@ $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
-objdir := .obj/debug-static
+objdir := $(OBJ)/debug-static
 exe := bin/wordgrinder-static
 objs :=
 ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
@@ -318,7 +333,7 @@ $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -Os -DNDEBUG
-objdir := .obj/release-x11
+objdir := $(OBJ)/release-x11
 exe := bin/xwordgrinder
 objs :=
 ldflags := $(UNIXLDFLAGS) $(X11_LIB)
@@ -328,7 +343,7 @@ $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g
-objdir := .obj/debug-x11
+objdir := $(OBJ)/debug-x11
 exe := bin/xwordgrinder-debug
 objs :=
 ldflags := $(UNIXLDFLAGS) $(X11_LIB)
@@ -338,7 +353,7 @@ $(eval $(build-wordgrinder-minizip))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
-objdir := .obj/debug-static-x11
+objdir := $(OBJ)/debug-static-x11
 exe := bin/xwordgrinder-static
 objs :=
 ldflags := $(UNIXLDFLAGS) $(X11_LIB)
@@ -377,7 +392,7 @@ ldflags := \
 	-lz
 
 cflags := $(WINDOWSCFLAGS) -Os -DNDEBUG
-objdir := .obj/win32-release
+objdir := $(OBJ)/win32-release
 exe := bin/wordgrinder.exe
 objs :=
 $(eval $(build-wordgrinder-core))
@@ -389,7 +404,7 @@ $(eval $(build-wordgrinder))
 
 
 cflags := $(WINDOWSCFLAGS) -g
-objdir := .obj/win32-debug
+objdir := $(OBJ)/win32-debug
 exe := bin/wordgrinder-debug.exe
 objs :=
 $(eval $(build-wordgrinder-core))
@@ -419,14 +434,14 @@ endif
 
 define run-test
 
-.obj/$(strip $1).passed: $(TESTER) $1
+$(OBJ)/$(strip $1).passed: $(TESTER) $1
 	@echo TEST $1
 	@mkdir -p $$(dir $$@)
 	@rm -f $$@
 	$(hide) $(TESTER) --lua $1
 	@touch $$@
 
-tests: .obj/$(strip $1).passed
+tests: $(OBJ)/$(strip $1).passed
 
 endef
 
