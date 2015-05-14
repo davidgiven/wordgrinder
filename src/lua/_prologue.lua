@@ -2,10 +2,34 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+-- Urrgh, luajit's path defaults to all the wrong places. This is painfully
+-- evil but does at least work.
+
+if jit then
+	package.path = package.path ..
+		";/usr/share/lua/5.1/?.lua;/usr/share/lua/5.1/?/init.lua"
+	package.cpath = package.cpath ..
+		";/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so"
+end
+
 -- Load the LFS module if needed (Windows has it built in).
 
 if not lfs then
 	lfs = require "lfs"
+end
+
+-- Bit library fallbacks. (LuaJIT vs Lua 5.2 incompatibilities.)
+
+if not bit32 then
+	bit32 =
+	{
+		bxor = bit.bxor,
+		band = bit.band,
+		bor = bit.bor,
+		btest = function(a, b)
+			return bit.band(a, b) ~= 0
+		end
+	}
 end
 
 -- Make sure that reads of undefined global variables fail. Note: this will
