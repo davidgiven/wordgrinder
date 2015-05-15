@@ -89,6 +89,7 @@ function Cmd.Undo()
 		NonmodalMessage("Nothing left to undo")
 		return false
 	end
+	NonmodalMessage("Undone ("..#Document._undostack.." left in undo buffer)")
 	return true
 end
 
@@ -102,6 +103,7 @@ function Cmd.Redo()
 		NonmodalMessage("Nothing left to redo")
 		return false
 	end
-	return false
+	NonmodalMessage("Redone ("..#Document._redostack.." left in redo buffer)")
+	return true
 end
 
