@@ -582,6 +582,10 @@ local function create_styles()
 	return styles
 end
 	
+function ResetParagraphStyles()
+	DocumentSet.styles = create_styles()
+end
+
 function CreateDocumentSet()
 	local ds =
 	{
