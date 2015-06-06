@@ -470,6 +470,7 @@ $(eval $(call run-test, tests/type-while-selected.lua))
 $(eval $(call run-test, tests/undo.lua))
 $(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
+$(eval $(call run-test, tests/weirdness-combining-words.lua))
 
 .phony: tests
 
