@@ -13,7 +13,6 @@ Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 Cmd.DeletePreviousChar()
-FlushAsyncEvents()
 
 AssertEquals(8, GetCurrentStyleHint()) -- bold on
 AssertTableEquals({"\24foo\16bar"}, Document[1])

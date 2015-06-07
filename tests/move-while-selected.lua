@@ -3,12 +3,9 @@ require("tests/testsuite")
 -- Non-sticky
 
 Cmd.InsertStringIntoWord("foo")
-FlushAsyncEvents()
 Cmd.SetMark()
 Cmd.GotoPreviousCharW()
-FlushAsyncEvents()
 Cmd.GotoPreviousCharW()
-FlushAsyncEvents()
 
 AssertEquals(false, Document.sticky_selection)
 AssertEquals(1, Document.mp)
@@ -25,12 +22,9 @@ AssertEquals(nil, Document.mp)
 ResetDocumentSet()
 
 Cmd.InsertStringIntoWord("foo")
-FlushAsyncEvents()
 Cmd.ToggleMark()
 Cmd.GotoPreviousCharW()
-FlushAsyncEvents()
 Cmd.GotoPreviousCharW()
-FlushAsyncEvents()
 
 AssertEquals(true, Document.sticky_selection)
 AssertEquals(1, Document.mp)

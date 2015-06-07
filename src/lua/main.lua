@@ -29,7 +29,7 @@ function QueueRedraw()
 			oldcp = Document.cp
 			oldcw = Document.cw
 			oldco = Document.co
-			FireAsyncEvent(Event.Moved)
+			FireEvent(Event.Moved)
 		end
 
 		if not Document.wrapwidth then
@@ -54,9 +54,10 @@ end
 
 do
 	local function cb(event, token)
-		oldcp = nil
-		oldcw = nil
-		oldco = nil
+		oldcp = 1
+		oldcw = 1
+		oldco = 1
+		SetCurrentStyleHint(0, 0)
 	end
 
 	AddEventListener(Event.DocumentLoaded, cb)
