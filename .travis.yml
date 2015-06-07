@@ -1,6 +1,6 @@
 language: c
 before_install:
-    sudo apt-get install lua5.2
+    sudo apt-get install lua5.2 liblua5.2-dev
 script:
     - make -j4
 
