@@ -304,13 +304,14 @@ cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -Os -DNDEBUG
 objdir := $(OBJ)/release
 exe := bin/wordgrinder
 objs :=
-ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
+ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB) -DBUILTIN_LFS
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
 $(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder))
 
-cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g
+cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g -DBUILTIN_LFS
 objdir := $(OBJ)/debug
 exe := bin/wordgrinder-debug
 objs :=
@@ -318,6 +319,7 @@ ldflags := $(UNIXLDFLAGS) $(NCURSES_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-ncurses))
 $(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(NCURSES_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS
@@ -332,7 +334,7 @@ $(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder-emu))
 $(eval $(build-wordgrinder))
 
-cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -Os -DNDEBUG
+cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -Os -DNDEBUG -DBUILTIN_LFS
 objdir := $(OBJ)/release-x11
 exe := bin/xwordgrinder
 objs :=
@@ -340,9 +342,10 @@ ldflags := $(UNIXLDFLAGS) $(X11_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-x11))
 $(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder))
 
-cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g
+cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g -DBUILTIN_LFS
 objdir := $(OBJ)/debug-x11
 exe := bin/xwordgrinder-debug
 objs :=
@@ -350,6 +353,7 @@ ldflags := $(UNIXLDFLAGS) $(X11_LIB)
 $(eval $(build-wordgrinder-core))
 $(eval $(build-wordgrinder-x11))
 $(eval $(build-wordgrinder-minizip))
+$(eval $(build-wordgrinder-lfs))
 $(eval $(build-wordgrinder))
 
 cflags := $(UNIXCFLAGS) $(X11_CFLAGS) -g -DEMULATED_WCWIDTH -DBUILTIN_LFS

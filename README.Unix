@@ -39,10 +39,6 @@ WordGrinder needs the following packages installed:
  - zlib. You will already have this, but just on the offchance, it's here:
      http://www.zlib.net/
      
- - LuaFileSystem 1.2, the file system access extension to Lua. This is
-   available from:
-     http://www.keplerproject.org/luafilesystem/index.html
-
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
@@ -51,8 +47,7 @@ WordGrinder needs the following packages installed:
 If you have Debian, you've already got all these. Merely install these
 packages:
 
-  libncursesw5-dev liblua5.2-dev lua-filesystem-dev zlib1g-dev libxft-dev
-  lua5.2
+  libncursesw5-dev liblua5.2-dev zlib1g-dev libxft-dev lua5.2
 
 To build, simply do:
 
