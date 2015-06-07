@@ -104,6 +104,7 @@ local DocumentSettingsMenu = addmenu("Document settings",
     {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
 	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
 	{"FSSmartquotes", "Q", "Smart quotes...",        nil,         Cmd.ConfigureSmartQuotes},
+	{"FSSpellchecker", "C", "Spellchecker...",       nil,         Cmd.ConfigureSpellchecker},
 })
 
 local GlobalSettingsMenu = addmenu("Global settings",

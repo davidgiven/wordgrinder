@@ -924,11 +924,22 @@ function Cmd.Delete()
 	
 	-- And merge the two areas together again.
 	
+	if not (Cmd.GotoPreviousWordW() and
+	        Cmd.GotoEndOfWord() and
+			Cmd.JoinWithNextWord()) then
+		return false
+	end
+
+	-- If the selection started at a word boundary, make sure it's preserved.
+	
+	if (mo1 == 1) and (mw1 > 1) then
+		if not Cmd.SplitCurrentWord() then
+			return false
+		end
+	end
+	
 	NonmodalMessage("Selected area deleted.")
-	return Cmd.GotoPreviousWordW() and
-	       Cmd.GotoEndOfWord() and
-	       Cmd.JoinWithNextWord() and
-	       Cmd.UnsetMark()
+	return Cmd.UnsetMark()
 end
 
 function Cmd.Find(findtext, replacetext)

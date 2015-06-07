@@ -151,6 +151,7 @@ LUASCRIPTS := \
 	src/lua/addons/keymapoverride.lua \
 	src/lua/addons/smartquotes.lua \
 	src/lua/addons/undo.lua \
+	src/lua/addons/spillchocker.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 
@@ -475,6 +476,7 @@ $(eval $(call run-test, tests/undo.lua))
 $(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 $(eval $(call run-test, tests/weirdness-combining-words.lua))
+$(eval $(call run-test, tests/weirdness-replacing-words.lua))
 
 .phony: tests
 
