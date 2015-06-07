@@ -213,6 +213,7 @@ end
 function Cmd.SplitCurrentWord()
 	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local styleprime = ""
+	local styleprimelen = 0
 
 	if not Document.mp then
 		local stylehint = GetCurrentStyleHint()
@@ -225,8 +226,18 @@ function Cmd.SplitCurrentWord()
 		-- This means that the frameworks we have for applying style won't
 		-- work. Instead, we exploit our knowledge of how the style bytes
 		-- are implemented to do it manually.
+		-- 
+		-- We *also* don't want to change the actual style of the text. So the
+		-- prime code needs to be followed by an unprime code. The cursor will
+		-- be placed between these. (As soon as the user types, all this
+		-- insanity will be undone.)
 		
 		styleprime = CreateStyleByte(stylehint)
+		if (stylehint ~= 0) then
+			-- Only add this is needed to prevent stupid control code buildup.
+			styleprime = styleprime .. CreateStyleByte(0)
+		end
+		styleprimelen = 1
 	end
 
 	local paragraph = Document[cp]
@@ -241,7 +252,7 @@ function Cmd.SplitCurrentWord()
 		paragraph:sub(cw+1))
 
 	Document.cw = cw + 1
-	Document.co = 1 + #styleprime
+	Document.co = 1 + styleprimelen
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -698,7 +709,7 @@ function Cmd.MoveWhileSelected()
 end
 
 function Cmd.TypeWhileSelected()
-	if Document.mp then
+	if Document.mp and not Document.sticky_selection then
 		return Cmd.Delete()
 	end
 	return true

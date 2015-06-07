@@ -37,8 +37,8 @@ AssertEquals(1, Document.mp)
 AssertEquals(1, Document.mw)
 AssertEquals(4, Document.mo)
 
--- This should also delete the selection.
+-- This should *not* delete the selection.
 Cmd.TypeWhileSelected()
 
-AssertEquals("f", Document[1][1])
+AssertEquals("foo", Document[1][1])
 
