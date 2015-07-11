@@ -440,6 +440,10 @@ function Cmd.GotoNextLine()
 	local x, ln, lines = getpos()
 
 	if (ln == #lines) then
+		if (Document.cp == #Document) then
+			return Cmd.GotoEndOfParagraph()
+		end
+
 		return Cmd.GotoNextParagraph() and
 		       Cmd.GotoBeginningOfParagraph() and
 		       Cmd.GotoXPosition(x)
@@ -453,6 +457,10 @@ function Cmd.GotoPreviousLine()
 	local x, ln, lines = getpos()
 
 	if (ln == 1) then
+		if (Document.cp == 1) then
+			return Cmd.GotoBeginningOfParagraph()
+		end
+
 		return Cmd.GotoPreviousParagraph() and
 		       Cmd.GotoEndOfParagraph() and
 		       Cmd.GotoXPosition(x)
