@@ -133,6 +133,7 @@ LUASCRIPTS := \
 	src/lua/export/latex.lua \
 	src/lua/export/troff.lua \
 	src/lua/export/opendocument.lua \
+	src/lua/export/markdown.lua \
 	src/lua/import.lua \
 	src/lua/import/html.lua \
 	src/lua/import/text.lua \
