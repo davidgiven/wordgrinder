@@ -17,6 +17,10 @@ local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
 
 function FileBrowser(title, message, saving, default)
+	-- Prevent the first item being selected if no default is supplied; as
+	-- it's always .., it's never helpful.
+	default = default or ""
+
 	local files = {}
 	for i in lfs.dir(".") do
 		if (i ~= ".") and ((i == "..") or not i:match("^%.")) then
@@ -83,7 +87,7 @@ function FileBrowser(title, message, saving, default)
 
 	if attr and (attr.mode == "directory") then
 		lfs.chdir(f)
-		return FileBrowser(title, message, saving)
+		return FileBrowser(title, message, saving, default)
 	end
 	
 	if saving and not e then
@@ -125,6 +129,11 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		return action
 	end
 
+	local function go_to_parent(self, key)
+		textfield.value = ".."
+		return "confirm"
+	end
+
 	local helptext
 	if (ARCH == "windows") then
 		helptext = "enter an absolute path or drive letter ('c:') to go there"
@@ -140,6 +149,7 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
+		["KEY_^P"] = go_to_parent,
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
@@ -171,7 +181,7 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 	}
 	
 	local result = Form.Run(dialogue, RedrawScreen,
-		"RETURN to confirm, CTRL+C to cancel")
+		"RETURN to confirm, CTRL+C to cancel, CTRL+P to go to parent dir")
 	QueueRedraw()
 	if result then
 		return textfield.value
