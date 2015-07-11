@@ -179,3 +179,19 @@ function ExportFileWithUI(filename, title, extension, callback)
 	QueueRedraw()
 	return true
 end
+
+--- Converts a document into a local string.
+
+function ExportToString(document, callback)
+	local ss = {}
+	local writer = function(...)
+		for _, s in ipairs({...}) do
+			ss[#ss+1] = s
+		end
+	end
+
+	callback(writer, document)
+
+	return table.concat(ss)
+end
+

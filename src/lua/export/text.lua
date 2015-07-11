@@ -59,3 +59,7 @@ function Cmd.ExportTextFile(filename)
 	return ExportFileWithUI(filename, "Export Text File", ".txt",
 		callback)
 end
+
+function Cmd.ExportToTextString()
+	return ExportToString(Document, callback)
+end
