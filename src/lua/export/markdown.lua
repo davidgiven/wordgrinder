@@ -3,22 +3,24 @@ local function unmarkdown(s)
 	s = s:gsub("- ", "\\- ")
 	s = s:gsub("> ", "\\> ")
 	s = s:gsub("`", "\\`")
+	s = s:gsub("_", "\\_")
+	s = s:gsub("*", "\\*")
 	return s
 end
 
 local style_tab =
 {
-	["H1"] = {false, '#', '\n'},
-	["H2"] = {false, '##', '\n'},
-	["H3"] = {false, '###', '\n'},
-	["H4"] = {false, '####', '\n'},
+	["H1"] = {false, '# ', '\n'},
+	["H2"] = {false, '## ', '\n'},
+	["H3"] = {false, '### ', '\n'},
+	["H4"] = {false, '#### ', '\n'},
 	["P"] =  {false, '', '\n'},
 	["L"] =  {false, '- ', ''},
 	["LB"] = {false, '- ', ''},
 	["Q"] =  {false, '> ', '\n'}, 
 	["V"] =  {false, '> ', '\n'},
-	["RAW"] = {false, '`', '`'},
-	["PRE"] = {true, '```\n', '\n```\n'}
+	["RAW"] = {false, '    ', ''},
+	["PRE"] = {true, '`', '`'}
 }
 
 local function callback(writer, document)
@@ -100,6 +102,7 @@ local function callback(writer, document)
 		end,
 
 		epilogue = function()
+			changepara(nil)
 		end,
 	})
 end
