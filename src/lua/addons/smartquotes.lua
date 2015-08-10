@@ -2,30 +2,32 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local GetStringWidth = wg.getstringwidth
+
 -----------------------------------------------------------------------------
 -- Process incoming key events.
 
 do
-	local function escape(s)
-		return (s:gsub("%%", "%%%%"))
-	end
-
 	local function cb(event, token, payload)
 		local settings = DocumentSet.addons.smartquotes or {}
 
-		if settings.notinraw and (payload.paragraph.style.name ~= "RAW") then
-			if settings.doublequotes then
-				payload.word = payload.word:gsub('^"', escape(settings.leftdouble))
-				payload.word = payload.word:gsub('"', escape(settings.rightdouble))
+		if settings.notinraw
+				and (Document[Document.cp].style.name ~= "RAW") then
+			local value = payload.value
+			local word = Document[Document.cp][Document.cw]
+			local first = GetWidthFromOffset(word, Document.co) == 0
+
+			if settings.doublequotes and (value == '"') then
+				value = first and settings.leftdouble or settings.rightdouble
 			end
-			if settings.singlequotes then
-				payload.word = payload.word:gsub("^'", escape(settings.leftsingle))
-				payload.word = payload.word:gsub("'", escape(settings.rightsingle))
+			if settings.singlequotes and (value == "'") then
+				value = first and settings.leftsingle or settings.rightsingle
 			end
+			payload.value = value
 		end
 	end
 	
-	AddEventListener(Event.WordModified, cb)
+	AddEventListener(Event.KeyTyped, cb)
 end
 
 -----------------------------------------------------------------------------
@@ -45,6 +47,50 @@ do
 	end
 	
 	AddEventListener(Event.RegisterAddons, cb)
+end
+
+-----------------------------------------------------------------------------
+-- Process the selection.
+
+local function escape(s)
+	return (s:gsub("%%", "%%%%"))
+end
+
+local function convert_clipboard()
+	local settings = DocumentSet.addons.smartquotes or {}
+	local clipboard = DocumentSet:getClipboard()
+
+	local ld = escape(settings.leftdouble)
+	local rd = escape(settings.rightdouble)
+	local ls = escape(settings.leftsingle)
+	local rs = escape(settings.rightsingle)
+
+	for pn = 1, #clipboard do
+		local para = clipboard[pn]
+		if settings.notinraw and (para.style.name ~= "RAW") then
+			local newwords = {}
+			for _, w in ipairs(para) do
+				w = w:gsub('^(%c*)"', "%1"..ld)
+				w = w:gsub('"', rd)
+
+				w = w:gsub("^(%c*)'", "%1"..ls)
+				w = w:gsub("'", rs)
+				newwords[#newwords+1] = w
+			end
+			
+			clipboard[pn] = CreateParagraph(para.style, newwords)
+		end
+	end
+
+	NonmodalMessage("Clipboard smartquotified.")
+	return true
+end
+
+function Cmd.Smartquotify()
+	return Cmd.Checkpoint() and
+		Cmd.Copy(true) and
+		convert_clipboard() and
+		Cmd.Paste()
 end
 
 -----------------------------------------------------------------------------

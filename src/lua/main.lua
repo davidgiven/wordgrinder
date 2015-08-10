@@ -156,7 +156,11 @@ function WordProcessor(filename)
 				if not c:match("^KEY_") then
 					Cmd.Checkpoint()
 					Cmd.TypeWhileSelected()
-					Cmd.InsertStringIntoWord(c)
+
+					local payload = { value = c }
+					FireEvent(Event.KeyTyped, payload)
+
+					Cmd.InsertStringIntoWord(payload.value)
 				else
 					f = DocumentSet.menu:lookupAccelerator(c)
 					if f then

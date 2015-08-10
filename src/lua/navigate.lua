@@ -176,20 +176,11 @@ function Cmd.InsertStringIntoWord(c)
 		return false
 	end
 	
-	local payload =
-	{
-		word = s,
-		wn = Document.cw,
-		paragraph = paragraph
-	}
-	FireEvent(Event.WordModified, payload)
-	local news = payload.word
-
 	Document[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
-		news,
+		s,
 		paragraph:sub(cw+1))
-	Document.co = co + (#news - #s)
+	Document.co = co
 	
 	DocumentSet:touch()
 	QueueRedraw()
@@ -385,6 +376,7 @@ function Cmd.SplitCurrentParagraph()
 	Document.cp = Document.cp + 1
 	Document.cw = 1
 	Document.co = 1
+	QueueRedraw()
 	return true
 end
 
@@ -833,22 +825,11 @@ function Cmd.Paste()
 	Cmd.SplitCurrentWord()
 	local paragraph = Document[Document.cp]
 
-	local newwords = {}
-	for wn, word in ipairs(buffer[1]) do
-		local payload = {
-			word = word,
-			wn = wn,
-			paragraph = paragraph
-		}
-		FireEvent(Event.WordModified, payload)
-		newwords[#newwords+1] = payload.word
-	end
-
 	Document[Document.cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw),
-		newwords,
+		buffer[1],
 		paragraph:sub(cw+1))
-	Document.cw = Document.cw + #newwords
+	Document.cw = Document.cw + #buffer[1]
 	Document.co = 1
 	
 	-- Splice the first word of the section just pasted.
@@ -870,19 +851,8 @@ function Cmd.Paste()
 		local p = 2
 		for p = 2, #buffer do	
 			local paragraph = buffer[p]
-			local words = {}
-			for wn, word in ipairs(buffer[p]) do
-				local payload =
-				{
-					word = word,
-					wn = wn,
-					paragraph = paragraph
-				}
-				FireEvent(Event.WordModified, payload)
-				words[#words+1] = payload.word
-			end
 			Document:insertParagraphBefore(
-				CreateParagraph(paragraph.style, words),
+				CreateParagraph(paragraph.style, paragraph),
 				Document.cp)
 
 			Document.cp = Document.cp + 1

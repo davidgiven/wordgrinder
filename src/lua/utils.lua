@@ -131,6 +131,16 @@ function TableToString(t)
 	return "{"..table.concat(ts, ", ").."}"
 end
 
+--- Return a table of the bytes of a string.
+
+function StringBytesToString(s)
+	local ts = {}
+	for i = 1, #s do
+		ts[#ts+1] = string.byte(s, i)
+	end
+	return TableToString(ts)
+end
+		
 --- Return a partially immutable proxy for an object.
 -- This only handles direct assignment to array members.
 --

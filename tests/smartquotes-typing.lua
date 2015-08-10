@@ -4,26 +4,69 @@ DocumentSet.addons.smartquotes.singlequotes = true
 DocumentSet.addons.smartquotes.doublequotes = true
 DocumentSet.addons.smartquotes.notinraw = true
 
-Cmd.InsertStringIntoParagraph("'Hello, world!'")
+-- Fake typing on the keyboard.
+local function typestring(s)
+	for c in s:gmatch(".") do
+		local payload = { value = c }
+		FireEvent(Event.KeyTyped, payload)
+
+		local c = payload.value
+		if (c == " ") then
+			Cmd.SplitCurrentWord()
+		else
+			Cmd.InsertStringIntoWord(c)
+		end
+	end
+end
+
+typestring("'Hello, world!'")
+AssertTableEquals({"‘Hello,", "world!’"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
-Cmd.InsertStringIntoParagraph('"Hello, world!"')
+
+typestring('"Hello, world!"')
+AssertTableEquals({"“Hello,", "world!”"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
-Cmd.InsertStringIntoParagraph("flob's")
+
+typestring("flob's")
+AssertTableEquals({"flob’s"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
+
 Cmd.ChangeParagraphStyle("RAW")
-Cmd.InsertStringIntoParagraph("not'd")
+typestring("not'd")
+AssertTableEquals({"not'd"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
+
+Cmd.ChangeParagraphStyle("P")
+Cmd.SetStyle("b")
+typestring("'fnord'")
+AssertTableEquals({"\24‘fnord’"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
+
+Cmd.SetStyle("o")
+Cmd.SetStyle("i")
+typestring("'")
+Cmd.SetStyle("b")
+typestring("fnord'")
+AssertTableEquals({"\17‘\25fnord’"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
 
 DocumentSet.addons.smartquotes.rightsingle = "%"
-Cmd.SplitCurrentParagraph()
 Cmd.ChangeParagraphStyle("P")
-Cmd.InsertStringIntoParagraph("blorb's")
+typestring("blorb's")
+AssertTableEquals({"blorb%s"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
 
-AssertEquals("‘Hello,", Document[1][1])
-AssertEquals("world!’", Document[1][2])
-AssertEquals("“Hello,", Document[2][1])
-AssertEquals("world!”", Document[2][2])
-AssertEquals("flob’s", Document[3][1])
-AssertEquals("not'd", Document[4][1])
-AssertEquals("blorb%s", Document[5][1])
+DocumentSet.addons.smartquotes.rightsingle = "’"
+typestring([["Once upon a time," said K'trx'frn, "there was an aardvark called Albert."]])
+AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
+	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
+
+typestring("fnord")
+Cmd.GotoBeginningOfWord()
+typestring('"')
+Cmd.GotoEndOfWord()
+AssertTableEquals({"“fnord"}, Document[Document.cp])
+Cmd.SplitCurrentParagraph()
 
 
