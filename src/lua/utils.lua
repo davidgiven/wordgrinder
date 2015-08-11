@@ -90,20 +90,12 @@ function SplitString(str, delim)
      
     local result = {}
     local pat = "(.-)" .. delim .. "()"
-    local nb = 0
     local lastPos
     for part, pos in str:gmatch(pat) do
-		nb = nb + 1
-		result[nb] = part
+		result[#result+1] = part
 		lastPos = pos
-		if (nb == maxNb) then
-			break
-		end
     end
-    -- Handle the last field
-    if nb ~= maxNb then
-        result[nb + 1] = str:sub(lastPos)
-    end
+	result[#result+1] = str:sub(lastPos)
     return result
 end
 
