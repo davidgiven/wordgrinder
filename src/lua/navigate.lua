@@ -328,13 +328,17 @@ function Cmd.DeleteSelectionOrNextChar()
 end
 
 function Cmd.DeleteWordLeftOfCursor()
-	local paragraph = Document[Document.cp]
+	local cp = Document.cp
 	local cw = Document.cw
 	local co = Document.co
+	local paragraph = Document[cp]
+	local word = paragraph[cw]
 
-	paragraph[cw] = DeleteFromWord(paragraph[cw], 1, co)
+	Document[cp] = CreateParagraph(paragraph.style,
+		paragraph:sub(1, cw-1),
+		DeleteFromWord(word, 1, co),
+		paragraph:sub(cw+1))
 	Document.co = 1
-	paragraph:touch()
 	
 	DocumentSet:touch()
 	QueueRedraw()

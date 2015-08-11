@@ -29,17 +29,20 @@ AssertEquals(4, Document.co)
 Cmd.SplitCurrentWord()
 
 AssertEquals(1, #Document)
-AssertEquals(2, #Document[1])
-AssertEquals("foo", Document[1][1])
-AssertEquals("\016bar", Document[1][2])
+AssertTableEquals({"foo", "\016bar"}, Document[1])
 
 Cmd.GotoBeginningOfWord()
 Cmd.DeletePreviousChar()
 Cmd.SplitCurrentParagraph()
 
 AssertEquals(2, #Document)
-AssertEquals(1, #Document[1])
-AssertEquals(1, #Document[2])
-AssertEquals("foo", Document[1][1])
-AssertEquals("\016bar", Document[2][1])
+AssertTableEquals({"foo"}, Document[1])
+AssertTableEquals({"\016bar"}, Document[2])
+
+Cmd.InsertStringIntoParagraph("o bar")
+Cmd.GotoEndOfWord()
+Cmd.DeleteWord()
+AssertEquals(2, Document.cw)
+AssertEquals(1, Document.co)
+AssertTableEquals({"o", ""}, Document[2])
 
