@@ -159,7 +159,7 @@ function RedrawScreen()
 	local ocw = cw
 	cl, cw = paragraph:getLineOfWord(cw)
 	if not cl then
-		error("word "..ocw.." not in para of len "..#paragraph)
+		error("word "..ocw.." not in para "..cp.." of len "..#paragraph)
 	end
 	
 	-- Position the cursor.

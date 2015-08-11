@@ -94,24 +94,24 @@ local ExportMenu = addmenu("Export current document",
 	{"FEtxt",  "T", "Export to plain text...",   nil,         Cmd.ExportTextFile},
 	{"FEtex",  "L", "Export to LaTeX...",        nil,         Cmd.ExportLatexFile},
 	{"FEtr",   "F", "Export to Troff...",        nil,         Cmd.ExportTroffFile},
---	{"FErtf",  "R", "Export to Rtf...",        nil,         Cmd.ExportRTFFile},
+--	{"FErtf",  "R", "Export to Rtf...",          nil,         Cmd.ExportRTFFile},
 })
 
 local DocumentSettingsMenu = addmenu("Document settings",
 {
-    {"FSautosave", "A", "Autosave...",               nil,         Cmd.ConfigureAutosave},
-    {"FSscrapbook", "S", "Scrapbook...",             nil,         Cmd.ConfigureScrapbook},
-    {"FSHTMLExport", "H", "HTML export...",          nil,         Cmd.ConfigureHTMLExport},
-	{"FSPageCount", "P", "Page count...",            nil,         Cmd.ConfigurePageCount},
-	{"FSSmartquotes", "Q", "Smart quotes...",        nil,         Cmd.ConfigureSmartQuotes},
-	{"FSSpellchecker", "C", "Spellchecker...",       nil,         Cmd.ConfigureSpellchecker},
+    {"FSautosave",     "A", "Autosave...",           nil,         Cmd.ConfigureAutosave},
+    {"FSscrapbook",    "S", "Scrapbook...",          nil,         Cmd.ConfigureScrapbook},
+    {"FSHTMLExport",   "H", "HTML export...",        nil,         Cmd.ConfigureHTMLExport},
+	{"FSPageCount",    "P", "Page count...",         nil,         Cmd.ConfigurePageCount},
+	{"FSSmartquotes",  "Q", "Smart quotes...",       nil,         Cmd.ConfigureSmartQuotes},
+	{"FSSpellchecker", "K", "Spellchecker...",       nil,         Cmd.ConfigureSpellchecker},
 })
 
 local GlobalSettingsMenu = addmenu("Global settings",
 {
 	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},
 	"-",
-	{"FSDebug",    "D", "Debugging options...",      nil,         Cmd.ConfigureDebug},
+	{"FSDebug",      "D", "Debugging options...",    nil,         Cmd.ConfigureDebug},
 })
 
 local FileMenu = addmenu("File",
@@ -140,6 +140,12 @@ local ScrapbookMenu = addmenu("Scrapbook",
 	{"ESpaste",    "P", "Paste to scrapbook",        nil,         { cp, Cmd.PasteToScrapbook }},
 })
 
+local SpellcheckMenu = addmenu("Spellchecker",
+{
+	{"ECfind",     "F", "Find next misspelt word",        "^L",   Cmd.FindNextMisspeltWord },
+	{"ECadd",      "A", "Add current word to dictionary", "^M",   { cp, Cmd.AddToUserDictionary }},
+})
+
 local EditMenu = addmenu("Edit",
 {
 	{"ET",         "T", "Cut",                       "^X",        { cp, Cmd.Cut }},
@@ -157,6 +163,7 @@ local EditMenu = addmenu("Edit",
 	"-",
 	{"EG",         "G", "Go to...",                  "^G",        Cmd.Goto},
 	{"Escrapbook", "S", "Scrapbook ▷",               nil,         ScrapbookMenu},
+	{"Espell",     "K", "Spellchecker ▷",            nil,         SpellcheckMenu},
 })
 
 local MarginMenu = addmenu("Margin",

@@ -43,6 +43,7 @@ DocumentSetClass =
 	touch = function(self)
 		self.changed = true
 		self.justchanged = true
+		Document:touch()
 	end,
 	
 	clean = function(self)
@@ -265,6 +266,10 @@ DocumentClass =
 		else
 			return sb
 		end
+	end,
+
+	touch = function(self)
+		FireEvent(Event.DocumentModified, self)
 	end,
 }
 

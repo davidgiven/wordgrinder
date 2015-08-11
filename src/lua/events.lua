@@ -10,6 +10,7 @@ Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar 
 Event.Changed = {}           --- the document's been changed
 Event.DocumentCreated = {}   --- a new documentset has just been created
 Event.DocumentLoaded = {}    --- a new documentset has just been loaded
+Event.DocumentModified = {}  --- (document) a document has been modified
 Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
 Event.KeyTyped = {}          --- (value=) user is typing into the document
 Event.Idle = {}              --- the user isn't touching the keyboard
