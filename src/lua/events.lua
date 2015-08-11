@@ -12,6 +12,7 @@ Event.DocumentCreated = {}   --- a new documentset has just been created
 Event.DocumentLoaded = {}    --- a new documentset has just been loaded
 Event.DocumentModified = {}  --- (document) a document has been modified
 Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
+Event.DrawWord = {}          --- (word=, ostyle=, cstyle=) a word is being drawn on the screen
 Event.KeyTyped = {}          --- (value=) user is typing into the document
 Event.Idle = {}              --- the user isn't touching the keyboard
 Event.Moved = {}             --- the cursor has moved

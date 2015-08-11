@@ -557,12 +557,12 @@ function Cmd.LoadDocumentSet(filename)
 	if (fileformat < FILEFORMAT) then
 		UpgradeDocument(fileformat)
 		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
-		FireEvent(Event.RegisterAddons)
 				
 		DocumentSet.fileformat = FILEFORMAT
 		DocumentSet.menu = CreateMenu()
-		DocumentSet:touch()
 	end
+	FireEvent(Event.RegisterAddons)
+	DocumentSet:touch()
 
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)

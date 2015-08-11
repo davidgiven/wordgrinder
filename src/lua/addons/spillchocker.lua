@@ -12,7 +12,7 @@ local USER_DICTIONARY_NAME = "User dictionary"
 do
 	local function cb()
 		DocumentSet.addons.spellchecker = DocumentSet.addons.spellchecker or {
-			highlight = false,
+			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
 		}
@@ -72,6 +72,19 @@ function GetUserDictionary()
 	return user_dictionary_cache
 end
 
+function IsWordMisspelt(word)
+	local settings = DocumentSet.addons.spellchecker or {}
+	if settings.enabled then
+		local misspelt = true
+		if settings.useuserdictionary and GetUserDictionary()[word] then
+			misspelt = false
+		end
+		return misspelt
+	else
+		return false
+	end
+end
+
 -----------------------------------------------------------------------------
 -- Add the current word to the user dictionary.
 
@@ -94,10 +107,24 @@ function Cmd.AddToUserDictionary()
 end
 
 -----------------------------------------------------------------------------
+-- The core of the live checker: looks up a word and determines whether
+-- it's misspelt or not.
+
+do
+	local function cb(self, token, payload)
+		if IsWordMisspelt(payload.word) then
+			payload.cstyle = bit32.bor(payload.cstyle, wg.DIM)
+		end
+	end
+
+	AddEventListener(Event.DrawWord, cb) 
+end
+
+-----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigureSpellchecker()
-	local settings = DocumentSet.addons.spellchecker
+	local settings = DocumentSet.addons.spellchecker or {}
 
 	local highlight_checkbox =
 		Form.Checkbox {
@@ -166,7 +193,7 @@ function Cmd.ConfigureSpellchecker()
 		return false
 	end
 	
-	settings.highlight = highlight_checkbox.value
+	settings.enabled = highlight_checkbox.value
 	settings.usesystemdictionary = systemdictionary_checkbox.value
 	settings.useuserdictionary = userdictionary_checkbox.value
 	DocumentSet:touch()

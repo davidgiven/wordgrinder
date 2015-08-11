@@ -334,7 +334,16 @@ ParagraphClass =
 		local xs = self.xs
 		for _, wn in ipairs(line) do
 			local w = self[wn]
-			ostyle = WriteStyled(x+xs[wn], y, w, ostyle, nil, nil, cstyle)
+
+			local payload = {
+				word = w,
+				ostyle = ostyle,
+				cstyle = cstyle
+			}
+			FireEvent(Event.DrawWord, payload)
+
+			ostyle = WriteStyled(x+xs[wn], y, payload.word,
+				payload.ostyle, nil, nil, payload.cstyle)
 		end
 	end,
 
@@ -384,7 +393,15 @@ ParagraphClass =
 				end
 			end
 			
-			ostyle = WriteStyled(x+self.xs[w], y, self[w], ostyle, s, e, cstyle)
+			local payload = {
+				word = self[w],
+				ostyle = ostyle,
+				cstyle = cstyle
+			}
+			FireEvent(Event.DrawWord, payload)
+
+			ostyle = WriteStyled(x+self.xs[w], y, payload.word,
+				payload.ostyle, s, e, payload.cstyle)
 		end
 	end,
 
