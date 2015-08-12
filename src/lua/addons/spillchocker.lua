@@ -64,7 +64,7 @@ function GetUserDictionary()
 		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
 			if (p.style == vstyle) then
-				local w = GetWordText(p[1])
+				local w = GetWordSimpleText(p[1])
 				user_dictionary_cache[w] = true
 			end
 		end
@@ -76,7 +76,10 @@ function IsWordMisspelt(word)
 	local settings = DocumentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
-		if settings.useuserdictionary and GetUserDictionary()[word] then
+		local s = GetWordSimpleText(word)
+		if (s == "") then
+			misspelt = false
+		elseif settings.useuserdictionary and GetUserDictionary()[s] then
 			misspelt = false
 		end
 		return misspelt
@@ -89,7 +92,7 @@ end
 -- Add the current word to the user dictionary.
 
 function Cmd.AddToUserDictionary()
-	local word = GetWordText(Document[Document.cp][Document.cw])
+	local word = GetWordSimpleText(Document[Document.cp][Document.cw])
 
 	if (word ~= "") then
 		if not GetUserDictionary()[word] then

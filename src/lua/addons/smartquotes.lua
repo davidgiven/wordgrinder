@@ -50,11 +50,23 @@ do
 end
 
 -----------------------------------------------------------------------------
--- Process the selection.
+-- Undo any smart quotes.
 
 local function escape(s)
 	return (s:gsub("%%", "%%%%"))
 end
+
+function UnSmartquotify(s)
+	local settings = DocumentSet.addons.smartquotes or {}
+	s = s:gsub(escape(settings.leftdouble), '"')
+	s = s:gsub(escape(settings.rightdouble), '"')
+	s = s:gsub(escape(settings.leftsingle), "'")
+	s = s:gsub(escape(settings.rightsingle), "'")
+	return s
+end
+
+-----------------------------------------------------------------------------
+-- Process the selection.
 
 local function convert_clipboard()
 	local settings = DocumentSet.addons.smartquotes or {}

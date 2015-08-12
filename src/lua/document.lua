@@ -508,6 +508,16 @@ function GetOffsetFromWidth(s, x)
 		return len + 1
 end
 
+function GetWordSimpleText(s)
+	s = GetWordText(s)
+	s = UnSmartquotify(s)
+	s = s:gsub('[-!?~#(){}[%]=+_+*&^$".,<>]+', "")
+	s = s:gsub("^'+", "")
+	s = s:gsub("'+$", "")
+	s = s:lower()
+	return s
+end
+
 local function create_styles()
 	local styles =
 	{
