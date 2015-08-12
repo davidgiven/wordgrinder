@@ -12,6 +12,7 @@ AssertEquals("hello",   GetWordSimpleText("‘Hello’"))
 AssertEquals("hello",   GetWordSimpleText("“Hello”"))
 AssertEquals("there's", GetWordSimpleText("there's"))
 AssertEquals("there's", GetWordSimpleText("there’s"))
+AssertEquals("there",   GetWordSimpleText("there;"))
 
 AssertEquals("'Hello'", UnSmartquotify("‘Hello’"))
 AssertEquals('"Hello"', UnSmartquotify("“Hello”"))

@@ -42,4 +42,9 @@ function ModalMessage(s1, s2)
 	end
 end
 
+function SaveGlobalSettings()
+end
+
+GlobalSettings.systemdictionary.filename = nil
+
 return {}

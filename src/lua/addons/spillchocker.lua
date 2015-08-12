@@ -10,11 +10,19 @@ local USER_DICTIONARY_NAME = "User dictionary"
 -- Addon registration. Create the default settings in the DocumentSet.
 
 do
+	local function find_default_dictionary()
+		return "/etc/dictionaries-common/words"
+	end
+
 	local function cb()
 		DocumentSet.addons.spellchecker = DocumentSet.addons.spellchecker or {
 			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
+		}
+
+		GlobalSettings.systemdictionary = GlobalSettings.systemdictionary or {
+			filename = find_default_dictionary()
 		}
 	end
 	
@@ -25,6 +33,7 @@ end
 -- Utilities.
 
 local user_dictionary_cache
+local system_dictionary_cache
 
 local function user_dictionary_document_modified()
 	user_dictionary_cache = nil
@@ -35,7 +44,7 @@ local function get_user_dictionary_document()
 	if not d then
 		d = CreateDocument()
 		DocumentSet:addDocument(d, USER_DICTIONARY_NAME)
-		NonmodalMessage("Creating scrapbook in document '"
+		NonmodalMessage("Creating dictionary in document '"
 				..USER_DICTIONARY_NAME.."'.")
 
 		d[1] = CreateParagraph(
@@ -72,14 +81,40 @@ function GetUserDictionary()
 	return user_dictionary_cache
 end
 
+function GetSystemDictionary()
+	local settings = GlobalSettings.systemdictionary or {}
+	if not system_dictionary_cache then
+		system_dictionary_cache = {}
+
+		if settings.filename then
+			NonmodalMessage("Loading system dictionary '"
+				.. settings.filename .. "'")
+			local fp, e = io.open(settings.filename, "r")
+			if fp then
+				for s in fp:lines() do
+					system_dictionary_cache[s] = true
+				end
+				fp:close()
+			else
+				NonmodalMessage("Failed to load system dictionary: " .. e)
+			end
+			QueueRedraw()
+		end
+	end
+	return system_dictionary_cache
+end
+
 function IsWordMisspelt(word)
 	local settings = DocumentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
 		local s = GetWordSimpleText(word)
-		if (s == "") then
-			misspelt = false
-		elseif settings.useuserdictionary and GetUserDictionary()[s] then
+		if (s == "") 
+			or s:find("^[0-9]+$")
+			or (#s < 3)
+			or (settings.usesystemdictionary and GetSystemDictionary()[s])
+			or (settings.useuserdictionary and GetUserDictionary()[s])
+		then
 			misspelt = false
 		end
 		return misspelt
@@ -188,7 +223,7 @@ function Cmd.FindNextMisspeltWord()
 end
 
 -----------------------------------------------------------------------------
--- Configuration user interface.
+-- Per-document set configuration user interface.
 
 function Cmd.ConfigureSpellchecker()
 	local settings = DocumentSet.addons.spellchecker or {}
@@ -229,7 +264,7 @@ function Cmd.ConfigureSpellchecker()
 		["KEY_ENTER"] = "confirm",
 		
 		highlight_checkbox,
---		systemdictionary_checkbox,
+		systemdictionary_checkbox,
 		userdictionary_checkbox,
 		
 		Form.Label {
@@ -239,12 +274,12 @@ function Cmd.ConfigureSpellchecker()
 			value = "Display misspelt words:"
 		},
 		
---		Form.Label {
---			x1 = 1, y1 = 3,
---			x2 = 32, y2 = 3,
---			align = Form.Left,
---			value = "Use system dictionary:"
---		},
+		Form.Label {
+			x1 = 1, y1 = 3,
+			x2 = 32, y2 = 3,
+			align = Form.Left,
+			value = "Use system dictionary:"
+		},
 		
 		Form.Label {
 			x1 = 1, y1 = 5,
@@ -266,3 +301,27 @@ function Cmd.ConfigureSpellchecker()
 	DocumentSet:touch()
 	return true
 end
+
+-----------------------------------------------------------------------------
+-- System dictionary configuration interface.
+
+function Cmd.ConfigureSystemDictionary()
+	local settings = GlobalSettings.systemdictionary
+
+	local oldcwd = lfs.currentdir()
+	local filename = FileBrowser(
+		"Load new system dictionary",
+		"Select the dictionary file to load.",
+		false,
+		settings.filename)
+	lfs.chdir(oldcwd)
+
+	if filename then
+		system_dictionary_cache = nil
+		settings.filename = filename
+		SaveGlobalSettings()
+	end
+
+	return true
+end
+

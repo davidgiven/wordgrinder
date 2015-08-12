@@ -24,6 +24,7 @@ AssertTableEquals({"fnord", 0, 0},
 
 DocumentSet.addons.spellchecker.enabled = true
 DocumentSet.addons.spellchecker.useuserdictionary = true
+DocumentSet.addons.spellchecker.usesystemdictionary = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
 FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"fnord", 0, 0},
@@ -37,6 +38,13 @@ AssertTableEquals({"fnord.", 0, 0},
 local payload = { word="notfound", cstyle=0, ostyle=0 }
 FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"notfound", wg.DIM, 0},
+	{payload.word, payload.cstyle, payload.ostyle})
+
+DocumentSet.addons.spellchecker.useuserdictionary = true
+DocumentSet.addons.spellchecker.usesystemdictionary = true
+local payload = { word="fnord", cstyle=0, ostyle=0 }
+FireEvent(Event.DrawWord, payload)
+AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
 Cmd.InsertStringIntoParagraph("foo bar baz")

@@ -21,6 +21,15 @@ function FileBrowser(title, message, saving, default)
 	-- it's always .., it's never helpful.
 	default = default or ""
 
+	-- If the default has a slash in it, it's a subdirectory, so go there.
+	do
+		local _, _, dir, leaf = default:find("(.*)/([^/]*)$")
+		if dir then
+			lfs.chdir(dir)
+			default = leaf
+		end
+	end
+
 	local files = {}
 	for i in lfs.dir(".") do
 		if (i ~= ".") and ((i == "..") or not i:match("^%.")) then
