@@ -124,6 +124,70 @@ do
 end
 
 -----------------------------------------------------------------------------
+-- The core of the offline checker: scan forward looking for misspelt words.
+
+function Cmd.FindNextMisspeltWord()
+	ImmediateMessage("Searching...")
+	
+	-- If we have a selection, start checking from immediately
+	-- afterwards. Otherwise, start at the current cursor position.
+	
+	local sp, sw, so
+	if Document.mp then
+		sp, sw, so = Document.mp, Document.mw + 1, 1
+		if sw > #Document[sp] then
+			sw = 1
+			sp = sp + 1
+			if sp > #Document then
+				sp = 1
+			end
+		end
+	else
+		sp, sw, so = Document.cp, Document.cw, 1
+	end
+	local cp, cw, co = sp, sw, so
+
+	-- Keep looping until we reach the starting point again.
+	
+	while true do
+		local word = Document[cp][cw]
+		if IsWordMisspelt(word) then
+			Document.cp = cp
+			Document.cw = cw
+			Document.co = #word + 1
+			Document.mp = cp
+			Document.mw = cw
+			Document.mo = 1
+			NonmodalMessage("Misspelt word found.")
+			QueueRedraw()
+			return true
+		end
+	
+		-- Nothing. Move on to the next word.
+		
+		co = 1
+		cw = cw + 1
+		if (cw > #Document[cp]) then
+			cw = 1
+			cp = cp + 1
+			if (cp > #Document) then
+				cp = 1
+			end
+		end
+		
+		-- Check to see if we've scanned everything.
+		
+		if (cp == sp) and (cw == sw) and (co == 1) then
+			break
+		end
+	end
+	
+	QueueRedraw()
+	NonmodalMessage("No misspelt words found.")
+	return false
+end
+
+-----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigureSpellchecker()

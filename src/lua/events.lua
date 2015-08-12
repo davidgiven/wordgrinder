@@ -64,6 +64,8 @@ end
 -- @param ...                any additional event parameters
 
 function FireEvent(event, ...)
+	assert(event)
+
 	local l = listeners[event]
 	if not l then
 		return
@@ -81,6 +83,8 @@ end
 -- @param event              the event to fire
 
 function FireAsyncEvent(event)
+	assert(event)
+
 	batched[event] = true
 end
 

@@ -511,9 +511,9 @@ end
 function GetWordSimpleText(s)
 	s = GetWordText(s)
 	s = UnSmartquotify(s)
-	s = s:gsub('[-!?~#(){}[%]=+_+*&^$".,<>]+', "")
-	s = s:gsub("^'+", "")
-	s = s:gsub("'+$", "")
+	s = s:gsub('[~#(){}[%]&^$"<>]+', "")
+	s = s:gsub("^[']+", "")
+	s = s:gsub("[',.!?]+$", "")
 	s = s:lower()
 	return s
 end
