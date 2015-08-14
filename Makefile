@@ -127,6 +127,7 @@ LUASCRIPTS := \
 	src/lua/html.lua \
 	src/lua/margin.lua \
 	src/lua/fileio.lua \
+	src/lua/xpattern.lua \
 	src/lua/export.lua \
 	src/lua/export/text.lua \
 	src/lua/export/html.lua \
@@ -480,6 +481,7 @@ $(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 $(eval $(call run-test, tests/weirdness-combining-words.lua))
 $(eval $(call run-test, tests/weirdness-replacing-words.lua))
+$(eval $(call run-test, tests/xpattern.lua))
 
 .phony: tests
 

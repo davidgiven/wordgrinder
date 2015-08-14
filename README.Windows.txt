@@ -65,6 +65,10 @@ for the full text.
 WordGrinder contains a copy of the LuaFileSystem code. This is also MIT
 licensed and is © The Kepler Project. See 
 http://www.keplerproject.org/luafilesystem for more information.
+ 
+WordGrinder contains a copy of the xpattern module. This is also MIT
+licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern
+for more information.
 
 
 
