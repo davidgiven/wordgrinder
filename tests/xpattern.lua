@@ -102,7 +102,7 @@ assert(str(m'aab') == 'aa')
 
 -- replacation (+)
 local m = ( P'b' * P'a'^1 ):compile()
-print(m'b')
+--print(m'b')
 assert(str(m'b') == '')
 assert(str(m'ba') == 'ba')
 assert(str(m'baab') == 'baa')
