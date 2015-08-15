@@ -111,6 +111,9 @@ WordGrinder contains a copy of the xpattern module. This is also MIT
 licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern
 for more information.
 
+WordGrinder contains a copy of the SCOWL wordlist for British and
+American-Canadian English. This is © Kevin Atkinson and J. Ross Beresford.
+Please see the README.Scowl file for the full license text.
 
 
 REVISION HISTORY
@@ -124,7 +127,7 @@ display in a terminal (if you have a new enough version of ncurses); more
 traditional charstyle selection (you can press ^B at the beginning of words
 now!); more traditional selection model (shift+cursor keys works now!); fix
 crash on loading very large .wg files; smart quote support; more efficient
-files; undo and redo.
+files; undo and redo; spellchecker.
 
 WordGrinder 0.5.2.1: 2015-02-21: Minor bugfixes: build system fixes; updated
 minizip to a version which builds better on Ubuntu; OSX Homebrew build system;

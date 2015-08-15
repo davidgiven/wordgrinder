@@ -70,6 +70,10 @@ WordGrinder contains a copy of the xpattern module. This is also MIT
 licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern
 for more information.
 
+WordGrinder contains a copy of the SCOWL wordlist for British and
+American-Canadian English. This is © Kevin Atkinson and J. Ross Beresford.
+Please see the README.Scowl file for the full license text.
+
 
 
 REVISION HISTORY
