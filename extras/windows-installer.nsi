@@ -92,7 +92,12 @@ Section "WordGrinder (required)"
 	SetOutPath $INSTDIR
 	File "bin\wordgrinder.exe"
 	File "README.wg"
-	FILE "COPYING"
+	File "COPYING"
+	File "README.Scowl"
+
+	CreateDirectory $INSTDIR\Dictionaries
+	File /oname=Dictionaries\British.dictionary "extras\british.dictionary"
+	File /oname=Dictionaries\American-Canadian.dictionary "extras\american-canadian.dictionary"
 	  
 	; Write the installation path into the registry
 	WriteRegStr HKLM SOFTWARE\NSIS_WordGrinder "Install_Dir" "$INSTDIR"
@@ -148,6 +153,10 @@ Section "Uninstall"
 	Delete $INSTDIR\uninstall.exe
 	Delete $INSTDIR\README.wg
 	Delete $INSTDIR\COPYING
+
+	Delete Dictionaries\British.dictionary
+	Delete Dictionaries\American-Canadian.dictionary
+	RMDir $INSTDIR\Dictionaries
 
 	; Remove shortcuts, if any
 	Delete "$SMPROGRAMS\WordGrinder\*.*"
