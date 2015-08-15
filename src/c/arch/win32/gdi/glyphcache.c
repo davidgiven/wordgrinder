@@ -339,13 +339,13 @@ static void draw_unicode(HDC dc, WCHAR* wstring, int slen, int w, int h,
 	int fg;
 
 	if (attrs & DPY_DIM)
-		fg = 0x555555;
+		fg = colourmap[COLOUR_DIM];
 	else if (attrs & DPY_BRIGHT)
-		fg = 0xffffff;
+		fg = colourmap[COLOUR_BRIGHT];
 	else
-		fg = 0x888888;
+		fg = colourmap[COLOUR_NORMAL];
 
-	SetBkColor(dc, 0x000000);
+	SetBkColor(dc, colourmap[COLOUR_BLACK]);
 	SetTextColor(dc, fg);
 
 	HPEN pen = CreatePen(PS_SOLID, 0, fg);

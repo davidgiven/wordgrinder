@@ -43,4 +43,14 @@ extern void dpy_flushkeys(void);
 
 extern HWND window;
 
+enum {
+	COLOUR_BLACK,
+	COLOUR_DIM,
+	COLOUR_NORMAL,
+	COLOUR_BRIGHT,
+	COLOUR__NUM
+};
+
+extern COLORREF colourmap[COLOUR__NUM];
+
 #endif

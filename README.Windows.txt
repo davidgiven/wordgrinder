@@ -87,7 +87,7 @@ display in a terminal (if you have a new enough version of ncurses); more
 traditional charstyle selection (you can press ^B at the beginning of words
 now!); more traditional selection model (shift+cursor keys works now!); fix
 crash on loading very large .wg files; smart quote support; more efficient
-files; undo and redo; spellchecker.
+files; undo and redo; spellchecker; colour configuration on X11 and Windows.
 
 WordGrinder 0.5.2.1: 2015-02-18: Minor bugfixes: build system fixes; updated
 minizip to a version which builds better on Ubuntu; OSX Homebrew build system;

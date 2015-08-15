@@ -16,8 +16,14 @@
 
 #define DEFAULT_CHAR (' ' << 8)
 
-#define MENUITEM_SETFONT 1
-#define MENUITEM_FULLSCREEN 2
+enum {
+	MENUITEM_SETFONT,
+	MENUITEM_FULLSCREEN,
+	MENUITEM_SETBGCOL,
+	MENUITEM_SETDIMCOL,
+	MENUITEM_SETNORMALCOL,
+	MENUITEM_SETBRIGHTCOL,
+};
 
 #define REGISTRY_PATH "Software\\Cowlark Technologies\\WordGrinder"
 
@@ -37,10 +43,14 @@ static bool window_geometry_valid = false;
 static RECT window_geometry;
 static bool window_created = false;
 
-static void resize_buffer(void);
+static void resize_buffer(bool force);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
 static void switch_to_windowed(void);
+
+static COLORREF custom_colours[16];
+
+COLORREF colourmap[COLOUR__NUM];
 
 static HKEY make_key(const char* keystring)
 {
@@ -77,6 +87,33 @@ static void write_default_font(void)
 	RegSetValueEx(key, "DefaultFont", 0,
 			REG_BINARY,
 			(LPBYTE) &fontlf, sizeof(fontlf));
+	RegCloseKey(key);
+}
+
+static void read_colourmap(void)
+{
+	HKEY key = make_key(REGISTRY_PATH);
+	DWORD size = sizeof(colourmap);
+	DWORD e = RegQueryValueEx(key, "Colours",
+			NULL, NULL,
+			(LPBYTE) colourmap, &size);
+	RegCloseKey(key);
+
+	if (e != ERROR_SUCCESS)
+	{
+		colourmap[COLOUR_BLACK]  = 0x000000;
+		colourmap[COLOUR_DIM]    = 0x555555;
+		colourmap[COLOUR_NORMAL] = 0x888888;
+		colourmap[COLOUR_BRIGHT] = 0xffffff;
+	}
+}
+
+static void write_colourmap(void)
+{
+	HKEY key = make_key(REGISTRY_PATH);
+	RegSetValueEx(key, "Colours", 0,
+			REG_BINARY,
+			(LPBYTE) colourmap, sizeof(colourmap));
 	RegCloseKey(key);
 }
 
@@ -187,13 +224,18 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	if (x1 < 0)
 		x1 = 0;
 
+	HBRUSH blackbrush = CreateSolidBrush(colourmap[COLOUR_BLACK]);
+	HPEN dimpen = CreatePen(PS_SOLID, 0, colourmap[COLOUR_DIM]);
+	HPEN normalpen = CreatePen(PS_SOLID, 0, colourmap[COLOUR_NORMAL]);
+	HPEN brightpen = CreatePen(PS_SOLID, 0, colourmap[COLOUR_BRIGHT]);
+
 	int y1 = ps->rcPaint.top/textheight;
 	int x2 = ps->rcPaint.right/textwidth;
 	x2 += 1; /* because of overlapping characters */
 	if (x2 >= screenwidth)
 	{
 		RECT r = {screenwidth*textwidth, 0, ps->rcPaint.right, ps->rcPaint.bottom};
-		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
+		FillRect(dc, &r, blackbrush);
 		x2 = screenwidth;
 	}
 
@@ -201,15 +243,11 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	if (y2 >= screenheight)
 	{
 		RECT r = {0, screenheight*textheight, ps->rcPaint.right, ps->rcPaint.bottom};
-		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
+		FillRect(dc, &r, blackbrush);
 		y2 = screenheight-1;
 	}
 
 	int state = SaveDC(dc);
-
-	HPEN brightpen = CreatePen(PS_SOLID, 0, 0xffffff);
-	HPEN normalpen = CreatePen(PS_SOLID, 0, 0x888888);
-	HPEN dimpen = CreatePen(PS_SOLID, 0, 0x555555);
 
 	for (int y = y1; y <= y2; y++)
 	{
@@ -218,7 +256,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 		/* Clear this line (or at least the part of it we're drawing). */
 
 		RECT r = {ps->rcPaint.left, sy, ps->rcPaint.right, sy+textheight};
-		FillRect(dc, &r, GetStockObject(BLACK_BRUSH));
+		FillRect(dc, &r, blackbrush);
 
 		/* Draw the actual text. */
 
@@ -291,6 +329,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	DeleteObject(brightpen);
 	DeleteObject(normalpen);
 	DeleteObject(dimpen);
+	DeleteObject(blackbrush);
 	RestoreDC(dc, state);
 }
 
@@ -313,7 +352,25 @@ static void setfont_cb(void)
 		glyphcache_init(dc, &fontlf);
 		ReleaseDC(window, dc);
 
-		resize_buffer();
+		resize_buffer(false);
+	}
+}
+
+static void setcolour_cb(int c)
+{
+	CHOOSECOLOR cc = {sizeof(cc)};
+	cc.hwndOwner = window;
+	cc.Flags = CC_ANYCOLOR | CC_RGBINIT;
+	cc.rgbResult = colourmap[c];
+	cc.lpCustColors = custom_colours;
+
+	if (ChooseColor(&cc))
+	{
+		colourmap[c] = cc.rgbResult;
+		write_colourmap();
+
+		glyphcache_flush();
+		resize_buffer(true);
 	}
 }
 
@@ -332,13 +389,14 @@ static void fullscreen_cb(void)
 	else
 		switch_to_windowed();
 
-	resize_buffer();
+	resize_buffer(false);
 }
 
 static void create_cb(void)
 {
 	/* Initialise the glyph cache. */
 
+	read_colourmap();
 	read_default_font();
 
 	HDC dc = GetDC(window);
@@ -411,7 +469,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 				create_cb();
 				window_created = true;
 			}
-			resize_buffer();
+			resize_buffer(false);
 			break;
 
 		case WM_SIZING:
@@ -463,6 +521,19 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 					setfont_cb();
 					break;
 
+				case MENUITEM_SETBGCOL:
+					setcolour_cb(COLOUR_BLACK);
+					break;
+				case MENUITEM_SETDIMCOL:
+					setcolour_cb(COLOUR_DIM);
+					break;
+				case MENUITEM_SETNORMALCOL:
+					setcolour_cb(COLOUR_NORMAL);
+					break;
+				case MENUITEM_SETBRIGHTCOL:
+					setcolour_cb(COLOUR_BRIGHT);
+					break;
+
 				case MENUITEM_FULLSCREEN:
 					fullscreen_cb();
 					break;
@@ -501,7 +572,7 @@ void dpy_init(const char* argv[])
 	read_window_geometry();
 }
 
-static void resize_buffer(void)
+static void resize_buffer(bool force)
 {
 	RECT rect;
 	int e = GetClientRect(window, &rect);
@@ -514,7 +585,7 @@ static void resize_buffer(void)
 	int w = rect.right / textwidth;
 	int h = rect.bottom / textheight;
 
-	if ((w != screenwidth) || (h != screenheight))
+	if (force || (w != screenwidth) || (h != screenheight))
 	{
 		glyphcache_flush();
 
@@ -600,6 +671,19 @@ static void invalidate_character_at(int x, int y)
 	InvalidateRect(window, &r, 0);
 }
 
+static void insert_item_on_menu(const char* msg, int id, HMENU menu)
+{
+	MENUITEMINFO mii = {sizeof(mii)};
+	mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
+	mii.fType = MFT_STRING;
+	mii.dwTypeData = (char*) msg;
+	mii.cch = strlen(msg);
+	mii.wID = id;
+
+	int count = GetMenuItemCount(menu);
+	InsertMenuItem(menu, count+1, TRUE, &mii);
+}
+
 static void switch_to_windowed(void)
 {
 	if (window)
@@ -630,28 +714,29 @@ static void switch_to_windowed(void)
 
 	{
 		HMENU menu = GetSystemMenu(window, FALSE);
-		int count = GetMenuItemCount(menu);
 
 		MENUITEMINFO mii;
 		mii.cbSize = sizeof(mii);
 
 		mii.fMask = MIIM_FTYPE;
 		mii.fType = MFT_SEPARATOR;
-		InsertMenuItem(menu, count++, TRUE, &mii);
+		int count = GetMenuItemCount(menu);
+		InsertMenuItem(menu, count+1, TRUE, &mii);
 
-		mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
-		mii.fType = MFT_STRING;
-		mii.dwTypeData = "Select display fon&t...";
-		mii.cch = strlen(mii.dwTypeData);
-		mii.wID = MENUITEM_SETFONT;
-		InsertMenuItem(menu, count++, TRUE, &mii);
+		insert_item_on_menu("Select display fon&t...",
+			MENUITEM_SETFONT, menu);
 
-		mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
-		mii.fType = MFT_STRING;
-		mii.dwTypeData = "&Fullscreen mode\tAlt+Enter";
-		mii.cch = strlen(mii.dwTypeData);
-		mii.wID = MENUITEM_FULLSCREEN;
-		InsertMenuItem(menu, count++, TRUE, &mii);
+		insert_item_on_menu("Select &background colour...",
+			MENUITEM_SETBGCOL, menu);
+		insert_item_on_menu("Select &dim colour...",
+			MENUITEM_SETDIMCOL, menu);
+		insert_item_on_menu("Select &normal colour...",
+			MENUITEM_SETNORMALCOL, menu);
+		insert_item_on_menu("Select b&right colour...",
+			MENUITEM_SETBRIGHTCOL, menu);
+
+		insert_item_on_menu("&Fullscreen mode\tAlt+Enter",
+			MENUITEM_FULLSCREEN, menu);
 
 		EnableMenuItem(menu, SC_CLOSE,
 			MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
