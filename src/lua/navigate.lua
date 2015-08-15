@@ -932,10 +932,16 @@ function Cmd.Find(findtext, replacetext)
 		end
 	end
 
-	-- Convert the search text into a pattern.
-	
-	local patterns = {}
-	local words = SplitString(findtext, "%s")
+	DocumentSet.findtext = findtext
+	DocumentSet._findpatterns = nil
+	DocumentSet.replacetext = replacetext
+	return Cmd.FindNext()	
+end
+
+local function compile_patterns(text)
+	patterns = {}
+	local words = SplitString(text, "%s")
+
 	for _, w in ipairs(words) do
 		-- w is a word from the pattern. We need to perform the following
 		-- changes:
@@ -973,10 +979,8 @@ function Cmd.Find(findtext, replacetext)
 		patterns[1] = patterns[1].."%c*$"
 		patterns[#patterns] = "^%c*"..patterns[#patterns]
 	end
-	
-	DocumentSet.findtext = patterns
-	DocumentSet.replacetext = replacetext
-	return Cmd.FindNext()	
+
+	return patterns
 end
 
 function Cmd.FindNext()
@@ -986,10 +990,16 @@ function Cmd.FindNext()
 
 	ImmediateMessage("Searching...")
 	
+	-- Get the compiled pattern for the text we're searching for.
+	
+	if not DocumentSet._findpatterns then
+		DocumentSet._findpatterns = compile_patterns(DocumentSet.findtext)
+	end
+	local patterns = DocumentSet._findpatterns
+
 	-- Start at the current cursor position.
 	
 	local cp, cw, co = Document.cp, Document.cw, Document.co
-	local patterns = DocumentSet.findtext
 	if (#patterns == 0) then
 		QueueRedraw()
 		NonmodalMessage("Nothing to search for.")
@@ -1008,13 +1018,21 @@ function Cmd.FindNext()
 			-- We got a match! First, though, check to see if the remaining
 			-- words in the pattern match.
 	
-			local endword = cw
+			local ep, ew = cp, cw
 			local pi = 2
 			local found = true
 			while (pi <= #patterns) do
-				endword = endword + 1
+				ew = ew + 1
+				if (ew > #Document[ep]) then
+					ep = ep + 1
+					ew = 1
+					if (ep > #Document) then
+						found = false
+						break
+					end
+				end
 				
-				word = Document[cp][endword]
+				word = Document[ep][ew]
 				if not word then
 					found = false
 					break
@@ -1030,10 +1048,10 @@ function Cmd.FindNext()
 			end
 			 
 			if found then
-				Document.cp = cp
-				Document.cw = endword
+				Document.cp = ep
+				Document.cw = ew
 				Document.co = e + 1
-				Document.mp = Document.cp
+				Document.mp = cp
 				Document.mw = cw
 				Document.mo = s
 				NonmodalMessage("Found.")
