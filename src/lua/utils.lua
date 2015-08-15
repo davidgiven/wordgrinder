@@ -133,6 +133,25 @@ function StringBytesToString(s)
 	return TableToString(ts)
 end
 		
+--- Insert element between elements of an array.
+-- The old array is left untouched.
+--
+-- @param array              the array
+-- @param spacer             the element to insert
+-- @return                   a new array
+
+function Intersperse(array, spacer)
+	local a = {}
+	for i = 1, #array-1 do
+		a[#a+1] = array[i]
+		a[#a+1] = spacer
+	end
+	if (#array > 0) then
+		a[#a+1] = array[#array]
+	end
+	return a
+end
+
 --- Return a partially immutable proxy for an object.
 -- This only handles direct assignment to array members.
 --

@@ -14,6 +14,7 @@ local GetStyleFromWord = wg.getstylefromword
 local CreateStyleByte = wg.createstylebyte
 local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
+local P = M.P
 local table_concat = table.concat
 local unpack = unpack or table.unpack
 
@@ -941,6 +942,7 @@ end
 local function compile_patterns(text)
 	patterns = {}
 	local words = SplitString(text, "%s")
+	local smartquotes = DocumentSet.addons.smartquotes or {}
 
 	for _, w in ipairs(words) do
 		-- w is a word from the pattern. We need to perform the following
@@ -962,22 +964,34 @@ local function compile_patterns(text)
 
 			if ((c >= "A") and (c <= "Z")) or
 			    ((c >= "a") and (c <= "z")) then
-				c = "["..c:upper()..c:lower().."]"
+				c = P("["..c:upper()..c:lower().."]")
+			elseif (c == "'") then
+				c = P("'") + P(smartquotes.leftsingle) + P(smartquotes.rightsingle)
+			elseif (c == '"') then
+				c = P('"') + P(smartquotes.leftdouble) + P(smartquotes.rightdouble)
 			end
 			
-			wp[#wp+1] = c
+			wp[#wp+1] = P(c)
 		end
 		
-		patterns[#patterns + 1] = table_concat(wp, "%c*")
+		patterns[#patterns + 1] = P(unpack(Intersperse(wp, "%c*")))
 	end
 	
 	for i = 2, (#patterns - 1) do
-		patterns[i] = "^%c*"..patterns[i].."%c*$"
+		patterns[i] = P("^%c*", patterns[i], "%c*$")
 	end
 	
 	if (#patterns > 1) then
-		patterns[1] = patterns[1].."%c*$"
-		patterns[#patterns] = "^%c*"..patterns[#patterns]
+		patterns[1] = P(patterns[1], "%c*$")
+		patterns[#patterns] = P("^%c*", patterns[#patterns])
+	end
+
+	for i = 1, #patterns do
+		patterns[i] = P("()", patterns[i], "()")
+	end
+
+	for i = 1, #patterns do
+		patterns[i] = patterns[i]:compile()
 	end
 
 	return patterns
@@ -1012,7 +1026,7 @@ function Cmd.FindNext()
 	
 	while true do
 		local word = Document[cp][cw]
-		local s, e = word:find(pattern, co)
+		local s, e = pattern(word, co)
 		
 		if s then
 			-- We got a match! First, though, check to see if the remaining
@@ -1038,7 +1052,7 @@ function Cmd.FindNext()
 					break
 				end
 				
-				_, e = word:find(patterns[pi])
+				_, e = patterns[pi](word)
 				if not e then
 					found = false
 					break
@@ -1050,7 +1064,7 @@ function Cmd.FindNext()
 			if found then
 				Document.cp = ep
 				Document.cw = ew
-				Document.co = e + 1
+				Document.co = e
 				Document.mp = cp
 				Document.mw = cw
 				Document.mo = s

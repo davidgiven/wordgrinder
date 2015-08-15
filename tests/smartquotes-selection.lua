@@ -51,3 +51,14 @@ AssertTableEquals({"not'd"}, Document[6])
 AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
 	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[7])
 
+Cmd.GotoBeginningOfDocument()
+Cmd.Find("'Hello", "XXXX")
+Cmd.ReplaceThenFind()
+
+Cmd.GotoBeginningOfDocument()
+Cmd.Find('"Hello', "YYYY")
+Cmd.ReplaceThenFind()
+
+AssertTableEquals({"XXXX,", "world!’"}, Document[1])
+AssertTableEquals({"YYYY,", "world!”"}, Document[2])
+

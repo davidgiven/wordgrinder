@@ -17,3 +17,7 @@ AssertEquals("there",   GetWordSimpleText("there;"))
 AssertEquals("'Hello'", UnSmartquotify("‘Hello’"))
 AssertEquals('"Hello"', UnSmartquotify("“Hello”"))
 
+AssertTableEquals({}, Intersperse({}, 0))
+AssertTableEquals({1}, Intersperse({1}, 0))
+AssertTableEquals({1, 0, 2}, Intersperse({1, 2}, 0))
+AssertTableEquals({1, 0, 2, 0, 3}, Intersperse({1, 2, 3}, 0))
