@@ -16,6 +16,14 @@ local redrawpending = true
 
 HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
 
+-- Determine the installation directory (Windows only).
+
+if (ARCH == "windows") then
+	local exe = os.getenv("WINDOWS_EXE")
+	local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
+	WINDOWS_INSTALL_DIR = dir
+end
+
 -- Which config file are we loading?
 
 local configfile = HOME .. "/.wordgrinder.lua"

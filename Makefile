@@ -482,6 +482,7 @@ $(eval $(call run-test, tests/weirdness-combining-words.lua))
 $(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 $(eval $(call run-test, tests/weirdness-replacing-words.lua))
+$(eval $(call run-test, tests/windows-installdir.lua))
 $(eval $(call run-test, tests/xpattern.lua))
 
 .phony: tests

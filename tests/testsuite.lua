@@ -6,6 +6,22 @@ function AssertEquals(want, got)
 	end
 end
 
+function AssertNull(got)
+	if got then
+		error(
+			string.format("Assertion failed: wanted null(ish); got %q\n",
+				tostring(got)))
+	end
+end
+
+function AssertNotNull(got)
+	if not got then
+		error(
+			string.format("Assertion failed: wanted not null(ish); got %q\n",
+				tostring(got)))
+	end
+end
+
 function AssertTableEquals(want, got)
 	local failed = false
 	if (#want ~= #got) then

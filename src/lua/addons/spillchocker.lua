@@ -11,7 +11,11 @@ local USER_DICTIONARY_NAME = "User dictionary"
 
 do
 	local function find_default_dictionary()
-		return "/etc/dictionaries-common/words"
+		if (ARCH == "windows") then
+			return WINDOWS_INSTALL_DIR .. "/Dictionaries/"
+		else
+			return "/etc/dictionaries-common/words"
+		end
 	end
 
 	local function cb()
