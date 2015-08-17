@@ -92,7 +92,7 @@ function GetUserDictionary()
 
 		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
-			if (p.style == vstyle) then
+			if (p.style.name == "V") then
 				local w = GetWordSimpleText(p[1])
 				user_dictionary_cache[w] = true
 			end
@@ -130,7 +130,7 @@ function IsWordMisspelt(word)
 		local misspelt = true
 		local s = GetWordSimpleText(word)
 		if (s == "") 
-			or s:find("^[0-9]+$")
+			or (not s:find("[a-zA-Z]"))
 			or (#s < 3)
 			or (settings.usesystemdictionary and GetSystemDictionary()[s])
 			or (settings.useuserdictionary and GetUserDictionary()[s])
@@ -150,7 +150,8 @@ function Cmd.AddToUserDictionary()
 	local word = GetWordSimpleText(Document[Document.cp][Document.cw])
 
 	if (word ~= "") then
-		if not GetUserDictionary()[word] then
+		if (not GetUserDictionary()[word]) and
+				(not GetSystemDictionary()[word]) then
 			local d = get_user_dictionary_document()
 			d:appendParagraph(CreateParagraph(DocumentSet.styles["V"], word))
 			d:touch()
