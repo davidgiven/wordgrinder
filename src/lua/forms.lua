@@ -64,9 +64,11 @@ Form.WrappedLabel = makewidgetclass
 		local paragraph = CreateParagraph(nil, words)
 		local lines = paragraph:wrap(self.realwidth)
 		
+		local s = SpellcheckerOff()
 		for i = 1, #lines do
 			paragraph:renderLine(lines[i], self.realx1, self.realy1+i-1)
 		end
+		SpellcheckerRestore(s)
 	end,
 	
 	calculate_height = function(self)

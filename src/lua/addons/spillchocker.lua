@@ -34,6 +34,22 @@ do
 end
 
 -----------------------------------------------------------------------------
+-- Allow the spellchecker to be temporarily disabled (so we don't end up
+-- spellchecking dialogue boxes, etc).
+
+function SpellcheckerOff()
+	local settings = DocumentSet.addons.spellchecker or {}
+	local state = settings.enabled
+	settings.enabled = false
+	return state
+end
+
+function SpellcheckerRestore(s)
+	local settings = DocumentSet.addons.spellchecker or {}
+	settings.enabled = s
+end
+
+-----------------------------------------------------------------------------
 -- Utilities.
 
 local user_dictionary_cache
