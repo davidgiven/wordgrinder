@@ -62,3 +62,12 @@ Cmd.ReplaceThenFind()
 AssertTableEquals({"XXXX,", "world!’"}, Document[1])
 AssertTableEquals({"YYYY,", "world!”"}, Document[2])
 
+Cmd.GotoEndOfDocument()
+Cmd.SetMark()
+Cmd.GotoPreviousParagraph()
+Cmd.GotoBeginningOfParagraph()
+Cmd.Unsmartquotify()
+
+AssertTableEquals({'"Once', "upon", "a", 'time,"', "said", "K'trx'frn,",
+	'"there', "was", "an", "aardvark", "called", 'Albert."'}, Document[7])
+

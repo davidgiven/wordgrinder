@@ -98,10 +98,46 @@ local function convert_clipboard()
 	return true
 end
 
+local function unconvert_clipboard()
+	local settings = DocumentSet.addons.smartquotes or {}
+	local clipboard = DocumentSet:getClipboard()
+
+	local ld = escape(settings.leftdouble)
+	local rd = escape(settings.rightdouble)
+	local ls = escape(settings.leftsingle)
+	local rs = escape(settings.rightsingle)
+
+	for pn = 1, #clipboard do
+		local para = clipboard[pn]
+		if settings.notinraw and (para.style.name ~= "RAW") then
+			local newwords = {}
+			for _, w in ipairs(para) do
+				w = w:gsub(ld, '"')
+				w = w:gsub(rd, '"')
+				w = w:gsub(ls, "'")
+				w = w:gsub(rs, "'")
+				newwords[#newwords+1] = w
+			end
+			
+			clipboard[pn] = CreateParagraph(para.style, newwords)
+		end
+	end
+
+	NonmodalMessage("Clipboard unsmartquotified.")
+	return true
+end
+
 function Cmd.Smartquotify()
 	return Cmd.Checkpoint() and
 		Cmd.Copy(true) and
 		convert_clipboard() and
+		Cmd.Paste()
+end
+
+function Cmd.Unsmartquotify()
+	return Cmd.Checkpoint() and
+		Cmd.Copy(true) and
+		unconvert_clipboard() and
 		Cmd.Paste()
 end
 
