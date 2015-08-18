@@ -143,8 +143,8 @@ LUASCRIPTS := \
 	src/lua/addons/autosave.lua \
 	src/lua/addons/docsetman.lua \
 	src/lua/addons/scrapbook.lua \
-	src/lua/addons/pagecount.lua \
 	src/lua/addons/statusbar_charstyle.lua \
+	src/lua/addons/statusbar_pagecount.lua \
 	src/lua/addons/statusbar_position.lua \
 	src/lua/addons/statusbar_wordcount.lua \
 	src/lua/addons/debug.lua \

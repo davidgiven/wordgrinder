@@ -10,8 +10,11 @@ do
 		local settings = DocumentSet.addons.pagecount or {}
 		if settings.enabled then
 			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
-			terms[#terms+1] = 
-				string.format("%d %s", pages, Pluralise(pages, "page", "pages"))
+			terms[#terms+1] = {
+				priority=80,
+				value=string.format("%d %s", pages,
+					Pluralise(pages, "page", "pages"))
+			}
 		end
 	end
 	
