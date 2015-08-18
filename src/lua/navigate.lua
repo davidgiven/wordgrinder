@@ -770,8 +770,9 @@ function Cmd.Copy(keepselection)
 		buffer[1] = CreateParagraph(paragraph.style,
 			paragraph:sub(mw1))
 		if (mp1 == mp2) then
-			mw2 = mw2 - mw1
+			mw2 = mw2 - mw1 + 1
 		end
+		mw1 = 1
 	end
 	
 	-- Remove any words in the last paragraph that weren't copied.
@@ -782,19 +783,6 @@ function Cmd.Copy(keepselection)
 			paragraph:sub(1, mw2))
 	end
 	
-	-- Remove any characters in the leading word that weren't copied.
-	
-	paragraph = buffer[1]
-	word = paragraph[1]
-	if word then
-		buffer[1] = CreateParagraph(paragraph.style,
-			{DeleteFromWord(word, 1, mo1)},
-			paragraph:sub(2))
-		if (mp1 == mp2) and (mw1 == mw2) then
-			mo2 = mo2 - mo1 + 1
-		end
-	end
-	
 	-- Remove any characters in the trailing word that weren't copied.
 	
 	paragraph = buffer[#buffer]
@@ -803,6 +791,16 @@ function Cmd.Copy(keepselection)
 		buffer[#buffer] = CreateParagraph(paragraph.style,
 			paragraph:sub(1, #paragraph-1),
 			DeleteFromWord(word, mo2, word:len()+1))
+	end
+	
+	-- Remove any characters in the leading word that weren't copied.
+	
+	paragraph = buffer[1]
+	local word = paragraph[1]
+	if word then
+		buffer[1] = CreateParagraph(paragraph.style,
+			{DeleteFromWord(word, 1, mo1)},
+			paragraph:sub(2))
 	end
 	
 	NonmodalMessage("Selected area copied to clipboard.")

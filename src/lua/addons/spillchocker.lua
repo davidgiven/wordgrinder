@@ -155,6 +155,7 @@ function Cmd.AddToUserDictionary()
 			local d = get_user_dictionary_document()
 			d:appendParagraph(CreateParagraph(DocumentSet.styles["V"], word))
 			d:touch()
+			user_dictionary_cache = nil
 			NonmodalMessage("Word '"..word.."' added to user dictionary")
 		else
 			NonmodalMessage("Word '"..word.."' already in user dictionary")
