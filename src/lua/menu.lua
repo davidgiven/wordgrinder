@@ -400,10 +400,10 @@ MenuClass = {
 					end
 				elseif (c == "KEY_^V") then
 					local item = menu[n]
-					if (type(item) ~= "string") and 
-							not self.accelerators[item.id] then
+					if (type(item) ~= "string") then
 						DrawStatusLine("Press new accelerator key for menu item.")
 						
+						local oak = self.accelerators[item.id]
 						local ak = GetChar():upper()
 						if ak:match("^KEY_") then
 							ak = ak:gsub("^KEY_", "")
@@ -412,6 +412,10 @@ MenuClass = {
 							elseif (ak == "ESCAPE") or (ak == "RESIZE") then
 								NonmodalMessage("You can't bind that key.")
 							else
+								if oak then
+									self.accelerators[oak] = nil
+								end
+
 								self.accelerators[ak] = item.id
 								self.accelerators[item.id] = ak
 							end
