@@ -371,7 +371,9 @@ static int applystyletoword_cb(lua_State* L)
 	const char* offset2 = src + luaL_checkint(L, 5) - 1;
 	const char* csoffset = src + luaL_checkint(L, 6) - 1;
 
-	char dest[srcbytes];
+	/* Adding a style will add at most two extra bytes to the string
+	 * (on, and then off again). Probably less. */
+	char dest[srcbytes+2];
 	char* p = dest;
 	char* cdoffset = dest;
 
