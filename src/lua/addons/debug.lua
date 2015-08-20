@@ -18,6 +18,22 @@ do
 					value=string_format("%dkB", mem)
 				}
 		end
+		if settings.location then
+			terms[#terms+1] = 
+				{
+					priority=50,
+					value=string_format("%d.%d.%d",
+						Document.cp, Document.cw, Document.co)
+				}
+		end
+		if settings.currentword then
+			terms[#terms+1] = 
+				{
+					priority=50,
+					value=string_format("%q",
+						Document[Document.cp][Document.cw])
+				}
+		end
 	end
 	
 	AddEventListener(Event.BuildStatusBar, cb)
@@ -29,7 +45,9 @@ end
 do
 	local function cb()
 		GlobalSettings.debug = GlobalSettings.debug or {
-			memory = false
+			memory = false,
+			location = false,
+			currentword = false
 		}
 	end
 	
@@ -49,12 +67,27 @@ function Cmd.ConfigureDebug()
 			label = "Show memory usage on status bar",
 			value = settings.memory
 		}
+	local location_checkbox =
+		Form.Checkbox {
+			x1 = 1, y1 = 5,
+			x2 = 40, y2 = 5,
+			label = "Show detailed location on status bar",
+			value = settings.location
+		}
+
+	local currentword_checkbox =
+		Form.Checkbox {
+			x1 = 1, y1 = 7,
+			x2 = 40, y2 = 8,
+			label = "Show word representation on status bar",
+			value = settings.currentword
+		}
 
 	local dialogue =
 	{
 		title = "Configure Debugging Options",
 		width = Form.Large,
-		height = 5,
+		height = 9,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -62,6 +95,8 @@ function Cmd.ConfigureDebug()
 		["KEY_ENTER"] = "confirm",
 		
 		memory_checkbox,
+		location_checkbox,
+		currentword_checkbox,
 		
 		Form.Label {
 			x1 = 1, y1 = 1,
@@ -78,6 +113,8 @@ function Cmd.ConfigureDebug()
 	end
 	
 	settings.memory = memory_checkbox.value
+	settings.location = location_checkbox.value
+	settings.currentword = currentword_checkbox.value
 	SaveGlobalSettings()
 
 	return true
