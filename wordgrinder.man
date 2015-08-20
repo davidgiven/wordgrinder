@@ -65,8 +65,22 @@ source file may have a document name suffixed with a
 .I :
 for use when importing or exporting WordGrinder files. 
   
+.TP
+.BI \--config\  file.lua
+Sets the name of the user config file.
   
   
+.SH CONFIGURATION
+
+The user config file is a Lua file which is loaded and executed before
+the program starts up (but after any
+.B --lua
+files). It defaults to:
+
+.TP
+.B ~/.wordgrinder.lua
+
+
 .SH AUTHOR
 .B wordgrinder
 was written by David Given.
