@@ -109,7 +109,7 @@ local DocumentSettingsMenu = addmenu("Document settings",
 
 local GlobalSettingsMenu = addmenu("Global settings",
 {
-	{"FSWidescreen", "W", "Widescreen mode...",      nil,         Cmd.ConfigureWidescreen},
+	{"FSlookandfeel","L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
 	{"FSDictionary", "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
 	"-",
 	{"FSDebug",      "X", "Debugging options...",    nil,         Cmd.ConfigureDebug},

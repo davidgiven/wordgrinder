@@ -152,6 +152,22 @@ function Intersperse(array, spacer)
 	return a
 end
 
+--- Merge two tables.
+-- Keys in old will override new if present.
+--
+-- @param old                old table (or nil)
+-- @param new                new table
+-- @return                   modified new table
+
+function MergeTables(old, new)
+	if old then
+		for k, v in pairs(old) do
+			new[k] = v
+		end
+	end
+	return new
+end
+
 --- Return a partially immutable proxy for an object.
 -- This only handles direct assignment to array members.
 --

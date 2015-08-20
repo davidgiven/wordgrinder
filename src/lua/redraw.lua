@@ -221,7 +221,7 @@ function RedrawScreen()
 		pn = pn - 1
 	end
 	
-	if (y >= 0) then
+	if (y >= 0) and WantTerminators() then
 		drawtopmarker(y)
 	end
 	
@@ -275,7 +275,7 @@ function RedrawScreen()
 		Document.topw = 1
 	end
 	
-	if (y <= ScreenHeight) then
+	if (y <= ScreenHeight) and WantTerminators() then
 		drawbottommarker(y)
 	end
 	
