@@ -154,9 +154,7 @@ const char* dpy_getkeyname(uni_t k)
 
 	switch (k)
 	{
-#if defined(OSX)
-		case 127: /* OSX produces this */
-#endif
+		case 127: /* Some misconfigured terminals produce this */
 		case KEY_BACKSPACE:
 			return "KEY_BACKSPACE";
 
