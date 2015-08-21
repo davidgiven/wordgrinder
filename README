@@ -48,6 +48,7 @@ If you have Debian, you've already got all these. Merely install these
 packages:
 
   libncursesw5-dev liblua5.2-dev zlib1g-dev libxft-dev lua5.2
+  lua-filesystem
 
 To build, simply do:
 
