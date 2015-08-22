@@ -52,15 +52,9 @@ local function writetostream(object, writes, writei)
 		cacheid = cacheid + 1
 		
 		if (type(t) == "table") then
-			local m = getmetatable(t)
+			local m = GetClass(t)
 			if m then
-				m = type_lookup[m.__index]
-				if not m then
-					-- This only happens in debug code; it means we're trying
-					-- to save an immutablised array. Cheat profusely.
-					t = getmetatable(t):getRawArray()
-					m = TABLE
-				end
+				m = type_lookup[m]
 			else
 				m = TABLE
 			end

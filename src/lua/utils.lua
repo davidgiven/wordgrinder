@@ -206,3 +206,19 @@ function ImmutabliseArray(o)
 	return p
 end
 
+--- Returns the index metatable field of a table.
+-- Immutable objects are handled correctly.
+
+function GetClass(t)
+	local index = nil
+	local mt = getmetatable(t)
+	if mt then
+		index = mt.__index
+		if (type(index) == "function") then
+			t = mt.getRawArray()
+			index = getmetatable(t).__index
+		end
+	end
+	return index
+end
+--

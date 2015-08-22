@@ -184,6 +184,7 @@ function WordProcessor(filename)
 	while true do
 		local f, e = xpcall(eventloop, Traceback)
 		if not f then
+			print(e)
 			ModalMessage("Internal error!",
 				"Something went wrong inside WordGrinder! I'll try and "..
 				"continue but you should save your work immediately (under a "..
