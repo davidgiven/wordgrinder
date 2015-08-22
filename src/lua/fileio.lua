@@ -500,17 +500,31 @@ function LoadFromStream(filename)
 end
 
 local function loaddocument(filename)
-	local d, e = LoadFromStream(filename)
+	local ds, e = LoadFromStream(filename)
 	if e then
 		return nil, e
 	end
 
+	-- Fix up incorrect table classes.
+	
+	for _, d in ipairs(ds:getDocumentList()) do
+		if not getmetatable(d) then
+			setmetatable(d, {__index = DocumentClass})
+		end
+
+		for _, p in ipairs(d) do
+			if not getmetatable(p) then
+				setmetatable(p, {__index = ParagraphClass})
+			end
+		end
+	end
+
 	-- Even if the changed flag was set in the document on disk, remove it.
 	
-	d:clean()
+	ds:clean()
 	
-	d.name = filename
-	return d
+	ds.name = filename
+	return ds
 end
 
 function Cmd.LoadDocumentSet(filename)
