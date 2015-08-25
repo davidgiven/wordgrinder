@@ -473,11 +473,7 @@ function CreateParagraph(style, ...)
 
 	words.style = style or DocumentSet.styles["P"]
 	setmetatable(words, {__index = ParagraphClass})
-	if DEBUG then
-		return ImmutabliseArray(words)
-	else
-		return words
-	end
+	return words
 end
 
 -- Returns how many screen spaces a portion of a string takes up.
