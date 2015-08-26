@@ -69,4 +69,6 @@ Cmd.GotoEndOfWord()
 AssertTableEquals({"“fnord"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
 
+typestring("\"'nested'\"")
+AssertTableEquals({"“‘nested’”"}, Document[Document.cp])
 

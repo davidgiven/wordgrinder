@@ -3,6 +3,11 @@
 -- file in this distribution for the full text.
 
 local GetStringWidth = wg.getstringwidth
+local P = M.P
+
+local function escape(s)
+	return (s:gsub("%%", "%%%%"))
+end
 
 -----------------------------------------------------------------------------
 -- Process incoming key events.
@@ -10,12 +15,22 @@ local GetStringWidth = wg.getstringwidth
 do
 	local function cb(event, token, payload)
 		local settings = DocumentSet.addons.smartquotes or {}
+		local start_of_word_pattern = 
+			(P("^") *
+			 (P("[\"']") +
+			  P(escape(settings.leftdouble)) +
+			  P(escape(settings.leftsingle)) +
+			  P("%c")
+			 )^0 *
+			 P("$")
+			):compile()
 
 		if settings.notinraw
 				and (Document[Document.cp].style.name ~= "RAW") then
 			local value = payload.value
 			local word = Document[Document.cp][Document.cw]
-			local first = GetWidthFromOffset(word, Document.co) == 0
+			local prefix = word:sub(1, Document.co-1)
+			local first = start_of_word_pattern(prefix) ~= nil
 
 			if settings.doublequotes and (value == '"') then
 				value = first and settings.leftdouble or settings.rightdouble
@@ -52,10 +67,6 @@ end
 -----------------------------------------------------------------------------
 -- Undo any smart quotes.
 
-local function escape(s)
-	return (s:gsub("%%", "%%%%"))
-end
-
 function UnSmartquotify(s)
 	local settings = DocumentSet.addons.smartquotes or {}
 	s = s:gsub(escape(settings.leftdouble), '"')
@@ -77,16 +88,40 @@ local function convert_clipboard()
 	local ls = escape(settings.leftsingle)
 	local rs = escape(settings.rightsingle)
 
+	local start_of_word_pattern =
+		(P("^") *
+		 (P("[\"']") +
+		  P(ld) +
+		  P(ls) +
+		  P("%c")
+		 )^0 *
+		 P("$")
+		):compile()
+
 	for pn = 1, #clipboard do
 		local para = clipboard[pn]
 		if settings.notinraw and (para.style.name ~= "RAW") then
 			local newwords = {}
 			for _, w in ipairs(para) do
-				w = w:gsub('^(%c*)"', "%1"..ld)
-				w = w:gsub('"', rd)
+				w = w:gsub('()(["\'])',
+					function(pos, s)
+						local prefix = w:sub(1, pos-1)
+						local first = start_of_word_pattern(prefix) ~= nil
+						if first then
+							if (s == "'") then
+								return ls
+							elseif (s == '"') then
+								return ld
+							end
+						else
+							if (s == "'") then
+								return rs
+							elseif (s == '"') then
+								return rd
+							end
+						end
+					end)
 
-				w = w:gsub("^(%c*)'", "%1"..ls)
-				w = w:gsub("'", rs)
 				newwords[#newwords+1] = w
 			end
 			

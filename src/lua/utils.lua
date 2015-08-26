@@ -198,6 +198,10 @@ function ImmutabliseArray(o)
 				return ipairs(o)
 			end,
 
+			__pairs = function(self)
+				return pairs(o)
+			end,
+
 			getRawArray = function(self)
 				return o
 			end

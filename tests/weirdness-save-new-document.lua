@@ -21,4 +21,5 @@ AssertNotNull(Document[1].getLineOfWord)
 Cmd.ChangeDocument("other")
 AssertTableEquals({"blarg"}, Document[1])
 AssertNotNull(Document[1].getLineOfWord)
+AssertNotNull(Document[1].style)
 

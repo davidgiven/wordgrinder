@@ -34,6 +34,9 @@ Cmd.ChangeParagraphStyle("P")
 Cmd.InsertStringIntoParagraph([["Once upon a time," said K'trx'frn, "there was an aardvark called Albert."]])
 Cmd.SplitCurrentParagraph()
 
+Cmd.InsertStringIntoParagraph("\"'nested'\"")
+Cmd.SplitCurrentParagraph()
+
 Cmd.GotoBeginningOfDocument()
 Cmd.SetMark()
 Cmd.GotoEndOfDocument()
@@ -50,6 +53,7 @@ AssertEquals("RAW", Document[6].style.name)
 AssertTableEquals({"not'd"}, Document[6])
 AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
 	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[7])
+AssertTableEquals({"“‘nested’”"}, Document[8])
 
 Cmd.GotoBeginningOfDocument()
 Cmd.Find("'Hello", "XXXX")
@@ -63,6 +67,7 @@ AssertTableEquals({"XXXX,", "world!’"}, Document[1])
 AssertTableEquals({"YYYY,", "world!”"}, Document[2])
 
 Cmd.GotoEndOfDocument()
+Cmd.GotoPreviousParagraph()
 Cmd.SetMark()
 Cmd.GotoPreviousParagraph()
 Cmd.GotoBeginningOfParagraph()
