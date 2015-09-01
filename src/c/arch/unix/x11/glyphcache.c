@@ -98,7 +98,12 @@ static struct glyph* create_glyph(unsigned int id)
 
 	struct glyph* glyph = create_struct_glyph();
 	glyph->id = id;
-	glyph->width = fontwidth * emu_wcwidth(c);
+
+	int wcw = emu_wcwidth(c);
+	if (wcw < 1)
+		wcw = 1;
+
+	glyph->width = fontwidth * wcw;
 	glyph->pixmap = XCreatePixmap(display, window,
 		glyph->width, fontheight,
 		DefaultDepth(display, DefaultScreen(display)));
