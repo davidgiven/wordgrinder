@@ -158,12 +158,19 @@ function SaveToStream(filename, object)
 		r, e = fp:close()
 	end
 
-	-- Once done, rename the new file over the top of the old one.
-	-- Force the new one to be removed in case the rename fails.
+	-- Once done, do a complicated series of renames so that we
+	-- don't remove the old file until we're sure the new one has
+	-- been written correctly. Note that accurséd Windows doesn't
+	-- support clobbering renames...
 	
 	if r then
-		r, e = os.rename(filename..".new", filename)
-		os.remove(filename..".new")
+		r, e = os.rename(filename, filename..".old")
+		if not e then
+			r, e = os.rename(filename..".new", filename)
+		end
+		if not e then
+			os.remove(filename..".old")
+		end
 	end
 
 	return r, e
