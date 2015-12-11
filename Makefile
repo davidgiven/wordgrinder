@@ -100,10 +100,11 @@ windows: \
 wininstaller: $(WININSTALLER)
 .PHONY: wininstaller
 
-install: bin/wordgrinder bin/wordgrinder.1
+install: bin/wordgrinder bin/xwordgrinder bin/wordgrinder.1
 	@echo INSTALL
 	$(hide)install -d                       $(PREFIX)/bin
 	$(hide)install -m 755 bin/wordgrinder   $(PREFIX)/bin/wordgrinder
+	$(hide)install -m 755 bin/xwordgrinder  $(PREFIX)/bin/xwordgrinder
 	$(hide)install -d                       $(PREFIX)/share/man/man1
 	$(hide)install -m 644 bin/wordgrinder.1 $(PREFIX)/share/man/man1/wordgrinder.1
 	$(hide)install -d                       $(PREFIX)/share/doc/wordgrinder
