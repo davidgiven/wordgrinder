@@ -105,19 +105,27 @@ end
 -- @return                   a string
 
 function TableToString(t)
+	local function stringify(n)
+		if (type(n) == "string") then
+			return string.format("%q", n)
+		elseif (type(n) == "number") then
+			return tostring(n)
+		elseif (n == nil) then
+			return nil
+		else
+			return TableToString(n)
+		end
+	end
+
 	local ts = {}
 	for _, n in ipairs(t) do
-		local s
-		if (type(n) == "string") then
-			s = string.format("%q", n)
-		elseif (type(n) == "number") then
-			s = tostring(n)
-		elseif (n == nil) then
-			s = nil
-		else
-			s = "unknown " .. type(n)
+		ts[#ts+1] = stringify(n)
+	end
+
+	for k, v in pairs(t) do
+		if (type(k) ~= "number") then
+			ts[#ts+1] = "["..stringify(k).."]="..stringify(v)
 		end
-		ts[#ts+1] = s
 	end
 
 	return "{"..table.concat(ts, ", ").."}"

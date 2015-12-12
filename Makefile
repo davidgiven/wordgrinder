@@ -442,7 +442,7 @@ endif
 
 define run-test
 
-$(OBJ)/$(strip $1).passed: $(TESTER) $1
+$(OBJ)/$(strip $1).passed: $(TESTER) $1 tests/testsuite.lua
 	@echo TEST $1
 	@mkdir -p $$(dir $$@)
 	@rm -f $$@
@@ -485,6 +485,7 @@ $(eval $(call run-test, tests/weirdness-deletion-with-multiple-spaces.lua))
 $(eval $(call run-test, tests/weirdness-end-of-lines.lua))
 $(eval $(call run-test, tests/weirdness-replacing-words.lua))
 $(eval $(call run-test, tests/weirdness-save-new-document.lua))
+$(eval $(call run-test, tests/weirdness-stray-control-char-in-export.lua))
 $(eval $(call run-test, tests/weirdness-styled-clipboard.lua))
 $(eval $(call run-test, tests/weirdness-styling-unicode.lua))
 $(eval $(call run-test, tests/windows-installdir.lua))

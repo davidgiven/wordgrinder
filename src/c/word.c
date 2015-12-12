@@ -42,12 +42,6 @@ static int parseword_cb(lua_State* L)
 
 	for (;;)
 	{
-		if (s == send)
-		{
-			wend = s;
-			flush = true;
-		}
-
 		if (flush)
 		{
 			if (w != wend)
@@ -63,16 +57,25 @@ static int parseword_cb(lua_State* L)
 		}
 
 		if (s == send)
-			break;
-
-		wchar_t c = readu8(&s);
-
-		if (iswcntrl(c))
 		{
-			oldattr = attr;
-			attr = c & STYLE_ALL;
+			if (w == s)
+				break;
+
 			flush = true;
-			wend = s - 1;
+		}
+		else
+		{
+			wchar_t c = readu8(&s);
+
+			if (iswcntrl(c))
+			{
+				oldattr = attr;
+				attr = c & STYLE_ALL;
+				flush = true;
+				wend = s - 1;
+			}
+			else
+				wend = s;
 		}
 	}
 
