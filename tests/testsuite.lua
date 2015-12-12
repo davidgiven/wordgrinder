@@ -42,6 +42,74 @@ function AssertTableEquals(want, got)
 	end
 end
 
+local function TableEquals(want, got)
+	local wantkeys = {}
+	for k, v in pairs(want) do
+		wantkeys[k] = true
+	end
+
+	for k, v in pairs(got) do
+		if not wantkeys[k] then
+			return false
+		else
+			local wantv = want[k]
+			if (type(v) ~= type(wantv)) then
+				return false
+			elseif (v ~= wantv) then
+				if (type(v) ~= "table") then
+					return false
+				end
+
+				if not TableEquals(wantv, v) then
+					return false
+				end
+			end
+			wantkeys[k] = nil
+		end
+	end
+
+	if next(wantkeys) then
+		return false
+	end
+
+	return true
+end
+
+function AssertTableAndPropertiesEquals(want, got)
+	if not TableEquals(want, got) then
+		error(
+			string.format("Assertion failed: wanted %s; got %s\n",
+				TableToString(want), TableToString(got)))
+	end
+end
+
+function LoggingObject()
+	local object = {}
+	local result = {}
+	setmetatable(object, {
+		__index = function(self, k)
+			local log = (result[k] or {})
+			result[k] = log
+
+			return function(...)
+				table.insert(log, {...})
+			end
+		end
+	})
+
+	return object, result
+end
+
+function LoggingCallback()
+	local log = {}
+
+	local function cb(...)
+		table.insert(log, {...})
+	end
+
+	return cb, log
+end
+
 local hidemessages =
 {
 	["Document upgraded"] = true
