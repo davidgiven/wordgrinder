@@ -148,6 +148,36 @@ uni_t dpy_getchar(int timeout)
 	}
 }
 
+static const char* ncurses_prefix_to_name(const char* s)
+{
+	if (strcmp(s, "KDC") == 0)  return "DELETE";
+	if (strcmp(s, "kDN") == 0)  return "DOWN";
+	if (strcmp(s, "kEND") == 0) return "END";
+	if (strcmp(s, "kHOM") == 0) return "HOME";
+	if (strcmp(s, "kIC") == 0)  return "INSERT";
+	if (strcmp(s, "kLFT") == 0) return "LEFT";
+	if (strcmp(s, "kNXT") == 0) return "PGDN";
+	if (strcmp(s, "kPRV") == 0) return "PGUP";
+	if (strcmp(s, "kRIT") == 0) return "RIGHT";
+	if (strcmp(s, "kUP") == 0)  return "UP";
+
+	return s;
+}
+
+static const char* ncurses_suffix_to_name(int suffix)
+{
+	switch (suffix)
+	{
+		case 3: return "A";
+		case 4: return "SA";
+		case 5: return "^";
+		case 6: return "S^";
+		case 7: return "A^";
+	}
+
+	return NULL;
+}
+
 const char* dpy_getkeyname(uni_t k)
 {
 	k = -k;
@@ -204,26 +234,23 @@ const char* dpy_getkeyname(uni_t k)
 	const char* name = keyname(k);
 	if (name)
 	{
-		if (strcmp(name, "kUP5") == 0)  return "KEY_^UP";
-		if (strcmp(name, "kRIT5") == 0) return "KEY_^RIGHT";
-		if (strcmp(name, "kUP6") == 0)  return "KEY_S^UP";
-		if (strcmp(name, "kRIT6") == 0) return "KEY_S^RIGHT";
-		if (strcmp(name, "kDN5") == 0)  return "KEY_^DOWN";
-		if (strcmp(name, "kLFT5") == 0) return "KEY_^LEFT";
-		if (strcmp(name, "kDN6") == 0)  return "KEY_S^DOWN";
-		if (strcmp(name, "kLFT6") == 0) return "KEY_S^LEFT";
-		if (strcmp(name, "kPRV5") == 0) return "KEY_^PGUP";
-		if (strcmp(name, "kNXT5") == 0) return "KEY_^PGDN";
-		if (strcmp(name, "kPRV6") == 0) return "KEY_S^PGUP";
-		if (strcmp(name, "kNXT6") == 0) return "KEY_S^PGDN";
-		if (strcmp(name, "kHOM5") == 0) return "KEY_^HOME";
-		if (strcmp(name, "kEND5") == 0) return "KEY_^END";
-		if (strcmp(name, "kHOM6") == 0) return "KEY_S^HOME";
-		if (strcmp(name, "kEND6") == 0) return "KEY_S^END";
-		if (strcmp(name, "kIC5") == 0)  return "KEY_^INSERT";
-		if (strcmp(name, "kDC5") == 0)  return "KEY_^DELETE";
-		if (strcmp(name, "kIC6") == 0)  return "KEY_S^INSERT";
-		if (strcmp(name, "kDC6") == 0)  return "KEY_S^DELETE";
+		char buf[strlen(name)+1];
+		strcpy(buf, name);
+
+		int prefix = strcspn(buf, "0123456789");
+		int suffix = buf[prefix] - '0';
+		buf[prefix] = '\0';
+
+		if ((suffix >= 0) && (suffix <= 9))
+		{
+			const char* ps = ncurses_prefix_to_name(buf);
+			const char* ss = ncurses_suffix_to_name(suffix);
+			if (ss)
+			{
+				sprintf(buffer, "KEY_%s%s", ss, ps);
+				return buffer;
+			}
+		}
 	}
 
 	sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");

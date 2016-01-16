@@ -476,7 +476,7 @@ MenuClass = {
 	end,
 	
 	lookupAccelerator = function(self, c)
-		c = c:gsub("^KEY_", "")
+		c = c:gsub("^KEY_", ""):upper()
 
 		-- Check the overrides table and only then the documentset keymap.
 		
