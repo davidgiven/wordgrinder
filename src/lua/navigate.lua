@@ -278,7 +278,8 @@ function Cmd.JoinWithNextWord()
 		paragraph = Document[cp]
 	end
 
-	local word = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
+	local word, co, _ = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
+	Document.co = co
 	Document[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		word,

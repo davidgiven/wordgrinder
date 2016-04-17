@@ -296,6 +296,7 @@ static int insertintoword_cb(lua_State* L)
 
 	int sstate = 0;
 	int dstate = 0;
+	int insstart = -1;
 	int insend = -1;
 	bool copied = 0;
 
@@ -306,6 +307,8 @@ static int insertintoword_cb(lua_State* L)
 
 		if (!copied && ((s - src) >= offset))
 		{
+			insstart = p - dest;
+
 			while (copy(&p, &dstate, &ins, &newstate, 0, STYLE_ALL))
 				;
 
@@ -316,14 +319,21 @@ static int insertintoword_cb(lua_State* L)
 	while (copy(&p, &dstate, &s, &sstate, 0, STYLE_ALL));
 
 	/* Return both the new string, and the offset to the end of the inserted
-	 * section. */
+	 * section, and the offset to the *start* of the inserted section (because
+	 * it might have changed). */
 
 	lua_pushlstring(L, dest, p - dest);
+
 	if (insend != -1)
 		lua_pushnumber(L, 1 + insend);
 	else
 		lua_pushnil(L);
-	return 2;
+
+	if (insstart != -1)
+		lua_pushnumber(L, 1 + insstart);
+	else
+		lua_pushnil(L);
+	return 3;
 }
 
 /* Deletes all characters between certain offsets in a word. */
