@@ -12,9 +12,11 @@ local compress = wg.compress
 local decompress = wg.decompress
 local writeu8 = wg.writeu8
 local readu8 = wg.readu8
+local string_format = string.format
 
 local MAGIC = "WordGrinder dumpfile v1: this is not a text file!"
 local ZMAGIC = "WordGrinder dumpfile v2: this is not a text file!"
+local TMAGIC = "WordGrinder dumpfile v3: this is a text file; diff me!"
 
 local STOP = 0
 local TABLE = 1
@@ -32,86 +34,67 @@ local PARAGRAPHCLASS = 102
 local WORDCLASS = 103
 local MENUCLASS = 104
 
-local function writetostream(object, writes, writei)
-	local type_lookup = {
-		[DocumentSetClass] = DOCUMENTSETCLASS,
-		[DocumentClass] = DOCUMENTCLASS,
-		[ParagraphClass] = PARAGRAPHCLASS,
-		[MenuClass] = MENUCLASS,
-	}
-	
-	local cache = {}
-	local cacheid = 1
-	local function save(t)
-		if cache[t] then
-			writei(CACHE)
-			writei(cache[t])
-			return
-		end
-		cache[t] = cacheid
-		cacheid = cacheid + 1
-		
+local function writetostream(object, write, writeo)
+	local function save(key, t, force)
 		if (type(t) == "table") then
 			local m = GetClass(t)
-			if m then
-				m = type_lookup[m]
-			else
-				m = TABLE
-			end
-			if (m == WORDCLASS) then
-				writei(BRIEFWORD)
-				save(t)
-			else
-				writei(m)
-				writei(#t)
-				
-				for _, i in ipairs(t) do
-					save(i)
+			if (m ~= ParagraphClass) and (key ~= ".current") then
+				for k, i in ipairs(t) do
+					save(key.."."..k, i)
 				end
 
-				-- Save the keys in alphabetical order, so we get repeatable
-				-- files.
-				local keys = {}
-				for k in pairs(t) do
-					if (type(k) ~= "number") then
-						if not k:find("^_") then
-							keys[#keys+1] = k
+				if (t ~= DocumentSet.documents) then
+					-- Save the keys in alphabetical order, so we get repeatable
+					-- files.
+					local keys = {}
+					for k in pairs(t) do
+						if (type(k) ~= "number") then
+							if not k:find("^_") then
+								keys[#keys+1] = k
+							end
 						end
 					end
-				end
-				table.sort(keys)
+					table.sort(keys)
 
-				for _, k in ipairs(keys) do
-					save(k)
-					save(t[k])
+					for _, k in ipairs(keys) do
+						save(key.."."..k, t[k])
+					end
 				end
-				writei(STOP)
 			end
 		elseif (type(t) == "boolean") then
-			if t then
-				writei(BOOLEANTRUE)
-			else
-				writei(BOOLEANFALSE)
-			end
+			writeo(key, tostring(t))
 		elseif (type(t) == "string") then
-			writei(STRING)
-			writei(#t)
-			writes(t)
+			writeo(key, string_format("%q", t))
 		elseif (type(t) == "number") then
-			if (t >= 0) then
-				writei(NUMBER)
-				writei(t)
-			else
-				writei(NEGNUMBER)
-				writei(-t)
-			end
+			writeo(key, tostring(t))
 		else
 			error("unsupported type "..type(t))
 		end
 	end
+
+	save("", object)
+	save(".current", object:_findDocument(object.current.name))
 	
-	save(object)
-	
+	for i, d in ipairs(object.documents) do
+		write("#")
+		write(tostring(i))
+		write("\n")
+
+		for _, p in ipairs(d) do
+			write(p.style.name)
+
+			for _, s in ipairs(p) do
+				write(" ")
+				write(s)
+			end
+
+			write("\n")
+		end
+
+		write(".")
+		write("\n")
+	end
+
 	return true
 end
 
@@ -135,24 +118,23 @@ function SaveToStream(filename, object)
 	local fpw = fp.write
 	
 	local ss = {}
-	local writes = function(s)
-		if (type(s) == "number") then
-			s = writeu8(s)
-		end
-		ss[#ss+1] = s
-	end
-	
-	local writei = function(s)
-		s = writeu8(s)
+	local write = function(s)
 		ss[#ss+1] = s
 	end
 
-	local r = writetostream(object, writes, writei)
-	local s = compress(table.concat(ss))	
+	local writeo = function(k, v)
+		write(k)
+		write(": ")
+		write(v)
+		write("\n")
+	end
+	
+	local r = writetostream(object, write, writeo)
+	local s = table.concat(ss)
 
 	local e
 	if r then
-		r, e = fp:write(ZMAGIC, "\n", s)
+		r, e = fp:write(TMAGIC, "\n", s)
 	end
 	if r then
 		r, e = fp:close()
@@ -160,7 +142,7 @@ function SaveToStream(filename, object)
 
 	-- Once done, do a complicated series of renames so that we
 	-- don't remove the old file until we're sure the new one has
-	-- been written correctly. Note that accurséd Windows doesn't
+	-- been written correctly. Note that accursï¿½d Windows doesn't
 	-- support clobbering renames...
 	
 	if r then
@@ -484,6 +466,88 @@ function loadfromstreamz(fp)
 	return load()		
 end
 
+function loadfromstreamt(fp)
+	local data = CreateDocumentSet()
+	data.menu = CreateMenu()
+	data.documents = {}
+
+	while true do
+		local line = fp:read("*l")
+		if not line then
+			break
+		end
+
+		if line:find("^%.") then
+			local _, _, k, p, v = line:find("^(.*)%.([^.:]+): (.*)$")
+
+			-- This is setting a property value.
+			local o = data
+			for e in k:gmatch("[^.]+") do
+				if e:find('^[0-9]+') then
+					e = tonumber(e)
+				end
+				if not o[e] then
+					if (o == data.documents) then
+						o[e] = CreateDocument()
+					else
+						o[e] = {}
+					end
+				end
+				o = o[e]
+			end
+
+			if v:find('^-?[0-9]+$') then
+				v = tonumber(v)
+			elseif (v == "true") then
+				v = true
+			elseif (v == "false") then
+				v = false 
+			elseif v:find('^".*"$') then
+				v = v:sub(2, -2)
+				v = v:gsub("\\(.)", "%1")
+			else
+				error(
+					string.format("malformed property %s.%s: %s", k, p, v))
+			end
+
+			if p:find('^[0-9]+$') then
+				p = tonumber(p)
+			end
+
+			o[p] = v 
+		elseif line:find("^#") then
+			local id = tonumber(line:sub(2))
+			local doc = data.documents[id]
+
+			local index = 1
+			while true do
+				line = fp:read("*l")
+				if not line or (line == ".") then
+					break
+				end
+
+				local words = SplitString(line, " ")
+				words[1] = data.styles[words[1]]
+				local para = CreateParagraph(unpack(words))
+
+				doc[index] = para
+				index = index + 1
+			end
+		else
+			error(
+				string.format("malformed line when reading file: %s", line))
+		end
+	end
+
+	-- Patch up document names.
+	for i, d in ipairs(data.documents) do
+		data.documents[d.name] = d
+	end
+	data.current = data.documents[data.current]
+
+	return data
+end
+
 function LoadFromStream(filename)
 	local fp, e = io.open(filename, "rb")
 	if not fp then
@@ -495,6 +559,8 @@ function LoadFromStream(filename)
 		loader = loadfromstream
 	elseif (magic == ZMAGIC) then
 		loader = loadfromstreamz
+	elseif (magic == TMAGIC) then
+		loader = loadfromstreamt
 	else
 		fp:close()
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
