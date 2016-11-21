@@ -490,6 +490,8 @@ $(eval $(call run-test, tests/weirdness-splitting-lines-before-space.lua))
 $(eval $(call run-test, tests/weirdness-stray-control-char-in-export.lua))
 $(eval $(call run-test, tests/weirdness-styled-clipboard.lua))
 $(eval $(call run-test, tests/weirdness-styling-unicode.lua))
+$(eval $(call run-test, tests/weirdness-word-left-from-end-of-line.lua))
+$(eval $(call run-test, tests/weirdness-word-right-to-last-word-in-doc.lua))
 $(eval $(call run-test, tests/windows-installdir.lua))
 $(eval $(call run-test, tests/xpattern.lua))
 

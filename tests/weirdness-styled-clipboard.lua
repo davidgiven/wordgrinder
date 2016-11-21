@@ -5,6 +5,7 @@ AssertEquals("\17→", wg.deletefromword(w, 5, #w+1))
 
 Cmd.InsertStringIntoParagraph("Word File→Edit→Fnord Word")
 Cmd.GotoPreviousWord()
+Cmd.GotoPreviousWord()
 Cmd.GotoBeginningOfWord()
 Cmd.SetMark()
 Cmd.GotoEndOfWord()

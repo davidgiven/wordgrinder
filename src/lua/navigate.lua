@@ -92,8 +92,13 @@ function Cmd.GotoPreviousWord()
 		return false
 	end
 	
-	Document.cw = Document.cw - 1
-	Document.co = 1
+	if Cmd.GotoPreviousChar() then
+		-- If that worked, we weren't at the beginning of the word.
+		Document.co = 1
+	else
+		Document.cw = Document.cw - 1
+		Document.co = 1
+	end
 
 	QueueRedraw()
 	return true
@@ -102,6 +107,7 @@ end
 function Cmd.GotoNextWord()
 	local p = Document[Document.cp]
 	if (Document.cw == #p) then
+		Document.co = #(p[Document.cw]) + 1
 		QueueRedraw()
 		return false
 	end
