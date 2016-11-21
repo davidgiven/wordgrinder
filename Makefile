@@ -6,8 +6,11 @@ hide = @
 
 .DELETE_ON_ERROR:
 
-PREFIX = $(HOME)
-CC = gcc
+PREFIX ?= $(HOME)
+BINDIR ?= $(PREFIX)/bin
+DOCDIR ?= $(PREFIX)/share/doc
+MANDIR ?= $(PREFIX)/share/man
+CC ?= gcc
 WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
@@ -32,7 +35,7 @@ else ifneq ($(Apple_PubSub_Socket_Render),)
 	TESTER = bin/wordgrinder-debug
 all: unix
 else
-	LIBROOT := /usr/lib
+	LIBROOT ?= /usr/lib
 	INCROOT := /usr
 	ifeq ($(USE_LUAJIT),y)
 		LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
@@ -42,15 +45,23 @@ else
 		# uses new 5.2 metamethods and doesn't work on LuaJIT.
 		TESTER = bin/wordgrinder
 	else
-		LUA_INCLUDE := $(INCROOT)/include/lua5.2
-		LUA_LIB := -llua5.2
+		LUA_INCLUDE ?= $(INCROOT)/include/lua5.2
+		LUA_LIB ?= -llua5.2
 		TESTER = bin/wordgrinder-debug
 	endif
 
-	NCURSES_CFLAGS := $(shell pkg-config ncursesw --cflags)
-	NCURSES_LIB := $(shell pkg-config ncursesw --libs)
-	X11_CFLAGS := $(shell pkg-config freetype2 --cflags) -I/usr/include/X11
-	X11_LIB := -lX11 -lXft $(shell pkg-config freetype2 --libs) 
+	ifndef NCURSES_CFLAGS
+		NCURSES_CFLAGS := $(shell pkg-config ncursesw --cflags)
+	endif
+	ifndef NCURSES_LIB
+		NCURSES_LIB := $(shell pkg-config ncursesw --libs)
+	endif
+	ifndef X11_CFLAGS
+		X11_CFLAGS := $(shell pkg-config freetype2 --cflags) -I/usr/include/X11
+	endif
+	ifndef X11_LIB
+		X11_LIB := -lX11 -lXft $(shell pkg-config freetype2 --libs)
+	endif
 
 	OS = unix
 all: unix x11unix
@@ -102,13 +113,13 @@ wininstaller: $(WININSTALLER)
 
 install: bin/wordgrinder bin/xwordgrinder bin/wordgrinder.1
 	@echo INSTALL
-	$(hide)install -d                       $(PREFIX)/bin
-	$(hide)install -m 755 bin/wordgrinder   $(PREFIX)/bin/wordgrinder
-	$(hide)install -m 755 bin/xwordgrinder  $(PREFIX)/bin/xwordgrinder
-	$(hide)install -d                       $(PREFIX)/share/man/man1
-	$(hide)install -m 644 bin/wordgrinder.1 $(PREFIX)/share/man/man1/wordgrinder.1
-	$(hide)install -d                       $(PREFIX)/share/doc/wordgrinder
-	$(hide)install -m 644 README.wg         $(PREFIX)/share/doc/wordgrinder/README.wg
+	$(hide)install -d                       $(DESTDIR)$(BINDIR)
+	$(hide)install -m 755 bin/wordgrinder   $(DESTDIR)$(BINDIR)/wordgrinder
+	$(hide)install -m 755 bin/xwordgrinder  $(DESTDIR)$(BINDIR)/xwordgrinder
+	$(hide)install -d                       $(DESTDIR)$(MANDIR)/man1
+	$(hide)install -m 644 bin/wordgrinder.1 $(DESTDIR)$(MANDIR)/man1/wordgrinder.1
+	$(hide)install -d                       $(DESTDIR)$(DOCDIR)/wordgrinder
+	$(hide)install -m 644 README.wg         $(DESTDIR)$(DOCDIR)/wordgrinder/README.wg
 	
 # --- Builds the script blob ------------------------------------------------
 
