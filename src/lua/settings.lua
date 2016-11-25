@@ -6,16 +6,33 @@ GlobalSettings = {}
 
 local filename = HOME .. "/.wordgrinder.settings"
 
-function LoadGlobalSettings()
-	local s = LoadFromStream(filename)
+function LoadGlobalSettings(f)
+	if not f then
+		f = filename
+	end
+
+	local s = LoadFromStream(f)
 	if s then
-		GlobalSettings = s
+		if s.globalSettings then
+			GlobalSettings = s.globalSettings
+		else
+			-- Backwards compatibility.
+			GlobalSettings = s
+		end
+
 		FireEvent(Event.RegisterAddons)
 	end
 end
 
-function SaveGlobalSettings()
-	local r, e = SaveToStream(filename, GlobalSettings)
+function SaveGlobalSettings(f)
+	if not f then
+		f = filename
+	end
+
+	local r, e = SaveToStream(
+		f,
+		{globalSettings=GlobalSettings}
+	)
 	return r
 end
 

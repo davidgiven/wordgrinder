@@ -73,26 +73,29 @@ local function writetostream(object, write, writeo)
 	end
 
 	save("", object)
-	save(".current", object:_findDocument(object.current.name))
-	
-	for i, d in ipairs(object.documents) do
-		write("#")
-		write(tostring(i))
-		write("\n")
 
-		for _, p in ipairs(d) do
-			write(p.style.name)
+	if (GetClass(object) == DocumentSetClass) then
+		save(".current", object:_findDocument(object.current.name))
 
-			for _, s in ipairs(p) do
-				write(" ")
-				write(s)
+		for i, d in ipairs(object.documents) do
+			write("#")
+			write(tostring(i))
+			write("\n")
+
+			for _, p in ipairs(d) do
+				write(p.style.name)
+
+				for _, s in ipairs(p) do
+					write(" ")
+					write(s)
+				end
+
+				write("\n")
 			end
 
+			write(".")
 			write("\n")
 		end
-
-		write(".")
-		write("\n")
 	end
 
 	return true

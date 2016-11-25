@@ -126,7 +126,11 @@ function ModalMessage(s1, s2)
 	end
 end
 
-function SaveGlobalSettings()
+local oldSaveGlobalSettings = SaveGlobalSettings
+function SaveGlobalSettings(f)
+	if f then
+		return oldSaveGlobalSettings(f)
+	end
 end
 
 GlobalSettings.systemdictionary.filename = nil
