@@ -12,6 +12,8 @@ local compress = wg.compress
 local decompress = wg.decompress
 local writeu8 = wg.writeu8
 local readu8 = wg.readu8
+local escape = wg.escape
+local unescape = wg.unescape
 local string_format = string.format
 
 local MAGIC = "WordGrinder dumpfile v1: this is not a text file!"
@@ -64,7 +66,7 @@ local function writetostream(object, write, writeo)
 		elseif (type(t) == "boolean") then
 			writeo(key, tostring(t))
 		elseif (type(t) == "string") then
-			writeo(key, string_format("%q", t))
+			writeo(key, '"'..escape(t)..'"')
 		elseif (type(t) == "number") then
 			writeo(key, tostring(t))
 		else
@@ -507,7 +509,7 @@ function loadfromstreamt(fp)
 				v = false 
 			elseif v:find('^".*"$') then
 				v = v:sub(2, -2)
-				v = v:gsub("\\(.)", "%1")
+				v = unescape(v)
 			else
 				error(
 					string.format("malformed property %s.%s: %s", k, p, v))

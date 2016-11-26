@@ -174,6 +174,95 @@ static int time_cb(lua_State* L)
 	return 1;
 }
 
+static int escape_cb(lua_State* L)
+{
+	size_t inputbuffersize;
+	const char* inputbuffer = luaL_checklstring(L, 1, &inputbuffersize);
+
+	const size_t outputbuffersize = inputbuffersize*2; /* big enough to fit */
+	char* const outputbuffer = malloc(outputbuffersize);
+
+	const char* in = (char*) inputbuffer;
+	const char* inend = inputbuffer + inputbuffersize;
+
+	char* out = outputbuffer;
+
+	while (in < inend)
+	{
+		int c = readu8(&in);
+		switch (c)
+		{
+			case '\n':
+				writeu8(&out, '\\');
+				writeu8(&out, 'n');
+				break;
+
+			case '\r':
+				writeu8(&out, '\\');
+				writeu8(&out, 'r');
+				break;
+
+			case '"':
+			case '\\':
+				writeu8(&out, '\\');
+				/* fall through */
+			default:
+				writeu8(&out, c);
+		}
+	}
+
+	lua_pushlstring(L, outputbuffer, out - outputbuffer);
+	free(outputbuffer);
+
+	return 1;
+}
+
+static int unescape_cb(lua_State* L)
+{
+	size_t inputbuffersize;
+	const char* inputbuffer = luaL_checklstring(L, 1, &inputbuffersize);
+
+	const size_t outputbuffersize = inputbuffersize; /* big enough to fit */
+	char* const outputbuffer = malloc(outputbuffersize);
+
+	const char* in = (char*) inputbuffer;
+	const char* inend = inputbuffer + inputbuffersize;
+
+	char* out = outputbuffer;
+
+	while (in < inend)
+	{
+		int c = readu8(&in);
+		switch (c)
+		{
+			case '\\':
+				c = readu8(&in);
+				switch (c)
+				{
+					case 'n':
+						writeu8(&out, '\n');
+						break;
+
+					case 'r':
+						writeu8(&out, '\r');
+						break;
+
+					default:
+						writeu8(&out, c);
+				}
+				break;
+
+			default:
+				writeu8(&out, c);
+		}
+	}
+
+	lua_pushlstring(L, outputbuffer, out - outputbuffer);
+	free(outputbuffer);
+
+	return 1;
+}
+
 void utils_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -182,6 +271,8 @@ void utils_init(void)
 		{ "writeu8",                   writeu8_cb },
 		{ "transcode",                 transcode_cb },
 		{ "time",                      time_cb },
+		{ "escape",                    escape_cb },
+		{ "unescape",                  unescape_cb },
 		{ NULL,                        NULL }
 	};
 

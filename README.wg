@@ -32,8 +32,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.margin: 0
 .clipboard.viewmode: 1
 .documents.1.co: 1
-.documents.1.cp: 1
-.documents.1.cw: 1
+.documents.1.cp: 3
+.documents.1.cw: 17
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
@@ -159,7 +159,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "README.wg"
+.name: "/.pool/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .styles.1.above: 1
