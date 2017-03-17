@@ -15,7 +15,7 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-USE_LUAJIT = y
+USE_LUAJIT = n
 
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
