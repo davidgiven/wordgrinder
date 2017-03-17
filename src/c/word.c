@@ -31,7 +31,7 @@ static int parseword_cb(lua_State* L)
 	size_t size;
 	const char* s = luaL_checklstring(L, 1, &size);
 	const char* send = s + size;
-	int dstyle = luaL_checkint(L, 2);
+	int dstyle = luaL_checkinteger(L, 2);
 	/* pos 3 contains the callback function */
 
 	int oldattr = 0;
@@ -86,12 +86,12 @@ static int parseword_cb(lua_State* L)
 
 static int writestyled_cb(lua_State* L)
 {
-	int x = luaL_checkint(L, 1);
-	int y = luaL_checkint(L, 2);
+	int x = luaL_checkinteger(L, 1);
+	int y = luaL_checkinteger(L, 2);
 	size_t size;
 	const char* s = luaL_checklstring(L, 3, &size);
 	const char* send = s + size;
-	int oattr = luaL_checkint(L, 4);
+	int oattr = luaL_checkinteger(L, 4);
 	const char* revon = s + lua_tointeger(L, 5) - 1;
 	const char* revoff = s + lua_tointeger(L, 6) - 1;
 	int sor = lua_tointeger(L, 7);
@@ -167,7 +167,7 @@ static int getwordtext_cb(lua_State* L)
 static int nextcharinword_cb(lua_State* L)
 {
 	const char* src = luaL_checkstring(L, 1);
-	int offset = luaL_checkint(L, 2) - 1;
+	int offset = luaL_checkinteger(L, 2) - 1;
 	const char* p = src + offset;
 
 	/* At the end of the string? */
@@ -200,7 +200,7 @@ static int nextcharinword_cb(lua_State* L)
 static int prevcharinword_cb(lua_State* L)
 {
 	const char* src = luaL_checkstring(L, 1);
-	int offset = luaL_checkint(L, 2) - 1;
+	int offset = luaL_checkinteger(L, 2) - 1;
 	const char* p = src + offset;
 
 	/* Back up over any control codes; give up if we find ourselves at
@@ -288,8 +288,8 @@ static int insertintoword_cb(lua_State* L)
 	const char* s = src;
 	size_t insbytes;
 	const char* ins = luaL_checklstring(L, 2, &insbytes);
-	int offset = luaL_checkint(L, 3) - 1;
-	int newstate = luaL_checkint(L, 4);
+	int offset = luaL_checkinteger(L, 3) - 1;
+	int newstate = luaL_checkinteger(L, 4);
 
 	char dest[srcbytes + insbytes + OVERHEAD];
 	char* p = dest;
@@ -342,8 +342,8 @@ static int deletefromword_cb(lua_State* L)
 {
 	size_t srcbytes;
 	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	const char* offset1 = src + luaL_checkint(L, 2) - 1;
-	const char* offset2 = src + luaL_checkint(L, 3) - 1;
+	const char* offset1 = src + luaL_checkinteger(L, 2) - 1;
+	const char* offset2 = src + luaL_checkinteger(L, 3) - 1;
 
 	char dest[srcbytes];
 	char* p = dest;
@@ -378,11 +378,11 @@ static int applystyletoword_cb(lua_State* L)
 {
 	size_t srcbytes;
 	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	int targetsor = luaL_checkint(L, 2);
-	int targetsand = luaL_checkint(L, 3);
-	const char* offset1 = src + luaL_checkint(L, 4) - 1;
-	const char* offset2 = src + luaL_checkint(L, 5) - 1;
-	const char* csoffset = src + luaL_checkint(L, 6) - 1;
+	int targetsor = luaL_checkinteger(L, 2);
+	int targetsand = luaL_checkinteger(L, 3);
+	const char* offset1 = src + luaL_checkinteger(L, 4) - 1;
+	const char* offset2 = src + luaL_checkinteger(L, 5) - 1;
+	const char* csoffset = src + luaL_checkinteger(L, 6) - 1;
 
 	/* Adding a style will add at most two extra bytes to the string
 	 * (on, and then off again). Probably less. */
@@ -432,7 +432,7 @@ static int getstylefromword_cb(lua_State* L)
 {
 	size_t srcbytes;
 	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	const char* offset = src + luaL_checkint(L, 2) - 1;
+	const char* offset = src + luaL_checkinteger(L, 2) - 1;
 
 	int state = 0;
 	while (src < offset)
@@ -453,12 +453,12 @@ static int getstylefromword_cb(lua_State* L)
 
 static int createstylebyte_cb(lua_State* L)
 {
-	int style = luaL_checkint(L, 1);
+	int style = luaL_checkinteger(L, 1);
 	char buffer = style | STYLE_MARKER;
 	lua_pushlstring(L, &buffer, 1);
 	return 1;
 }
-	
+
 void word_init(void)
 {
 	const static luaL_Reg funcs[] =

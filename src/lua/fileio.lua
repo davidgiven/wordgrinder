@@ -15,6 +15,7 @@ local readu8 = wg.readu8
 local escape = wg.escape
 local unescape = wg.unescape
 local string_format = string.format
+local unpack = rawget(_G, "unpack") or table.unpack
 
 local MAGIC = "WordGrinder dumpfile v1: this is not a text file!"
 local ZMAGIC = "WordGrinder dumpfile v2: this is not a text file!"
@@ -114,14 +115,14 @@ function SaveToStream(filename, object)
 
 	-- However, write the file to a *different* filename
 	-- (so that crashes during writing doesn't corrupt the file).
-	
+
 	fp, e = io.open(filename..".new", "wb")
 	if not fp then
 		return nil, e
 	end
-	
+
 	local fpw = fp.write
-	
+
 	local ss = {}
 	local write = function(s)
 		ss[#ss+1] = s
@@ -133,7 +134,7 @@ function SaveToStream(filename, object)
 		write(v)
 		write("\n")
 	end
-	
+
 	local r = writetostream(object, write, writeo)
 	local s = table.concat(ss)
 
@@ -149,7 +150,7 @@ function SaveToStream(filename, object)
 	-- don't remove the old file until we're sure the new one has
 	-- been written correctly. Note that accurs�d Windows doesn't
 	-- support clobbering renames...
-	
+
 	if r then
 		r, e = os.rename(filename, filename..".old")
 		if not e then
@@ -181,14 +182,14 @@ function Cmd.SaveCurrentDocumentAs(filename)
 	DocumentSet.name = filename
 
 	ImmediateMessage("Saving...")
-	DocumentSet:clean()	
+	DocumentSet:clean()
 	local r, e = SaveDocumentSetRaw(DocumentSet.name)
 	if not r then
 		ModalMessage("Save failed", "The document could not be saved: "..e)
 	else
 		NonmodalMessage("Save succeeded.")
 	end
-	return r	
+	return r
 end
 
 function Cmd.SaveCurrentDocument()
@@ -203,32 +204,32 @@ function Cmd.SaveCurrentDocument()
 		end
 		DocumentSet.name = name
 	end
-	
+
 	return Cmd.SaveCurrentDocumentAs(name)
 end
 
 local function loadfromstream(fp)
 	local cache = {}
 	local load
-	
+
 	local function populate_table(t)
 		local n = tonumber(fp:read("*l"))
 		for i = 1, n do
 			t[i] = load()
 		end
-		
+
 		while true do
 			local k = load()
 			if not k then
 				break
 			end
-			
+
 			t[k] = load()
 		end
-		
+
 		return t
 	end
-	
+
 	local load_cb = {
 		["DS"] = function()
 			local t = {}
@@ -236,21 +237,21 @@ local function loadfromstream(fp)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		["D"] = function()
 			local t = {}
 			setmetatable(t, {__index = DocumentClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		["P"] = function()
 			local t = {}
 			setmetatable(t, {__index = ParagraphClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		["W"] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
@@ -267,63 +268,63 @@ local function loadfromstream(fp)
 			cache[cn] = t.text
 			return t.text
 		end,
-		
+
 		["M"] = function()
 			local t = {}
 			setmetatable(t, {__index = MenuClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		["T"] = function()
 			local t = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		["S"] = function()
 			local s = fp:read("*l")
 			cache[#cache + 1] = s
 			return s
 		end,
-		
+
 		["N"] = function()
 			local n = tonumber(fp:read("*l"))
 			cache[#cache + 1] = n
 			return n
 		end,
-		
+
 		["B"] = function()
 			local s = fp:read("*l")
 			s = (s == "T")
 			cache[#cache + 1] = s
 			return s
 		end,
-		
+
 		["."] = function()
 			return nil
 		end
 	}
-	
+
 	load = function()
 		local s = fp:read("*l")
 		if not s then
 			error("unexpected EOF when reading file")
 		end
-		
+
 		local n = tonumber(s)
 		if n then
 			return cache[n]
 		end
-		
+
 		local f = load_cb[s]
 		if not f then
 			error("can't load type "..s)
 		end
 		return f()
 	end
-	
-	return load()		
+
+	return load()
 end
 
 function loadfromstreamz(fp)
@@ -331,54 +332,54 @@ function loadfromstreamz(fp)
 	local load
 	local data = decompress(fp:read("*a"))
 	local offset = 1
-	
+
 	local function populate_table(t)
 		local n
 		n, offset = readu8(data, offset)
 		for i = 1, n do
 			t[i] = load()
 		end
-		
+
 		while true do
 			local k = load()
 			if not k then
 				break
 			end
-			
+
 			t[k] = load()
 		end
-		
+
 		return t
 	end
-	
+
 	local load_cb = {
 		[CACHE] = function()
 			local n
 			n, offset = readu8(data, offset)
 			return cache[n]
 		end,
-		
+
 		[DOCUMENTSETCLASS] = function()
 			local t = {}
 			setmetatable(t, {__index = DocumentSetClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		[DOCUMENTCLASS] = function()
 			local t = {}
 			setmetatable(t, {__index = DocumentClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		[PARAGRAPHCLASS] = function()
 			local t = {}
 			setmetatable(t, {__index = ParagraphClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		[WORDCLASS] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
@@ -394,7 +395,7 @@ function loadfromstreamz(fp)
 			cache[cn] = t.text
 			return t.text
 		end,
-		
+
 		[BRIEFWORD] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
@@ -403,20 +404,20 @@ function loadfromstreamz(fp)
 			cache[#cache+1] = t
 			return t
 		end,
-		
+
 		[MENUCLASS] = function()
 			local t = {}
 			setmetatable(t, {__index = MenuClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		[TABLE] = function()
 			local t = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
-		
+
 		[STRING] = function()
 			local n
 			n, offset = readu8(data, offset)
@@ -426,14 +427,14 @@ function loadfromstreamz(fp)
 			cache[#cache + 1] = s
 			return s
 		end,
-		
+
 		[NUMBER] = function()
 			local n
 			n, offset = readu8(data, offset)
 			cache[#cache + 1] = n
 			return n
 		end,
-		
+
 		[NEGNUMBER] = function()
 			local n
 			n, offset = readu8(data, offset)
@@ -441,34 +442,34 @@ function loadfromstreamz(fp)
 			cache[#cache + 1] = n
 			return n
 		end,
-		
+
 		[BOOLEANTRUE] = function()
 			cache[#cache + 1] = true
 			return true
 		end,
-		
+
 		[BOOLEANFALSE] = function()
 			cache[#cache + 1] = false
 			return false
 		end,
-		
+
 		[STOP] = function()
 			return nil
 		end
 	}
-	
+
 	load = function()
 		local n
 		n, offset = readu8(data, offset)
-		
+
 		local f = load_cb[n]
 		if not f then
 			error("can't load type "..n.." at offset "..offset)
 		end
 		return f()
 	end
-	
-	return load()		
+
+	return load()
 end
 
 function loadfromstreamt(fp)
@@ -501,12 +502,12 @@ function loadfromstreamt(fp)
 				o = o[e]
 			end
 
-			if v:find('^-?[0-9]+$') then
+			if v:find('^-?[0-9][0-9.e+-]*$') then
 				v = tonumber(v)
 			elseif (v == "true") then
 				v = true
 			elseif (v == "false") then
-				v = false 
+				v = false
 			elseif v:find('^".*"$') then
 				v = v:sub(2, -2)
 				v = unescape(v)
@@ -519,7 +520,7 @@ function loadfromstreamt(fp)
 				p = tonumber(p)
 			end
 
-			o[p] = v 
+			o[p] = v
 		elseif line:find("^#") then
 			local id = tonumber(line:sub(2))
 			local doc = data.documents[id]
@@ -570,11 +571,11 @@ function LoadFromStream(filename)
 		fp:close()
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
-	
+
 	local d, e = loader(fp)
 	fp:close()
-	
-	return d, e 
+
+	return d, e
 end
 
 local function loaddocument(filename)
@@ -584,9 +585,9 @@ local function loaddocument(filename)
 	end
 
 	-- Even if the changed flag was set in the document on disk, remove it.
-	
+
 	d:clean()
-	
+
 	d.name = filename
 	return d
 end
@@ -595,14 +596,14 @@ function Cmd.LoadDocumentSet(filename)
 	if not ConfirmDocumentErasure() then
 		return false
 	end
-	
+
 	if not filename then
 		filename = FileBrowser("Load Document Set", "Load file:", false)
 		if not filename then
 			return false
 		end
 	end
-	
+
 	ImmediateMessage("Loading...")
 	local d, e = loaddocument(filename)
 	if not d then
@@ -613,7 +614,7 @@ function Cmd.LoadDocumentSet(filename)
 		QueueRedraw()
 		return false
 	end
-		
+
 	-- Downgrading documents is not supported.
 	local fileformat = d.fileformat or 1
 	if (fileformat > FILEFORMAT) then
@@ -625,11 +626,11 @@ function Cmd.LoadDocumentSet(filename)
 
 	DocumentSet = d
 	Document = d.current
-	
+
 	if (fileformat < FILEFORMAT) then
 		UpgradeDocument(fileformat)
 		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
-				
+
 		DocumentSet.fileformat = FILEFORMAT
 		DocumentSet.menu = CreateMenu()
 	end
@@ -638,7 +639,7 @@ function Cmd.LoadDocumentSet(filename)
 
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
-	
+
 	ResetParagraphStyles()
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
@@ -659,17 +660,17 @@ function UpgradeDocument(oldversion)
 	DocumentSet.addons = DocumentSet.addons or {}
 
 	-- Upgrade version 1 to 2.
-	
+
 	if (oldversion < 2) then
 		-- Update wordcount.
 
 		for _, document in ipairs(DocumentSet) do
 			local wc = 0
-			
+
 			for _, p in ipairs(document) do
 				wc = wc + #p
 			end
-			
+
 			document.wordcount = wc
 		end
 
@@ -677,12 +678,12 @@ function UpgradeDocument(oldversion)
 
 		DocumentSet.statusbar = true
 	end
-	
+
 	-- Upgrade version 2 to 3.
-	
+
 	if (oldversion < 3) then
 		-- Idle time defaults to 3.
-		
+
 		DocumentSet.idletime = 3
 	end
 

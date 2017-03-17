@@ -85,8 +85,8 @@ static int setnormal_cb(lua_State* L)
 
 static int write_cb(lua_State* L)
 {
-	int x = luaL_checkint(L, 1);
-	int y = luaL_checkint(L, 2);
+	int x = luaL_checkinteger(L, 1);
+	int y = luaL_checkinteger(L, 2);
 	size_t size;
 	const char* s = luaL_checklstring(L, 3, &size);
 	const char* send = s + size;
@@ -105,18 +105,18 @@ static int write_cb(lua_State* L)
 
 static int cleararea_cb(lua_State* L)
 {
-	int x1 = luaL_checkint(L, 1);
-	int y1 = luaL_checkint(L, 2);
-	int x2 = luaL_checkint(L, 3);
-	int y2 = luaL_checkint(L, 4);
+	int x1 = luaL_checkinteger(L, 1);
+	int y1 = luaL_checkinteger(L, 2);
+	int x2 = luaL_checkinteger(L, 3);
+	int y2 = luaL_checkinteger(L, 4);
 	dpy_cleararea(x1, y1, x2, y2);
 	return 0;
 }
 
 static int gotoxy_cb(lua_State* L)
 {
-	cursorx = luaL_checkint(L, 1);
-	cursory = luaL_checkint(L, 2);
+	cursorx = luaL_checkinteger(L, 1);
+	cursory = luaL_checkinteger(L, 2);
 	return 0;
 }
 

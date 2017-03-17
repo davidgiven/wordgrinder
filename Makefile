@@ -15,7 +15,7 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-USE_LUAJIT = n
+USE_LUAJIT = y
 
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
@@ -100,7 +100,7 @@ x11unix: \
 	bin/xwordgrinder-debug \
 	bin/xwordgrinder-static
 .PHONY: unix x11unix
-	
+
 windows: \
 	bin/wordgrinder.exe \
 	bin/wordgrinder-debug.exe \
@@ -120,7 +120,7 @@ install: bin/wordgrinder bin/xwordgrinder bin/wordgrinder.1
 	$(hide)install -m 644 bin/wordgrinder.1 $(DESTDIR)$(MANDIR)/man1/wordgrinder.1
 	$(hide)install -d                       $(DESTDIR)$(DOCDIR)/wordgrinder
 	$(hide)install -m 644 README.wg         $(DESTDIR)$(DOCDIR)/wordgrinder/README.wg
-	
+
 # --- Builds the script blob ------------------------------------------------
 
 # Each script is loaded in this order, which is important.
@@ -173,11 +173,11 @@ $(OBJ)/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
 	@mkdir -p $(OBJ)
 	$(hide)lua tools/multibin2c.lua script_table $^ > $@
-	
+
 clean::
 	@echo CLEAN $(OBJ)/luascripts.c
 	@rm -f $(OBJ)/luascripts.c
-	
+
 # --- Builds a single C file ------------------------------------------------
 
 define cfile
@@ -218,12 +218,12 @@ define build-wordgrinder
 $(exe): $(objs) Makefile
 	@echo LINK $$@
 	@mkdir -p $$(dir $$@)
-	$(hide)$(cc) $(CFLAGS) $(cflags) $(LDFLAGS) -o $$@ $(objs) $(ldflags) 
+	$(hide)$(cc) $(CFLAGS) $(cflags) $(LDFLAGS) -o $$@ $(objs) $(ldflags)
 
 clean::
 	@echo CLEAN $(exe)
 	@rm -f $(exe) $(objs)
-	
+
 endef
 
 # --- Builds the WordGrinder core code --------------------------------------
@@ -309,7 +309,7 @@ UNIXCFLAGS := \
 	-D_XOPEN_SOURCE \
 	-D_GNU_SOURCE \
 	-DARCH=\"unix\"
-	
+
 UNIXLDFLAGS := \
 	$(addprefix -L,$(LIBROOT)) \
 	$(LUA_LIB) \
@@ -388,7 +388,7 @@ bin/wordgrinder.1: wordgrinder.man
 	$(hide)sed -e 's/@@@DATE@@@/$(DATE)/g; s/@@@VERSION@@@/$(VERSION)/g' $< > $@
 
 endif
-	
+
 # --- Windows ---------------------------------------------------------------
 
 ifeq ($(OS),windows)
@@ -446,7 +446,7 @@ $(WININSTALLER): extras/windows-installer.nsi bin/wordgrinder.exe
 clean::
 	@echo CLEAN $(WININSTALLER)
 	@rm -f $(WININSTALLER)
-	
+
 endif
 
 # --- Tests -----------------------------------------------------------------

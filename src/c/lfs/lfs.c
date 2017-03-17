@@ -360,8 +360,8 @@ static int lfs_f_setmode(lua_State *L) {
 static int file_lock (lua_State *L) {
         FILE *fh = check_file (L, 1, "lock");
         const char *mode = luaL_checkstring (L, 2);
-        const long start = luaL_optlong (L, 3, 0);
-        long len = luaL_optlong (L, 4, 0);
+        const long start = luaL_optinteger (L, 3, 0);
+        long len = luaL_optinteger (L, 4, 0);
         if (_file_lock (L, fh, mode, start, len, "lock")) {
                 lua_pushboolean (L, 1);
                 return 1;
@@ -381,8 +381,8 @@ static int file_lock (lua_State *L) {
 */
 static int file_unlock (lua_State *L) {
         FILE *fh = check_file (L, 1, "unlock");
-        const long start = luaL_optlong (L, 2, 0);
-        long len = luaL_optlong (L, 3, 0);
+        const long start = luaL_optinteger (L, 2, 0);
+        long len = luaL_optinteger (L, 3, 0);
         if (_file_lock (L, fh, "u", start, len, "unlock")) {
                 lua_pushboolean (L, 1);
                 return 1;

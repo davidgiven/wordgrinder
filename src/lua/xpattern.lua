@@ -5,7 +5,7 @@
 -- Implemented in pure Lua with code generation technique.
 -- It translates an expression into a snippet of Lua code
 -- having a series of `string.match` calls, which is then
--- compiled (via `loadstring`).
+-- compiled (via `load`).
 --
 -- Like lpeg, does not support backtracking.
 --
@@ -24,10 +24,10 @@ local match  = string.match
 local assert = assert
 local error  = error
 local ipairs = ipairs
-local loadstring   = loadstring
 local setmetatable = setmetatable
 local type   = type
 local print  = print
+local load   = load
 
 
 -- Adds whitespace to string `s`.
@@ -364,7 +364,7 @@ M.code_of = code_of
 local function compile(epat)
   local code = code_of(epat)
   if M.debug then print('DEBUG:\n' .. code) end
-  local f = assert(loadstring(code))(match)
+  local f = assert(load(code))(match)
   return f
 end
 M.compile = compile
