@@ -37,6 +37,14 @@ all: unix
 else
 	LIBROOT ?= /usr/lib
 	INCROOT := /usr
+	# Redhat and Debian systems have different names for the lua packages
+	ifeq ($(wildcard /etc/redhat-release),)
+		# Debian
+		LUA_PACKAGE = lua5.2
+	else
+		# Redhat, Fedora
+		LUA_PACKAGE = lua
+	endif
 	ifeq ($(USE_LUAJIT),y)
 		LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
 		LUA_LIB := -lluajit-5.1
