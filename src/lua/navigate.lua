@@ -400,7 +400,7 @@ function Cmd.GotoXPosition(pos)
 	local line = lines[ln]
 	local wordofline = #line
 
-	pos = pos - (paragraph.style.indent or 0)
+	pos = pos - paragraph:getIndentOfLine(ln)
 	if (pos < 0) then
 		pos = 0
 	end
@@ -434,8 +434,7 @@ local function getpos()
 	local cw = Document.cw
 	local word = paragraph[cw]
 	local x, ln, wn = paragraph:getXOffsetOfWord(cw)
-	x = x + GetWidthFromOffset(word, Document.co)
-	x = x + (paragraph.style.indent or 0)
+	x = x + GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(ln)
 
 	return x, ln, lines
 end
@@ -642,14 +641,6 @@ function Cmd.CreateBlankDocumentSet()
 	end
 
 	return false
-end
-
-local function styles()
-	local s = {}
-	for _, style in pairs(DocumentSet.styles) do
-		s[#s+1] = style.name .. " (HTML: " .. style.html ..")"
-	end
-	return s
 end
 
 function Cmd.ChangeParagraphStyle(style)

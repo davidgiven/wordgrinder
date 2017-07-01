@@ -640,7 +640,6 @@ function Cmd.LoadDocumentSet(filename)
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 
-	ResetParagraphStyles()
 	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	QueueRedraw()

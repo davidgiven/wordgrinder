@@ -32,13 +32,13 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.margin: 0
 .clipboard.viewmode: 1
 .documents.1.co: 1
-.documents.1.cp: 3
-.documents.1.cw: 17
+.documents.1.cp: 1
+.documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3592
+.documents.1.wordcount: 3612
 .documents.2.co: 1
 .documents.2.cp: 1
 .documents.2.cw: 1
@@ -164,58 +164,51 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .statusbar: true
 .styles.1.above: 1
 .styles.1.below: 1
+.styles.1.bullet: ""
 .styles.1.desc: "Plain text"
-.styles.1.html: "P"
+.styles.1.firstindent: 0
+.styles.1.indent: 0
 .styles.1.name: "P"
 .styles.2.above: 3
 .styles.2.below: 1
 .styles.2.desc: "Heading #1"
-.styles.2.html: "H1"
 .styles.2.name: "H1"
 .styles.3.above: 2
 .styles.3.below: 1
 .styles.3.desc: "Heading #2"
-.styles.3.html: "H2"
 .styles.3.name: "H2"
 .styles.4.above: 1
 .styles.4.below: 1
 .styles.4.desc: "Heading #3"
-.styles.4.html: "H3"
 .styles.4.name: "H3"
 .styles.5.above: 1
 .styles.5.below: 1
 .styles.5.desc: "Heading #4"
-.styles.5.html: "H4"
 .styles.5.name: "H4"
 .styles.6.above: 1
 .styles.6.below: 1
 .styles.6.desc: "Indented text"
-.styles.6.html: "BLOCKQUOTE"
 .styles.6.indent: 4
 .styles.6.name: "Q"
 .styles.7.above: 1
 .styles.7.below: 1
 .styles.7.bullet: "-"
 .styles.7.desc: "List item with bullet"
-.styles.7.html: "LI"
 .styles.7.indent: 4
 .styles.7.name: "LB"
 .styles.8.above: 1
 .styles.8.below: 1
 .styles.8.desc: "List item without bullet"
-.styles.8.html: "LI"
 .styles.8.indent: 4
 .styles.8.name: "L"
 .styles.9.above: 0
 .styles.9.below: 0
 .styles.9.desc: "Indented text, run together"
-.styles.9.html: "BLOCKQUOTE"
 .styles.9.indent: 4
 .styles.9.name: "V"
 .styles.10.above: 0
 .styles.10.below: 0
 .styles.10.desc: "Preformatted text"
-.styles.10.html: "PRE"
 .styles.10.indent: 4
 .styles.10.name: "PRE"
 .styles.11.above: 0
@@ -226,51 +219,45 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.H1.above: 3
 .styles.H1.below: 1
 .styles.H1.desc: "Heading #1"
-.styles.H1.html: "H1"
 .styles.H1.name: "H1"
 .styles.H2.above: 2
 .styles.H2.below: 1
 .styles.H2.desc: "Heading #2"
-.styles.H2.html: "H2"
 .styles.H2.name: "H2"
 .styles.H3.above: 1
 .styles.H3.below: 1
 .styles.H3.desc: "Heading #3"
-.styles.H3.html: "H3"
 .styles.H3.name: "H3"
 .styles.H4.above: 1
 .styles.H4.below: 1
 .styles.H4.desc: "Heading #4"
-.styles.H4.html: "H4"
 .styles.H4.name: "H4"
 .styles.L.above: 1
 .styles.L.below: 1
 .styles.L.desc: "List item without bullet"
-.styles.L.html: "LI"
 .styles.L.indent: 4
 .styles.L.name: "L"
 .styles.LB.above: 1
 .styles.LB.below: 1
 .styles.LB.bullet: "-"
 .styles.LB.desc: "List item with bullet"
-.styles.LB.html: "LI"
 .styles.LB.indent: 4
 .styles.LB.name: "LB"
 .styles.P.above: 1
 .styles.P.below: 1
+.styles.P.bullet: ""
 .styles.P.desc: "Plain text"
-.styles.P.html: "P"
+.styles.P.firstindent: 0
+.styles.P.indent: 0
 .styles.P.name: "P"
 .styles.PRE.above: 0
 .styles.PRE.below: 0
 .styles.PRE.desc: "Preformatted text"
-.styles.PRE.html: "PRE"
 .styles.PRE.indent: 4
 .styles.PRE.name: "PRE"
 .styles.Q.above: 1
 .styles.Q.below: 1
 .styles.Q.desc: "Indented text"
-.styles.Q.html: "BLOCKQUOTE"
 .styles.Q.indent: 4
 .styles.Q.name: "Q"
 .styles.RAW.above: 0
@@ -281,7 +268,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.V.above: 0
 .styles.V.below: 0
 .styles.V.desc: "Indented text, run together"
-.styles.V.html: "BLOCKQUOTE"
 .styles.V.indent: 4
 .styles.V.name: "V"
 .current: 1
@@ -320,7 +306,7 @@ P That’s all. To apply them, select some text and then use Style→Italic (
 P Tip: to type a new word in a particular character style, make sure nothing’s selected, press CTRL+I, CTRL+B or CTRL+U to toggle the insertion state (look down at the right hand side of the status bar), and then type.
 H3 Paragraph styles
 P WordGrinder supports a number of paragraph styles. See Style→Paragraph Styles (CTRL+P) for the list. Each style applies to a complete paragraph. If you want to see what style each paragraph has set, use Style→Set Margin Mode→Show Paragraph Styles. The style names will be displayed in the left-hand margin.
-P Paragraph styles are not currently customisable, but they may become so in the future.
+P Some basic look-and-feel of how paragraph styles are show can be edited through the dialogue at Style→Set Margin Mode→Edit Paragraph Styles. These only affect how text is shown inside WordGrinder; exported text is unaffected.
 P The RAW paragraph style is interesting as it allows you to embed arbitrary chunks of data into your document which, when exported, are emitted intact into the output file. I use this to insert HTML into documents I’m writing.
 H2 Documents and Document Sets
 P Each WordGrinder file can contain multiple pieces of text. A file is referred to as a Document Set; each piece of text within the Document Set is a Document.

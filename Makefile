@@ -166,6 +166,7 @@ LUASCRIPTS := \
 	src/lua/addons/smartquotes.lua \
 	src/lua/addons/undo.lua \
 	src/lua/addons/spillchocker.lua \
+	src/lua/addons/style-editor.lua \
 	src/lua/menu.lua \
 	src/lua/cli.lua \
 

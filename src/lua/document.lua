@@ -39,22 +39,22 @@ DocumentSetClass =
 			l:purge()
 		end
 	end,
-	
+
 	touch = function(self)
 		self.changed = true
 		self.justchanged = true
 		Document:touch()
 	end,
-	
+
 	clean = function(self)
 		self.changed = nil
 		self.justchanged = nil
 	end,
-	
+
 	getDocumentList = function(self)
 		return self.documents
 	end,
-	
+
 	_findDocument = function(self, name)
 		for i, d in ipairs(self.documents) do
 			if (d.name == name) then
@@ -63,7 +63,7 @@ DocumentSetClass =
 		end
 		return nil
 	end,
-	
+
 	findDocument = function(self, name)
 		local document = self.documents[name]
 		if not document then
@@ -76,66 +76,66 @@ DocumentSetClass =
 		end
 		return document
 	end,
-	
+
 	addDocument = function(self, document, name, index)
 		document.name = name
-		
+
 		local n = self:_findDocument(name) or (#self.documents + 1)
 		self.documents[n] = document
 		self.documents[name] = document
 		if not self.current or (self.current.name == name) then
 			self:setCurrent(name)
 		end
-		
+
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
 	end,
-	
+
 	moveDocumentIndexTo = function(self, name, targetIndex)
 		local n = self:_findDocument(name)
 		if not n then
 			return
 		end
 		local document = self.documents[n]
-		
+
 		table_remove(self.documents, n)
 		table_insert(self.documents, targetIndex, document)
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
 	end,
-	
+
 	deleteDocument = function(self, name)
 		if (#self.documents == 1) then
 			return false
 		end
-		
+
 		local n = self:_findDocument(name)
 		if not n then
 			return
 		end
 		local document = self.documents[n]
-		
+
 		table_remove(self.documents, n)
 		self.documents[name] = nil
-		
+
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
-		
+
 		if (Document == document) then
 			document = self.documents[n]
 			if not document then
 				document = self.documents[#self.documents]
 			end
-			
+
 			self:setCurrent(document.name)
 		end
-		
+
 		return true
 	end,
-	
+
 	setCurrent = function(self, name)
 		-- Ensure any housekeeping on the current document gets done.
-		
+
 		if Document.changed then
 			FireEvent(Event.Changed)
 		end
@@ -148,26 +148,26 @@ DocumentSetClass =
 		self.current = Document
 		ResizeScreen()
 	end,
-	
+
 	renameDocument = function(self, oldname, newname)
 		if self.documents[newname] then
 			return false
 		end
-		
+
 		local d = self.documents[oldname]
 		self.documents[oldname] = nil
 		self.documents[newname] = d
 		d.name = newname
-		
+
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
 		return true
 	end,
-	
+
 	setClipboard = function(self, clipboard)
 		self.clipboard = clipboard
 	end,
-	
+
 	getClipboard = function(self)
 		return self.clipboard
 	end,
@@ -178,24 +178,24 @@ DocumentClass =
 	appendParagraph = function(self, p)
 		self[#self+1] = p
 	end,
-	
+
 	insertParagraphBefore = function(self, paragraph, pn)
 		table.insert(self, pn, paragraph)
 	end,
-	
+
 	deleteParagraphAt = function(self, pn)
 		table.remove(self, pn)
 	end,
-	
+
 	wrap = function(self, width)
 		self.wrapwidth = width
 	end,
-	
+
 	getMarks = function(self)
 		if not self.mp then
 			return
 		end
-		
+
 		local mp1 = self.mp
 		local mw1 = self.mw
 		local mo1 = self.mo
@@ -209,10 +209,10 @@ DocumentClass =
 		   ) then
 			return mp2, mw2, mo2, mp1, mw1, mo1
 		end
-		
+
 		return mp1, mw1, mo1, mp2, mw2, mo2
 	end,
-	
+
 	-- remove any cached data prior to saving
 	purge = function(self)
 		for _, paragraph in ipairs(self) do
@@ -231,36 +231,36 @@ DocumentClass =
 		self.undostack = nil
 		self.redostack = nil
 	end,
-	
+
 	-- calculate space above this paragraph
 	spaceAbove = function(self, pn)
 		local paragraph = self[pn]
 		local paragraphabove = self[pn - 1]
-		
+
 		local sa = paragraph.style.above or 0 -- FIXME
 		local sb = 0
 		if paragraphabove then
 			sb = paragraphabove.style.below or 0 -- FIXME
 		end
-		
+
 		if (sa > sb) then
 			return sa
 		else
 			return sb
 		end
 	end,
-	
+
 	-- calculate space below this paragraph
 	spaceBelow = function(self, pn)
 		local paragraph = self[pn]
 		local paragraphbelow = self[pn + 1]
-		
+
 		local sb = paragraph.style.below or 0 -- FIXME
 		local sa = 0
 		if paragraphbelow then
 			sa = paragraphbelow.style.above or 0 -- FIXME
 		end
-		
+
 		if (sa > sb) then
 			return sa
 		else
@@ -280,51 +280,53 @@ ParagraphClass =
 		for _, w in ipairs(self) do
 			words[#words+1] = w
 		end
-		
+
 		return CreateParagraph(self.style, words)
 	end,
-	
+
 	touch = function(self)
 		self.lines = nil
 		self.wrapwidth = nil
 		self.xs = nil
 	end,
-	
+
 	wrap = function(self, width)
 		width = width or Document.wrapwidth
-		width = width - (self.style.indent or 0)
-		
 		if (self.wrapwidth ~= width) then
 			local lines = {}
 			local line = {wn = 1}
 			local w = 0
 			local xs = {}
 			self.xs = xs
-			
+
+			width = width - self:getIndentOfLine(1)
+
 			for wn, word in ipairs(self) do
 				-- get width of word (including space)
 				local ww = GetStringWidth(word) + 1
-	
+
 				xs[wn] = w
 				w = w + ww
 				if (w >= width) then
 					lines[#lines+1] = line
+					if #lines == 1 then
+						width = width + self:getIndentOfLine(1) - self:getIndentOfLine(2)
+					end
 					line = {wn = wn}
 					w = ww
 					xs[wn] = 0
 				end
-				
+
 				line[#line+1] = wn
 			end
-			
+
 			if (#line > 0) then
 				lines[#lines+1] = line
 			end
-			
-			self.wrapwidth = width
+
 			self.lines = lines
 		end
-		
+
 		return self.lines
 	end,
 
@@ -349,17 +351,17 @@ ParagraphClass =
 
 	renderMarkedLine = function(self, line, x, y, width, pn)
 		width = width or (ScreenWidth - x)
-		
-		local lwn = line.wn		
+
+		local lwn = line.wn
 		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
 
 		local cstyle = stylemarkup[self.style.name] or 0
 		local ostyle = 0
 		for wn, w in ipairs(line) do
 			local s, e
-			
+
 			wn = lwn + wn - 1
-			
+
 			if (pn < mp1) or (pn > mp2) then
 				s = nil
 			elseif (pn > mp1) and (pn < mp2) then
@@ -392,7 +394,7 @@ ParagraphClass =
 					end
 				end
 			end
-			
+
 			local payload = {
 				word = self[w],
 				ostyle = ostyle,
@@ -412,19 +414,29 @@ ParagraphClass =
 			if (wn <= #l) then
 				return ln, wn
 			end
-			
+
 			wn = wn - #l
 		end
-		
+
 		return nil, nil
 	end,
-	
+
+	-- returns: number of characters
+	getIndentOfLine = function(self, ln)
+		local indent
+		if (ln == 1) then
+			indent = self.style.firstindent
+		end
+		indent = indent or self.style.indent or 0
+		return indent
+	end,
+
 	-- returns: word number
 	getWordOfLine = function(self, ln)
 		local lines = self:wrap()
 		return lines[ln].wn
 	end,
-	
+
 	-- returns: X offset, line number, word number in line
 	getXOffsetOfWord = function(self, wn)
 		local lines = self:wrap()
@@ -432,7 +444,7 @@ ParagraphClass =
 		local ln, wn = self:getLineOfWord(wn)
 		return x, ln, wn
 	end,
-	
+
 	sub = function(self, start, count)
 		if not count then
 			count = #self - start + 1
@@ -453,7 +465,7 @@ ParagraphClass =
 		for _, w in ipairs(self) do
 			s[#s+1] = GetWordText(w)
 		end
-		
+
 		return table_concat(s, " ")
 	end
 }
@@ -496,11 +508,11 @@ function GetOffsetFromWidth(s, x)
 			if (ww > x) then
 				return o
 			end
-			
+
 			x = x - ww
 			o = o + charlen
 		end
-		
+
 		return len + 1
 end
 
@@ -520,42 +532,37 @@ local function create_styles()
 		{
 			desc = "Plain text",
 			name = "P",
-			html = "P",
 			above = 1,
 			below = 1,
+			firstindent = 0,
 		},
 		{
 			desc = "Heading #1",
 			name = "H1",
-			html = "H1",
 			above = 3,
 			below = 1,
 		},
 		{
 			desc = "Heading #2",
 			name = "H2",
-			html = "H2",
 			above = 2,
 			below = 1,
 		},
 		{
 			desc = "Heading #3",
 			name = "H3",
-			html = "H3",
 			above = 1,
 			below = 1,
 		},
 		{
 			desc = "Heading #4",
 			name = "H4",
-			html = "H4",
 			above = 1,
 			below = 1,
 		},
 		{
 			desc = "Indented text",
 			name = "Q",
-			html = "BLOCKQUOTE",
 			indent = 4,
 			above = 1,
 			below = 1,
@@ -563,7 +570,6 @@ local function create_styles()
 		{
 			desc = "List item with bullet",
 			name = "LB",
-			html = "LI",
 			above = 1,
 			below = 1,
 			indent = 4,
@@ -572,7 +578,6 @@ local function create_styles()
 		{
 			desc = "List item without bullet",
 			name = "L",
-			html = "LI",
 			above = 1,
 			below = 1,
 			indent = 4,
@@ -580,7 +585,6 @@ local function create_styles()
 		{
 			desc = "Indented text, run together",
 			name = "V",
-			html = "BLOCKQUOTE",
 			indent = 4,
 			above = 0,
 			below = 0
@@ -588,7 +592,6 @@ local function create_styles()
 		{
 			desc = "Preformatted text",
 			name = "PRE",
-			html = "PRE",
 			indent = 4,
 			above = 0,
 			below = 0
@@ -596,20 +599,19 @@ local function create_styles()
 		{
 			desc = "Raw data exported to output file",
 			name = "RAW",
-			html = nil,
 			indent = 0,
 			above = 0,
 			below = 0
 		}
 	}
-	
+
 	for _, s in ipairs(styles) do
 		styles[s.name] = s
 	end
-	
+
 	return styles
 end
-	
+
 function ResetParagraphStyles()
 	DocumentSet.styles = create_styles()
 end
@@ -624,7 +626,7 @@ function CreateDocumentSet()
 		styles = create_styles(),
 		addons = {},
 	}
-	
+
 	setmetatable(ds, {__index = DocumentSetClass})
 	return ds
 end
@@ -639,9 +641,9 @@ function CreateDocument()
 		cw = 1,
 		co = 1,
 	}
-	
+
 	setmetatable(d, {__index = DocumentClass})
-	
+
 	local p = CreateParagraph(DocumentSet.styles["P"], {""})
 	d:appendParagraph(p)
 	return d
