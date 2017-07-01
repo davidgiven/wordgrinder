@@ -110,7 +110,11 @@ function WordProcessor(filename)
 	RedrawScreen()
 
 	if filename then
-		Cmd.LoadDocumentSet(filename)
+		if not Cmd.LoadDocumentSet(filename) then
+			-- As a special case, if we tried to load a document from the command line and it
+			-- doesn't exist, then we prime the document name so that saving the file is easy.
+			DocumentSet.name = filename
+		end
 	else
 		FireEvent(Event.DocumentLoaded)
 	end
