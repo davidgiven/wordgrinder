@@ -15,7 +15,13 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-USE_LUAJIT = n
+ifeq ($(wildcard /etc/redhat-release),)
+	# Non-RH
+	USE_LUAJIT = n
+else
+	# Red Hat/Fedora
+	USE_LUAJIT = y
+endif
 
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
@@ -37,16 +43,26 @@ all: unix
 else
 	LIBROOT ?= /usr/lib
 	INCROOT := /usr
+	# Redhat and Debian systems have different names for the lua packages
+	ifeq ($(wildcard /etc/redhat-release),)
+		# Debian
+		LUA_PACKAGE = lua5.2
+	else
+		# Redhat, Fedora
+		LUA_PACKAGE = lua
+	endif
 	ifeq ($(USE_LUAJIT),y)
 		LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
 		LUA_LIB := -lluajit-5.1
+		LUA_PATH := $(hide)/bin/lua-5.1
 		# The ImmutabliseArray() code, used by the debug version of
 		# WordGrinder to ensure we don't modify stuff we shouldn't,
 		# uses new 5.2 metamethods and doesn't work on LuaJIT.
 		TESTER = bin/wordgrinder
 	else
-		LUA_INCLUDE ?= $(INCROOT)/include/lua5.2
-		LUA_LIB ?= -llua5.2
+		LUA_INCLUDE := $(INCROOT)/include/lua5.2
+		LUA_LIB := -llua5.2
+		LUA_PATH := $(hide)lua
 		TESTER = bin/wordgrinder-debug
 	endif
 
@@ -173,8 +189,8 @@ LUASCRIPTS := \
 $(OBJ)/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
 	@mkdir -p $(OBJ)
-	$(hide)lua tools/multibin2c.lua script_table $^ > $@
-
+	$(LUA_PATH) tools/multibin2c.lua script_table $^ > $@
+	
 clean::
 	@echo CLEAN $(OBJ)/luascripts.c
 	@rm -f $(OBJ)/luascripts.c
