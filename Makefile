@@ -15,7 +15,16 @@ WINCC = mingw32-gcc.exe
 WINDRES = windres.exe
 MAKENSIS = makensis
 
-USE_LUAJIT = n
+# Do we build with debug symbols?
+DEBUGINFO = n
+
+# Detect Fedora systems and adjust accordingly
+ifneq ($(wildcard /etc/fedora-release),)
+	# Fedora uses lua 5.3, so we'll use luaJIT instead
+	USE_LUAJIT = y
+else
+	USE_LUAJIT = n
+endif
 
 ifneq ($(findstring Windows,$(OS)),)
 	OS = windows
@@ -38,8 +47,14 @@ else
 	LIBROOT ?= /usr/lib
 	INCROOT := /usr
 	ifeq ($(USE_LUAJIT),y)
-		LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
+		# Fedora 26 uses a newer version of luaJIT, so check for that
+		ifneq ($(wildcard $(INCROOT)/include/luajit-2.1),)
+			LUA_INCLUDE := $(INCROOT)/include/luajit-2.1
+		else
+			LUA_INCLUDE := $(INCROOT)/include/luajit-2.0
+		endif
 		LUA_LIB := -lluajit-5.1
+		LUA_PATH := $(hide)/bin/lua-5.1
 		# The ImmutabliseArray() code, used by the debug version of
 		# WordGrinder to ensure we don't modify stuff we shouldn't,
 		# uses new 5.2 metamethods and doesn't work on LuaJIT.
@@ -47,6 +62,7 @@ else
 	else
 		LUA_INCLUDE ?= $(INCROOT)/include/lua5.2
 		LUA_LIB ?= -llua5.2
+		LUA_PATH := $(hide)lua
 		TESTER = bin/wordgrinder-debug
 	endif
 
@@ -84,6 +100,10 @@ override CFLAGS += \
 	-Werror=implicit-function-declaration \
 	-fdata-sections \
 	--std=gnu99
+
+ifeq ($(DEBUGINFO),y)
+	override CFLAGS += -g
+endif
 
 override LDFLAGS += \
 
@@ -173,8 +193,8 @@ LUASCRIPTS := \
 $(OBJ)/luascripts.c: $(LUASCRIPTS)
 	@echo SCRIPTS
 	@mkdir -p $(OBJ)
-	$(hide)lua tools/multibin2c.lua script_table $^ > $@
-
+	$(LUA_PATH) tools/multibin2c.lua script_table $^ > $@
+	
 clean::
 	@echo CLEAN $(OBJ)/luascripts.c
 	@rm -f $(OBJ)/luascripts.c
