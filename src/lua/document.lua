@@ -237,10 +237,10 @@ DocumentClass =
 		local paragraph = self[pn]
 		local paragraphabove = self[pn - 1]
 
-		local sa = paragraph.style.above or 0 -- FIXME
+		local sa = DocumentStyles[paragraph.style].above or 0 -- FIXME
 		local sb = 0
 		if paragraphabove then
-			sb = paragraphabove.style.below or 0 -- FIXME
+			sb = DocumentStyles[paragraphabove.style].below or 0 -- FIXME
 		end
 
 		if (sa > sb) then
@@ -255,10 +255,10 @@ DocumentClass =
 		local paragraph = self[pn]
 		local paragraphbelow = self[pn + 1]
 
-		local sb = paragraph.style.below or 0 -- FIXME
+		local sb = DocumentStyles[paragraph.style].below or 0 -- FIXME
 		local sa = 0
 		if paragraphbelow then
-			sa = paragraphbelow.style.above or 0 -- FIXME
+			sa = DocumentStyles[paragraphbelow.style].above or 0 -- FIXME
 		end
 
 		if (sa > sb) then
@@ -331,7 +331,7 @@ ParagraphClass =
 	end,
 
 	renderLine = function(self, line, x, y)
-		local cstyle = stylemarkup[self.style.name] or 0
+		local cstyle = stylemarkup[self.style] or 0
 		local ostyle = 0
 		local xs = self.xs
 		for _, wn in ipairs(line) do
@@ -355,7 +355,7 @@ ParagraphClass =
 		local lwn = line.wn
 		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
 
-		local cstyle = stylemarkup[self.style.name] or 0
+		local cstyle = stylemarkup[self.style] or 0
 		local ostyle = 0
 		for wn, w in ipairs(line) do
 			local s, e
@@ -425,9 +425,9 @@ ParagraphClass =
 	getIndentOfLine = function(self, ln)
 		local indent
 		if (ln == 1) then
-			indent = self.style.firstindent
+			indent = DocumentStyles[self.style].firstindent
 		end
-		indent = indent or self.style.indent or 0
+		indent = indent or DocumentStyles[self.style].indent or 0
 		return indent
 	end,
 
@@ -483,7 +483,11 @@ function CreateParagraph(style, ...)
 		end
 	end
 
-	words.style = style or DocumentSet.styles["P"]
+	if type(style) ~= "string" then
+		error("paragraph style is not a string")
+	end
+	words.style = style
+
 	setmetatable(words, {__index = ParagraphClass})
 	return words
 end
@@ -526,7 +530,7 @@ function GetWordSimpleText(s)
 	return s
 end
 
-local function create_styles()
+function CreateDocumentStyles()
 	local styles =
 	{
 		{
@@ -612,10 +616,6 @@ local function create_styles()
 	return styles
 end
 
-function ResetParagraphStyles()
-	DocumentSet.styles = create_styles()
-end
-
 function CreateDocumentSet()
 	local ds =
 	{
@@ -623,7 +623,7 @@ function CreateDocumentSet()
 		statusbar = true,
 		idletime = 3,
 		documents = {},
-		styles = create_styles(),
+		styles = DocumentStyles,
 		addons = {},
 	}
 
@@ -644,7 +644,7 @@ function CreateDocument()
 
 	setmetatable(d, {__index = DocumentClass})
 
-	local p = CreateParagraph(DocumentSet.styles["P"], {""})
+	local p = CreateParagraph("P", {""})
 	d:appendParagraph(p)
 	return d
 end

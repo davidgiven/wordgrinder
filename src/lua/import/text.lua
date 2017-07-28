@@ -23,10 +23,10 @@ local function loadtextfile(fp)
 	for l in fp:lines() do
 		l = CanonicaliseString(l)
 		l = l:gsub("%c+", "")
-		local p = CreateParagraph(DocumentSet.styles["P"], ParseStringIntoWords(l))
+		local p = CreateParagraph("P", ParseStringIntoWords(l))
 		document:appendParagraph(p)
 	end
-	
+
 	return document
 end
 

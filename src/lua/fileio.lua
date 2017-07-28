@@ -86,7 +86,7 @@ local function writetostream(object, write, writeo)
 			write("\n")
 
 			for _, p in ipairs(d) do
-				write(p.style.name)
+				write(p.style)
 
 				for _, s in ipairs(p) do
 					write(" ")
@@ -533,7 +533,6 @@ function loadfromstreamt(fp)
 				end
 
 				local words = SplitString(line, " ")
-				words[1] = data.styles[words[1]]
 				local para = CreateParagraph(unpack(words))
 
 				doc[index] = para
@@ -640,7 +639,6 @@ function Cmd.LoadDocumentSet(filename)
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 
-	RebuildParagraphStylesMenu(DocumentSet.styles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	QueueRedraw()
 
@@ -663,7 +661,7 @@ function UpgradeDocument(oldversion)
 	if (oldversion < 2) then
 		-- Update wordcount.
 
-		for _, document in ipairs(DocumentSet) do
+		for _, document in ipairs(DocumentSet.documents) do
 			local wc = 0
 
 			for _, p in ipairs(document) do
@@ -692,5 +690,22 @@ function UpgradeDocument(oldversion)
 		-- This is the version which made WordClass disappear. The
 		-- conversion's actually done as part of the stream loader
 		-- (where WORDCLASS and BRIEFWORD are parsed).
+	end
+
+	-- Upgrade version 6 to 7.
+
+	if (oldversion < 7) then
+		-- This is the version where DocumentSet.styles vanished. Each paragraph.style
+		-- is now a string containing the name of the style; styles are looked up on
+		-- demand.
+
+		for _, document in ipairs(DocumentSet.documents) do
+			for _, p in ipairs(document) do
+				if (type(p.style) ~= "string") then
+					p.style = p.style.name
+				end
+			end
+		end
+		DocumentSet.styles = nil
 	end
 end

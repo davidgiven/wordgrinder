@@ -61,19 +61,19 @@ Form.WrappedLabel = makewidgetclass
 {
 	draw = function(self)
 		local words = ParseStringIntoWords(self.value)
-		local paragraph = CreateParagraph(nil, words)
+		local paragraph = CreateParagraph("P", words)
 		local lines = paragraph:wrap(self.realwidth)
-		
+
 		local s = SpellcheckerOff()
 		for i = 1, #lines do
 			paragraph:renderLine(lines[i], self.realx1, self.realy1+i-1)
 		end
 		SpellcheckerRestore(s)
 	end,
-	
+
 	calculate_height = function(self)
 		local words = ParseStringIntoWords(self.value)
-		local paragraph = CreateParagraph(nil, words)
+		local paragraph = CreateParagraph("P", words)
 		local lines = paragraph:wrap(self.realwidth)
 		return #lines
 	end,
@@ -81,7 +81,7 @@ Form.WrappedLabel = makewidgetclass
 
 Form.Label = makewidgetclass {
 	align = Form.Centre,
-	
+
 	draw = function(self)
 		local xo
 		if (self.align == Form.Centre) then
@@ -91,7 +91,7 @@ Form.Label = makewidgetclass {
 		elseif (self.align == Form.Right) then
 			xo = self.realwidth - GetStringWidth(self.value)
 		end
-		
+
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		Write(self.realx1 + xo, self.realy1, self.value)
 	end
@@ -106,7 +106,7 @@ Form.Checkbox = makewidgetclass {
 	value = false,
 	label = "Checkbox",
 	focusable = true,
-	
+
 	draw = function(self)
 		local s
 		if self.value then
@@ -114,37 +114,37 @@ Form.Checkbox = makewidgetclass {
 		else
 			s = "> NO "
 		end
-				
+
 		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
-		
+
 		SetBright()
 		Write(self.realx2, self.realy1, s)
 		SetNormal()
-				
+
 		if self.focus then
 			GotoXY(self.realx2, self.realy1)
 		end
 	end,
-	
+
 	[" "] = checkbox_toggle
 }
 
 Form.TextField = makewidgetclass {
 	focusable = true,
-	
+
 	init = function(self)
 		self.cursor = self.cursor or (self.value:len() + 1)
 		self.offset = self.offset or 1
 	end,
-	
+
 	draw = function(self)
 		SetBright()
 		Write(self.realx1, self.realy1 + 1, string_rep("▔", self.realwidth))
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		SetNormal()
-		
+
 		-- If the cursor is to the left of the visible area, adjust.
-		
+
 		if (self.cursor < self.offset) then
 			self.offset = self.cursor
 		end
@@ -152,24 +152,24 @@ Form.TextField = makewidgetclass {
 		-- If the cursor is to the right of the visible area, adjust. (This is
 		-- very crude, but I'm not sure there's a more elegant way of doing
 		-- it.)
-		
+
 		while true do
 			local xo = GetStringWidth(self.value:sub(self.offset, self.cursor))
 			if (xo <= self.realwidth) then
 				break
 			end
-			
+
 			local b = GetBytesOfCharacter(self.value:byte(self.offset))
 			self.offset = self.offset + b
 		end
-		
+
 		-- Draw the visible bit of the string.
-			
+
 		local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
 		SetBright()
 		Write(self.realx1, self.realy1, s)
 		SetNormal()
-		
+
 		if self.focus then
 			GotoXY(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
 		end
@@ -185,35 +185,35 @@ Form.TextField = makewidgetclass {
 			end
 			self:draw()
 		end
-		
+
 		return "nop"
 	end,
-	
+
 	["KEY_RIGHT"] = function(self, key)
-		if (self.cursor <= self.value:len()) then	
+		if (self.cursor <= self.value:len()) then
 			self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
 			self:draw()
 		end
-		
+
 		return "nop"
 	end,
 
 	["KEY_HOME"] = function(self, key)
 		self.cursor = 1
 		self:draw()
-		
+
 		return "nop"
 	end,
-			
+
 	["KEY_END"] = function(self, key)
 		self.cursor = self.value:len() + 1
 		self:draw()
-		
+
 		return "nop"
 	end,
 
 	["KEY_BACKSPACE"] = function(self, key)
-		if (self.cursor > 1) then	
+		if (self.cursor > 1) then
 			local w
 			while true do
 				self.cursor = self.cursor - 1
@@ -227,10 +227,10 @@ Form.TextField = makewidgetclass {
 				self.value:sub(self.cursor + w)
 			self:draw()
 		end
-		
+
 		return "nop"
 	end,
-				
+
 	["KEY_DELETE"] = function(self, key)
 		local v = self.value:byte(self.cursor)
 		if v then
@@ -239,25 +239,25 @@ Form.TextField = makewidgetclass {
 				self.value:sub(self.cursor + w)
 			self:draw()
 		end
-		
+
 		return "nop"
 	end,
-	
+
 	["KEY_^U"] = function(self, key)
 		self.cursor = 1
 		self.offset = 1
 		self.value = ""
 		self:draw()
-		
+
 		return "nop"
 	end,
-		
+
 	key = function(self, key)
 		if not key:match("^KEY_") then
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
 			self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
 			self:draw()
-		
+
 			return "nop"
 		end
 	end,
@@ -265,38 +265,38 @@ Form.TextField = makewidgetclass {
 
 Form.Browser = makewidgetclass {
 	focusable = true,
-	
+
 	init = function(self)
 		self.cursor = self.cursor or 1
 		self.offset = self.offset or 0
 	end,
-	
+
 	_adjustOffset = function(self)
 		local h = self.realheight
-		
+
 		if (self.offset == 0) then
 			self.offset = self.cursor - int(h/2)
 		end
 
-		self.offset = min(self.offset, self.cursor)		
+		self.offset = min(self.offset, self.cursor)
 		self.offset = max(self.offset, self.cursor - (h-2))
-		self.offset = min(self.offset, #self.data - (h-2)) 
+		self.offset = min(self.offset, #self.data - (h-2))
 		self.offset = max(self.offset, 1)
 	end,
-	
+
 	changed = function(self)
 		return "nop"
 	end,
-	
+
 	draw = function(self)
 		local x = self.realx1
 		local y = self.realy1
 		local w = self.realwidth
 		local h = self.realheight
-			
+
 		-- Draw the box.
-		
-		do	
+
+		do
 			local border = string_rep("─", w - 2)
 			SetBright()
 			Write(x, y, "┌")
@@ -312,10 +312,10 @@ Form.Browser = makewidgetclass {
 			SetNormal()
 		end
 
-		self:_adjustOffset()		
-		
+		self:_adjustOffset()
+
 		-- Draw the data.
-		
+
 		local space = string_rep(" ", w - 2)
 		for i = 0, h-2 do
 			local index = self.offset + i
@@ -323,14 +323,14 @@ Form.Browser = makewidgetclass {
 			if not item then
 				break
 			end
-			
+
 			if (index == self.cursor) then
 				SetReverse()
 			else
 				SetNormal()
 			end
-			
-			Write(x+1, y+1+i, space)			
+
+			Write(x+1, y+1+i, space)
 			local s = GetBoundedString(item.label, w-4)
 			Write(x+2, y+1+i, s)
 
@@ -348,48 +348,48 @@ Form.Browser = makewidgetclass {
 		end
 		SetNormal()
 	end,
-	
+
 	["KEY_UP"] = function(self, key)
 		if (self.cursor > 1) then
 			self.cursor = self.cursor - 1
 			self:draw()
 			return self:changed()
 		end
-		
+
 		return "nop"
 	end,
-	
+
 	["KEY_DOWN"] = function(self, key)
 		if (self.cursor < #self.data) then
 			self.cursor = self.cursor + 1
 			self:draw()
 			return self:changed()
 		end
-		
+
 		return "nop"
 	end,
-	
+
 	["KEY_PGUP"] = function(self, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor - int(self.realheight/2)
 		if (self.cursor < 1) then
 			self.cursor = 1
 		end
-		
+
 		if (self.cursor ~= oldcursor) then
 			self:draw()
 			return self:changed()
 		end
 		return "nop"
 	end,
-	
+
 	["KEY_PGDN"] = function(self, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor + int(self.realheight/2)
 		if (self.cursor > #self.data) then
 			self.cursor = #self.data
 		end
-		
+
 		if (self.cursor ~= oldcursor) then
 			self:draw()
 			return self:changed()
@@ -407,20 +407,20 @@ local standard_actions =
 				if (f == 0) then
 					f = #dialogue
 				end
-	
+
 				local widget = dialogue[f]
 				if widget.focusable then
 					dialogue.focus = f
 					return "redraw"
 				end
-			
+
 				f = f - 1
 			end
 		end
-		
+
 		return "nop"
 	end,
-	
+
 	["KEY_DOWN"] = function(dialogue, key)
 		if dialogue.focus then
 			local f = dialogue.focus + 1
@@ -428,17 +428,17 @@ local standard_actions =
 				if (f > #dialogue) then
 					f = 1
 				end
-	
+
 				local widget = dialogue[f]
 				if widget.focusable then
 					dialogue.focus = f
 					return "redraw"
 				end
-			
+
 				f = f + 1
 			end
 		end
-		
+
 		return "nop"
 	end
 }
@@ -464,11 +464,11 @@ end
 
 function Form.Run(dialogue, redraw, helptext)
 	-- Ensure the screen is properly sized.
-	
+
 	ResizeScreen()
-	
+
 	-- Find a widget to give the focus to.
-	
+
 	if not dialogue.focus then
 		for i, widget in ipairs(dialogue) do
 			if widget.focusable then
@@ -477,29 +477,29 @@ function Form.Run(dialogue, redraw, helptext)
 			end
 		end
 	end
-	
+
 	-- Initialise any widgets that need it.
-	
+
 	for _, widget in ipairs(dialogue) do
 		if widget.init then
 			widget:init()
 		end
 	end
-	
+
 	-- Redraw the backdrop.
-	
+
 	if redraw then
 		redraw()
 	end
-	
+
 	-- Size the dialogue.
-	
+
 	if (dialogue.width == Form.Large) then
 		dialogue.realwidth = int(ScreenWidth * 6/7)
 	else
 		dialogue.realwidth = dialogue.width
 	end
-	
+
 	if (dialogue.height == Form.Large) then
 		dialogue.realheight = int(ScreenHeight * 5/6)
 	else
@@ -507,45 +507,45 @@ function Form.Run(dialogue, redraw, helptext)
 	end
 
 	-- Is this a stretchy dialogue?
-			
+
 	if dialogue.stretchy then
 		-- Automatically scale the height depending on a 'stretchy' widget.
-		
+
 		for _, widget in ipairs(dialogue) do
 			if (widget.y1 > 0) and (widget.y2 < 0) then
 				widget.realx1 = resolvesize(widget.x1, dialogue.realwidth)
 				widget.realx2 = resolvesize(widget.x2, dialogue.realwidth)
-				widget.realwidth = widget.realx2 - widget.realx1 
-			
+				widget.realwidth = widget.realx2 - widget.realx1
+
 				local h = 1
 				if widget.calculate_height then
 					h = widget:calculate_height()
 				end
-				
+
 				dialogue.realheight = dialogue.height + h
 				break
 			end
 		end
 	end
-	
+
 	-- Place the dialogue.
-	
+
 	dialogue.realx = int(ScreenWidth/2 - dialogue.realwidth/2)
 	dialogue.realy = int(ScreenHeight/2 - dialogue.realheight/2)
-	
+
 	-- Place all widgets in the dialogue.
-	
+
 	for _, widget in ipairs(dialogue) do
 		widget.realx1 = resolvesize(widget.x1, dialogue.realwidth) + dialogue.realx
 		widget.realy1 = resolvesize(widget.y1, dialogue.realheight) + dialogue.realy
 		widget.realx2 = resolvesize(widget.x2, dialogue.realwidth) + dialogue.realx
 		widget.realy2 = resolvesize(widget.y2, dialogue.realheight) + dialogue.realy
-		widget.realwidth = widget.realx2 - widget.realx1 
-		widget.realheight = widget.realy2 - widget.realy1 
+		widget.realwidth = widget.realx2 - widget.realx1
+		widget.realheight = widget.realy2 - widget.realy1
 	end
-	
+
 	-- Draw the dialogue itself.
-	
+
 	do
 		local sizeadjust = 0
 		if helptext then
@@ -560,36 +560,36 @@ function Form.Run(dialogue, redraw, helptext)
 				dialogue.realwidth, "<"..helptext..">")
 		end
 	end
-		
+
 	-- Draw the widgets.
-	
+
 	GotoXY(ScreenWidth-1, ScreenHeight-1)
 	for i, widget in ipairs(dialogue) do
 		widget.focus = (i == dialogue.focus)
 		widget:draw()
 	end
-	
+
 	-- Process keys.
 
 	while true do
 		local key = wg.getchar()
-		
+
 		if (key == "KEY_RESIZE") then
 			ResizeScreen()
 			return Form.Run(dialogue, redraw, helptext)
 		end
-		
+
 		local action = nil
 		if dialogue.focus then
 			local w = dialogue[dialogue.focus]
 			action = findaction(w, w, key)
 		end
-		
+
 		if not action then
 			action = findaction(dialogue, dialogue, key) or
 				findaction(standard_actions, dialogue, key)
 		end
-			
+
 		if (action == "redraw") then
 			return Form.Run(dialogue, redraw, helptext)
 		elseif (action == "cancel") then

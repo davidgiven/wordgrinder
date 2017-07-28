@@ -33,7 +33,7 @@ function CreateImporter(document)
 	local wbuffer
 	local oldattr
 	local attr
-	
+
 	return
 	{
 		reset = function(self)
@@ -46,20 +46,20 @@ function CreateImporter(document)
 		style_on = function(self, a)
 			attr = bitor(attr, a)
 		end,
-	
+
 		style_off = function(self, a)
 			attr = bitxor(bitor(attr, a), a)
 		end,
-	
+
 		text = function(self, t)
 			if (oldattr ~= attr) then
 				wbuffer[#wbuffer + 1] = string_char(16 + attr)
 				oldattr = attr
 			end
-		
+
 			wbuffer[#wbuffer + 1] = t
 		end,
-	 
+
 		flushword = function(self, force)
 			if (#wbuffer > 0) or force then
 				local s = table_concat(wbuffer)
@@ -68,18 +68,18 @@ function CreateImporter(document)
 				oldattr = 0
 			end
 		end,
-	
+
 		flushparagraph = function(self, style)
 			style = style or "P"
-			
+
 			if (#wbuffer > 0) then
 				self:flushword()
 			end
-			
+
 			if (#pbuffer > 0) then
-				local p = CreateParagraph(DocumentSet.styles[style], pbuffer)
+				local p = CreateParagraph(style, pbuffer)
 				document:appendParagraph(p)
-				
+
 				pbuffer = {}
 			end
 		end
@@ -95,34 +95,34 @@ function ImportFileWithUI(filename, title, callback)
 			return false
 		end
 	end
-	
-	ImmediateMessage("Importing...")	
+
+	ImmediateMessage("Importing...")
 
 	-- Actually import the file.
-	
+
 	local fp = io.open(filename)
 	if not fp then
 		return nil
 	end
-	
+
 	local document = callback(fp)
 	if not document then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")
 		QueueRedraw()
 		return false
 	end
-		
+
 	fp:close()
-	
+
 	-- All the importers produce a blank line at the beginning of the
 	-- document (the default content made by CreateDocument()). Remove it.
-	
+
 	if (#document > 1) then
 		document:deleteParagraphAt(1)
 	end
-	
+
 	-- Add the document to the document set.
-	
+
 	local docname = Leafname(filename)
 
 	if DocumentSet.documents[docname] then
@@ -135,7 +135,7 @@ function ImportFileWithUI(filename, title, callback)
 			end
 		end
 	end
-	
+
 	DocumentSet:addDocument(document, docname)
 	DocumentSet:setCurrent(docname)
 

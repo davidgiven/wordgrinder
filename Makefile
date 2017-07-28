@@ -68,7 +68,7 @@ all: unix x11unix
 endif
 
 VERSION := 0.6.0
-FILEFORMAT := 6
+FILEFORMAT := 7
 DATE := $(shell date +'%-d %B %Y')
 
 OBJ = .obj/lj_$(USE_LUAJIT)
@@ -484,6 +484,7 @@ $(eval $(call run-test, tests/load-0.3.3.lua))
 $(eval $(call run-test, tests/load-0.4.1.lua))
 $(eval $(call run-test, tests/load-0.5.3.lua))
 $(eval $(call run-test, tests/load-0.6.lua))
+$(eval $(call run-test, tests/load-0.6-v6.lua))
 $(eval $(call run-test, tests/load-failed.lua))
 $(eval $(call run-test, tests/move-while-selected.lua))
 $(eval $(call run-test, tests/parse-string-into-words.lua))

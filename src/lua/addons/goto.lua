@@ -14,7 +14,7 @@ local function gotobrowser(data, index)
 		data = data,
 		cursor = index
 	}
-	
+
 	local dialogue =
 	{
 		title = "Table of Contents",
@@ -25,16 +25,16 @@ local function gotobrowser(data, index)
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
-		
+
 		Form.Label {
 			x1 = 1, y1 = 1,
 			x2 = -1, y2 = 1,
 			value = "Select heading to jump to:"
 		},
-		
+
 		browser,
 	}
-	
+
 	local result = Form.Run(dialogue, RedrawScreen,
 		"RETURN to select item, CTRL+C to cancel")
 	QueueRedraw()
@@ -47,12 +47,12 @@ end
 
 function Cmd.Goto()
 	ImmediateMessage("Scanning document...")
-	
+
 	local data = {}
 	local levelcount = {0, 0, 0, 0}
 	local currentheading = 1
 	for paran, para in ipairs(Document) do
-		local _, _, level = para.style.name:find("^H(%d)$") 
+		local _, _, level = para.style:find("^H(%d)$")
 		if level then
 			level = tonumber(level)
 
@@ -70,7 +70,7 @@ function Cmd.Goto()
 			end
 			s[#s+1] = " "
 			s[#s+1] = para:asString()
-			
+
 			data[#data+1] =
 			{
 				label = table_concat(s),
@@ -79,15 +79,15 @@ function Cmd.Goto()
 
 			if (paran <= Document.cp) then
 				currentheading = #data
-			end		
+			end
 		end
 	end
-	
+
 	if (#data == 0) then
 		ModalMessage("No contents available", "You must have some heading paragraphs in your document to use the table of contents.")
-		return false		
+		return false
 	end
-	
+
 	local result = gotobrowser(data, currentheading)
 	QueueRedraw()
 
@@ -97,6 +97,6 @@ function Cmd.Goto()
 		Document.co = 1
 		return true
 	end
-	
+
 	return false
 end

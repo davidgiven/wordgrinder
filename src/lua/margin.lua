@@ -25,20 +25,20 @@ local style_name_controller =
 {
 	attach = function(self)
 		local m = 0
-		
+
 		for _, style in pairs(DocumentSet.styles) do
 			local mm = GetStringWidth(style.name)
 			if (mm > m) then
 				m = mm
 			end
 		end
-		
+
 		Document.margin = m + 1
 		NonmodalMessage("Margin now displays paragraph styles.")
 	end,
-	
+
 	getcontent = function(self, pn, paragraph)
-		return paragraph.style.name
+		return paragraph.style
 	end
 }
 
@@ -48,17 +48,17 @@ local paragraph_number_controller =
 		local cb = function()
 			Document.margin = int(math.log10(#Document)) + 3
 		end
-		
+
 		self.token = AddEventListener(Event.Changed, cb)
 		cb()
 		NonmodalMessage("Margin now displays paragraph numbers.")
 	end,
-	
+
 	detach = function(self)
 		RemoveEventListener(self.token)
 		self.token = nil
 	end,
-	
+
 	getcontent = function(self, pn, paragraph)
 		return tostring(pn)
 	end
@@ -70,13 +70,13 @@ local word_count_controller =
 		Document.margin = 5
 		NonmodalMessage("Margin now displays word counts.")
 	end,
-	
+
 	getcontent = function(self, pn, paragraph)
 		return tostring(#paragraph)
 	end
 }
 
-MarginControllers = 
+MarginControllers =
 {
 	[1] = no_margin_controller,
 	[2] = style_name_controller,
@@ -85,7 +85,7 @@ MarginControllers =
 }
 
 --- Sets a specific margin mode for the current document.
--- 
+--
 -- @param mode               the new margin mode
 
 function SetMarginMode(mode)
@@ -93,13 +93,13 @@ function SetMarginMode(mode)
 	if controller.detach then
 		controller:detach()
 	end
-	
+
 	Document.viewmode = mode
 	controller = MarginControllers[Document.viewmode]
 	if controller.attach then
 		controller:attach()
 	end
-	
+
 	DocumentSet:touch()
 	ResizeScreen()
 end

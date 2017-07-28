@@ -47,11 +47,12 @@ function QueueRedraw()
 end
 
 function ResetDocumentSet()
+	DocumentStyles = CreateDocumentStyles()
 	DocumentSet = CreateDocumentSet()
 	DocumentSet.menu = CreateMenu()
 	Document = CreateDocument()
 	DocumentSet:addDocument(CreateDocument(), "main")
-	RebuildParagraphStylesMenu(DocumentSet.styles)
+	RebuildParagraphStylesMenu(DocumentStyles)
 	RebuildDocumentsMenu(DocumentSet.documents)
 	DocumentSet:purge()
 	DocumentSet:clean()

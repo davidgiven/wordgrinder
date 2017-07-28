@@ -15,10 +15,10 @@ local time = wg.time
 
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
- 
+
 function ExportFileUsingCallbacks(document, cb)
 	cb.prologue()
-	
+
 	local listmode = false
 	local rawmode = false
 	local italic, underline, bold
@@ -26,19 +26,19 @@ function ExportFileUsingCallbacks(document, cb)
 	local firstword
 	local wordbreak
 	local emptyword
-	
+
 	local wordwriter = function (style, text)
 		italic = bit(style, ITALIC)
 		underline = bit(style, UNDERLINE)
 		bold = bit(style, BOLD)
-		
+
 		local writer
 		if rawmode then
 			writer = cb.rawtext
 		else
 			writer = cb.text
 		end
-		
+
 		if not italic and olditalic then
 			cb.italic_off()
 		end
@@ -48,12 +48,12 @@ function ExportFileUsingCallbacks(document, cb)
 		if not bold and oldbold then
 			cb.bold_off()
 		end
-		
+
 		if wordbreak then
 			writer(' ')
 			wordbreak = false
 		end
-	
+
 		if bold and not oldbold then
 			cb.bold_on()
 		end
@@ -72,9 +72,8 @@ function ExportFileUsingCallbacks(document, cb)
 	end
 
 	for _, paragraph in ipairs(Document) do
-		local style = paragraph.style
-		local name = style.name
-		
+		local name = paragraph.style
+
 		if (name == "L") or (name == "LB") then
 			if not listmode then
 				cb.list_start()
@@ -84,16 +83,16 @@ function ExportFileUsingCallbacks(document, cb)
 			cb.list_end()
 			listmode = false
 		end
-		
+
 		rawmode = (name == "RAW")
-		
+
 		cb.paragraph_start(name)
-	
+
 		if (#paragraph == 1) and (#paragraph[1] == 0) then
 			cb.notext()
 		else
 			firstword = true
-			wordbreak = false	
+			wordbreak = false
 			olditalic = false
 			oldunderline = false
 			oldbold = false
@@ -104,7 +103,7 @@ function ExportFileUsingCallbacks(document, cb)
 				else
 					wordbreak = true
 				end
-				
+
 				emptyword = true
 				italic = false
 				underline = false
@@ -125,7 +124,7 @@ function ExportFileUsingCallbacks(document, cb)
 				cb.bold_off()
 			end
 		end
-		
+
 		cb.paragraph_end(name)
 	end
 	if listmode then
@@ -149,7 +148,7 @@ function ExportFileWithUI(filename, title, extension, callback)
 		else
 			filename = "(unnamed)"
 		end
-			
+
 		filename = FileBrowser(title, "Export as:", true,
 			filename)
 		if not filename then
@@ -159,7 +158,7 @@ function ExportFileWithUI(filename, title, extension, callback)
 			filename = filename .. extension
 		end
 	end
-	
+
 	ImmediateMessage("Exporting...")
 	local fp, e = io.open(filename, "w")
 	if not fp then
@@ -167,15 +166,15 @@ function ExportFileWithUI(filename, title, extension, callback)
 		QueueRedraw()
 		return false
 	end
-	
+
 	local fpw = fp.write
 	local writer = function(...)
 		fpw(fp, ...)
 	end
-	
+
 	callback(writer, Document)
 	fp:close()
-	
+
 	QueueRedraw()
 	return true
 end

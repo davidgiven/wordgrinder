@@ -29,7 +29,7 @@ do
 			filename = find_default_dictionary()
 		}
 	end
-	
+
 	AddEventListener(Event.RegisterAddons, cb)
 end
 
@@ -68,13 +68,13 @@ local function get_user_dictionary_document()
 				..USER_DICTIONARY_NAME.."'.")
 
 		d[1] = CreateParagraph(
-				DocumentSet.styles["P"],
+				"P",
 				SplitString("This is your user dictionary --- place words, "
 						.. "one at a time, in V paragraphs and they will be "
 						.. "considered valid in your document.", "%s")
 			)
 
-		AddEventListener(Event.DocumentModified, 
+		AddEventListener(Event.DocumentModified,
 			function(self, token, document)
 				if (document == d) then
 					user_dictionary_document_modified(d)
@@ -92,7 +92,7 @@ function GetUserDictionary()
 
 		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
-			if (p.style.name == "V") then
+			if (p.style == "V") then
 				local w = GetWordSimpleText(p[1])
 				user_dictionary_cache[w] = true
 			end
@@ -129,7 +129,7 @@ function IsWordMisspelt(word)
 	if settings.enabled then
 		local misspelt = true
 		local s = GetWordSimpleText(word)
-		if (s == "") 
+		if (s == "")
 			or (not s:find("[a-zA-Z]"))
 			or (#s < 3)
 			or (settings.usesystemdictionary and GetSystemDictionary()[s])
@@ -153,7 +153,7 @@ function Cmd.AddToUserDictionary()
 		if (not GetUserDictionary()[word]) and
 				(not GetSystemDictionary()[word]) then
 			local d = get_user_dictionary_document()
-			d:appendParagraph(CreateParagraph(DocumentSet.styles["V"], word))
+			d:appendParagraph(CreateParagraph("V", word))
 			d:touch()
 			user_dictionary_cache = nil
 			NonmodalMessage("Word '"..word.."' added to user dictionary")
@@ -177,7 +177,7 @@ do
 		end
 	end
 
-	AddEventListener(Event.DrawWord, cb) 
+	AddEventListener(Event.DrawWord, cb)
 end
 
 -----------------------------------------------------------------------------
@@ -185,10 +185,10 @@ end
 
 function Cmd.FindNextMisspeltWord()
 	ImmediateMessage("Searching...")
-	
+
 	-- If we have a selection, start checking from immediately
 	-- afterwards. Otherwise, start at the current cursor position.
-	
+
 	local sp, sw, so
 	if Document.mp then
 		sp, sw, so = Document.mp, Document.mw + 1, 1
@@ -205,7 +205,7 @@ function Cmd.FindNextMisspeltWord()
 	local cp, cw, co = sp, sw, so
 
 	-- Keep looping until we reach the starting point again.
-	
+
 	while true do
 		local word = Document[cp][cw]
 		if IsWordMisspelt(word) then
@@ -219,9 +219,9 @@ function Cmd.FindNextMisspeltWord()
 			QueueRedraw()
 			return true
 		end
-	
+
 		-- Nothing. Move on to the next word.
-		
+
 		co = 1
 		cw = cw + 1
 		if (cw > #Document[cp]) then
@@ -231,14 +231,14 @@ function Cmd.FindNextMisspeltWord()
 				cp = 1
 			end
 		end
-		
+
 		-- Check to see if we've scanned everything.
-		
+
 		if (cp == sp) and (cw == sw) and (co == 1) then
 			break
 		end
 	end
-	
+
 	QueueRedraw()
 	NonmodalMessage("No misspelt words found.")
 	return false
@@ -284,25 +284,25 @@ function Cmd.ConfigureSpellchecker()
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
-		
+
 		highlight_checkbox,
 		systemdictionary_checkbox,
 		userdictionary_checkbox,
-		
+
 		Form.Label {
 			x1 = 1, y1 = 1,
 			x2 = 32, y2 = 1,
 			align = Form.Left,
 			value = "Display misspelt words:"
 		},
-		
+
 		Form.Label {
 			x1 = 1, y1 = 3,
 			x2 = 32, y2 = 3,
 			align = Form.Left,
 			value = "Use system dictionary:"
 		},
-		
+
 		Form.Label {
 			x1 = 1, y1 = 5,
 			x2 = 32, y2 = 5,
@@ -310,13 +310,13 @@ function Cmd.ConfigureSpellchecker()
 			value = "Use user dictionary:"
 		},
 	}
-	
+
 	local result = Form.Run(dialogue, RedrawScreen,
 		"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 	if not result then
 		return false
 	end
-	
+
 	settings.enabled = highlight_checkbox.value
 	settings.usesystemdictionary = systemdictionary_checkbox.value
 	settings.useuserdictionary = userdictionary_checkbox.value

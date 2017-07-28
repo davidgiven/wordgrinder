@@ -27,7 +27,7 @@ Cmd.SplitCurrentParagraph()
 
 Cmd.ChangeParagraphStyle("RAW")
 Cmd.InsertStringIntoParagraph("not'd")
-AssertEquals("RAW", Document[Document.cp].style.name)
+AssertEquals("RAW", Document[Document.cp].style)
 Cmd.SplitCurrentParagraph()
 
 Cmd.ChangeParagraphStyle("P")
@@ -49,7 +49,7 @@ AssertTableEquals({"“Hello,", "world!”"}, Document[2])
 AssertTableEquals({"flob’s"}, Document[3])
 AssertTableEquals({"\24‘fnord’"}, Document[4])
 AssertTableEquals({"\17‘\25fnord’"}, Document[5])
-AssertEquals("RAW", Document[6].style.name)
+AssertEquals("RAW", Document[6].style)
 AssertTableEquals({"not'd"}, Document[6])
 AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
 	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[7])

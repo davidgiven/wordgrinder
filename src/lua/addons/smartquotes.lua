@@ -15,7 +15,7 @@ end
 do
 	local function cb(event, token, payload)
 		local settings = DocumentSet.addons.smartquotes or {}
-		local start_of_word_pattern = 
+		local start_of_word_pattern =
 			(P("^") *
 			 (P("[\"']") +
 			  P(escape(settings.leftdouble)) +
@@ -26,7 +26,7 @@ do
 			):compile()
 
 		if settings.notinraw
-				and (Document[Document.cp].style.name ~= "RAW") then
+				and (Document[Document.cp].style ~= "RAW") then
 			local value = payload.value
 			local word = Document[Document.cp][Document.cw]
 			local prefix = word:sub(1, Document.co-1)
@@ -41,7 +41,7 @@ do
 			payload.value = value
 		end
 	end
-	
+
 	AddEventListener(Event.KeyTyped, cb)
 end
 
@@ -60,7 +60,7 @@ do
 			rightsingle = '’'
 		}
 	end
-	
+
 	AddEventListener(Event.RegisterAddons, cb)
 end
 
@@ -100,7 +100,7 @@ local function convert_clipboard()
 
 	for pn = 1, #clipboard do
 		local para = clipboard[pn]
-		if settings.notinraw and (para.style.name ~= "RAW") then
+		if settings.notinraw and (para.style ~= "RAW") then
 			local newwords = {}
 			for _, w in ipairs(para) do
 				w = w:gsub('()(["\'])',
@@ -124,7 +124,7 @@ local function convert_clipboard()
 
 				newwords[#newwords+1] = w
 			end
-			
+
 			clipboard[pn] = CreateParagraph(para.style, newwords)
 		end
 	end
@@ -144,7 +144,7 @@ local function unconvert_clipboard()
 
 	for pn = 1, #clipboard do
 		local para = clipboard[pn]
-		if settings.notinraw and (para.style.name ~= "RAW") then
+		if settings.notinraw and (para.style ~= "RAW") then
 			local newwords = {}
 			for _, w in ipairs(para) do
 				w = w:gsub(ld, '"')
@@ -153,7 +153,7 @@ local function unconvert_clipboard()
 				w = w:gsub(rs, "'")
 				newwords[#newwords+1] = w
 			end
-			
+
 			clipboard[pn] = CreateParagraph(para.style, newwords)
 		end
 	end
@@ -204,28 +204,28 @@ function Cmd.ConfigureSmartQuotes()
 			x2 = 46, y2 = 5,
 			value = tostring(settings.leftsingle)
 		}
-	
+
 	local rightsingle_textfield =
 		Form.TextField {
 			x1 = 51, y1 = 5,
 			x2 = 56, y2 = 5,
 			value = tostring(settings.rightsingle)
 		}
-	
+
 	local leftdouble_textfield =
 		Form.TextField {
 			x1 = 41, y1 = 7,
 			x2 = 46, y2 = 7,
 			value = tostring(settings.leftdouble)
 		}
-	
+
 	local rightdouble_textfield =
 		Form.TextField {
 			x1 = 51, y1 = 7,
 			x2 = 56, y2 = 7,
 			value = tostring(settings.rightdouble)
 		}
-	
+
 	local notinraw_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 9,
@@ -244,7 +244,7 @@ function Cmd.ConfigureSmartQuotes()
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
-		
+
 		single_checkbox,
 		double_checkbox,
 		leftsingle_textfield,
@@ -302,13 +302,13 @@ function Cmd.ConfigureSmartQuotes()
 			value = "To apply to existing text, copy and then paste it."
 		}
 	}
-	
+
 	local result = Form.Run(dialogue, RedrawScreen,
 		"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 	if not result then
 		return false
 	end
-	
+
 	settings.singlequotes = single_checkbox.value
 	settings.doublequotes = double_checkbox.value
 	settings.leftsingle = leftsingle_textfield.value

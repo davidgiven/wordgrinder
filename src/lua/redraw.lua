@@ -46,10 +46,10 @@ local function drawmargin(y, pn, p)
 		end
 	end
 
-	local bullet = p.style.bullet
+	local bullet = DocumentStyles[p.style].bullet
 	if bullet then
 		local w = GetStringWidth(bullet) + 1
-		local i = p.style.indent
+		local i = DocumentStyles[p.style].indent
 		if (i >= w) then
 			Write(leftpadding + Document.margin + i - w, y, bullet)
 		end

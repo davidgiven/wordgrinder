@@ -644,8 +644,7 @@ function Cmd.CreateBlankDocumentSet()
 end
 
 function Cmd.ChangeParagraphStyle(style)
-	style = DocumentSet.styles[style]
-	if not style then
+	if not DocumentStyles[style] then
 		ModalMessage("Unknown paragraph style", "Sorry! I don't recognise that style. (This user interface will be improved.)")
 		return false
 	end
