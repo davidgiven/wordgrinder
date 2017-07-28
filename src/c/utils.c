@@ -114,7 +114,7 @@ void writeu8(char** destp, uni_t ch)
 static int readu8_cb(lua_State* L)
 {
 	const char* s = luaL_checkstring(L, 1);
-	int offset = lua_tointeger(L, 2);
+	int offset = forceinteger(L, 2);
 	uni_t c;
 
 	if (offset > 0)
@@ -129,7 +129,7 @@ static int readu8_cb(lua_State* L)
 
 static int writeu8_cb(lua_State* L)
 {
-	uni_t c = luaL_checkinteger(L, 1);
+	uni_t c = forceinteger(L, 1);
 	static char buffer[8];
 	char* s = buffer;
 

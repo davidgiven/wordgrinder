@@ -85,8 +85,8 @@ static int setnormal_cb(lua_State* L)
 
 static int write_cb(lua_State* L)
 {
-	int x = luaL_checkinteger(L, 1);
-	int y = luaL_checkinteger(L, 2);
+	int x = forceinteger(L, 1);
+	int y = forceinteger(L, 2);
 	size_t size;
 	const char* s = luaL_checklstring(L, 3, &size);
 	const char* send = s + size;
@@ -105,18 +105,18 @@ static int write_cb(lua_State* L)
 
 static int cleararea_cb(lua_State* L)
 {
-	int x1 = luaL_checkinteger(L, 1);
-	int y1 = luaL_checkinteger(L, 2);
-	int x2 = luaL_checkinteger(L, 3);
-	int y2 = luaL_checkinteger(L, 4);
+	int x1 = forceinteger(L, 1);
+	int y1 = forceinteger(L, 2);
+	int x2 = forceinteger(L, 3);
+	int y2 = forceinteger(L, 4);
 	dpy_cleararea(x1, y1, x2, y2);
 	return 0;
 }
 
 static int gotoxy_cb(lua_State* L)
 {
-	cursorx = luaL_checkinteger(L, 1);
-	cursory = luaL_checkinteger(L, 2);
+	cursorx = forceinteger(L, 1);
+	cursory = forceinteger(L, 2);
 	return 0;
 }
 
@@ -152,7 +152,7 @@ static int getboundedstring_cb(lua_State* L)
 	size_t size;
 	const char* start = luaL_checklstring(L, 1, &size);
 	const char* send = start + size;
-	int width = luaL_checkinteger(L, 2);
+	int width = forceinteger(L, 2);
 
 	const char* s = start;
 	while (s < send)
@@ -176,7 +176,7 @@ static int getboundedstring_cb(lua_State* L)
 
 static int getbytesofcharacter_cb(lua_State* L)
 {
-	int c = luaL_checkinteger(L, 1);
+	int c = forceinteger(L, 1);
 
 	lua_pushnumber(L, getu8bytes(c));
 	return 1;
@@ -186,7 +186,7 @@ static int getchar_cb(lua_State* L)
 {
 	int t = -1;
 	if (!lua_isnone(L, 1))
-		t = luaL_checkinteger(L, 1);
+		t = forceinteger(L, 1);
 
 	dpy_setcursor(cursorx, cursory);
 	dpy_sync();

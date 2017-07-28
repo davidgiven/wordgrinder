@@ -60,6 +60,8 @@ extern void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup);
 #define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX)
 #endif
 
+#define forceinteger(L, offset) (int)lua_tonumber(L, offset)
+
 /* --- Screen management ------------------------------------------------- */
 
 extern void screen_init(const char* argv[]);
