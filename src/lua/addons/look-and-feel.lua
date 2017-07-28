@@ -19,7 +19,18 @@ end
 function WantTerminators()
 	local settings = GlobalSettings.lookandfeel
 	if settings then
-		return settings.terminators
+		return settings.terminators or false
+	end
+	return true
+end
+
+-----------------------------------------------------------------------------
+-- Use the dense paragraph layout? (Indents, no space between paragraphs.)
+
+function WantDenseParagraphLayout()
+	local settings = GlobalSettings.lookandfeel
+	if settings then
+		return settings.denseparagraphs or false
 	end
 	return true
 end
@@ -33,11 +44,12 @@ do
 			{
 				enabled = false,
 				maxwidth = 80,
-				terminators = true
+				terminators = true,
+				denseparagraphs = false
 			}
 		)
 	end
-	
+
 	AddEventListener(Event.RegisterAddons, cb)
 end
 
@@ -61,7 +73,7 @@ function Cmd.ConfigureLookAndFeel()
 			x2 = 60, y2 = 3,
 			value = tostring(settings.maxwidth)
 		}
-		
+
 	local terminators_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 5,
@@ -70,19 +82,27 @@ function Cmd.ConfigureLookAndFeel()
 			value = settings.terminators
 		}
 
+	local denseparagraphs_checkbox =
+		Form.Checkbox {
+			x1 = 1, y1 = 7,
+			x2 = 50, y2 = 7,
+			label = "Use dense paragraph layout",
+			value = settings.denseparagraphs
+		}
+
 	local dialogue =
 	{
 		title = "Configure Look and Feel",
 		width = Form.Large,
-		height = 7,
+		height = 9,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
-		
+
 		enabled_checkbox,
-		
+
 		Form.Label {
 			x1 = 1, y1 = 3,
 			x2 = 32, y2 = 3,
@@ -91,16 +111,17 @@ function Cmd.ConfigureLookAndFeel()
 		},
 		maxwidth_textfield,
 
-		terminators_checkbox
+		terminators_checkbox,
+		denseparagraphs_checkbox,
 	}
-	
+
 	while true do
 		local result = Form.Run(dialogue, RedrawScreen,
 			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
 		if not result then
 			return false
 		end
-		
+
 		local maxwidth = tonumber(maxwidth_textfield.value)
 		if not maxwidth or (maxwidth < 20) then
 			ModalMessage("Parameter error", "The maximum width must be a valid number that's at least 20.")
@@ -108,11 +129,13 @@ function Cmd.ConfigureLookAndFeel()
 			settings.enabled = enabled_checkbox.value
 			settings.maxwidth = maxwidth
 			settings.terminators = terminators_checkbox.value
+			settings.denseparagraphs = denseparagraphs_checkbox.value
 			SaveGlobalSettings()
+			UpdateDocumentStyles()
 
 			return true
 		end
 	end
-		
+
 	return false
 end

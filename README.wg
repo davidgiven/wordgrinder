@@ -38,7 +38,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3612
+.documents.1.wordcount: 3656
 .documents.2.co: 1
 .documents.2.cp: 1
 .documents.2.cw: 1
@@ -272,12 +272,12 @@ H1 Welcome to WordGrinder
 H2 Important note for Windows users
 P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
 LB the mouse is ignored. WordGrinder is keyboard driven.
-LB the close button at the top right hand corner of the window won’t work. Instead, to quit, type CTRL+Q (or press ESC to open the menu and pick File→Quit).
+LB the close button at the top right hand corner of the window won’t work. Instead, to quit, type CTRL+Q (or press ESC to open the menu and pick File→Quit with the cursor keys and RETURN).
 LB by clicking on the icon at the top-left corner of the window you can change the font (the default one is pretty ugly; I recommend Consolas) and switch in and out of full-screen mode.
 P There’s more information on using WordGrinder with Windows further down in this file.
 H2 Introduction
 P WordGrinder is a word processor for processing words.
-P WordGrinder is not WYSIWYG. It is not point and click. It is not a desktop publisher. It is not a text editor. It is not do fonts and it barely does styles.
+P WordGrinder is not WYSIWYG. It is not point and click. It is not a desktop publisher. It is not a text editor. It does not do fonts and it barely does styles.
 P What it does do is words. It’s designed for writing text. It gets out of your way and lets you type.
 H2 Survival Guide
 P All your favourite navigation keys should work. Just type and it should do the right thing.
@@ -289,7 +289,9 @@ LB all navigation controls are defined in the Navigation menu. Forget which key 
 LB if no menu is open, pressing ALT+letter will open the specified submenu directly, bypassing the main menu. e.g. to open a file, just type ALT+F, O.
 LB typing CTRL+G will open this document’s table of contents. 
 P You can load and save files using the File menu. A Document Set is a file on disk. Each file can contain multiple Documents. Pay careful attention to whether WordGrinder is talking about Documents or Document Sets. There’s more information below.
-P Some operations (applying character styles, cut and paste) require you to select text. To do this, move to one end of the area to mark; press CTRL+SPACE; move to the other end. The operation will be applied to the highlighted text between the mark and the cursor. Note that the marks are always placed on the left side of the cursor. Pressing CTRL+SPACE again will remove the marks.
+P Some operations (applying character styles, cut and paste) require you to select text. There are two ways to do this:
+LB you can create an ephemeral selection by holding down SHIFT and pressing (most) navigation keys; this is the way most other applications make selections.
+LB you can set a mark by pressing CTRL+SPACE; then move the cursor normally. The selected text is between the mark and the cursor. Note that the mark are always placed on the left side of the cursor. Pressing CTRL+SPACE again will remove the mark.
 P That’s it. Now you can work WordGrinder.
 H2 Styles
 H3 Character styles
@@ -302,7 +304,7 @@ P That’s all. To apply them, select some text and then use Style→Italic (
 P Tip: to type a new word in a particular character style, make sure nothing’s selected, press CTRL+I, CTRL+B or CTRL+U to toggle the insertion state (look down at the right hand side of the status bar), and then type.
 H3 Paragraph styles
 P WordGrinder supports a number of paragraph styles. See Style→Paragraph Styles (CTRL+P) for the list. Each style applies to a complete paragraph. If you want to see what style each paragraph has set, use Style→Set Margin Mode→Show Paragraph Styles. The style names will be displayed in the left-hand margin.
-P Some basic look-and-feel of how paragraph styles are show can be edited through the dialogue at Style→Set Margin Mode→Edit Paragraph Styles. These only affect how text is shown inside WordGrinder; exported text is unaffected.
+P Some basic options on how paragraph styles are shown can be changed through the look-and-feel dialogue at File→Global Settings→Change look and feel. These only affect how text is shown inside WordGrinder; exported text is unaffected.
 P The RAW paragraph style is interesting as it allows you to embed arbitrary chunks of data into your document which, when exported, are emitted intact into the output file. I use this to insert HTML into documents I’m writing.
 H2 Documents and Document Sets
 P Each WordGrinder file can contain multiple pieces of text. A file is referred to as a Document Set; each piece of text within the Document Set is a Document.
@@ -314,7 +316,7 @@ P You can change any of the keyboard shortcuts assigned to menu items. These are
 P To do this, open the menu, navigate to the entry you want to change, and then press CTRL+V followed by the key you want to bind. You can’t bind keys used to type text into your document (e.g. A). You also can’t bind a key that’s already in use elsewhere. You can remove a binding by navigating to the appropriate menu item and pressing CTRL+X. Watch the status bar while a menu’s open for reminders.
 P All WordGrinder keybindings (except ESC, and menu and dialogue navigation) appear on the menus, so they’re all configurable. Things like the cursor keys appear in the Navigation menu.
 P If you get irrecoverably confused, you can reset all the keybindings by opening a menu and doing CTRL+R.
-P Note: WordGrinder’s keyboard support is at the mercy of which keys your platform supports, and this can vary wildly from platform to platform. For example, on some platforms that use ncurses it doesn’t seem possible to bind CTRL+arrow keys. In addition, some platforms have keys that I don’t know about. WordGrinder will support these, but they’ll be labelled as UNKNOWN_1234 or similar. If this happens to you, please get in touch so I can make it display a sensible name.
+P Note: WordGrinder’s keyboard support is at the mercy of which keys your platform supports, and this can vary wildly from platform to platform. For example, on some platforms that use ncurses it doesn’t seem possible to bind CTRL+arrow keys, so therefore on these platforms you can’t use them with WordGrinder (I can’t do anything about this. In addition, some platforms have keys that I don’t know about. WordGrinder will support these, but they’ll be labelled as UNKNOWN_1234 or similar. If this happens to you, please get in touch so I can make it display a sensible name.
 H2 Importing
 P If you don’t want to write a document from scratch in WordGrinder, it’s possible to import documents in a small number of other formats using File→Import new document. These all add a new document to the existing document set, rather than replacing the current one. The following formats are available:
 LB Plain text
@@ -345,7 +347,7 @@ P Nearly all WordGrinder configuration options are automatically saved with your
 P However, there is also a mechanism for allowing these settings to be overridden. I use this to have different keybindings on machines with different keyboards. It is currently very clunky and under development, and so may change without notice.
 P To use, run this command:
 Q wordgrinder --help
-P This will show the command line options, and at the bottom will tell you where your configuration file lives. Open this in a (non-Wordgrinder) text editor.
+P This will show the command line options, and at the bottom will tell you where your configuration file lives. Open this in a (non-WordGrinder) text editor.
 P Now run:
 Q wordgrinder --lua "ListMenuItems()"
 P WordGrinder will display all the menu items it knows about, plus their menu ID. You can now enter lines like this in your configuration file:
@@ -361,13 +363,13 @@ H2 Platforms
 P WordGrinder can be used on several platforms.
 H3 Unix terminal
 P WordGrinder will run in a terminal on practically any Unix platform with a modern curses library; I use Linux with ncurses.
-P Underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also display highlighted. Sorry. That’s the best ncurses can do.
+P Underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also displayed highlighted. Sorry. That’s the best ncurses can do.
 P ncurses’ keyboard support is hugely variant on what terminal you’re using, and some terminals don’t support things like SHIFT+UP/DOWN, CTRL+arrows, SHIFT+function keys, etc. In addition, ncurses enforces a one second delay when responding to the ESCAPE key. This is really annoying, but can be avoided by using ALT+letter instead.
 P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrinder can’t tell them apart; which is why pressing TAB toggles italics. Sorry. Use the X11 port instead.
 P You will also need a decent terminal emulator with Unicode support. I use xfce4-terminal with the Terminus font.
 H3 Unix X11
 P There is also a specific version of WordGrinder which will run natively on X. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys).
-P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which good Unicode coverage.
+P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage.
 P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
 LB X11_FONT: name of the font to use. WordGrinder uses Xft names. The default is “monospace”. Italic, bold and underlined versions are selected automatically, which might not work on some fonts (this isn’t WordGrinder’s fault).
 LB X11_BLACK_COLOUR: background colour. Any X11 colour name will work. The default is “#000000”.
@@ -376,13 +378,13 @@ LB X11_NORMAL_COLOUR: colour used for ordinary text. The default is “#88888
 LB X11_BRIGHT_COLOUR: colour used for highlighted text. The default is “#ffffff”.
 H3 Apple OS X
 P The Unix build of WordGrinder will run happily on OS X, in a Terminal window, behaving exactly like any other Unix system.
-P For best use it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences->Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
+P For best use it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
 P Fullscreen mode works very well.
 H3 Windows
 P WordGrinder will also run as a Window application. Some menu options have been added to the titlebar menu (single click on the icon on the top-left corner of the screen) to allow you to change the font, colours and toggle full-screen mode on and off; this last may also be done with ALT+ENTER (note that this is not rebindable).
 P Underline, bold and italics are displayed as underline, bold and italics.
 P The Windows version provides good keyboard support and most key combinations are supported.
-P WordGrinder will do its best to display Unicode characters. If the font you choose does not contain a particular glyph, WordGrinder will attempt to find a glyph from the closest matching font. Unfortunately this works quite badly with bitmap fonts, resulting in quite ugly results, but it does work.
+P WordGrinder will do its best to display Unicode characters. If the font you choose does not contain a particular glyph, WordGrinder will attempt to find a glyph from the closest matching font. Unfortunately this works quite badly with bitmap fonts, resulting in ugly results, but it does work.
 P I strongly suggest installing a decent TrueType Unicode monospaced font. Consolas is good and is supplied by default on most Windows systems, but I like DejaVu Sans Mono:
 P http://dejavu.sourceforge.net/wiki/index.php/Download
 H2 Neat features

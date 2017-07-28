@@ -18,7 +18,7 @@ It supports basic paragraph styles, basic character styles, basic screen
 markup, a menu interface that means you don't have to remember complex
 key sequences, HTML import and export, and some other useful features.
 
-WordGrinder does not require X. It runs in a terminal. 
+WordGrinder does not require X. It runs in a terminal.
 
 
 
@@ -29,21 +29,21 @@ WordGrinder needs the following packages installed:
 
  - ncursesw, the wide-character version of curses. This is supplied with
    most systems.
-   
+
  - an X development kit including Xft (if you want the X frontend). This
    is supplied with most systems.
 
  - Lua 5.2, the programming language. This is available from:
      http://www.lua.org/
-     
+
  - zlib. You will already have this, but just on the offchance, it's here:
      http://www.zlib.net/
-     
+
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
    will look funny.
-   
+
 If you have Debian, you've already got all these. Merely install these
 packages:
 
@@ -53,11 +53,11 @@ packages:
 To build, simply do:
 
   make -j
-  
+
 To install, do:
 
   sudo make install PREFIX=/usr
-  
+
 (Change PREFIX to whatever you like; naturally, if you're not installing in a
 global location, you don't need sudo.)
 
@@ -67,7 +67,7 @@ Notes for Apple users: WordGrinder works fine on OS X with Homebrew.  You'll
 need the following packages installed:
 
   lua52 ncurses
- 
+
 The Makefile should autodetect Homebrew and just work. However, note that only
 the wordgrinder-static binary will actually work, so you'll have to install
 this manually. Sorry, I haven't tried to make things work with any other OS X
@@ -87,7 +87,7 @@ Do this:
   wordgrinder README.wg
 
 Please read README.wg; it contains the manual. There is also a man page,
-which describes the command line interface.  
+which describes the command line interface.
 
 
 If you use WordGrinder, please join the mailing list. This will allow you
@@ -105,9 +105,9 @@ WordGrinder is available under the MIT license. Please see the COPYING file
 for the full text.
 
 WordGrinder contains a copy of the LuaFileSystem code. This is also MIT
-licensed and is © The Kepler Project. See 
+licensed and is © The Kepler Project. See
 http://www.keplerproject.org/luafilesystem for more information.
- 
+
 WordGrinder contains a copy of the xpattern module. This is also MIT
 licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern
 for more information.
@@ -119,6 +119,9 @@ Please see the README.Scowl file for the full license text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.7: 2017-??-??: new plain text diffable file format; Lua 5.3
+support; better locale detection; dense paragraphs mode; lots of bugfixes.
 
 WordGrinder 0.6: 2015-04-18: New X11 frontend (actual bold and italic on
 Linux machines!); shift+cursor keys starts a selection; more HTML emission
@@ -152,7 +155,7 @@ strings containing multiple whitespace characters (that was triggering the
 crash handler). Thanks to lostnbronx for the report. Added RAW and PRE
 paragraph styles. Cleaned up HTML import. Add customisability to HTML export.
 Relicensed to MIT.
- 
+
 WordGrinder 0.3.2: 2008-11-03: Fixed a very simple and very stupid typo that
 caused a crash if you tried to turn autosave on. Added a simple exception
 handler to try and prevent data loss on error in the future.

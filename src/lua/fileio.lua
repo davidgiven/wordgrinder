@@ -639,6 +639,7 @@ function Cmd.LoadDocumentSet(filename)
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 
+	UpdateDocumentStyles()
 	RebuildDocumentsMenu(DocumentSet.documents)
 	QueueRedraw()
 

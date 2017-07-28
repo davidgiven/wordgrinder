@@ -530,16 +530,26 @@ function GetWordSimpleText(s)
 	return s
 end
 
-function CreateDocumentStyles()
+function UpdateDocumentStyles()
+	local plaintext =
+	{
+		desc = "Plain test",
+		name = "P"
+	}
+
+	if WantDenseParagraphLayout() then
+		plaintext.above = 0
+		plaintext.below = 0
+		plaintext.firstindent = 4
+	else
+		plaintext.above = 1
+		plaintext.below = 1
+		plaintext.firstindent = 0
+	end
+
 	local styles =
 	{
-		{
-			desc = "Plain text",
-			name = "P",
-			above = 1,
-			below = 1,
-			firstindent = 0,
-		},
+		plaintext,
 		{
 			desc = "Heading #1",
 			name = "H1",
@@ -613,7 +623,7 @@ function CreateDocumentStyles()
 		styles[s.name] = s
 	end
 
-	return styles
+	DocumentStyles = styles
 end
 
 function CreateDocumentSet()

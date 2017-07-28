@@ -47,7 +47,7 @@ function QueueRedraw()
 end
 
 function ResetDocumentSet()
-	DocumentStyles = CreateDocumentStyles()
+	UpdateDocumentStyles()
 	DocumentSet = CreateDocumentSet()
 	DocumentSet.menu = CreateMenu()
 	Document = CreateDocument()
