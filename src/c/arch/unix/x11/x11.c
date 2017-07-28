@@ -23,7 +23,7 @@
 struct gg
 {
 	unsigned c : 24;
-	unsigned attr : 8; 
+	unsigned attr : 8;
 };
 
 enum
@@ -214,11 +214,8 @@ void dpy_writechar(int x, int y, uni_t c)
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
 	for (int y=y1; y<=y2; y++)
-	{
-		unsigned int* p = &backbuffer[y * screenwidth];
 		for (int x=x1; x<=x2; x++)
-			p[x] = glyphcache_id(' ' , defaultattr);
-	}
+			sput(backbuffer, x, y, glyphcache_id(' ' , defaultattr));
 }
 
 static void render_glyph(unsigned int id, int x, int y)
@@ -442,7 +439,7 @@ const char* dpy_getkeyname(uni_t k)
 		case XK_Escape:      template = "ESCAPE"; break;
 		case XK_BackSpace:   template = "BACKSPACE"; break;
 	}
-	
+
 	if (template)
 	{
 		sprintf(buffer, "KEY_%s%s%s",

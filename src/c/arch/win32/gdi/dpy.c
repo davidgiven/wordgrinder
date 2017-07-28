@@ -209,7 +209,7 @@ static bool special_key(int vk, unsigned flags)
 		vk |= VKM_CTRL;
 	if (GetKeyState(VK_SHIFT) & 0x8000)
 		vk |= VKM_SHIFT;
-		
+
 	dpy_queuekey(-vk);
 	return true;
 }
@@ -551,7 +551,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 			}
 			goto delegate;
 		}
-				
+
 		delegate:
 		default:
 			return DefWindowProcW(window, message, wparam, lparam);
@@ -842,7 +842,7 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
 	for (int y = y1; y <= y2; y++)
 		for (int x = x1; x <= x2; x++)
-			backbuffer[y*screenwidth + x] = (' '<<8) | defaultattr;
+			dpy_writechar(x, y, (' '<<8) | defaultattr);
 }
 
 const char* dpy_getkeyname(uni_t k)
