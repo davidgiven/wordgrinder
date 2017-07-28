@@ -187,8 +187,6 @@ local StyleMenu = addmenu("Style",
 	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
 	{"SM",     "M", "Set margin mode ▷",          nil,         MarginMenu},
 	{"SS",     "S", "Toggle status bar",          nil,         Cmd.ToggleStatusBar},
-	"-",
-	{"SE",     "E", "Edit paragraph styles",      nil,         Cmd.EditParagraphStyles},
 })
 
 local NavigationMenu = addmenu("Navigation",
