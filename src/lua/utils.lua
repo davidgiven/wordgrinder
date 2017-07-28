@@ -50,7 +50,7 @@ end
 
 function Leafname(filename)
 	local _, _, f = filename:find("([^/\\]+)$")
-	if f then 
+	if f then
 		return f
 	end
 	return filename
@@ -69,11 +69,11 @@ function Traceback(e)
 		if not t then
 			break
 		end
-		s[#s+1] = t.short_src .. ":" .. t.currentline 
+		s[#s+1] = t.short_src .. ":" .. t.currentline
 		i = i + 1
 	end
 
-	return table.concat(s, "\n")	
+	return table.concat(s, "\n")
 end
 
 --- Splits a string by specifying the delimiter pattern.
@@ -87,7 +87,7 @@ function SplitString(str, delim)
     if not str:find(delim) then
     	return {str}
     end
-     
+
     local result = {}
     local pat = "(.-)" .. delim .. "()"
     local lastPos
@@ -112,6 +112,8 @@ function TableToString(t)
 			return tostring(n)
 		elseif (n == nil) then
 			return nil
+		elseif (type(n) == "boolean") then
+			return tostring(n)
 		else
 			return TableToString(n)
 		end
@@ -140,7 +142,7 @@ function StringBytesToString(s)
 	end
 	return TableToString(ts)
 end
-		
+
 --- Insert element between elements of an array.
 -- The old array is left untouched.
 --
@@ -233,4 +235,3 @@ function GetClass(t)
 	end
 	return index
 end
---
