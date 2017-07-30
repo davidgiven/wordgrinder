@@ -235,3 +235,13 @@ function GetClass(t)
 	end
 	return index
 end
+
+-- Returns a load() callback which supplies a string.
+
+function ChunkStream(text)
+	return function()
+		local t = text
+		text = nil
+		return t
+	end
+end

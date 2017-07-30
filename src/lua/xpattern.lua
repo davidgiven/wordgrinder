@@ -364,7 +364,7 @@ M.code_of = code_of
 local function compile(epat)
   local code = code_of(epat)
   if M.debug then print('DEBUG:\n' .. code) end
-  local f = assert(load(code))(match)
+  local f = assert(load(ChunkStream(code)))(match)
   return f
 end
 M.compile = compile

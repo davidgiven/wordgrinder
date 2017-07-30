@@ -94,7 +94,7 @@ function WordProcessor(filename)
 	do
         local fp, e, errno = io.open(configfile, "r")
 		if fp then
-			f, e = load(fp:read("*a"), configfile)
+			f, e = load(ChunkStream(fp:read("*a")), configfile)
 			if f then
 				xpcall(f, CLIError)
 			else
