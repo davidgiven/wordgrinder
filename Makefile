@@ -14,6 +14,11 @@ CC ?= gcc
 WINCC ?= i686-w64-mingw32-gcc
 WINDRES ?= i686-w64-mingw32-windres
 MAKENSIS ?= makensis
+ifneq ($(shell type $(MAKENSIS) >/dev/null 2>&1 ; echo $?),0)
+	# If makensis isn't on the path, chances are we're on Cygwin doing a
+	# Windows build --- so look in the default installation directory.
+	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
+endif
 
 VERSION := 0.7.0
 FILEFORMAT := 7
