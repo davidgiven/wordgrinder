@@ -8,9 +8,10 @@ matrix:
 #            dist: trusty
         -
             os: osx
+            env: HOMEBREW_NO_AUTO_UPDATE=1
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja lua ncursesw; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja lua; fi
 
 addons:
     apt:
