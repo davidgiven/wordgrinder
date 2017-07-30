@@ -28,7 +28,7 @@ LUA_INTERPRETER = $(OBJDIR)/lua
 
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
 ifneq ($(Apple_PubSub_Socket_Render),)
-	CURSES_PACKAGE := "-I/usr/include -L/usr/lib -lncurses"
+	CURSES_PACKAGE := -I/usr/include -L/usr/lib -lncurses
 else
 	CURSES_PACKAGE := ncursesw
 endif
@@ -83,7 +83,6 @@ $(OBJDIR)/build.ninja: $(LUA_INTERPRETER) build.lua Makefile
 		BUILDFILE="$@" \
 		OBJDIR="$(OBJDIR)" \
 		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
-		LUA_PACKAGE="$(LUA_PACKAGE)" \
 		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
 		CC="$(CC)" \
 		WINCC="$(WINCC)" \
