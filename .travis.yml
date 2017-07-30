@@ -4,7 +4,7 @@ dist: trusty
 addons:
     apt:
         packages:
-        - ninja
+        - ninja-build
         #- gcc-mingw-w64-i686
         #- libz-mingw-w64-dev
         #- nsis
