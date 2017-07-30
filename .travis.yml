@@ -2,5 +2,5 @@ language: c
 before_install:
     sudo apt-get install ninja gcc-mingw-w64-i686 nsis libz-mingw-w64-dev lua5.2 liblua5.2-dev
 script:
-    - make -j4
+    - make -j4 dev
 
