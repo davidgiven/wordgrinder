@@ -10,7 +10,7 @@ matrix:
             os: osx
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja lua ncursesw; fi
 
 addons:
     apt:
