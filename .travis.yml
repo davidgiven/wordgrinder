@@ -2,10 +2,10 @@ language: c
 
 matrix:
     include:
-#        -
-#            os: linux
-#            sudo: false
-#            dist: trusty
+        -
+            os: linux
+            sudo: false
+            dist: trusty
         -
             os: osx
             env: HOMEBREW_NO_AUTO_UPDATE=1
