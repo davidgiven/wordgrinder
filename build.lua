@@ -101,7 +101,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
     end
 
-    local needs_luabitop = (luapackage == "lua51") or (luapackage == "internallua")
+    local needs_luabitop = (luapackage == "lua51") or (luapackage == "internallua") or (luapackage == "lua-5.1")
     if needs_luabitop then
         cflags[#cflags+1] = "-DBUILTIN_LUABITOP"
     end
@@ -116,6 +116,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-mwindows"
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
+	ldflags[#ldflags+1] = "-mwindows"
     else
         cc = CC
         cflags[#cflags+1] = "-DARCH='\"unix\"'"
@@ -301,7 +302,9 @@ else
     print("not found")
 end
 
-for _, luapackage in ipairs({"luajit", "lua51", "lua52", "lua53"}) do
+local lua_packages = {"luajit", "lua-5.1", "lua-5.2", "lua-5.3"}
+
+for _, luapackage in ipairs(lua_packages) do
     io.write("Lua package '"..luapackage.."': ")
     if has_package(luapackage) then
         print("found")
@@ -309,6 +312,7 @@ for _, luapackage in ipairs({"luajit", "lua51", "lua52", "lua53"}) do
         print("not found")
     end
 end
+lua_packages[#lua_packages+1] = "internallua"
 
 if want_frontend("curses") then
     emit("CURSES_CFLAGS = ", package_flags(CURSES_PACKAGE, "--cflags"))
@@ -395,7 +399,7 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
 
 if want_frontend("x11") or want_frontend("curses") then
     for _, buildstyle in ipairs({"release", "debug", "static"}) do
-        for _, luapackage in ipairs({"internallua", "luajit", "lua51", "lua52", "lua53"}) do
+        for _, luapackage in ipairs(lua_packages) do
             if (luapackage == "internallua") or has_package(luapackage) then
                 if want_frontend("x11") then
                     build_wordgrinder_binary("bin/xwordgrinder", luapackage, "x11", buildstyle)

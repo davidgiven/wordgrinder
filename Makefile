@@ -14,6 +14,11 @@ CC ?= gcc
 WINCC ?= i686-w64-mingw32-gcc
 WINDRES ?= i686-w64-mingw32-windres
 MAKENSIS ?= makensis
+ifneq ($(shell type $(MAKENSIS) >/dev/null 2>&1 ; echo $?),0)
+	# If makensis isn't on the path, chances are we're on Cygwin doing a
+	# Windows build --- so look in the default installation directory.
+	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
+endif
 
 VERSION := 0.7.0
 FILEFORMAT := 7
@@ -23,8 +28,8 @@ LUA_INTERPRETER = $(OBJDIR)/lua
 CURSES_PACKAGE = ncursesw
 
 # Replace lua53 with internallua or a pkg-config name (including luajit)
-PREFERRED_WORDGRINDER = wordgrinder-lua52-curses-release
-PREFERRED_XWORDGRINDER = xwordgrinder-lua52-x11-release
+PREFERRED_WORDGRINDER = wordgrinder-lua-5.2-curses-release
+PREFERRED_XWORDGRINDER = xwordgrinder-lua-5.2-x11-release
 
 NINJABUILD = \
 	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
