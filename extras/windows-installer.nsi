@@ -6,7 +6,7 @@
 ; $URL: https://wordgrinder.svn.sf.net/svnroot/wordgrinder/wordgrinder/src/c/arch/win32/console/dpy.c $
 
 !include MUI2.nsh
-	
+
 Name "WordGrinder for Windows"
 OutFile "${OUTFILE}"
 
@@ -30,7 +30,7 @@ SetCompressor /solid lzma
 	This wizard will install WordGrinder on your computer.$\r$\n\
 	$\r$\n\
 	$_CLICK"
-	
+
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_BITMAP "${NSISDIR}\Contrib\Graphics\Header\nsis.bmp"
 !define MUI_ABORTWARNING
@@ -52,7 +52,7 @@ SetCompressor /solid lzma
 	Not kidding.$\r$\n\
 	$\r$\n\
 	Have fun!"
-	
+
 Function showreadmeaction
 	ExecShell "" "$INSTDIR\README.wg"
 FunctionEnd
@@ -73,7 +73,7 @@ FunctionEnd
 
 !define SHCNE_ASSOCCHANGED 0x08000000
 !define SHCNF_IDLIST 0
- 
+
 Function RefreshShellIcons
 	System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v \
 		(${SHCNE_ASSOCCHANGED}, ${SHCNF_IDLIST}, 0, 0)'
@@ -90,18 +90,19 @@ FunctionEnd
 Section "WordGrinder (required)"
 	SectionIn RO
 	SetOutPath $INSTDIR
-	File "bin\wordgrinder.exe"
+	File /oname=wordgrinder.exe "bin\wordgrinder-internallua-windows-release.exe"
 	File "README.wg"
 	File "COPYING"
 	File "README.Scowl"
+	File "README.Lua"
 
 	CreateDirectory $INSTDIR\Dictionaries
 	File /oname=Dictionaries\British.dictionary "extras\british.dictionary"
 	File /oname=Dictionaries\American-Canadian.dictionary "extras\american-canadian.dictionary"
-	  
+
 	; Write the installation path into the registry
 	WriteRegStr HKLM SOFTWARE\NSIS_WordGrinder "Install_Dir" "$INSTDIR"
-	  
+
 	; Write the uninstall keys for Windows
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\WordGrinder" "DisplayName" "WordGrinder for Windows"
 	WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\WordGrinder" "UninstallString" '"$INSTDIR\uninstall.exe"'
@@ -111,7 +112,7 @@ Section "WordGrinder (required)"
 
 	; Create a file extension mapping.
 	WriteRegStr HKCR ".wg" "" "WordGrinder.Document"
-	
+
 	; Now create the file type.
 	WriteRegStr HKCR "WordGrinder.Document" "" "WordGrinder Document"
 	WriteRegStr HKCR "WordGrinder.Document\DefaultIcon" "" "$INSTDIR\wordgrinder.exe,0"
