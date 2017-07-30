@@ -1,0 +1,5 @@
+This is a slightly modified version of Lua 5.1.5, used by the build system and for the
+internal Lua library.
+
+https://www.lua.org/versions.html
+
