@@ -63,13 +63,13 @@ and then exits.
 The type of the file is autodetected from the extension of the filename. The
 source file may have a document name suffixed with a
 .I :
-for use when importing or exporting WordGrinder files. 
-  
+for use when importing or exporting WordGrinder files.
+
 .TP
 .BI \--config\  file.lua
 Sets the name of the user config file.
-  
-  
+
+
 .SH CONFIGURATION
 
 The user config file is a Lua file which is loaded and executed before
@@ -85,4 +85,4 @@ files). It defaults to:
 .B wordgrinder
 was written by David Given.
 .br
-http://wordgrinder.sourceforge.net
+http://cowlark.com/wordgrinder
