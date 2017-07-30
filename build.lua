@@ -93,7 +93,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     end
 
     if buildstyle == "debug" then
-        cflags[#cflags+1] = "-Og"
+        cflags[#cflags+1] = "-O0"
     else
         cflags[#cflags+1] = "-Os"
         ldflags[#cflags+1] = "-s"
