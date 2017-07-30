@@ -28,7 +28,7 @@ LUA_INTERPRETER = $(OBJDIR)/lua
 
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
 ifneq ($(Apple_PubSub_Socket_Render),)
-	CURSES_PACKAGE := -I/usr/include -L/usr/lib -lncurses
+	CURSES_PACKAGE := --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
 else
 	CURSES_PACKAGE := ncursesw
 endif

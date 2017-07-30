@@ -30,7 +30,12 @@ end
 
 local function package_flags(package, kind)
     if package:find("^-") then
-        return package
+        local _, _, clause = package:find(kind.."={(.-)}")
+        if not clause then
+            print("External package specifier "..package.." contains no clause "..kind)
+            os.exit(1)
+        end
+        return clause
     end
 
     local filename = os.tmpname()
