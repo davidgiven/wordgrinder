@@ -1,7 +1,17 @@
 language: c
+sudo: false
 dist: trusty
-before_install:
-    sudo apt-get install ninja gcc-mingw-w64-i686 nsis libz-mingw-w64-dev lua5.2 liblua5.2-dev
+addons:
+    apt:
+        packages:
+        - ninja
+        #- gcc-mingw-w64-i686
+        #- libz-mingw-w64-dev
+        #- nsis
+        - liblua5.1-dev
+        - liblua5.2-dev
+        - liblua5.3-dev
+        - libluajit5.1-dev
 script:
     - make -j4 dev
 
