@@ -25,7 +25,7 @@ local function has_package(package)
 end
 
 local function has_binary(binary)
-    return os.execute("type "..binary.." >/dev/null 2&>1") == 0
+    return os.execute("type "..binary.." >/dev/null 2>&1") == 0
 end
 
 local function package_flags(package, kind)
