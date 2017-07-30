@@ -10,8 +10,8 @@ addons:
         #- nsis
         - liblua5.1-dev
         - liblua5.2-dev
-        - liblua5.3-dev
-        - libluajit5.1-dev
+        #- liblua5.3-dev
+        #- libluajit5.1-dev
 script:
     - make -j4 dev
 
