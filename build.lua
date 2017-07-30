@@ -18,14 +18,21 @@ local function want_frontend(name)
 end
 
 local function has_package(package)
+    if package:find("^-") then
+        return true
+    end
     return os.execute("pkg-config "..package) == 0
 end
 
 local function has_binary(binary)
-    return os.execute("type "..binary.." > /dev/null") == 0
+    return os.execute("type "..binary.." >/dev/null 2&>1") == 0
 end
 
 local function package_flags(package, kind)
+    if package:find("^-") then
+        return package
+    end
+
     local filename = os.tmpname()
     local e = os.execute("pkg-config "..kind.." "..package.." > "..filename)
     if e ~= 0 then

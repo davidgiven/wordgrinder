@@ -14,7 +14,7 @@ CC ?= gcc
 WINCC ?= i686-w64-mingw32-gcc
 WINDRES ?= i686-w64-mingw32-windres
 MAKENSIS ?= makensis
-ifneq ($(shell type $(MAKENSIS) >/dev/null 2>&1 ; echo $?),0)
+ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
 	# If makensis isn't on the path, chances are we're on Cygwin doing a
 	# Windows build --- so look in the default installation directory.
 	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
@@ -25,7 +25,13 @@ FILEFORMAT := 7
 DATE := $(shell date +'%-d %B %Y')
 
 LUA_INTERPRETER = $(OBJDIR)/lua
-CURSES_PACKAGE = ncursesw
+
+# Hack to try and detect OSX's non-pkg-config compliant ncurses.
+ifneq ($(Apple_PubSub_Socket_Render),)
+	CURSES_PACKAGE := "-I/usr/include -L/usr/lib -lncurses"
+else
+	CURSES_PACKAGE := ncursesw
+endif
 
 # Replace lua53 with internallua or a pkg-config name (including luajit)
 PREFERRED_WORDGRINDER = wordgrinder-lua-5.2-curses-release
