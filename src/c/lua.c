@@ -9,6 +9,10 @@
 #include "lfs/lfs.h"
 #endif
 
+#if defined BUILTIN_LUABITOP
+#include "luabitop/bit.h"
+#endif
+
 lua_State* L;
 
 static int report(lua_State* L, int status)
@@ -79,6 +83,9 @@ void script_init(void)
 #if defined BUILTIN_LFS
 	luaopen_lfs(L);
 #endif
+#if defined BUILTIN_LUABITOP
+	luaopen_bit(L);
+#endif
 
 	atexit(script_deinit);
 
@@ -92,7 +99,7 @@ void script_init(void)
 
 	lua_pushstring(L, ARCH);
 	lua_setglobal(L, "ARCH");
-	
+
 	lua_newtable(L);
 	lua_setglobal(L, "wg");
 
