@@ -24,6 +24,13 @@ local function has_package(package)
     return os.execute("pkg-config "..package) == 0
 end
 
+local function package_name(package)
+    if package:find("^-") then
+        return "custom"
+    end
+    return package
+end
+
 local function has_binary(binary)
     return os.execute("type "..binary.." >/dev/null 2>&1") == 0
 end
@@ -55,7 +62,7 @@ local function addname(exe, name)
 end
 
 function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
-    name = luapackage.."-"..frontend.."-"..buildstyle
+    name = package_name(luapackage).."-"..frontend.."-"..buildstyle
     exe = addname(exe, name)
     allbinaries[#allbinaries+1] = exe
 
@@ -101,9 +108,8 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-O0"
     else
         cflags[#cflags+1] = "-Os"
-        ldflags[#cflags+1] = "-s"
+        ldflags[#ldflags+1] = "-s"
     end
-
 
     if luapackage == "internallua" then
         cflags[#cflags+1] = "-Isrc/c/emu/lua-5.1.5"
@@ -227,7 +233,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 end
 
 function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
-    name = luapackage.."-"..frontend.."-"..buildstyle
+    name = package_name(luapackage).."-"..frontend.."-"..buildstyle
     exe = addname(exe, name)
     allbinaries[#allbinaries+1] = "test-"..name
 
@@ -290,6 +296,13 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
     emit("build test-", name, ": phony ", table.concat(alltests, " "))
 end
 
+local installables = {}
+function install_file(mode, src, dest)
+    emit("build ", dest, ": install ", src)
+    emit("  mode = ", mode)
+    installables[#installables+1] = dest
+end
+
 -- Detect what tools we have available.
 
 io.write("Windows toolchain: ")
@@ -314,17 +327,30 @@ else
     print("not found")
 end
 
-local lua_packages = {"luajit", "lua-5.1", "lua-5.2", "lua-5.3"}
-
-for _, luapackage in ipairs(lua_packages) do
-    io.write("Lua package '"..luapackage.."': ")
-    if has_package(luapackage) then
-        print("found")
-    else
-        print("not found")
+local lua_packages = {}
+local function add_lua_package(package)
+    if not lua_packages[package] then
+        lua_packages[package] = true
+        lua_packages[#lua_packages+1] = package
     end
 end
-lua_packages[#lua_packages+1] = "internallua"
+add_lua_package(LUA_PACKAGE)
+add_lua_package("internallua")
+add_lua_package("lua-5.1")
+add_lua_package("lua-5.2")
+add_lua_package("lua-5.3")
+add_lua_package("luajit")
+
+for _, luapackage in ipairs(lua_packages) do
+    if luapackage ~= "internallua" then
+        io.write("Lua package '"..luapackage.."': ")
+        if has_package(luapackage) then
+            print("found")
+        else
+            print("not found")
+        end
+    end
+end
 
 if want_frontend("curses") then
     emit("CURSES_CFLAGS = ", package_flags(CURSES_PACKAGE, "--cflags"))
@@ -359,8 +385,11 @@ rule rcfile
 rule makensis
     command = $MAKENSIS -v2 -nocd -dVERSION=$VERSION -dOUTFILE=$out $in
 
-rule nop
-    command = true
+rule install
+    command = install -m $mode $in $out
+
+rule manpage
+    command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
 ]])
 
 emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
@@ -424,6 +453,31 @@ if want_frontend("x11") or want_frontend("curses") then
             end
         end
     end
+
+    local preferred_test
+    local preferred_curses
+    local preferred_x11
+    if want_frontend("curses") then
+        preferred_curses = "bin/wordgrinder-"..package_name(LUA_PACKAGE).."-curses-release"
+        preferred_test = "test-"..package_name(LUA_PACKAGE).."-curses-debug"
+        install_file("755", preferred_curses, DESTDIR..BINDIR.."/wordgrinder")
+    end
+    if want_frontend("x11") then
+        preferred_x11 = "bin/xwordgrinder-"..package_name(LUA_PACKAGE).."-x11-release"
+        if not preferred_test then
+            preferred_test = "test-"..package_name(LUA_PACKAGE).."-x11-debug"
+        end
+        install_file("755", preferred_x11, DESTDIR..BINDIR.."/xwordgrinder")
+    end
+    install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
+    install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
+
+    emit("build bin/wordgrinder.1: manpage wordgrinder.man")
+    emit("  date = ", DATE)
+    emit("  version = ", VERSION)
+
+    emit("build all: phony bin/wordgrinder.1 ", preferred_curses, " ", preferred_x11, " ", preferred_test)
+    emit("build install: phony all ", table.concat(installables, " "))
 end
 
 if want_frontend("windows") then
@@ -439,4 +493,4 @@ if want_frontend("windows") then
 end
 
 emit("build clean: phony")
-emit("build all: phony ", table.concat(allbinaries, " "))
+emit("build dev: phony ", table.concat(allbinaries, " "))

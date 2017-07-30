@@ -4,10 +4,12 @@ PREFIX ?= $(HOME)
 BINDIR ?= $(PREFIX)/bin
 DOCDIR ?= $(PREFIX)/share/doc
 MANDIR ?= $(PREFIX)/share/man
+DESTDIR ?=
 
-OBJDIR = .obj
+# Where do the temporary files go?
+OBJDIR = /tmp/wg-build
 
-# Used for the native build (curses, X11)
+# The compiler used for the native build (curses, X11)
 CC ?= gcc
 
 # Used for the Windows build (either cross or native)
@@ -20,6 +22,15 @@ ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
 	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
 endif
 
+# For native builds only, which Lua do you want to use? This affects
+# only which one gets installed. The Windows build always uses the
+# internal Lua.
+#
+# Choices are: internallua, a pkg-config name, or a flag spec like:
+# --cflags={-I/usr/include/thingylua} --libs={-L/usr/lib/thingylua -lthingylua}
+LUA_PACKAGE := lua-5.2
+
+# For native builds only,
 VERSION := 0.7.0
 FILEFORMAT := 7
 DATE := $(shell date +'%-d %B %Y')
@@ -33,63 +44,48 @@ else
 	CURSES_PACKAGE := ncursesw
 endif
 
-# Replace lua53 with internallua or a pkg-config name (including luajit)
-PREFERRED_WORDGRINDER = wordgrinder-lua-5.2-curses-release
-PREFERRED_XWORDGRINDER = xwordgrinder-lua-5.2-x11-release
-
 NINJABUILD = \
 	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
 
 # Builds and tests the Unix release versions only.
 .PHONY: all
 all: $(OBJDIR)/build.ninja
-	$(NINJABUILD) \
-		bin/$(PREFERRED_WORDGRINDER) \
-		bin/$(PREFERRED_XWORDGRINDER) \
-		$(subst wordgrinder,test,$(PREFERRED_WORDGRINDER))
+	$(NINJABUILD) all
+
+# Builds, tests and installs the Unix release versions only.
+.PHONY: install
+install: $(OBJDIR)/build.ninja
+	$(NINJABUILD) install
 
 # Builds and tests everything.
 .PHONY: dev
 dev: $(OBJDIR)/build.ninja
-	$(NINJABUILD) all
+	$(NINJABUILD) dev
 
 # Builds Windows (but doesn't test it).
 .PHONY: windows
 windows: $(OBJDIR)/build.ninja
 	$(NINJABUILD) bin/WordGrinder-$(VERSION)-setup.exe
 
-.PHONY: install
-install: all bin/wordgrinder.1
-	@echo INSTALL
-	$(hide)install -d                                   $(DESTDIR)$(BINDIR)
-	$(hide)install -m 755 bin/$(PREFERRED_WORDGRINDER)  $(DESTDIR)$(BINDIR)/wordgrinder
-	$(hide)install -m 755 bin/$(PREFERRED_XWORDGRINDER) $(DESTDIR)$(BINDIR)/xwordgrinder
-	$(hide)install -d                                   $(DESTDIR)$(MANDIR)/man1
-	$(hide)install -m 644 bin/wordgrinder.1             $(DESTDIR)$(MANDIR)/man1/wordgrinder.1
-	$(hide)install -d                                   $(DESTDIR)$(DOCDIR)/wordgrinder
-	$(hide)install -m 644 README.wg                     $(DESTDIR)$(DOCDIR)/wordgrinder/README.wg
-
-bin/wordgrinder.1: wordgrinder.man
-	@echo MANPAGE
-	$(hide) sed -e 's/@@@DATE@@@/$(DATE)/g; s/@@@VERSION@@@/$(VERSION)/g' $< > $@
-
-.PHONY: ninjabuild
-ninjabuild: $(OBJDIR)/build.ninja
-	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS) $(MAKECMDGOALS)
-
-$(OBJDIR)/build.ninja: $(LUA_INTERPRETER) build.lua Makefile
+$(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 	@mkdir -p $(dir $@)
 	$(hide) $(LUA_INTERPRETER) build.lua \
+		BINDIR="$(BINDIR)" \
 		BUILDFILE="$@" \
-		OBJDIR="$(OBJDIR)" \
-		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
-		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
 		CC="$(CC)" \
+		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
+		DATE="$(DATE)" \
+		DESTDIR="$(DESTDIR)" \
+		DOCDIR="$(DOCDIR)" \
+		FILEFORMAT="$(FILEFORMAT)" \
+		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
+		LUA_PACKAGE="$(LUA_PACKAGE)" \
+		MAKENSIS="$(MAKENSIS)" \
+		MANDIR="$(MANDIR)" \
+		OBJDIR="$(OBJDIR)" \
+		VERSION="$(VERSION)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
-		MAKENSIS="$(MAKENSIS)" \
-		VERSION="$(VERSION)" \
-		FILEFORMAT="$(FILEFORMAT)" \
 
 clean:
 	@echo CLEAN
