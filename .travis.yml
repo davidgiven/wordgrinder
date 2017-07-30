@@ -2,12 +2,15 @@ language: c
 
 matrix:
     include:
-        -
-            os: linux
-            sudo: false
-            dist: trusty
+#        -
+#            os: linux
+#            sudo: false
+#            dist: trusty
         -
             os: osx
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja   ; fi
 
 addons:
     apt:
