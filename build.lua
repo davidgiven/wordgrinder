@@ -476,7 +476,7 @@ if want_frontend("x11") or want_frontend("curses") then
     emit("  date = ", DATE)
     emit("  version = ", VERSION)
 
-    emit("build all: phony bin/wordgrinder.1 ", preferred_curses, " ", preferred_x11, " ", preferred_test)
+    emit("build all: phony bin/wordgrinder.1 ", preferred_curses or "", " ", preferred_x11 or "", " ", preferred_test)
     emit("build install: phony all ", table.concat(installables, " "))
 end
 
