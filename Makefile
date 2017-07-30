@@ -28,8 +28,8 @@ LUA_INTERPRETER = $(OBJDIR)/lua
 CURSES_PACKAGE = ncursesw
 
 # Replace lua53 with internallua or a pkg-config name (including luajit)
-PREFERRED_WORDGRINDER = wordgrinder-lua52-curses-release
-PREFERRED_XWORDGRINDER = xwordgrinder-lua52-x11-release
+PREFERRED_WORDGRINDER = wordgrinder-lua-5.2-curses-release
+PREFERRED_XWORDGRINDER = xwordgrinder-lua-5.2-x11-release
 
 NINJABUILD = \
 	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS)

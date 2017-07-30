@@ -302,12 +302,7 @@ else
     print("not found")
 end
 
-local lua_packages = {
-	"luajit",
-	"lua51", "lua-5.1",
-	"lua52", "lua-5.2",
-	"lua53", "lua-5.3"
-}
+local lua_packages = {"luajit", "lua-5.1", "lua-5.2", "lua-5.3"}
 
 for _, luapackage in ipairs(lua_packages) do
     io.write("Lua package '"..luapackage.."': ")
