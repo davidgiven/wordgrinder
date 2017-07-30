@@ -1,6 +1,14 @@
 language: c
-sudo: false
-dist: trusty
+
+matrix:
+    include:
+        -
+            os: linux
+            sudo: false
+            dist: trusty
+        -
+            os: osx
+
 addons:
     apt:
         packages:
@@ -12,6 +20,7 @@ addons:
         - liblua5.2-dev
         #- liblua5.3-dev
         #- libluajit5.1-dev
+
 script:
     - make -j4 dev
 
