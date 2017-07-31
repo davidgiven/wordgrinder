@@ -1,4 +1,8 @@
-hide = @
+# ===========================================================================
+#                          CONFIGURATION OPTIONS
+# ===========================================================================
+
+# It should be mostly safe to leave these options at the default.
 
 PREFIX ?= $(HOME)
 BINDIR ?= $(PREFIX)/bin
@@ -10,7 +14,7 @@ DESTDIR ?=
 OBJDIR = /tmp/wg-build
 
 # The compiler used for the native build (curses, X11)
-CC ?= gcc
+CC ?= cc
 
 # Used for the Windows build (either cross or native)
 WINCC ?= i686-w64-mingw32-gcc
@@ -22,27 +26,38 @@ ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
 	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
 endif
 
-# For native builds only, which Lua do you want to use? This affects
-# only which one gets installed. The Windows build always uses the
-# internal Lua.
+# For non-windows builds only, which Lua do you want to use?
+# Use 'internallua' if you want to use the built-in Lua 5.1. If
+# you want to dynamically link to your system's Lua, or to Luajit,
+# use a pkg-config name instead (e.g. lua-5.1, lua-5.2, luajit).
+# WordGrinder works with 5.1, 5.2, 5.3, and LuaJit.
 #
-# Choices are: internallua, a pkg-config name, or a flag spec like:
+# Alternatively, use a flag specify string like this:
 # --cflags={-I/usr/include/thingylua} --libs={-L/usr/lib/thingylua -lthingylua}
-LUA_PACKAGE := internallua
+LUA_PACKAGE ?= internallua
 
-# For native builds only,
+# Application version and file format.
 VERSION := 0.7.0
 FILEFORMAT := 7
-DATE := $(shell date +'%-d %B %Y')
-
-LUA_INTERPRETER = $(OBJDIR)/lua
+DATE ?= $(shell date +'%-d %B %Y')
 
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
 ifneq ($(Apple_PubSub_Socket_Render),)
-	CURSES_PACKAGE := --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
+	CURSES_PACKAGE ?= --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
 else
-	CURSES_PACKAGE := ncursesw
+	CURSES_PACKAGE ?= ncursesw
 endif
+
+# ===========================================================================
+#                       END OF CONFIGURATION OPTIONS
+# ===========================================================================
+#
+# If you need to edit anything below here, please let me know so I can add
+# a proper configuration option.
+
+hide = @
+
+LUA_INTERPRETER = $(OBJDIR)/lua
 
 NINJABUILD = \
 	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
@@ -57,12 +72,12 @@ all: $(OBJDIR)/build.ninja
 install: $(OBJDIR)/build.ninja
 	$(NINJABUILD) install
 
-# Builds and tests everything.
+# Builds and tests everything that's buildable on your machine.
 .PHONY: dev
 dev: $(OBJDIR)/build.ninja
 	$(NINJABUILD) dev
 
-# Builds Windows (but doesn't test it).
+# Builds Windows (but doesn't test it because that's hard).
 .PHONY: windows
 windows: $(OBJDIR)/build.ninja
 	$(NINJABUILD) bin/WordGrinder-$(VERSION)-setup.exe
