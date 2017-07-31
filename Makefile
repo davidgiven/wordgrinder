@@ -28,7 +28,7 @@ endif
 #
 # Choices are: internallua, a pkg-config name, or a flag spec like:
 # --cflags={-I/usr/include/thingylua} --libs={-L/usr/lib/thingylua -lthingylua}
-LUA_PACKAGE := lua-5.2
+LUA_PACKAGE := internallua
 
 # For native builds only,
 VERSION := 0.7.0

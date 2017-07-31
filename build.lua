@@ -454,6 +454,15 @@ if want_frontend("x11") or want_frontend("curses") then
         end
     end
 
+    if (LUA_PACKAGE ~= "internallua") and not has_package(LUA_PACKAGE) then
+        print()
+        print("LUA_PACKAGE is set to '"..LUA_PACKAGE.."', but no Lua package of that name is available.")
+        print("Cannot build, giving up. (Try 'internallua').")
+        print()
+        os.exit(1)
+    end
+    print("The preferred Lua package is: '"..LUA_PACKAGE.."'")
+
     local preferred_test
     local preferred_curses
     local preferred_x11
