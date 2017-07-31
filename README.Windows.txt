@@ -1,7 +1,7 @@
-                              WORDGRINDER V0.6.0
+                              WORDGRINDER V0.7.0
                               ==================
 
-                           © 2007-2015 David Given
+                           © 2007-2017 David Given
                                  2015-09-23
 
                                Windows version
@@ -62,13 +62,16 @@ LICENSE
 WordGrinder is available under the MIT license. Please see the COPYING file
 for the full text.
 
+WordGrinder contains a copy of Lua 5.1. This is also MIT licensed and is
+© 1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
+
 WordGrinder contains a copy of the LuaFileSystem code. This is also MIT
-licensed and is © The Kepler Project. See 
+licensed and is © The Kepler Project. See
 http://www.keplerproject.org/luafilesystem for more information.
- 
-WordGrinder contains a copy of the xpattern module. This is also MIT
-licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern
-for more information.
+
+WordGrinder contains a copy of the xpattern module. This is also MIT licensed
+and is © David Manura. See http://lua-users.org/wiki/ExPattern for more
+information.
 
 WordGrinder contains a copy of the SCOWL wordlist for British and
 American-Canadian English. This is © Kevin Atkinson and J. Ross Beresford.
@@ -78,6 +81,10 @@ Please see the README.Scowl file for the full license text.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.7: 2017-??-??: new plain text diffable file format; Lua 5.3
+support; better locale detection; dense paragraphs mode; lots of bugfixes.
+Official OSX support. New (better, hopefully) build system.
 
 WordGrinder 0.6: 2015-04-18: New X11 frontend (actual bold and italic on
 Linux machines!); shift+cursor keys starts a selection; more HTML emission
@@ -111,7 +118,7 @@ strings containing multiple whitespace characters (that was triggering the
 crash handler). Thanks to lostnbronx for the report. Added RAW and PRE
 paragraph styles. Cleaned up HTML import. Add customisability to HTML export.
 Relicensed to MIT.
- 
+
 WordGrinder 0.3.2: 2008-11-03: Fixed a very simple and very stupid typo that
 caused a crash if you tried to turn autosave on. Added a simple exception
 handler to try and prevent data loss on error in the future.
