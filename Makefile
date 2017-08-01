@@ -26,20 +26,24 @@ ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
 	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
 endif
 
+# Application version and file format.
+VERSION := 0.7.0
+FILEFORMAT := 7
+DATE ?= $(shell date +'%-d %B %Y')
+
 # For non-windows builds only, which Lua do you want to use?
-# Use 'internallua' if you want to use the built-in Lua 5.1. If
+# Use 'builtin' if you want to use the built-in Lua 5.1. If
 # you want to dynamically link to your system's Lua, or to Luajit,
 # use a pkg-config name instead (e.g. lua-5.1, lua-5.2, luajit).
 # WordGrinder works with 5.1, 5.2, 5.3, and LuaJit.
 #
 # Alternatively, use a flag specify string like this:
 # --cflags={-I/usr/include/thingylua} --libs={-L/usr/lib/thingylua -lthingylua}
-LUA_PACKAGE ?= internallua
+LUA_PACKAGE ?= builtin
 
-# Application version and file format.
-VERSION := 0.7.0
-FILEFORMAT := 7
-DATE ?= $(shell date +'%-d %B %Y')
+# Which package to use for Minizip. Use 'builtin' for the built-in
+# one.
+MINIZIP_PACKAGE ?= builtin
 
 # Hack to try and detect the presence of the Xft library (it's not in
 # pkg-config).
@@ -103,6 +107,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		FILEFORMAT="$(FILEFORMAT)" \
 		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
 		LUA_PACKAGE="$(LUA_PACKAGE)" \
+		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		MAKENSIS="$(MAKENSIS)" \
 		MANDIR="$(MANDIR)" \
 		OBJDIR="$(OBJDIR)" \

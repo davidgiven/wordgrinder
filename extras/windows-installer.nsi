@@ -90,7 +90,7 @@ FunctionEnd
 Section "WordGrinder (required)"
 	SectionIn RO
 	SetOutPath $INSTDIR
-	File /oname=wordgrinder.exe "bin\wordgrinder-internallua-windows-release.exe"
+	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-windows-release.exe"
 	File "README.wg"
 	File "COPYING"
 	File "README.Scowl"

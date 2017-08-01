@@ -21,6 +21,9 @@ local function has_package(package)
     if package:find("^-") then
         return true
     end
+    if package == "builtin" then
+        return true
+    end
     return os.execute("pkg-config "..package) == 0
 end
 
@@ -74,7 +77,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         "-DNOUNCRYPT",
         "-DNOCRYPT",
         "-Isrc/c",
-        "-Isrc/c/minizip",
         "-Wall",
         "-Wno-unused-function",
         "-ffunction-sections",
@@ -111,7 +113,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-s"
     end
 
-    if luapackage == "internallua" then
+    if luapackage == "builtin" then
         cflags[#cflags+1] = "-Isrc/c/emu/lua-5.1.5"
         cflags[#cflags+1] = "-DLUA_USE_MKSTEMP"
     else
@@ -119,7 +121,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
     end
 
-    local needs_luabitop = (luapackage == "lua51") or (luapackage == "internallua") or (luapackage == "lua-5.1")
+    local needs_luabitop = (luapackage == "lua51") or (luapackage == "builtin") or (luapackage == "lua-5.1")
     if needs_luabitop then
         cflags[#cflags+1] = "-DBUILTIN_LUABITOP"
     end
@@ -141,6 +143,13 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-D_XOPEN_SOURCE_EXTENDED"
         cflags[#cflags+1] = "-D_XOPEN_SOURCE"
         cflags[#cflags+1] = "-D_GNU_SOURCE"
+    end
+
+    if MINIZIP_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/minizip"
+    else
+        cflags[#cflags+1] = package_flags(MINIZIP_PACKAGE, "--cflags")
+        ldflags[#ldflags+1] = package_flags(MINIZIP_PACKAGE, "--libs")
     end
 
     local function srcfile(cfile)
@@ -173,9 +182,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/luabitop/bit.c")
     end
 
-    -- Lua (if internal)
+    -- Lua (if builtin)
 
-    if luapackage == "internallua" then
+    if luapackage == "builtin" then
         srcfile("src/c/emu/lua-5.1.5/lapi.c")
         srcfile("src/c/emu/lua-5.1.5/lauxlib.c")
         srcfile("src/c/emu/lua-5.1.5/lbaselib.c")
@@ -223,9 +232,11 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     -- Minizip
 
-    srcfile("src/c/minizip/ioapi.c")
-    srcfile("src/c/minizip/zip.c")
-    srcfile("src/c/minizip/unzip.c")
+    if MINIZIP_PACKAGE == "builtin" then
+        srcfile("src/c/minizip/ioapi.c")
+        srcfile("src/c/minizip/zip.c")
+        srcfile("src/c/minizip/unzip.c")
+    end
 
     emit("build ", exe, ": ld ", table.concat(objs, " "))
     emit("  ldflags = ", table.concat(ldflags, " "))
@@ -312,6 +323,7 @@ if has_binary(WINCC) and has_binary(WINDRES) and has_binary(MAKENSIS) then
 else
     print("not found")
 end
+
 io.write("Curses package '"..CURSES_PACKAGE.."': ")
 if has_package(CURSES_PACKAGE) then
     print("found")
@@ -319,10 +331,11 @@ if has_package(CURSES_PACKAGE) then
 else
     print("not found")
 end
-io.write("FreeType2: ")
+
+io.write("FreeType2 package 'freetype2': ")
 if has_package("freetype2") then
     print("found")
-    io.write("Xft: ")
+    io.write("Xft package '"..XFT_PACKAGE.."': ")
     if has_package(XFT_PACKAGE) then
         print("found")
         FRONTENDS["x11"] = true
@@ -333,6 +346,18 @@ else
     print("not found")
 end
 
+io.write("Minizip package '"..MINIZIP_PACKAGE.."': ")
+if has_package(MINIZIP_PACKAGE) then
+    print("found")
+else
+    print("not found")
+    print()
+    print("Could not find the package for minizip, which is necessary to build.")
+    print("Try 'builtin' for the built-in one.")
+    print()
+    os.exit(1)
+end
+
 local lua_packages = {}
 local function add_lua_package(package)
     if not lua_packages[package] then
@@ -341,14 +366,14 @@ local function add_lua_package(package)
     end
 end
 add_lua_package(LUA_PACKAGE)
-add_lua_package("internallua")
+add_lua_package("builtin")
 add_lua_package("lua-5.1")
 add_lua_package("lua-5.2")
 add_lua_package("lua-5.3")
 add_lua_package("luajit")
 
 for _, luapackage in ipairs(lua_packages) do
-    if luapackage ~= "internallua" then
+    if luapackage ~= "builtin" then
         io.write("Lua package '"..luapackage.."': ")
         if has_package(luapackage) then
             print("found")
@@ -447,7 +472,7 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
 if want_frontend("x11") or want_frontend("curses") then
     for _, buildstyle in ipairs({"release", "debug", "static"}) do
         for _, luapackage in ipairs(lua_packages) do
-            if (luapackage == "internallua") or has_package(luapackage) then
+            if has_package(luapackage) then
                 if want_frontend("x11") then
                     build_wordgrinder_binary("bin/xwordgrinder", luapackage, "x11", buildstyle)
                     run_wordgrinder_tests("bin/xwordgrinder", luapackage, "x11", buildstyle)
@@ -460,10 +485,10 @@ if want_frontend("x11") or want_frontend("curses") then
         end
     end
 
-    if (LUA_PACKAGE ~= "internallua") and not has_package(LUA_PACKAGE) then
+    if not has_package(LUA_PACKAGE) then
         print()
         print("LUA_PACKAGE is set to '"..LUA_PACKAGE.."', but no Lua package of that name is available.")
-        print("Cannot build, giving up. (Try 'internallua').")
+        print("Cannot build, giving up. (Try 'builtin').")
         print()
         os.exit(1)
     end
@@ -497,14 +522,14 @@ end
 
 if want_frontend("windows") then
     for _, buildstyle in ipairs({"release", "debug"}) do
-        build_wordgrinder_binary("bin/wordgrinder.exe", "internallua", "windows", buildstyle)
+        build_wordgrinder_binary("bin/wordgrinder.exe", "builtin", "windows", buildstyle)
     end
 
     emit("build ", OBJDIR, "/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml")
 
     local installer = "bin/WordGrinder-"..VERSION.."-setup.exe"
     allbinaries[#allbinaries+1] = installer
-    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-internallua-windows-release.exe")
+    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe")
 end
 
 emit("build clean: phony")
