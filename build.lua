@@ -27,6 +27,25 @@ local function has_package(package)
     return os.execute("pkg-config "..package) == 0
 end
 
+local function detect_package(name, package)
+    io.write("Detecting "..name.." in package '"..package.."': ")
+    io.stdout:flush()
+
+    local found = has_package(package)
+    print(found and "found" or "not found")
+    return found
+end
+
+local function detect_mandatory_package(name, package)
+    if not detect_package(name, package) then
+        print()
+        print("Mandatory package is missing --- cannot build. (There's probably a built-")
+        print("in one; try 'builtin'.")
+        print()
+        os.exit(1)
+    end
+end
+
 local function package_name(package)
     if package:find("^-") then
         return "custom"
@@ -73,7 +92,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         "-g",
         "-DVERSION='\""..VERSION.."\"'",
         "-DFILEFORMAT="..FILEFORMAT,
-        "-DBUILTIN_LFS",
         "-DNOUNCRYPT",
         "-DNOCRYPT",
         "-Isrc/c",
@@ -121,9 +139,18 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
     end
 
-    local needs_luabitop = (luapackage == "lua51") or (luapackage == "builtin") or (luapackage == "lua-5.1")
-    if needs_luabitop then
-        cflags[#cflags+1] = "-DBUILTIN_LUABITOP"
+    if LUAFILESYSTEM_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/emu/lfs"
+    else
+        cflags[#cflags+1] = package_flags(LUAFILESYSTEM_PACKAGE, "--cflags")
+        ldflags[#ldflags+1] = package_flags(LUAFILESYSTEM_PACKAGE, "--libs")
+    end
+
+    if LUABITOP_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/emu/luabitop"
+    else
+        cflags[#cflags+1] = package_flags(LUABITOP_PACKAGE, "--cflags")
+        ldflags[#ldflags+1] = package_flags(LUABITOP_PACKAGE, "--libs")
     end
 
     local cc
@@ -170,16 +197,18 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     srcfile("src/c/screen.c")
     srcfile(OBJDIR.."/luascripts.c")
 
-    -- Additional mandatory libraries
+    -- Additional optional libraries
 
-    srcfile("src/c/lfs/lfs.c")
+    if LUAFILESYSTEM_PACKAGE == "builtin" then
+        srcfile("src/c/emu/lfs/lfs.c")
+    end
 
     if (buildstyle == "static") or (frontend == "windows") then
         srcfile("src/c/emu/wcwidth.c")
     end
 
-    if needs_luabitop then
-        srcfile("src/c/luabitop/bit.c")
+    if LUABITOP_PACKAGE == "builtin" then
+        srcfile("src/c/emu/luabitop/lua-bitop.c")
     end
 
     -- Lua (if builtin)
@@ -324,39 +353,11 @@ else
     print("not found")
 end
 
-io.write("Curses package '"..CURSES_PACKAGE.."': ")
-if has_package(CURSES_PACKAGE) then
-    print("found")
-    FRONTENDS["curses"] = true
-else
-    print("not found")
-end
+FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)
+FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("Xft", XFT_PACKAGE)
 
-io.write("FreeType2 package 'freetype2': ")
-if has_package("freetype2") then
-    print("found")
-    io.write("Xft package '"..XFT_PACKAGE.."': ")
-    if has_package(XFT_PACKAGE) then
-        print("found")
-        FRONTENDS["x11"] = true
-    else
-        print("not found")
-    end
-else
-    print("not found")
-end
-
-io.write("Minizip package '"..MINIZIP_PACKAGE.."': ")
-if has_package(MINIZIP_PACKAGE) then
-    print("found")
-else
-    print("not found")
-    print()
-    print("Could not find the package for minizip, which is necessary to build.")
-    print("Try 'builtin' for the built-in one.")
-    print()
-    os.exit(1)
-end
+detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
+detect_mandatory_package("LuaFileSystem", LUAFILESYSTEM_PACKAGE)
 
 local lua_packages = {}
 local function add_lua_package(package)
@@ -373,14 +374,7 @@ add_lua_package("lua-5.3")
 add_lua_package("luajit")
 
 for _, luapackage in ipairs(lua_packages) do
-    if luapackage ~= "builtin" then
-        io.write("Lua package '"..luapackage.."': ")
-        if has_package(luapackage) then
-            print("found")
-        else
-            print("not found")
-        end
-    end
+    detect_package("Lua", luapackage)
 end
 
 if want_frontend("curses") then

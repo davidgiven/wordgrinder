@@ -31,19 +31,16 @@ VERSION := 0.7.0
 FILEFORMAT := 7
 DATE ?= $(shell date +'%-d %B %Y')
 
-# For non-windows builds only, which Lua do you want to use?
+# Which Lua do you want to use?
+#
 # Use 'builtin' if you want to use the built-in Lua 5.1. If
 # you want to dynamically link to your system's Lua, or to Luajit,
 # use a pkg-config name instead (e.g. lua-5.1, lua-5.2, luajit).
 # WordGrinder works with 5.1, 5.2, 5.3, and LuaJit.
 #
-# Alternatively, use a flag specify string like this:
+# Alternatively, use a flag specifier string like this:
 # --cflags={-I/usr/include/thingylua} --libs={-L/usr/lib/thingylua -lthingylua}
 LUA_PACKAGE ?= builtin
-
-# Which package to use for Minizip. Use 'builtin' for the built-in
-# one.
-MINIZIP_PACKAGE ?= builtin
 
 # Hack to try and detect the presence of the Xft library (it's not in
 # pkg-config).
@@ -59,6 +56,21 @@ ifneq ($(filter Darwin%,$(shell uname)),)
 else
 	CURSES_PACKAGE ?= ncursesw
 endif
+
+# By default, WordGrinder uses the builtin versions of these libraries.
+# However, they're overridable --- this is mainly of use if you're a
+# package maintainer and want to dynamically link to your platform's
+# version.
+#
+# Important note: the pkg-config files for Lua packages are typically
+# wrong, as they'll try to link in the wrong Lua library. You'll
+# probably have to use a manual flag specifier string. Also, setting
+# these only makes sense with 'make all' --- don't use this with
+# 'make dev' (but you probably won't be doing this anyway).
+
+LUAFILESYSTEM_PACKAGE ?= builtin
+LUABITOP_PACKAGE ?= builtin
+MINIZIP_PACKAGE ?= builtin
 
 # ===========================================================================
 #                       END OF CONFIGURATION OPTIONS
@@ -105,11 +117,13 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		DESTDIR="$(DESTDIR)" \
 		DOCDIR="$(DOCDIR)" \
 		FILEFORMAT="$(FILEFORMAT)" \
+		LUABITOP_PACKAGE="$(LUABITOP_PACKAGE)" \
+		LUAFILESYSTEM_PACKAGE="$(LUAFILESYSTEM_PACKAGE)" \
 		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
 		LUA_PACKAGE="$(LUA_PACKAGE)" \
-		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		MAKENSIS="$(MAKENSIS)" \
 		MANDIR="$(MANDIR)" \
+		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		OBJDIR="$(OBJDIR)" \
 		VERSION="$(VERSION)" \
 		WINCC="$(WINCC)" \

@@ -32,6 +32,8 @@
 #include "lua.h"
 #include "lauxlib.h"
 
+#if LUA_VERSION_NUM < 503
+
 #ifdef _MSC_VER
 /* MSVC is stuck in the last century and doesn't have C99's stdint.h. */
 typedef __int32 int32_t;
@@ -187,3 +189,4 @@ LUALIB_API int luaopen_bit(lua_State *L)
   return 1;
 }
 
+#endif
