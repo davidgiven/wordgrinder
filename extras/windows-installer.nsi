@@ -93,8 +93,9 @@ Section "WordGrinder (required)"
 	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-windows-release.exe"
 	File "README.wg"
 	File "COPYING"
-	File "README.Scowl"
-	File "README.Lua"
+	File "COPYING.Scowl"
+	File "COPYING.Lua"
+	File "COPYING.LuaBitOp"
 
 	CreateDirectory $INSTDIR\Dictionaries
 	File /oname=Dictionaries\British.dictionary "extras\british.dictionary"
