@@ -41,6 +41,14 @@ VERSION := 0.7.0
 FILEFORMAT := 7
 DATE ?= $(shell date +'%-d %B %Y')
 
+# Hack to try and detect the presence of the Xft library (it's not in
+# pkg-config).
+ifneq ($(wildcard /usr/include/X11/Xft/Xft.h),)
+	XFT_PACKAGE ?= --libs={-lX11 -lXft}
+else
+	XFT_PACKAGE ?= none
+endif
+
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
 ifneq ($(filter Darwin%,$(shell uname)),)
 	CURSES_PACKAGE ?= --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
@@ -101,6 +109,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		VERSION="$(VERSION)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
+		XFT_PACKAGE="$(XFT_PACKAGE)" \
 
 clean:
 	@echo CLEAN

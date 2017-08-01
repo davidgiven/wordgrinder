@@ -322,7 +322,13 @@ end
 io.write("FreeType2: ")
 if has_package("freetype2") then
     print("found")
-    FRONTENDS["x11"] = true
+    io.write("Xft: ")
+    if has_package(XFT_PACKAGE) then
+        print("found")
+        FRONTENDS["x11"] = true
+    else
+        print("not found")
+    end
 else
     print("not found")
 end
