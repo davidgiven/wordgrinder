@@ -6,15 +6,20 @@ matrix:
             os: linux
             sudo: false
             dist: trusty
-            env: CC=gcc
+            compiler: gcc
         -
             os: linux
             sudo: false
             dist: trusty
-            env: CC=clang
+            compiler: clang
         -
             os: osx
             env: HOMEBREW_NO_AUTO_UPDATE=1
+            compiler: gcc
+        -
+            os: osx
+            env: HOMEBREW_NO_AUTO_UPDATE=1
+            compiler: clang
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja lua; fi
