@@ -409,8 +409,11 @@ rule rcfile
 rule makensis
     command = $MAKENSIS -v2 -nocd -dVERSION=$VERSION -dOUTFILE=$out $in
 
+rule strip
+    command = strip $in -o $out
+
 rule install
-    command = install -s -m $mode $in $out
+    command = install -m $mode $in $out
 
 rule manpage
     command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
@@ -490,17 +493,25 @@ if want_frontend("x11") or want_frontend("curses") then
     local preferred_test
     local preferred_curses
     local preferred_x11
+	local stripped_curses
+	local stripped_x11
     if want_frontend("curses") then
         preferred_curses = "bin/wordgrinder-"..package_name(LUA_PACKAGE).."-curses-release"
         preferred_test = "test-"..package_name(LUA_PACKAGE).."-curses-debug"
-        install_file("755", preferred_curses, DESTDIR..BINDIR.."/wordgrinder")
+		stripped_curses = preferred_curses.."-stripped"
+		emit("build ", stripped_curses, ": strip ", preferred_curses)
+		allbinaries[#allbinaries+1] = stripped_curses
+        install_file("755", stripped_curses, DESTDIR..BINDIR.."/wordgrinder")
     end
     if want_frontend("x11") then
         preferred_x11 = "bin/xwordgrinder-"..package_name(LUA_PACKAGE).."-x11-release"
         if not preferred_test then
             preferred_test = "test-"..package_name(LUA_PACKAGE).."-x11-debug"
         end
-        install_file("755", preferred_x11, DESTDIR..BINDIR.."/xwordgrinder")
+		stripped_x11 = preferred_x11.."-stripped"
+		emit("build ", stripped_x11, ": strip ", preferred_x11)
+		allbinaries[#allbinaries+1] = stripped_x11
+        install_file("755", stripped_x11, DESTDIR..BINDIR.."/xwordgrinder")
     end
     install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
@@ -509,7 +520,7 @@ if want_frontend("x11") or want_frontend("curses") then
     emit("  date = ", DATE)
     emit("  version = ", VERSION)
 
-    emit("build all: phony bin/wordgrinder.1 ", preferred_curses or "", " ", preferred_x11 or "", " ", preferred_test)
+    emit("build all: phony bin/wordgrinder.1 ", stripped_curses or "", " ", stripped_x11 or "", " ", preferred_test)
     emit("build install: phony all ", table.concat(installables, " "))
 end
 
