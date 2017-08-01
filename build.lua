@@ -173,7 +173,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     end
 
     if MINIZIP_PACKAGE == "builtin" then
-        cflags[#cflags+1] = "-Isrc/c/minizip"
+        cflags[#cflags+1] = "-Isrc/c/emu/minizip"
     else
         cflags[#cflags+1] = package_flags(MINIZIP_PACKAGE, "--cflags")
         ldflags[#ldflags+1] = package_flags(MINIZIP_PACKAGE, "--libs")
@@ -262,9 +262,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     -- Minizip
 
     if MINIZIP_PACKAGE == "builtin" then
-        srcfile("src/c/minizip/ioapi.c")
-        srcfile("src/c/minizip/zip.c")
-        srcfile("src/c/minizip/unzip.c")
+        srcfile("src/c/emu/minizip/ioapi.c")
+        srcfile("src/c/emu/minizip/zip.c")
+        srcfile("src/c/emu/minizip/unzip.c")
     end
 
     emit("build ", exe, ": ld ", table.concat(objs, " "))
