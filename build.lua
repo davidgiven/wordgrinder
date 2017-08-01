@@ -128,7 +128,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-O0"
     else
         cflags[#cflags+1] = "-Os"
-        ldflags[#ldflags+1] = "-s"
     end
 
     if luapackage == "builtin" then
@@ -411,7 +410,7 @@ rule makensis
     command = $MAKENSIS -v2 -nocd -dVERSION=$VERSION -dOUTFILE=$out $in
 
 rule install
-    command = install -m $mode $in $out
+    command = install -s -m $mode $in $out
 
 rule manpage
     command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
