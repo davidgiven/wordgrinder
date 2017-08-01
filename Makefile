@@ -42,7 +42,7 @@ FILEFORMAT := 7
 DATE ?= $(shell date +'%-d %B %Y')
 
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
-ifneq ($(Apple_PubSub_Socket_Render),)
+ifneq ($(filter Darwin%,$(OSTYPE)),)
 	CURSES_PACKAGE ?= --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
 else
 	CURSES_PACKAGE ?= ncursesw
