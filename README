@@ -55,6 +55,9 @@ packages:
   If you have Debian/Ubuntu:
     ninja-build libncursesw5-dev liblua5.2-dev zlib1g-dev libxft-dev
 
+  If you have Fedora:
+    luajit luajit-devel compat-lua-libs compat-lua-devel compat-lua lua-filesystem-compat zlib-devel libXft-devel
+
   If you have OSX with Homebrew (ncurses only, sorry):
     ninja
 
