@@ -16,6 +16,10 @@ OBJDIR = /tmp/wg-build
 # The compiler used for the native build (curses, X11)
 CC ?= cc
 
+# Global CFLAGS and LDFLAGS.
+CFLAGS ?=
+LDFLAGS ?=
+
 # Used for the Windows build (either cross or native)
 WINCC ?= i686-w64-mingw32-gcc
 WINDRES ?= i686-w64-mingw32-windres
@@ -112,11 +116,13 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		BINDIR="$(BINDIR)" \
 		BUILDFILE="$@" \
 		CC="$(CC)" \
+		CFLAGS="$(CFLAGS)" \
 		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
 		DATE="$(DATE)" \
 		DESTDIR="$(DESTDIR)" \
 		DOCDIR="$(DOCDIR)" \
 		FILEFORMAT="$(FILEFORMAT)" \
+		LDFLAGS="$(LDFLAGS)" \
 		LUABITOP_PACKAGE="$(LUABITOP_PACKAGE)" \
 		LUAFILESYSTEM_PACKAGE="$(LUAFILESYSTEM_PACKAGE)" \
 		LUA_INTERPRETER="$(LUA_INTERPRETER)" \

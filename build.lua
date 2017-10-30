@@ -89,6 +89,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     allbinaries[#allbinaries+1] = exe
 
     local cflags = {
+        "$CFLAGS",
         "-g",
         "-DVERSION='\""..VERSION.."\"'",
         "-DFILEFORMAT="..FILEFORMAT,
@@ -103,6 +104,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         "--std=gnu99",
     }
     local ldflags = {
+        "$LDFLAGS",
         "-lz",
         "-lm",
         "-g",
@@ -375,6 +377,9 @@ add_lua_package("luajit")
 for _, luapackage in ipairs(lua_packages) do
     detect_package("Lua", luapackage)
 end
+
+emit("CFLAGS = ", CFLAGS)
+emit("LDFLAGS = ", LDFLAGS)
 
 if want_frontend("curses") then
     emit("CURSES_CFLAGS = ", package_flags(CURSES_PACKAGE, "--cflags"))
