@@ -82,7 +82,7 @@ Please see the README.Scowl file for the full license text.
 REVISION HISTORY
 ================
 
-WordGrinder 0.7: 2017-??-??: new plain text diffable file format; Lua 5.3
+WordGrinder 0.7: 2017-10-30: new plain text diffable file format; Lua 5.3
 support; better locale detection; dense paragraphs mode; lots of bugfixes.
 Official OSX support. New (better, hopefully) build system.
 
