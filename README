@@ -18,7 +18,8 @@ It supports basic paragraph styles, basic character styles, basic screen
 markup, a menu interface that means you don't have to remember complex
 key sequences, HTML import and export, and some other useful features.
 
-WordGrinder does not require X. It runs in a terminal.
+WordGrinder does not require X. It runs in a terminal. (But there's a
+version which uses X if you want it.)
 
 
 
