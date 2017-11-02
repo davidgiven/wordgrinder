@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.7.0
+                              WORDGRINDER V0.7.1
                               ==================
 
                            © 2007-2017 David Given
-                                 2017-10-30
+                                 2017-11-02
 
                                Windows version
 
@@ -93,6 +93,10 @@ http://lua-users.org/wiki/ExPattern for more information.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.7.1: 2017-11-02: correct and cleaner license reporting;
+rearrange the source so that we can avoid shipping upstream dependencies
+if we want. No actual code changes.
 
 WordGrinder 0.7: 2017-10-30: new plain text diffable file format; Lua 5.3
 support; better locale detection; dense paragraphs mode; lots of bugfixes.
