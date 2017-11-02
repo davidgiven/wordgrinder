@@ -92,10 +92,7 @@ Section "WordGrinder (required)"
 	SetOutPath $INSTDIR
 	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-windows-release.exe"
 	File "README.wg"
-	File "COPYING"
-	File "COPYING.Scowl"
-	File "COPYING.Lua"
-	File "COPYING.LuaBitOp"
+	File "licenses\COPYING.*"
 
 	CreateDirectory $INSTDIR\Dictionaries
 	File /oname=Dictionaries\British.dictionary "extras\british.dictionary"
@@ -154,11 +151,9 @@ Section "Uninstall"
 	Delete $INSTDIR\wordgrinder.exe
 	Delete $INSTDIR\uninstall.exe
 	Delete $INSTDIR\README.wg
-	Delete $INSTDIR\COPYING
 
-	Delete Dictionaries\British.dictionary
-	Delete Dictionaries\American-Canadian.dictionary
-	RMDir $INSTDIR\Dictionaries
+	Delete $INSTDIR\COPYING.*
+	RMDir /r $INSTDIR\Dictionaries
 
 	; Remove shortcuts, if any
 	Delete "$SMPROGRAMS\WordGrinder\*.*"
