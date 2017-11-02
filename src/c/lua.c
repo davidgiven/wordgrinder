@@ -5,7 +5,9 @@
 
 #include "globals.h"
 #include "lfs.h"
+#if LUA_VERSION_NUM == 501
 #include "lua-bitop.h"
+#endif
 
 lua_State* L;
 
@@ -153,7 +155,7 @@ void script_run(const char* argv[])
 
 /* Lua fallback functions, used for compatibility with 5.1 */
 
-#if !defined LUA_VERSION_NUM || LUA_VERSION_NUM==501
+#if LUA_VERSION_NUM==501
 void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
 {
 	luaL_checkstack(L, nup+1, "too many upvalues");

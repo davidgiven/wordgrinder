@@ -367,6 +367,7 @@ FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("
 detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
 detect_mandatory_package("LuaFileSystem", LUAFILESYSTEM_PACKAGE)
 detect_mandatory_package("uthash", UTHASH_PACKAGE)
+detect_mandatory_package("LuaBitOp", LUABITOP_PACKAGE)
 
 local lua_packages = {}
 local function add_lua_package(package)
