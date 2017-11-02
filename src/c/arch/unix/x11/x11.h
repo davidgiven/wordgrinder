@@ -8,7 +8,7 @@
 
 #include <X11/Xlib.h>
 #include <Xft/Xft.h>
-#include "utils/uthash.h"
+#include "uthash.h"
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))

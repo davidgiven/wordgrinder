@@ -154,6 +154,13 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(LUABITOP_PACKAGE, "--libs")
     end
 
+	if UTHASH_PACKAGE == "builtin" then
+		cflags[#cflags+1] = "-Isrc/c/emu/uthash"
+	else
+        cflags[#cflags+1] = package_flags(UTHASH_PACKAGE, "--cflags")
+        ldflags[#ldflags+1] = package_flags(UTHASH_PACKAGE, "--libs")
+    end
+
     local cc
     if frontend == "windows" then
         cc = WINCC
@@ -359,6 +366,7 @@ FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("
 
 detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
 detect_mandatory_package("LuaFileSystem", LUAFILESYSTEM_PACKAGE)
+detect_mandatory_package("uthash", UTHASH_PACKAGE)
 
 local lua_packages = {}
 local function add_lua_package(package)

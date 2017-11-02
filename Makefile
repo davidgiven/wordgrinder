@@ -75,6 +75,7 @@ endif
 LUAFILESYSTEM_PACKAGE ?= builtin
 LUABITOP_PACKAGE ?= builtin
 MINIZIP_PACKAGE ?= builtin
+UTHASH_PACKAGE ?= builtin
 
 # ===========================================================================
 #                       END OF CONFIGURATION OPTIONS
@@ -131,6 +132,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		MANDIR="$(MANDIR)" \
 		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		OBJDIR="$(OBJDIR)" \
+		UTHASH_PACKAGE="$(UTHASH_PACKAGE)" \
 		VERSION="$(VERSION)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
@@ -140,7 +142,10 @@ clean:
 	@echo CLEAN
 	@rm -rf $(OBJDIR)
 
+ifeq ($(LUA_INTERPRETER),$(OBJDIR)/lua)
 $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]
 	@echo Bootstrapping build
 	@mkdir -p $(dir $@)
 	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c -lm -DLUA_USE_MKSTEMP
+endif
+
