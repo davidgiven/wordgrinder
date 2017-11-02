@@ -137,8 +137,8 @@ The distribution contains a copy of the uthash and utlist libraries. This is ©
 2003-2009 Troy D Hanson, and is available under a simplified BSD license.
 
 The distribution contains a copy of the xpattern module. This is also MIT
-licensed and is © David Manura. See http://lua-users.org/wiki/ExPattern for more
-information.
+licensed and is © 2008-2009 David Manura. See
+http://lua-users.org/wiki/ExPattern for more information.
 
 
 
