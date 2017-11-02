@@ -1,6 +1,8 @@
-/* © 2008 David Given.
- * WordGrinder is licensed under the MIT open source license. See the COPYING
- * file in this distribution for the full text.
+/* © 2007 Markus Kuhn
+ * (modified by dg@cowlark.com)
+ * Permission to use, copy, modify, and distribute this software
+ * for any purpose and without fee is hereby granted. The author
+ * disclaims all warranties with regard to this software.
  */
 
 #include "globals.h"
