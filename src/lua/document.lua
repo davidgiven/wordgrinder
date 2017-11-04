@@ -533,7 +533,7 @@ end
 function UpdateDocumentStyles()
 	local plaintext =
 	{
-		desc = "Plain test",
+		desc = "Plain text",
 		name = "P"
 	}
 
