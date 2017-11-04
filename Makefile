@@ -77,6 +77,10 @@ LUABITOP_PACKAGE ?= builtin
 MINIZIP_PACKAGE ?= builtin
 UTHASH_PACKAGE ?= builtin
 
+# Do you want your binaries stripped on installation?
+
+WANT_STRIPPED_BINARIES ?= yes
+
 # ===========================================================================
 #                       END OF CONFIGURATION OPTIONS
 # ===========================================================================
@@ -134,13 +138,14 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		OBJDIR="$(OBJDIR)" \
 		UTHASH_PACKAGE="$(UTHASH_PACKAGE)" \
 		VERSION="$(VERSION)" \
+		WANT_STRIPPED_BINARIES="$(WANT_STRIPPED_BINARIES)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
 		XFT_PACKAGE="$(XFT_PACKAGE)" \
 
 clean:
 	@echo CLEAN
-	@rm -rf $(OBJDIR)
+	@rm -rf $(OBJDIR) bin
 
 ifeq ($(LUA_INTERPRETER),$(OBJDIR)/lua)
 $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]

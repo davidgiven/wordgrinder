@@ -351,6 +351,12 @@ function install_file(mode, src, dest)
     installables[#installables+1] = dest
 end
 
+-- Sanity check
+
+if (not WANT_STRIPPED_BINARIES) or (WANT_STRIPPED_BINARIES == "") then
+    WANT_STRIPPED_BINARIES = "yes"
+end
+
 -- Detect what tools we have available.
 
 io.write("Windows toolchain: ")
@@ -504,28 +510,35 @@ if want_frontend("x11") or want_frontend("curses") then
     end
     print("The preferred Lua package is: '"..LUA_PACKAGE.."'")
 
+    local function strip_binary(binary)
+        if WANT_STRIPPED_BINARIES == "yes" then
+            local stripped = binary.."-stripped"
+            emit("build ", stripped, ": strip ", binary)
+            allbinaries[#allbinaries+1] = stripped
+            binary = stripped
+        end
+
+        return binary
+    end
+
     local preferred_test
     local preferred_curses
     local preferred_x11
-	local stripped_curses
-	local stripped_x11
     if want_frontend("curses") then
         preferred_curses = "bin/wordgrinder-"..package_name(LUA_PACKAGE).."-curses-release"
         preferred_test = "test-"..package_name(LUA_PACKAGE).."-curses-debug"
-		stripped_curses = preferred_curses.."-stripped"
-		emit("build ", stripped_curses, ": strip ", preferred_curses)
-		allbinaries[#allbinaries+1] = stripped_curses
-        install_file("755", stripped_curses, DESTDIR..BINDIR.."/wordgrinder")
+
+        preferred_curses = strip_binary(preferred_curses)
+        install_file("755", preferred_curses, DESTDIR..BINDIR.."/wordgrinder")
     end
     if want_frontend("x11") then
         preferred_x11 = "bin/xwordgrinder-"..package_name(LUA_PACKAGE).."-x11-release"
         if not preferred_test then
             preferred_test = "test-"..package_name(LUA_PACKAGE).."-x11-debug"
         end
-		stripped_x11 = preferred_x11.."-stripped"
-		emit("build ", stripped_x11, ": strip ", preferred_x11)
-		allbinaries[#allbinaries+1] = stripped_x11
-        install_file("755", stripped_x11, DESTDIR..BINDIR.."/xwordgrinder")
+
+        preferred_x11 = strip_binary(preferred_x11)
+        install_file("755", preferred_x11, DESTDIR..BINDIR.."/xwordgrinder")
     end
     install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
@@ -534,7 +547,7 @@ if want_frontend("x11") or want_frontend("curses") then
     emit("  date = ", DATE)
     emit("  version = ", VERSION)
 
-    emit("build all: phony bin/wordgrinder.1 ", stripped_curses or "", " ", stripped_x11 or "", " ", preferred_test)
+    emit("build all: phony bin/wordgrinder.1 ", preferred_curses or "", " ", preferred_x11 or "", " ", preferred_test)
     emit("build install: phony all ", table.concat(installables, " "))
 end
 
