@@ -1,0 +1,2 @@
+brew 'ninja'
+brew 'lua'
