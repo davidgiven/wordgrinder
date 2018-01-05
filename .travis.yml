@@ -1,28 +1,18 @@
 language: c
 
-matrix:
-    include:
-        -
-            os: linux
-            sudo: false
-            dist: trusty
-            compiler: gcc
-        -
-            os: linux
-            sudo: false
-            dist: trusty
-            compiler: clang
-        -
-            os: osx
-            env: HOMEBREW_NO_AUTO_UPDATE=1
-            compiler: gcc
-        -
-            os: osx
-            env: HOMEBREW_NO_AUTO_UPDATE=1
-            compiler: clang
+env:
+    global: HOMEBREW_NO_AUTO_UPDATE=1
+
+compiler:
+    - gcc
+    - clang
+
+os:
+    - osx
+    - linux
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ninja lua; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bundle --file=.Brewfile; fi
 
 addons:
     apt:
@@ -38,4 +28,3 @@ addons:
 
 script:
     - make -j4 dev
-
