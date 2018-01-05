@@ -12,7 +12,7 @@ os:
     - linux
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bundle; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bundle --file=.Brewfile; fi
 
 addons:
     apt:
