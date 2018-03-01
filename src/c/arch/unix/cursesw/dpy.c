@@ -96,18 +96,21 @@ void dpy_setattr(int andmask, int ormask)
 
 void dpy_writechar(int x, int y, uni_t c)
 {
-	wchar_t cc = c;
+	char buffer[8];
+	char* p = buffer;
+	writeu8(&p, c);
+	*p = '\0';
 
-	mvaddnwstr(y, x, &cc, 1);
+	mvaddstr(y, x, buffer);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
-	wchar_t cc = ' ';
+	char cc = ' ';
 
 	for (int y = y1; y <= y2; y++)
 		for (int x = x1; x <= x2; x++)
-			mvaddnwstr(y, x, &cc, 1);
+			mvaddnstr(y, x, &cc, 1);
 }
 
 uni_t dpy_getchar(int timeout)

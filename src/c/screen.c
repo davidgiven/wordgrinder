@@ -93,7 +93,7 @@ static int write_cb(lua_State* L)
 
 	while (s < send)
 	{
-		wchar_t c = readu8(&s);
+		uni_t c = readu8(&s);
 
 		dpy_writechar(x, y, c);
 		if (!iswcntrl(c))
@@ -138,7 +138,7 @@ static int getstringwidth_cb(lua_State* L)
 	int width = 0;
 	while (s < send)
 	{
-		wchar_t c = readu8(&s);
+		uni_t c = readu8(&s);
 		if (!iswcntrl(c))
 			width += emu_wcwidth(c);
 	}
@@ -158,7 +158,7 @@ static int getboundedstring_cb(lua_State* L)
 	while (s < send)
 	{
 		const char* p = s;
-		wchar_t c = readu8(&s);
+		uni_t c = readu8(&s);
 		if (!iswcntrl(c))
 		{
 			width -= emu_wcwidth(c);
