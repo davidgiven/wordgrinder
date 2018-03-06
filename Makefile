@@ -105,6 +105,11 @@ all: $(OBJDIR)/build.ninja
 install: $(OBJDIR)/build.ninja
 	$(NINJABUILD) install
 
+# Builds and installs the Unix release versions only, without testing.
+.PHONY: install-notests
+install-notests: $(OBJDIR)/build.ninja
+	$(NINJABUILD) install-notests
+
 # Builds and tests everything that's buildable on your machine.
 .PHONY: dev
 dev: $(OBJDIR)/build.ninja
