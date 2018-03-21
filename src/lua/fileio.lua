@@ -80,7 +80,7 @@ local function writetostream(object, write, writeo)
 	if (GetClass(object) == DocumentSetClass) then
 		save(".current", object:_findDocument(object.current.name))
 
-		for i, d in ipairs(object.documents) do
+		local function save_document(i, d)
 			write("#")
 			write(tostring(i))
 			write("\n")
@@ -98,6 +98,13 @@ local function writetostream(object, write, writeo)
 
 			write(".")
 			write("\n")
+		end
+
+		if object.clipboard then
+			save_document("clipboard", object.clipboard)
+		end
+		for i, d in ipairs(object.documents) do
+			save_document(i, d)
 		end
 	end
 
@@ -522,8 +529,17 @@ function loadfromstreamt(fp)
 
 			o[p] = v
 		elseif line:find("^#") then
-			local id = tonumber(line:sub(2))
-			local doc = data.documents[id]
+			local id = line:sub(2)
+			local doc
+			if (id == "clipboard") then
+				doc = data.clipboard
+				if not doc then
+					doc = {}
+					data.clipboard = doc
+				end
+			else
+				doc = data.documents[tonumber(id)]
+			end
 
 			local index = 1
 			while true do
@@ -550,6 +566,10 @@ function loadfromstreamt(fp)
 	end
 	data.current = data.documents[data.current]
 
+	-- Remove any broken clipboard (works around a bug in v0.6 saved files).
+	if data.clipboard and (#data.clipboard == 0) then
+		data.clipboard = nil
+	end
 	return data
 end
 

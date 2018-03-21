@@ -145,6 +145,9 @@ http://lua-users.org/wiki/ExPattern for more information.
 REVISION HISTORY
 ================
 
+WordGrinder 0.7.2: 2017-03-21: pasting immediately after loading a
+document no longer hard crashes.
+
 WordGrinder 0.7.1: 2017-11-02: correct and cleaner license reporting;
 rearrange the source so that we can avoid shipping upstream dependencies
 if we want. No actual code changes.

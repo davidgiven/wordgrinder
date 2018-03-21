@@ -323,6 +323,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/weirdness-combining-words.lua",
         "tests/weirdness-deletion-with-multiple-spaces.lua",
         "tests/weirdness-end-of-lines.lua",
+        "tests/weirdness-missing-clipboard.lua",
         "tests/weirdness-replacing-words.lua",
         "tests/weirdness-save-new-document.lua",
         "tests/weirdness-splitting-lines-before-space.lua",

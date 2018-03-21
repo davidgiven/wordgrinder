@@ -157,6 +157,7 @@ function RedrawScreen()
 
 	local paragraph = Document[cp]
 	local ocw = cw
+	local cl
 	cl, cw = paragraph:getLineOfWord(cw)
 	if not cl then
 		error("word "..ocw.." not in para "..cp.." of len "..#paragraph)
