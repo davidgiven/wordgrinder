@@ -65,7 +65,7 @@ static int parseword_cb(lua_State* L)
 		}
 		else
 		{
-			wchar_t c = readu8(&s);
+			uni_t c = readu8(&s);
 
 			if (iswcntrl(c))
 			{
@@ -114,7 +114,7 @@ static int writestyled_cb(lua_State* L)
 			dpy_setattr(0, attr | mark);
 		}
 
-		wchar_t c = readu8(&s);
+		uni_t c = readu8(&s);
 
 		if (iswcntrl(c))
 		{
