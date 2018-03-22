@@ -49,7 +49,8 @@ LUA_PACKAGE ?= builtin
 # Hack to try and detect the presence of the Xft library (it's not in
 # pkg-config).
 ifneq ($(wildcard /usr/include/X11/Xft/Xft.h),)
-	XFT_PACKAGE ?= --cflags={} --libs={-lX11 -lXft}
+	XFT_PACKAGE ?= \
+		--cflags={-I/usr/include/X11} --libs={-lX11 -lXft}
 else ifneq ($(wildcard /usr/X11R6/include/X11/Xft/Xft.h),)
 	XFT_PACKAGE ?= \
 		--cflags={-I/usr/X11R6/include -I/usr/X11R6/include/X11} \
