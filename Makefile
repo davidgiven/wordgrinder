@@ -50,12 +50,18 @@ LUA_PACKAGE ?= builtin
 # pkg-config).
 ifneq ($(wildcard /usr/include/X11/Xft/Xft.h),)
 	XFT_PACKAGE ?= --libs={-lX11 -lXft}
+else ifneq ($(wildcard /usr/X11R6/include/X11/Xft/Xft.h),)
+	XFT_PACKAGE ?= \
+		--cflags={-I/usr/X11R6/include -I/usr/X11R6/include/X11} \
+		--libs={-L/usr/X11R6/lib -lX11 -lXft}
 else
 	XFT_PACKAGE ?= none
 endif
 
 # Hack to try and detect OSX's non-pkg-config compliant ncurses.
 ifneq ($(filter Darwin%,$(shell uname)),)
+	CURSES_PACKAGE ?= --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
+else ifneq ($(filter OpenBSD,$(shell uname)),)
 	CURSES_PACKAGE ?= --cflags={-I/usr/include} --libs={-L/usr/lib -lncurses}
 else
 	CURSES_PACKAGE ?= ncursesw

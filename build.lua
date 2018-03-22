@@ -402,8 +402,10 @@ if want_frontend("curses") then
     emit("CURSES_LDFLAGS = ", package_flags(CURSES_PACKAGE, "--libs"))
 end
 if want_frontend("x11") then
-    emit("X11_CFLAGS = ", package_flags("freetype2", "--cflags"), " -I/usr/include/X11")
-    emit("X11_LDFLAGS = ", package_flags("freetype2", "--libs"), " -lX11 -lXft")
+    emit("X11_CFLAGS = ", package_flags("freetype2", "--cflags"),
+	" ", package_flags(XFT_PACKAGE, "--cflags"))
+    emit("X11_LDFLAGS = ", package_flags("freetype2", "--libs"),
+	" ",  package_flags(XFT_PACKAGE, "--libs"))
 end
 emit("LUA_INTERPRETER = ", LUA_INTERPRETER)
 emit("WINDRES = ", WINDRES)
