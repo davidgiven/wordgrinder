@@ -114,7 +114,7 @@ end
 function SaveToStream(filename, object)
 	-- Ensure the destination file is writeable.
 
-	local fp, e = io.open(filename, "wb")
+	local fp, e = io.open(filename, "r+b") -- actually opens *writable* file
 	if not fp then
 		return nil, e
 	end
