@@ -332,6 +332,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/weirdness-styling-unicode.lua",
         "tests/weirdness-word-left-from-end-of-line.lua",
         "tests/weirdness-word-right-to-last-word-in-doc.lua",
+        "tests/weirdness-upgrade-0.6-with-clipboard.lua",
         "tests/windows-installdir.lua",
         "tests/xpattern.lua",
     }) do

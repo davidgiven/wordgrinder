@@ -720,13 +720,20 @@ function UpgradeDocument(oldversion)
 		-- is now a string containing the name of the style; styles are looked up on
 		-- demand.
 
+        local function convertStyles(document)
+            for _, p in ipairs(document) do
+                if (type(p.style) ~= "string") then
+                    p.style = p.style.name
+                end
+            end
+        end
+
 		for _, document in ipairs(DocumentSet.documents) do
-			for _, p in ipairs(document) do
-				if (type(p.style) ~= "string") then
-					p.style = p.style.name
-				end
-			end
-		end
+            convertStyles(document)
+        end
+        if DocumentSet.clipboard then
+            convertStyles(DocumentSet.clipboard)
+        end
 		DocumentSet.styles = nil
 	end
 end
