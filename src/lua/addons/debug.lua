@@ -30,8 +30,7 @@ do
 			terms[#terms+1] = 
 				{
 					priority=50,
-					value=string_format("%q",
-						Document[Document.cp][Document.cw])
+					value=Format(Document[Document.cp][Document.cw])
 				}
 		end
 	end

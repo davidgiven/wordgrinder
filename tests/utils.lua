@@ -21,3 +21,10 @@ AssertTableEquals({}, Intersperse({}, 0))
 AssertTableEquals({1}, Intersperse({1}, 0))
 AssertTableEquals({1, 0, 2}, Intersperse({1, 2}, 0))
 AssertTableEquals({1, 0, 2, 0, 3}, Intersperse({1, 2, 3}, 0))
+
+AssertEquals('""',            Format(""))
+AssertEquals('"foo"',         Format("foo"))
+AssertEquals('"fo\\"o"',      Format('fo"o'))
+AssertEquals('"\\17foo"',     Format("\17foo"))
+AssertEquals('"\\17foo\\17"', Format("\17foo\17"))
+

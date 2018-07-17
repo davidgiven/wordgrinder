@@ -2,6 +2,13 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local GetBytesOfCharacter = wg.getbytesofcharacter
+local ReadU8 = wg.readu8
+local WriteU8 = wg.writeu8
+local string_byte = string.byte
+local string_format = string.format
+local table_concat = table.concat
+
 function max(a, b)
 	if (a > b) then
 		return a
@@ -245,3 +252,27 @@ function ChunkStream(text)
 		return t
 	end
 end
+
+-- string.format("%q"); early Luas don't support control codes, so we emulate it.
+
+function Format(w)
+	local ss = {'"'}
+
+	local i = 1
+	local len = w:len()
+	while (i <= len) do
+		local c = ReadU8(w, i)
+		i = i + GetBytesOfCharacter(w:byte(i))
+		if c < 32 then
+			ss[#ss+1] = string_format("\\%d", c)
+		else
+			if (c == 92) or (c == 34) then
+				ss[#ss+1] = '\\'
+			end
+			ss[#ss+1] = WriteU8(c)
+		end
+	end
+	ss[#ss+1] = '"'
+	return table_concat(ss)
+end
+
