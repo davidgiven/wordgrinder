@@ -112,18 +112,10 @@ local function writetostream(object, write, writeo)
 end
 
 function SaveToStream(filename, object)
-	-- Ensure the destination file is writeable.
+	-- Write the file to a *different* filename (so that crashes during
+	-- writing doesn't corrupt the file).
 
-	local fp, e = io.open(filename, "r+b") -- actually opens *writable* file
-	if not fp then
-		return nil, e
-	end
-	fp:close()
-
-	-- However, write the file to a *different* filename
-	-- (so that crashes during writing doesn't corrupt the file).
-
-	fp, e = io.open(filename..".new", "wb")
+	local fp, e = io.open(filename..".new", "wb")
 	if not fp then
 		return nil, e
 	end
@@ -149,25 +141,23 @@ function SaveToStream(filename, object)
 	if r then
 		r, e = fp:write(TMAGIC, "\n", s)
 	end
-	if r then
-		r, e = fp:close()
+	r, e = fp:close()
+	if e then
+		return r, e
 	end
 
-	-- Once done, do a complicated series of renames so that we
-	-- don't remove the old file until we're sure the new one has
-	-- been written correctly. Note that accurs�d Windows doesn't
-	-- support clobbering renames...
+	-- At this point, we know the new file has been written correctly.
+	-- We can remove the old one and rename the new one to be the old
+	-- one. On proper operating systems we could do this in a single
+	-- os.rename, but Windows doesn't support clobbering renames.
 
-	if r then
-		r, e = os.rename(filename, filename..".old")
-		if not e then
-			r, e = os.rename(filename..".new", filename)
-		end
-		if not e then
-			os.remove(filename..".old")
-		end
+	os.remove(filename)
+	r, e = os.rename(filename..".new", filename)
+	if e then
+		-- Yikes! The old file has gone, but we couldn't rename the new
+		-- one...
+		return r, e..": the filename of your document has changed"
 	end
-
 	return r, e
 end
 
