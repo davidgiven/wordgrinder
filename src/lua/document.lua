@@ -627,6 +627,7 @@ function UpdateDocumentStyles()
 end
 
 function CreateDocumentSet()
+	UpdateDocumentStyles()
 	local ds =
 	{
 		fileformat = FILEFORMAT,

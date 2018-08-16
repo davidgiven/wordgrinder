@@ -323,6 +323,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/weirdness-combining-words.lua",
         "tests/weirdness-deletion-with-multiple-spaces.lua",
         "tests/weirdness-end-of-lines.lua",
+        "tests/weirdness-globals-applied-on-startup.lua",
         "tests/weirdness-missing-clipboard.lua",
         "tests/weirdness-replacing-words.lua",
         "tests/weirdness-save-new-document.lua",
@@ -330,9 +331,9 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/weirdness-stray-control-char-in-export.lua",
         "tests/weirdness-styled-clipboard.lua",
         "tests/weirdness-styling-unicode.lua",
+        "tests/weirdness-upgrade-0.6-with-clipboard.lua",
         "tests/weirdness-word-left-from-end-of-line.lua",
         "tests/weirdness-word-right-to-last-word-in-doc.lua",
-        "tests/weirdness-upgrade-0.6-with-clipboard.lua",
         "tests/windows-installdir.lua",
         "tests/xpattern.lua",
     }) do
