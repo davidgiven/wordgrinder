@@ -50,11 +50,11 @@ uni_t readu8(const char** srcp)
 	uni_t ch = (unsigned char)*src++ & masks[nb];
 	switch (nb) {
 	    /* these fall through deliberately */
-		case 5: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 4: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 3: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 2: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 1: ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 5: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f; 
+		case 4: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 3: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 2: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
+		case 1: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
 		case 0: break;
 	}
 
