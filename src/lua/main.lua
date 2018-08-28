@@ -90,6 +90,7 @@ end
 
 function WordProcessor(filename)
 	LoadGlobalSettings()
+	ResetDocumentSet()
 
 	do
         local fp, e, errno = io.open(configfile, "r")
@@ -207,7 +208,8 @@ end
 
 function Main(...)
 	-- Set up the initial document so that the command line options have
-	-- access.
+	-- access. The global settings aren't loaded yet, so things like paragraph
+	-- styles may not be set up correctly, but we don't care.
 
 	ResetDocumentSet()
 
