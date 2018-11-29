@@ -145,7 +145,7 @@ http://lua-users.org/wiki/ExPattern for more information.
 REVISION HISTORY
 ================
 
-WordGrinder 0.7.2: 2017-03-21: bugfix release. Pasting immediately after
+WordGrinder 0.7.2: 2018-11-29: bugfix release. Pasting immediately after
 loading a document no longer hard crashes. Don't buffer overrun if given
 invalid unicode. Global settings are now updated correctly (in several
 places). Fix a data loss situation when saving fails.
