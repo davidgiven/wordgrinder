@@ -31,7 +31,7 @@ ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
 endif
 
 # Application version and file format.
-VERSION := 0.7.1
+VERSION := 0.7.2
 FILEFORMAT := 7
 DATE ?= $(shell date +'%-d %B %Y')
 

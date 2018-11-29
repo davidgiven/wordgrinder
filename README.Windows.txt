@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.7.1
+                              WORDGRINDER V0.7.2
                               ==================
 
-                           © 2007-2017 David Given
-                                 2017-11-02
+                           © 2007-2018 David Given
+                                 2018-11-29
 
                                Windows version
 
@@ -93,6 +93,11 @@ http://lua-users.org/wiki/ExPattern for more information.
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.7.2: 2017-03-21: bugfix release. Pasting immediately after
+loading a document no longer hard crashes. Don't buffer overrun if given
+invalid unicode. Global settings are now updated correctly (in several
+places). Fix a data loss situation when saving fails.
 
 WordGrinder 0.7.1: 2017-11-02: correct and cleaner license reporting;
 rearrange the source so that we can avoid shipping upstream dependencies
