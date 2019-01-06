@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local string_rep = string.rep
+local string_format = string.format
 local table_concat = table.concat
 
 local function gotobrowser(data, index)
@@ -50,7 +51,7 @@ function Cmd.Goto()
 
 	local data = {}
 	local levelcount = {0, 0, 0, 0}
-	local currentheading = 1
+	local stack = {}
 	for paran, para in ipairs(Document) do
 		local _, _, level = para.style:find("^H(%d)$")
 		if level then
@@ -62,6 +63,7 @@ function Cmd.Goto()
 			levelcount[level] = levelcount[level] + 1
 			for i = level+1, 4 do
 				levelcount[i] = 0
+				stack[i] = nil
 			end
 
 			local s = {}
@@ -74,13 +76,33 @@ function Cmd.Goto()
 			data[#data+1] =
 			{
 				label = table_concat(s),
-				paran = paran
+				paran = paran,
+				wordcount = 0
 			}
+			stack[level] = data[#data]
 
+			oldlevel = level
 			if (paran <= Document.cp) then
 				currentheading = #data
 			end
 		end
+		for _, data in ipairs(stack) do
+			if data then
+				data.wordcount = data.wordcount + #para
+			end
+		end
+	end
+
+	local maxwords = 0
+	for _, data in ipairs(data) do
+		if data.wordcount > maxwords then
+			maxwords = data.wordcount
+		end
+	end
+	local maxwordslen = math.floor(math.log(maxwords)/math.log(10)) + 1
+	for _, data in ipairs(data) do
+		data.label = string_format("%"..(maxwordslen+2).."s %s",
+			"("..data.wordcount..")", data.label)
 	end
 
 	if (#data == 0) then

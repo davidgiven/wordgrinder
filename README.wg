@@ -26,11 +26,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.spellchecker.useuserdictionary: true
 .addons.widescreen.enabled: false
 .addons.widescreen.maxwidth: 80
-.clipboard.co: 1
-.clipboard.cp: 1
-.clipboard.cw: 1
-.clipboard.margin: 0
-.clipboard.viewmode: 1
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -38,16 +33,16 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3656
+.documents.1.wordcount: 3670
 .documents.2.co: 1
-.documents.2.cp: 1
+.documents.2.cp: 2
 .documents.2.cw: 1
 .documents.2.margin: 0
 .documents.2.name: "Unicode test document"
 .documents.2.viewmode: 1
 .documents.2.wordcount: 502
-.documents.3.co: 5
-.documents.3.cp: 1
+.documents.3.co: 1
+.documents.3.cp: 150
 .documents.3.cw: 1
 .documents.3.margin: 4
 .documents.3.name: "User dictionary"
@@ -159,7 +154,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.pool/@big/nonshared/wordgrinder/README.wg"
+.name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .styles.1.above: 1
@@ -389,7 +384,7 @@ P I strongly suggest installing a decent TrueType Unicode monospaced font. Conso
 P http://dejavu.sourceforge.net/wiki/index.php/Download
 H2 Neat features
 H3 Table of contents
-P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
+P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it. It’ll also show you the word count of each section (including all nested sections).
 H3 Undo
 P WordGrinder will remember every change you make, up to a limit of about 500. Use CTRL+Z to undo, and then CTRL+Y to redo an undone change. You can only use redo if you haven’t made any changes in the mean time, as usual.
 P The undo stack is not saved along with your document --- the undo stack always starts as empty when a document is loaded. (Because otherwise the files get stupidly big, and very slow to load and save.)
