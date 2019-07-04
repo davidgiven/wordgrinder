@@ -1,18 +1,16 @@
 language: c
 
-env:
-    global: HOMEBREW_NO_AUTO_UPDATE=1
-
 compiler:
     - gcc
     - clang
 
 os:
-    - osx
-    - linux
+    -
+        os: osx
+        osx_image: xcode10.2
 
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew bundle --file=.Brewfile; fi
+    -
+        os: linux
 
 addons:
     apt:
@@ -25,6 +23,10 @@ addons:
         - liblua5.2-dev
         #- liblua5.3-dev
         #- libluajit5.1-dev
+    homebrew:
+        packages:
+        - ninja
+        - lua
 
 script:
     - make -j4 dev
