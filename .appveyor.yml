@@ -9,7 +9,7 @@ init:
 
 install:
   - '%CYGWIN%\bin\bash -lc "cygcheck -dc cygwin"'
-  - '%CYGWIN%\setup-x86_64 -q -P ninja,lua,mingw64-x86_64-zlib-1.2.8-4'
+  - '%CYGWIN%\setup-x86_64 -q -P ninja,lua,mingw64-i686-zlib-1.2.8-4'
 
 build_script:
   - 'echo building...'
