@@ -1,0 +1,17 @@
+environment:
+  matrix:
+  - CYGWIN: C:\cygwin64
+
+clone_depth: 1
+
+init:
+  - git config --global core.autocrlf input
+
+install:
+  - '%CYGWIN%\bin\bash -lc "cygcheck -dc cygwin"'
+  - '%CYGWIN%\setup-x86_64 -q -P ninja,lua'
+
+build_script:
+  - 'echo building...'
+  - '%CYGWIN%\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make"'
+
