@@ -1,2 +1,0 @@
-brew 'ninja'
-brew 'lua'
