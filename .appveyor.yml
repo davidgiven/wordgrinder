@@ -13,5 +13,5 @@ install:
 
 build_script:
   - 'echo building...'
-  - '%CYGWIN%\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make"'
+  - '%CYGWIN%\bin\bash -lc "cd $APPVEYOR_BUILD_FOLDER; exec 0</dev/null; make windows"'
 
