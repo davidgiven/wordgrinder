@@ -253,7 +253,7 @@ end
 
 local function main(filename)
 	if not filename then
-		dprint("You must specify a filename to dump.")
+		print("You must specify a filename to dump.")
 		os.exit(1)
 	end
 
