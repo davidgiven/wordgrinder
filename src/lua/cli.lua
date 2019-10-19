@@ -22,6 +22,7 @@ local export_table =
 	["tr"] = Cmd.ExportTroffFile,
 	["tex"] = Cmd.ExportLatexFile, 
 	["txt"] = Cmd.ExportTextFile,
+	["md"] = Cmd.ExportMarkdownFile,
 }
 
 function CLIMessage(...)
