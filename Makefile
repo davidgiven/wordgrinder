@@ -16,6 +16,17 @@ OBJDIR = /tmp/wg-build
 # The compiler used for the native build (curses, X11)
 CC ?= cc
 
+# Which ninja do you want to use?
+ifeq ($(strip $(shell type ninja >/dev/null; echo $$?)),0)
+	NINJA ?= ninja
+else
+	ifeq ($(strip $(shell type ninja-build >/dev/null; echo $$?)),0)
+		NINJA ?= ninja-build
+    else
+        $(error No ninja found)
+    endif
+endif
+
 # Global CFLAGS and LDFLAGS.
 CFLAGS ?=
 LDFLAGS ?=
@@ -100,7 +111,7 @@ hide = @
 LUA_INTERPRETER = $(OBJDIR)/lua
 
 NINJABUILD = \
-	$(hide) ninja -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
+	$(hide) $(NINJA) -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
 
 # Builds and tests the Unix release versions only.
 .PHONY: all
