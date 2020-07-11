@@ -6,6 +6,15 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#if !defined WIN32
+	#if !defined _XOPEN_SOURCE
+		#define _XOPEN_SOURCE
+	#endif
+
+	#define _XOPEN_SOURCE_EXTENDED
+	#define _GNU_SOURCE
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>

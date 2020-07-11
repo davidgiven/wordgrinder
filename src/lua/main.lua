@@ -121,8 +121,6 @@ function WordProcessor(filename)
 		FireEvent(Event.DocumentLoaded)
 	end
 
-	--ModalMessage("Welcome!", "Welcome to WordGrinder! While editing, you may press ESC for the menu, or ESC, F, X to exit (or ALT+F, X if your terminal supports it).")
-
 	local masterkeymap = {
 		["KEY_RESIZE"] = function() -- resize
 			ResizeScreen()
@@ -160,8 +158,9 @@ function WordProcessor(filename)
 					FireEvent(Event.Idle)
 				end
 			end
-
-			ResetNonmodalMessages()
+			if c ~= "KEY_RESIZE" then
+				ResetNonmodalMessages()
+			end
 
 			-- Anything in masterkeymap overrides everything else.
 			local f = masterkeymap[c]
@@ -191,6 +190,7 @@ function WordProcessor(filename)
 		end
 	end
 
+	NonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.")
 	while true do
 		local f, e = xpcall(eventloop, Traceback)
 		if not f then

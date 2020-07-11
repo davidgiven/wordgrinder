@@ -154,9 +154,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(LUABITOP_PACKAGE, "--libs")
     end
 
-	if UTHASH_PACKAGE == "builtin" then
-		cflags[#cflags+1] = "-Isrc/c/emu/uthash"
-	else
+    if UTHASH_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/emu/uthash"
+    else
         cflags[#cflags+1] = package_flags(UTHASH_PACKAGE, "--cflags")
         ldflags[#ldflags+1] = package_flags(UTHASH_PACKAGE, "--libs")
     end
@@ -171,13 +171,10 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-mwindows"
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
-	ldflags[#ldflags+1] = "-mwindows"
+        ldflags[#ldflags+1] = "-mwindows"
     else
         cc = CC
         cflags[#cflags+1] = "-DARCH='\"unix\"'"
-        cflags[#cflags+1] = "-D_XOPEN_SOURCE_EXTENDED"
-        cflags[#cflags+1] = "-D_XOPEN_SOURCE"
-        cflags[#cflags+1] = "-D_GNU_SOURCE"
     end
 
     if MINIZIP_PACKAGE == "builtin" then
@@ -405,9 +402,9 @@ if want_frontend("curses") then
 end
 if want_frontend("x11") then
     emit("X11_CFLAGS = ", package_flags("freetype2", "--cflags"),
-	" ", package_flags(XFT_PACKAGE, "--cflags"))
+    " ", package_flags(XFT_PACKAGE, "--cflags"))
     emit("X11_LDFLAGS = ", package_flags("freetype2", "--libs"),
-	" ",  package_flags(XFT_PACKAGE, "--libs"))
+    " ",  package_flags(XFT_PACKAGE, "--libs"))
 end
 emit("LUA_INTERPRETER = ", LUA_INTERPRETER)
 emit("WINDRES = ", WINDRES)
@@ -553,7 +550,7 @@ if want_frontend("x11") or want_frontend("curses") then
     emit("  version = ", VERSION)
 
     emit("build binaries: phony bin/wordgrinder.1 ", preferred_curses or "", " ", preferred_x11 or "", " ")
-	emit("build tests: phony ", preferred_test)
+    emit("build tests: phony ", preferred_test)
     emit("build all: phony binaries tests")
     emit("build install: phony all ", table.concat(installables, " "))
     emit("build install-notests: phony binaries ", table.concat(installables, " "))
@@ -573,3 +570,6 @@ end
 
 emit("build clean: phony")
 emit("build dev: phony ", table.concat(allbinaries, " "))
+
+-- vim: sw=4 ts=4 et
+
