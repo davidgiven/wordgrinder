@@ -36,6 +36,17 @@ function WantDenseParagraphLayout()
 end
 
 -----------------------------------------------------------------------------
+-- Display an extra space after full stops?
+
+function WantFullStopSpaces()
+	local settings = GlobalSettings.lookandfeel
+	if settings then
+		return settings.fullstopspaces or false
+	end
+	return false
+end
+
+-----------------------------------------------------------------------------
 -- Addon registration. Create the default settings in the DocumentSet.
 
 do
@@ -90,11 +101,19 @@ function Cmd.ConfigureLookAndFeel()
 			value = settings.denseparagraphs
 		}
 
+	local fullstopspaces_checkbox =
+		Form.Checkbox {
+			x1 = 1, y1 = 9,
+			x2 = 50, y2 = 9,
+			label = "Show an extra space after full stops",
+			value = settings.fullstopspaces
+		}
+
 	local dialogue =
 	{
 		title = "Configure Look and Feel",
 		width = Form.Large,
-		height = 9,
+		height = 11,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -113,6 +132,7 @@ function Cmd.ConfigureLookAndFeel()
 
 		terminators_checkbox,
 		denseparagraphs_checkbox,
+		fullstopspaces_checkbox,
 	}
 
 	while true do
@@ -130,6 +150,7 @@ function Cmd.ConfigureLookAndFeel()
 			settings.maxwidth = maxwidth
 			settings.terminators = terminators_checkbox.value
 			settings.denseparagraphs = denseparagraphs_checkbox.value
+			settings.fullstopspaces = fullstopspaces_checkbox.value
 			SaveGlobalSettings()
 			UpdateDocumentStyles()
 

@@ -297,6 +297,7 @@ ParagraphClass =
 			local line = {wn = 1}
 			local w = 0
 			local xs = {}
+			local fullstopspaces = WantFullStopSpaces()
 			self.xs = xs
 
 			width = width - self:getIndentOfLine(1)
@@ -304,6 +305,11 @@ ParagraphClass =
 			for wn, word in ipairs(self) do
 				-- get width of word (including space)
 				local ww = GetStringWidth(word) + 1
+
+				-- add an extra space if the user asked for it
+				if fullstopspaces and word:find("%.$") then
+					ww = ww + 1
+				end
 
 				xs[wn] = w
 				w = w + ww
