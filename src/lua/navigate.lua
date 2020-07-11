@@ -361,7 +361,12 @@ function Cmd.DeleteWord()
 	if (Document.co == 1) then
 		Cmd.DeletePreviousChar()
 	end
-	return Cmd.DeleteWordLeftOfCursor()
+
+	Cmd.GotoEndOfWord()
+	Cmd.DeleteWordLeftOfCursor()
+	if Document.cw ~= 1 then
+		Cmd.DeletePreviousChar()
+	end
 end
 
 function Cmd.SplitCurrentParagraph()
