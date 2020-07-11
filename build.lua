@@ -321,6 +321,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/utils.lua",
         "tests/weirdness-cannot-save-settings.lua",
         "tests/weirdness-combining-words.lua",
+        "tests/weirdness-delete-word.lua",
         "tests/weirdness-deletion-with-multiple-spaces.lua",
         "tests/weirdness-end-of-lines.lua",
         "tests/weirdness-globals-applied-on-startup.lua",
