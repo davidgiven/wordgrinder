@@ -1,0 +1,41 @@
+name: C/C++ CI
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: apt
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
+    - name: make
+      run: make dev
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: brew
+      run: brew install pkg-config ninja
+    - name: make
+      run: make dev
+
+#  build-windows:
+#    runs-on: windows-latest
+#    steps:
+#    - uses: numworks/setup-msys2@v1
+#      with:
+#        path-type: inherit
+#    - uses: actions/checkout@v1
+#    - name: pacman
+#      run: |
+#        msys2do pacman -S --noconfirm --needed make ninja mingw-w64-i686-libusb mingw-w64-i686-sqlite3 mingw-w64-i686-zlib mingw-w64-i686-gcc zip
+#    - name: build
+#      run: |
+#        msys2do make
+
