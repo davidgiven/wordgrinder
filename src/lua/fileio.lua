@@ -726,4 +726,13 @@ function UpgradeDocument(oldversion)
         end
 		DocumentSet.styles = nil
 	end
+	
+	-- Upgrade version 7 to 8!
+	
+	if (oldversion < 8) then
+		--this version is where the number of lines is a tracked value, and two fields were
+		--added to the pagecount addon
+
+		Document.linecount = nil
+	end
 end

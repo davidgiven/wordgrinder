@@ -9,12 +9,21 @@ do
 	local function cb(event, token, terms)
 		local settings = DocumentSet.addons.pagecount or {}
 		if settings.enabled then
-			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
-			terms[#terms+1] = {
-				priority=80,
-				value=string.format("%d %s", pages,
-					Pluralise(pages, "page", "pages"))
-			}
+			if settings.pagesbylines then
+				local pages = math.ceil((Document.linecount or 0) / settings.linesperpage)
+				terms[#terms+1] = {
+					priority=80,
+					value=string.format("%d %s", pages,
+						Pluralise(pages, "page", "pages"))
+				}
+			else
+				local pages = math.ceil((Document.linecount or 0) / settings.wordsperpage)
+				terms[#terms+1] = {
+					priority=80,
+					value=string.format("%d %s", pages,
+						Pluralise(pages, "page", "pages"))
+				}
+			end
 		end
 	end
 	
@@ -28,7 +37,9 @@ do
 	local function cb()
 		DocumentSet.addons.pagecount = DocumentSet.addons.pagecount or {
 			enabled = false,
-			wordsperpage = 250,
+			pagesbylines = true,
+			wordsperpage = 251,
+			linesperpage = 22,
 		}
 	end
 	
@@ -44,23 +55,36 @@ function Cmd.ConfigurePageCount()
 	local enabled_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
-			x2 = 33, y2 = 1,
+			x2 = 40, y2 = 1,
 			label = "Show approximate page count",
 			value = settings.enabled
 		}
-
+	local mode_checkbox =
+		Form.Checkbox {
+			x1 = 1, y1 = 3,
+			x2 = 40, y2 = 3,
+			label = "estimate pagecount by lines, not words",
+			value = settings.pagesbylines
+		}
 	local count_textfield =
 		Form.TextField {
-			x1 = 33, y1 = 3,
-			x2 = 43, y2 = 3,
+			x1 = 40, y1 = 5,
+			x2 = 50, y2 = 5,
 			value = tostring(settings.wordsperpage)
+		}
+
+	local count_lpptextfield =
+		Form.TextField {
+			x1 = 40, y1 = 7,
+			x2 = 50, y2 = 7,
+			value = tostring(settings.linesperpage)
 		}
 		
 	local dialogue =
 	{
 		title = "Configure Page Count",
 		width = Form.Large,
-		height = 5,
+		height = 11,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -68,16 +92,24 @@ function Cmd.ConfigurePageCount()
 		["KEY_ENTER"] = "confirm",
 		
 		enabled_checkbox,
+		mode_checkbox,
 		
 		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
+			x1 = 1, y1 = 5,
+			x2 = 39, y2 = 5,
 			align = Form.Left,
 			value = "Number of words per page:"
 		},
 		count_textfield,
+
+		Form.Label {
+			x1 = 1, y1 = 7,
+			x2 = 39, y2 = 7,
+			align = Form.Left,
+			value = "Number of lines per page:"
+		},
+		count_lpptextfield
 	}
-	
 	while true do
 		local result = Form.Run(dialogue, RedrawScreen,
 			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
@@ -86,13 +118,21 @@ function Cmd.ConfigurePageCount()
 		end
 		
 		local enabled = enabled_checkbox.value
+		local pagesbylines = mode_checkbox.value
 		local wordsperpage = tonumber(count_textfield.value)
-		
+		local linesperpage = tonumber(count_lpptextfield.value)
+
 		if not wordsperpage then
 			ModalMessage("Parameter error", "The number of words per page must be a valid number.")
+
+		elseif not linesperpage then
+			ModalMessage("Parameter error", "The number of lines per page must be a valid number.")
+
 		else
 			settings.enabled = enabled
+			settings.pagesbylines = pagesbylines
 			settings.wordsperpage = wordsperpage
+			settings.linesperpage = linesperpage
 			DocumentSet:touch()
 
 			return true
