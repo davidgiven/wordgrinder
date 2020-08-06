@@ -17,7 +17,7 @@ do
 						Pluralise(pages, "page", "pages"))
 				}
 			else
-				local pages = math.ceil((Document.linecount or 0) / settings.wordsperpage)
+				local pages = math.ceil((Document.wordcount or 0) / settings.wordsperpage)
 				terms[#terms+1] = {
 					priority=80,
 					value=string.format("%d %s", pages,
