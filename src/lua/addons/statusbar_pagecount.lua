@@ -8,22 +8,19 @@
 do
 	local function cb(event, token, terms)
 		local settings = DocumentSet.addons.pagecount or {}
+		local pages
 		if settings.enabled then
-			if settings.pagesbylines then
-				local pages = math.ceil((Document.linecount or 0) / settings.linesperpage)
-				terms[#terms+1] = {
-					priority=80,
-					value=string.format("%d %s", pages,
-						Pluralise(pages, "page", "pages"))
-				}
+			if (settings.pagesbylines) then
+				pages = math.ceil((Document.linecount or 0) / settings.linesperpage)
 			else
-				local pages = math.ceil((Document.wordcount or 0) / settings.wordsperpage)
-				terms[#terms+1] = {
-					priority=80,
-					value=string.format("%d %s", pages,
-						Pluralise(pages, "page", "pages"))
-				}
+				pages = math.ceil((Document.wordcount or 0) / settings.wordsperpage)
 			end
+	
+			terms[#terms+1] = {
+				priority=80,
+				value=string.format("%d %s", pages,
+					Pluralise(pages, "page", "pages"))
+			}
 		end
 	end
 	
@@ -38,7 +35,7 @@ do
 		DocumentSet.addons.pagecount = DocumentSet.addons.pagecount or {
 			enabled = false,
 			pagesbylines = true,
-			wordsperpage = 251,
+			wordsperpage = 250,
 			linesperpage = 22,
 		}
 	end
