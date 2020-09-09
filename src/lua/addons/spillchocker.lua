@@ -85,7 +85,8 @@ local function get_user_dictionary_document()
 	return d
 end
 
-function GetUserDictionary()
+function GetUserDictionary(preserve_case)
+    local pc = preserve_case or false
 	if not user_dictionary_cache then
 		local d = get_user_dictionary_document()
 		user_dictionary_cache = {}
@@ -93,7 +94,7 @@ function GetUserDictionary()
 		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
-				local w = GetWordSimpleText(p[1])
+				local w = GetWordSimpleText(p[1], preserve_case)
 				user_dictionary_cache[w] = true
 			end
 		end
@@ -128,12 +129,18 @@ function IsWordMisspelt(word)
 	local settings = DocumentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
-		local s = GetWordSimpleText(word)
-		if (s == "")
-			or (not s:find("[a-zA-Z]"))
-			or (#s < 3)
-			or (settings.usesystemdictionary and GetSystemDictionary()[s])
-			or (settings.useuserdictionary and GetUserDictionary()[s])
+		local sci = GetWordSimpleText(word) -- case insensitive
+		local scs = GetWordSimpleText(word, true) -- case sensitive
+		if (sci == "")
+			or (not sci:find("[a-zA-Z]"))
+			or (#sci < 3)
+			or (settings.usesystemdictionary and GetSystemDictionary()[scs])
+			or (settings.useuserdictionary and GetUserDictionary(true)[scs])
+
+			or (settings.usesystemdictionary and OnlyFirstCharIsUppercase(scs) and GetSystemDictionary()[sci])
+
+			or (settings.useuserdictionary and OnlyFirstCharIsUppercase(scs) and GetUserDictionary()[sci])
+
 		then
 			misspelt = false
 		end
