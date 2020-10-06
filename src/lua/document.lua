@@ -526,14 +526,29 @@ function GetOffsetFromWidth(s, x)
 		return len + 1
 end
 
-function GetWordSimpleText(s)
+function GetWordSimpleText(s, preserve_case)
+    local pc = preserve_case or false
 	s = GetWordText(s)
 	s = UnSmartquotify(s)
 	s = s:gsub('[~#&^$"<>]+', "")
 	s = s:gsub("^[.'([{]+", "")
 	s = s:gsub("[',.!?:;)%]}]+$", "")
-	s = s:lower()
+    if not preserve_case then
+        s = s:lower()
+    end
 	return s
+end
+
+function OnlyFirstCharIsUppercase(s)
+    -- Return true if only first character is uppercase
+    local first_char = s:sub(0, 1)
+    if first_char:upper() == first_char then
+        local remaining_chars = s:sub(2, s:len())
+        if remaining_chars:lower() == remaining_chars then
+            return true
+        end
+    end
+    return false
 end
 
 function UpdateDocumentStyles()
