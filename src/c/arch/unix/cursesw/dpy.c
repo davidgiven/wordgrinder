@@ -216,7 +216,6 @@ const char* dpy_getkeyname(uni_t k)
 		case KEY_SRIGHT: return "KEY_SRIGHT";
 		case KEY_MOUSE: return "KEY_MOUSE";
 		case KEY_RESIZE: return "KEY_RESIZE";
-		case KEY_EVENT: return "KEY_EVENT";
 		case 13: return "KEY_RETURN";
 		case 27: return "KEY_ESCAPE";
 	}
