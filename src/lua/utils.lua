@@ -276,3 +276,13 @@ function Format(w)
 	return table_concat(ss)
 end
 
+-- Convert an array to a map.
+
+function ArrayToMap(array)
+	local map = {}
+	for _, i in ipairs(array) do
+		map[i] = true
+	end
+	return map
+end
+
