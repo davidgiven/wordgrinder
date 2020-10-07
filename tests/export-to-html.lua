@@ -38,7 +38,7 @@ Cmd.ChangeParagraphStyle("P")
 local expected = [[
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="generator" content="WordGrinder 0.7.2"/>
+<meta name="generator" content="WordGrinder 0.7.3"/>
 <title>main</title>
 </head><body>
 
