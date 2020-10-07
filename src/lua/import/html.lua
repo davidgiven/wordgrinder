@@ -80,6 +80,7 @@ local function loadhtmlfile(fp)
 	local document = CreateDocument()
 	local importer = CreateImporter(document)
 	local style = "P"
+	local liststyle = "LB"
 	local pre = false
 	
 	local function flush()
@@ -112,7 +113,9 @@ local function loadhtmlfile(fp)
 		["<h2>"] = function() flush() style = "H2" end,
 		["<h3>"] = function() flush() style = "H3" end,
 		["<h4>"] = function() flush() style = "H4" end,
-		["<li>"] = function() flush() style = "LB" end,
+		["<ol>"] = function() liststyle = "LN" end,
+		["<ul>"] = function() liststyle = "LB" end,
+		["<li>"] = function() flush() style = liststyle end,
 		["<i>"] = function() importer:style_on(ITALIC) end,
 		["</i>"] = function() importer:style_off(ITALIC) end,
 		["<em>"] = function() importer:style_on(ITALIC) end,
