@@ -2,6 +2,8 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local string_format = string.format
+
 -----------------------------------------------------------------------------
 -- The exporter itself.
 
@@ -24,9 +26,11 @@ local style_tab =
 		on='<h4>', off='</h4>'},
 	["P"] =  {pre=false, list=false,
 		on='<p>', off='</p>'},
-	["L"] =  {pre=false, list=true,
+	["L"] =  {pre=false, list="ul",
 		on='<li style="list-style-type: none;">', off='</li>'},
-	["LB"] = {pre=false, list=true,
+	["LB"] = {pre=false, list="ul",
+		on='<li>', off='</li>'},
+	["LN"] = {pre=false, list="ol",
 		on='<li>', off='</li>'},
 	["Q"] =  {pre=false, list=false,
 		on='<blockquote>', off='</blockquote>'},
@@ -58,12 +62,12 @@ local function callback(writer, document)
 			writer("\n")
 
 			if (not newstyle or not newstyle.list) and islist then
-				writer("</ul>\n")
+				writer(string_format("</%s>\n", islist))
 				islist = false
 			end
 			if (newstyle and newstyle.list) and not islist then
-				writer("<ul>\n")
-				islist = true
+				islist = newstyle.list
+				writer(string_format("<%s>\n", islist))
 			end
 
 			if newstyle then
