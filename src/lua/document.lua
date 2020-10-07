@@ -594,6 +594,7 @@ function UpdateDocumentStyles()
 			below = 1,
 			indent = 4,
 			bullet = "-",
+			list = true,
 		},
 		{
 			desc = "List item with number",
@@ -602,6 +603,7 @@ function UpdateDocumentStyles()
 			below = 1,
 			indent = 4,
 			numbered = true,
+			list = true,
 		},
 		{
 			desc = "List item without bullet",
@@ -609,6 +611,7 @@ function UpdateDocumentStyles()
 			above = 1,
 			below = 1,
 			indent = 4,
+			list = true,
 		},
 		{
 			desc = "Indented text, run together",

@@ -58,12 +58,12 @@ local function drawmargin(y, pn, p)
 	local bullet = style.bullet
 	if bullet then
 		drawbullet(bullet)
-	end
-
-	local numbered = style.numbered
-	if numbered then
-		local n = tostring(p.number or 0).."."
-		drawbullet(n)
+	else
+		local numbered = style.numbered
+		if numbered then
+			local n = tostring(p.number or 0).."."
+			drawbullet(n)
+		end
 	end
 end
 
@@ -309,10 +309,11 @@ do
 		for _, p in ipairs(Document) do
 			wc = wc + #p
 
-			if DocumentStyles[p.style].numbered then
+			local style = DocumentStyles[p.style]
+			if style.numbered then
 				p.number = pn
 				pn = pn + 1
-			else
+			elseif not style.list then
 				pn = 1
 			end
 		end

@@ -32,3 +32,17 @@ FireEvent(Event.Changed)
 AssertEquals(1, Document[1].number)
 AssertEquals(3, Document[3].number)
 
+Document.cp = 2
+Cmd.ChangeParagraphStyle("L")
+
+FireEvent(Event.Changed)
+AssertEquals(1, Document[1].number)
+AssertEquals(2, Document[3].number)
+
+Document.cp = 2
+Cmd.ChangeParagraphStyle("LB")
+
+FireEvent(Event.Changed)
+AssertEquals(1, Document[1].number)
+AssertEquals(2, Document[3].number)
+
