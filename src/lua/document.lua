@@ -228,6 +228,7 @@ DocumentClass =
 		-- These should no longer exist; this dates from a previous attempt
 		-- at undo with file version 6. We're not storing the undo buffer
 		-- in files any more.
+		-- lol XD this is the content of so many programming memes
 		self.undostack = nil
 		self.redostack = nil
 	end,

@@ -301,3 +301,22 @@ do
 
 	AddEventListener(Event.Changed, cb)
 end
+
+-----------------------------------------------------------------------------
+--Maintains the line count field in the current document.
+
+do
+	local function cb(event, token)
+		local lc = 0
+		local nl = 0
+
+		for _, p in ipairs(Document) do
+			lc = lc + #p:wrap()
+
+		end
+
+		Document.linecount = lc
+	end
+
+	AddEventListener(Event.Changed, cb)
+end
