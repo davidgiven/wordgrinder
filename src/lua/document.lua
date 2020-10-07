@@ -308,9 +308,28 @@ ParagraphClass =
 		self.lines = nil
 		self.wrapwidth = nil
 		self.xs = nil
+		self.sentences = nil
 	end,
 
 	wrap = function(self, width)
+		local sentences = self.sentences
+		if (sentences == nil) then
+			local issentence = true
+			sentences = {}
+			for wn, word in ipairs(self) do
+				if issentence then
+					sentences[wn] = true
+					issentence = false
+				end
+
+				if word:find("%.$") then
+					issentence = true
+				end
+			end
+			sentences[#self] = true
+			self.sentences = sentences
+		end
+
 		width = width or Document.wrapwidth
 		if (self.wrapwidth ~= width) then
 			local lines = {}
@@ -366,7 +385,8 @@ ParagraphClass =
 			local payload = {
 				word = w,
 				ostyle = ostyle,
-				cstyle = cstyle
+				cstyle = cstyle,
+				firstword = self.sentences[wn]
 			}
 			FireEvent(Event.DrawWord, payload)
 
@@ -424,7 +444,8 @@ ParagraphClass =
 			local payload = {
 				word = self[w],
 				ostyle = ostyle,
-				cstyle = cstyle
+				cstyle = cstyle,
+				firstword = self.sentences[wn]
 			}
 			FireEvent(Event.DrawWord, payload)
 
@@ -552,8 +573,19 @@ function GetWordSimpleText(s)
 	s = s:gsub('[~#&^$"<>]+', "")
 	s = s:gsub("^[.'([{]+", "")
 	s = s:gsub("[',.!?:;)%]}]+$", "")
-	s = s:lower()
 	return s
+end
+
+function OnlyFirstCharIsUppercase(s)
+    -- Return true if only first character is uppercase
+    local first_char = s:sub(0, 1)
+    if first_char:upper() == first_char then
+        local remaining_chars = s:sub(2, s:len())
+        if remaining_chars:lower() == remaining_chars then
+            return true
+        end
+    end
+    return false
 end
 
 function UpdateDocumentStyles()
