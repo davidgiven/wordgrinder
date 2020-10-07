@@ -89,6 +89,7 @@ DocumentSetClass =
 
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
+		return document
 	end,
 
 	moveDocumentIndexTo = function(self, name, targetIndex)
