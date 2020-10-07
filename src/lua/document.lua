@@ -596,6 +596,14 @@ function UpdateDocumentStyles()
 			bullet = "-",
 		},
 		{
+			desc = "List item with number",
+			name = "LN",
+			above = 1,
+			below = 1,
+			indent = 4,
+			numbered = true,
+		},
+		{
 			desc = "List item without bullet",
 			name = "L",
 			above = 1,

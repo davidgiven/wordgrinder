@@ -307,6 +307,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/load-0.6-v6.lua",
         "tests/load-failed.lua",
         "tests/move-while-selected.lua",
+        "tests/numbered-lists.lua",
         "tests/parse-string-into-words.lua",
         "tests/save-format-escaped-strings.lua",
         "tests/simple-editing.lua",

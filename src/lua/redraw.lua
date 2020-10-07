@@ -46,13 +46,24 @@ local function drawmargin(y, pn, p)
 		end
 	end
 
-	local bullet = DocumentStyles[p.style].bullet
-	if bullet then
-		local w = GetStringWidth(bullet) + 1
-		local i = DocumentStyles[p.style].indent
+	local style = DocumentStyles[p.style]
+	local function drawbullet(n)
+		local w = GetStringWidth(n) + 1
+		local i = style.indent
 		if (i >= w) then
-			Write(leftpadding + Document.margin + i - w, y, bullet)
+			Write(leftpadding + Document.margin + i - w, y, n)
 		end
+	end
+
+	local bullet = style.bullet
+	if bullet then
+		drawbullet(bullet)
+	end
+
+	local numbered = style.numbered
+	if numbered then
+		local n = tostring(p.number or 0).."."
+		drawbullet(n)
 	end
 end
 
@@ -286,14 +297,24 @@ function RedrawScreen()
 end
 
 -----------------------------------------------------------------------------
--- Maintains the word count field in the current document.
+-- Does assorted fast updates in the current document on changes:
+--   - word count
+--   - numbered paragraph styles
 
 do
 	local function cb(event, token)
 		local wc = 0
+		local pn = 1
 
 		for _, p in ipairs(Document) do
 			wc = wc + #p
+
+			if DocumentStyles[p.style].numbered then
+				p.number = pn
+				pn = pn + 1
+			else
+				pn = 1
+			end
 		end
 
 		Document.wordcount = wc
