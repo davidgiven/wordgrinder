@@ -53,9 +53,11 @@ end
 -- Utilities.
 
 local user_dictionary_cache
+local user_dictionary_cache
 local system_dictionary_cache
 
 local function user_dictionary_document_modified()
+	user_dictionary_cache = nil
 	user_dictionary_cache = nil
 end
 
@@ -85,8 +87,7 @@ local function get_user_dictionary_document()
 	return d
 end
 
-function GetUserDictionary(preserve_case)
-    local pc = preserve_case or false
+function GetUserDictionary()
 	if not user_dictionary_cache then
 		local d = get_user_dictionary_document()
 		user_dictionary_cache = {}
@@ -94,8 +95,8 @@ function GetUserDictionary(preserve_case)
 		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
-				local w = GetWordSimpleText(p[1], preserve_case)
-				user_dictionary_cache[w] = true
+				local w = GetWordSimpleText(p[1])
+				user_dictionary_cache[w:lower()] = w
 			end
 		end
 	end
@@ -113,7 +114,7 @@ function GetSystemDictionary()
 			local fp, e = io.open(settings.filename, "r")
 			if fp then
 				for s in fp:lines() do
-					system_dictionary_cache[s] = true
+					system_dictionary_cache[s:lower()] = s
 				end
 				fp:close()
 			else
@@ -125,22 +126,28 @@ function GetSystemDictionary()
 	return system_dictionary_cache
 end
 
-function IsWordMisspelt(word)
+function SetSystemDictionaryForTesting(array)
+	system_dictionary_cache = {}
+	for _, w in ipairs(array) do
+		system_dictionary_cache[w:lower()] = w
+	end
+end
+
+function IsWordMisspelt(word, firstword)
 	local settings = DocumentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
-		local sci = GetWordSimpleText(word) -- case insensitive
-		local scs = GetWordSimpleText(word, true) -- case sensitive
+		local systemdict = settings.usesystemdictionary and GetSystemDictionary() or {}
+		local userdict = settings.useuserdictionary and GetUserDictionary() or {}
+		local scs = GetWordSimpleText(word)
+		local sci = scs:lower()
 		if (sci == "")
 			or (not sci:find("[a-zA-Z]"))
 			or (#sci < 3)
-			or (settings.usesystemdictionary and GetSystemDictionary()[scs])
-			or (settings.useuserdictionary and GetUserDictionary(true)[scs])
-
-			or (settings.usesystemdictionary and OnlyFirstCharIsUppercase(scs) and GetSystemDictionary()[sci])
-
-			or (settings.useuserdictionary and OnlyFirstCharIsUppercase(scs) and GetUserDictionary()[sci])
-
+			or (systemdict[sci] == scs)
+			or (userdict[sci] == scs)
+			or (firstword and OnlyFirstCharIsUppercase(scs) and (systemdict[sci] == sci))
+			or (firstword and OnlyFirstCharIsUppercase(scs) and (userdict[sci] == sci))
 		then
 			misspelt = false
 		end
@@ -179,7 +186,7 @@ end
 
 do
 	local function cb(self, token, payload)
-		if IsWordMisspelt(payload.word) then
+		if IsWordMisspelt(payload.word, payload.firstword) then
 			payload.cstyle = bit32.bor(payload.cstyle, wg.DIM)
 		end
 	end
@@ -213,9 +220,11 @@ function Cmd.FindNextMisspeltWord()
 
 	-- Keep looping until we reach the starting point again.
 
+	Document[1]:wrap()
 	while true do
-		local word = Document[cp][cw]
-		if IsWordMisspelt(word) then
+		local paragraph = Document[cp]
+		local word = paragraph[cw]
+		if IsWordMisspelt(word, paragraph.sentences[cw]) then
 			Document.cp = cp
 			Document.cw = cw
 			Document.co = #word + 1
@@ -237,6 +246,7 @@ function Cmd.FindNextMisspeltWord()
 			if (cp > #Document) then
 				cp = 1
 			end
+			Document[cp]:wrap()
 		end
 
 		-- Check to see if we've scanned everything.
