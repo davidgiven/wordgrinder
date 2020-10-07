@@ -26,12 +26,12 @@ local style_tab =
 		on='<h4>', off='</h4>'},
 	["P"] =  {pre=false, list=false,
 		on='<p>', off='</p>'},
-	["L"] =  {pre=false, list="ul",
+	["L"] =  {pre=false, list=true,
 		on='<li style="list-style-type: none;">', off='</li>'},
-	["LB"] = {pre=false, list="ul",
+	["LB"] = {pre=false, list=true,
 		on='<li>', off='</li>'},
-	["LN"] = {pre=false, list="ol",
-		on='<li>', off='</li>'},
+	["LN"] = {pre=false, list=true,
+		on=nil, off='</li>'},
 	["Q"] =  {pre=false, list=false,
 		on='<blockquote>', off='</blockquote>'},
 	["V"] =  {pre=false, list=false,
@@ -47,7 +47,7 @@ local function callback(writer, document)
 	local currentpara = nil
 	local islist = false
 	
-	function changepara(newpara)
+	function changepara(newpara, para)
 		local currentstyle = style_tab[currentpara]
 		local newstyle = style_tab[newpara]
 		
@@ -62,16 +62,20 @@ local function callback(writer, document)
 			writer("\n")
 
 			if (not newstyle or not newstyle.list) and islist then
-				writer(string_format("</%s>\n", islist))
+				writer("</ul>\n")
 				islist = false
 			end
 			if (newstyle and newstyle.list) and not islist then
-				islist = newstyle.list
-				writer(string_format("<%s>\n", islist))
+				islist = true
+				writer("<ul>\n")
 			end
 
 			if newstyle then
-				writer(newstyle.on)
+				if newpara == "LN" then
+					writer(string.format('<li style="list-style-type: decimal;" value=%d>', para.number))
+				else
+					writer(newstyle.on)
+				end
 			end
 			currentpara = newpara
 		else
@@ -133,15 +137,15 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style)
-			changepara(style)
+		paragraph_start = function(style, paragraph)
+			changepara(style, paragraph)
 		end,		
 		
-		paragraph_end = function(style)
+		paragraph_end = function(style, paragraph)
 		end,
 		
 		epilogue = function()
-			changepara(nil)
+			changepara(nil, nil)
 			writer('</body>\n')	
 			writer('</html>\n')
 		end
@@ -151,6 +155,10 @@ end
 function Cmd.ExportHTMLFile(filename)
 	return ExportFileWithUI(filename, "Export HTML File", ".html",
 		callback)
+end
+
+function Cmd.ExportToHTMLString()
+	return ExportToString(Document, callback)
 end
 
 -----------------------------------------------------------------------------

@@ -290,6 +290,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/delete-selection.lua",
         "tests/escape-strings.lua",
         "tests/export-to-text.lua",
+        "tests/export-to-html.lua",
         "tests/find-and-replace.lua",
         "tests/get-style-from-word.lua",
         "tests/immutable-paragraphs.lua",

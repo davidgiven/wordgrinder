@@ -29,6 +29,7 @@ end
 
 Document[2][1] = "\16"
 ExportToString(Document, callback)
+PurgeAllBarFirstParameter(result)
 
 AssertTableAndPropertiesEquals(
 	{

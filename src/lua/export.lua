@@ -17,6 +17,7 @@ local time = wg.time
 -- table.
 
 function ExportFileUsingCallbacks(document, cb)
+	document:renumber()
 	cb.prologue()
 
 	local listmode = false
@@ -74,19 +75,18 @@ function ExportFileUsingCallbacks(document, cb)
 	for _, paragraph in ipairs(Document) do
 		local name = paragraph.style
 
-		if (name == "L") or (name == "LB") then
-			if not listmode then
-				cb.list_start()
-				listmode = true
-			end
-		elseif listmode then
-			cb.list_end()
-			listmode = false
+		if listmode and (listmode ~= name) then
+			cb.list_end(listmode)
+			listmode = nil
+		end
+		if not listmode and ((name == "L") or (name == "LB") or (name == "LN")) then
+			cb.list_start(name)
+			listmode = name
 		end
 
 		rawmode = (name == "RAW")
 
-		cb.paragraph_start(name)
+		cb.paragraph_start(name, paragraph)
 
 		if (#paragraph == 1) and (#paragraph[1] == 0) then
 			cb.notext()
@@ -125,7 +125,7 @@ function ExportFileUsingCallbacks(document, cb)
 			end
 		end
 
-		cb.paragraph_end(name)
+		cb.paragraph_end(name, paragraph)
 	end
 	if listmode then
 		cb.list_end()

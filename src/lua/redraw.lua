@@ -303,22 +303,7 @@ end
 
 do
 	local function cb(event, token)
-		local wc = 0
-		local pn = 1
-
-		for _, p in ipairs(Document) do
-			wc = wc + #p
-
-			local style = DocumentStyles[p.style]
-			if style.numbered then
-				p.number = pn
-				pn = pn + 1
-			elseif not style.list then
-				pn = 1
-			end
-		end
-
-		Document.wordcount = wc
+		Document:renumber()
 	end
 
 	AddEventListener(Event.Changed, cb)
