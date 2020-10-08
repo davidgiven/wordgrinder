@@ -9,6 +9,7 @@
 
 Name "WordGrinder for Windows"
 OutFile "${OUTFILE}"
+Unicode True
 
 InstallDir "$PROGRAMFILES\Cowlark Technologies\WordGrinder"
 
