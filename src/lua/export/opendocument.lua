@@ -4,6 +4,7 @@
 
 local table_concat = table.concat
 local writezip = wg.writezip
+local string_format = string.format
 
 -----------------------------------------------------------------------------
 -- The exporter itself.
@@ -16,44 +17,68 @@ local function unhtml(s)
 	return s
 end
 
+local function emit(s)
+	return function(para) return s end
+end
+
+local function header()
+	return function(para)
+		return string_format('<text:h text:style-name="%s" text:outline-level="1">', para.style)
+	end
+end
+		
+local function simple()
+	return function(para)
+		return string_format('<text:p text:style-name="%s">', para.style)
+	end
+end
+		
+local function list()
+	return function(para)
+		return string_format('<text:list text:style-name="%s"><text:list-item%s><text:p text:style-name="P">',
+			para.style,
+			para.number and string_format(' text:start-value="%d"', para.number) or '')
+	end
+end
+
 local style_tab =
 {
-	["H1"] = {false, '<text:h text:style-name="H1" text:outline-level="1">', '</text:h>'},
-	["H2"] = {false, '<text:h text:style-name="H2" text:outline-level="2">', '</text:h>'},
-	["H3"] = {false, '<text:h text:style-name="H3" text:outline-level="3">', '</text:h>'},
-	["H4"] = {false, '<text:h text:style-name="H4" text:outline-level="4">', '</text:h>'},
-	["P"] =  {false, '<text:p text:style-name="P">', '</text:p>'},
-	["L"] =  {false, '<text:list text:style-name="L"><text:list-item><text:p text:style-name="P">',
-		'</text:p></text:list-item></text:list>'},
-	["LB"] = {false, '<text:list text:style-name="LB"><text:list-item><text:p text:style-name="P">',
-		'</text:p></text:list-item></text:list>'},
-	["Q"] =  {false, '<text:p text:style-name="Q">', '</text:p>'},
-	["V"] =  {false, '<text:p text:style-name="V">', '</text:p>'},
-	["RAW"] = {false, '', ''},
-	["PRE"] = {false, '<text:p text:style-name="PRE">', '</text:p>'}
+	["H1"] = {false, header(), emit('</text:h>') },
+	["H2"] = {false, header(), emit('</text:h>') },
+	["H3"] = {false, header(), emit('</text:h>') },
+	["H4"] = {false, header(), emit('</text:h>') },
+	["P"] =  {false, emit('<text:p text:style-name="P">'), emit('</text:p>') },
+	["L"] =  {false, list(), emit('</text:p></text:list-item></text:list>') },
+	["LB"] = {false, list(), emit('</text:p></text:list-item></text:list>') },
+	["LN"] = {false, list(), emit('</text:p></text:list-item></text:list>') },
+	["Q"] =  {false, simple(), emit('</text:p>') },
+	["V"] =  {false, simple(), emit('</text:p>') },
+	["RAW"] = {false, emit(''), emit('') },
+	["PRE"] = {false, simple(), emit('</text:p>') }
 }
 
 local function callback(writer, document)
 	local settings = DocumentSet.addons.htmlexport
-	local currentpara = nil
+	local currentstylename = nil
 	
-	function changepara(newpara)
-		local currentstyle = style_tab[currentpara]
-		local newstyle = style_tab[newpara]
+	function changepara(para)
+		local newstylename = para and para.style
+		local currentstyle = style_tab[currentstylename]
+		local newstyle = style_tab[newstylename]
 		
-		if (newpara ~= currentpara) or
-			not newpara or
+		if (newstylename ~= currentstylename) or
+			not newstylename or
 			not currentstyle[1] or
 			not newstyle[1] 
 		then
 			if currentstyle then
-				writer(currentstyle[3])
+				writer(currentstyle[3](para))
 			end
 			writer("\n")
 			if newstyle then
-				writer(newstyle[2])
+				writer(newstyle[2](para))
 			end
-			currentpara = newpara
+			currentstylename = newstylename
 		else
 			writer("\n")
 		end
@@ -121,11 +146,11 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style)
-			changepara(style)
+		paragraph_start = function(para)
+			changepara(para)
 		end,		
 		
-		paragraph_end = function(style)
+		paragraph_end = function(para)
 		end,
 		
 	})
@@ -304,6 +329,14 @@ local function export_odt_with_ui(filename, title, extension)
 						</text:list-level-style-bullet>
                 	</text:list-style>
                 	
+                	<text:list-style style:name="LN">
+                		<text:list-level-style-number text:level="1">
+							<style:list-level-properties
+								text:space-before="5mm"
+								text:min-label-width="5mm"/>
+						</text:list-level-style-number>
+                	</text:list-style>
+                	
                 	<text:list-style style:name="L">
                 		<text:list-level-style-bullet text:level="1" text:bullet-char=" ">
 							<style:list-level-properties
@@ -341,3 +374,9 @@ end
 function Cmd.ExportODTFile(filename)
 	return export_odt_with_ui(filename, "Export ODT File", ".odt")
 end
+
+-- Note: just the content.xml.
+function Cmd.ExportToODTString()
+	return ExportToString(Document, callback)
+end
+

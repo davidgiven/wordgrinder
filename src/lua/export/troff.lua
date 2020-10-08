@@ -16,8 +16,9 @@ local style_tab =
 	["H3"] = '.NH 3',
 	["H4"] = '.NH 4',
 	["P"] =  '.LP',
-	["L"] =  '.IP',
-	["LB"] = '.IP \\[bu]',
+	["L"] =  '.IP "" 3',
+	["LB"] = '.IP \\[bu] 3',
+	["LN"] = 'special',
 	["Q"] =  '.IP',
 	["V"] =  '.IP',
 	["RAW"] = '',
@@ -150,12 +151,17 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style)
+		paragraph_start = function(para)
+			local style = para.style
 			if (currentstyle ~= "PRE") or (style ~= "PRE") then
 				if (currentstyle == "PRE") then
 					writer(".DE\n")
 				end
-				writer(style_tab[style] or ".LP")
+				if (style == "LN") then
+					writer(string_format(".IP %d. 3", para.number))
+				else
+					writer(style_tab[style] or ".LP")
+				end
 				writer('\n')
 			end
 			linestart = true
@@ -175,3 +181,9 @@ function Cmd.ExportTroffFile(filename)
 	return ExportFileWithUI(filename, "Export Troff File", ".tr",
 		callback)
 end
+
+function Cmd.ExportToTroffString()
+	return ExportToString(Document, callback)
+end
+
+

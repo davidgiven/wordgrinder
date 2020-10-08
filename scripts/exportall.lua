@@ -31,6 +31,7 @@ local function main(args)
         ["tr"] = Cmd.ExportTroffFile,
         ["tex"] = Cmd.ExportLatexFile, 
         ["txt"] = Cmd.ExportTextFile,
+		["md"] = Cmd.ExportMarkdownFile,
     }
     local _, _, extension = template:find("%.(%w+)$")
     local exporter = export_table[extension or ""]

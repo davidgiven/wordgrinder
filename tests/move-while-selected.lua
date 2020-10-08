@@ -36,3 +36,14 @@ Cmd.MoveWhileSelected()
 
 AssertEquals(1, Document.mp)
 
+-- Ensure that setting a mark at the beginning of a word works.
+
+ResetDocumentSet()
+Cmd.InsertStringIntoWord("foo")
+Cmd.SplitCurrentWord()
+Cmd.SetMark()
+AssertEquals(false, Document.sticky_selection)
+AssertEquals(1, Document.mp)
+AssertEquals(2, Document.mw)
+AssertEquals(1, Document.mo)
+

@@ -726,4 +726,11 @@ function UpgradeDocument(oldversion)
         end
 		DocumentSet.styles = nil
 	end
+
+	-- Upgrade version 7 to 8.
+	
+	if (oldversion < 8) then
+		-- This version added the LN paragraph style type; documents are forwards
+		-- compatible but not backward compatible.
+	end
 end

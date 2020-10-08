@@ -26,6 +26,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.spellchecker.useuserdictionary: true
 .addons.widescreen.enabled: false
 .addons.widescreen.maxwidth: 80
+.clipboard.co: 1
+.clipboard.cp: 1
+.clipboard.cw: 1
+.clipboard.margin: 0
+.clipboard.viewmode: 1
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -34,14 +39,13 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
 .documents.1.wordcount: 3656
-.documents.2.co: 3
+.documents.2.co: 1
 .documents.2.cp: 1
-.documents.2.cw: 2
+.documents.2.cw: 1
 .documents.2.margin: 0
 .documents.2.name: "Unicode test document"
-.documents.2.sticky_selection: false
 .documents.2.viewmode: 1
-.documents.2.wordcount: 501
+.documents.2.wordcount: 502
 .documents.3.co: 5
 .documents.3.cp: 1
 .documents.3.cw: 1
@@ -155,7 +159,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.name: "/.pool/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .styles.1.above: 1
@@ -189,36 +193,27 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.7.bullet: "-"
 .styles.7.desc: "List item with bullet"
 .styles.7.indent: 4
-.styles.7.list: true
 .styles.7.name: "LB"
 .styles.8.above: 1
 .styles.8.below: 1
 .styles.8.desc: "List item without bullet"
 .styles.8.indent: 4
-.styles.8.list: true
 .styles.8.name: "L"
-.styles.8.numbered: true
-.styles.9.above: 1
-.styles.9.below: 1
-.styles.9.desc: "List item without bullet"
+.styles.9.above: 0
+.styles.9.below: 0
+.styles.9.desc: "Indented text, run together"
 .styles.9.indent: 4
-.styles.9.list: true
-.styles.9.name: "L"
+.styles.9.name: "V"
 .styles.10.above: 0
 .styles.10.below: 0
-.styles.10.desc: "Indented text, run together"
+.styles.10.desc: "Preformatted text"
 .styles.10.indent: 4
-.styles.10.name: "V"
+.styles.10.name: "PRE"
 .styles.11.above: 0
 .styles.11.below: 0
-.styles.11.desc: "Preformatted text"
-.styles.11.indent: 4
-.styles.11.name: "PRE"
-.styles.12.above: 0
-.styles.12.below: 0
-.styles.12.desc: "Raw data exported to output file"
-.styles.12.indent: 0
-.styles.12.name: "RAW"
+.styles.11.desc: "Raw data exported to output file"
+.styles.11.indent: 0
+.styles.11.name: "RAW"
 .styles.H1.above: 3
 .styles.H1.below: 1
 .styles.H1.desc: "Heading #1"
@@ -239,22 +234,13 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.L.below: 1
 .styles.L.desc: "List item without bullet"
 .styles.L.indent: 4
-.styles.L.list: true
 .styles.L.name: "L"
 .styles.LB.above: 1
 .styles.LB.below: 1
 .styles.LB.bullet: "-"
 .styles.LB.desc: "List item with bullet"
 .styles.LB.indent: 4
-.styles.LB.list: true
 .styles.LB.name: "LB"
-.styles.LN.above: 1
-.styles.LN.below: 1
-.styles.LN.desc: "List item without bullet"
-.styles.LN.indent: 4
-.styles.LN.list: true
-.styles.LN.name: "L"
-.styles.LN.numbered: true
 .styles.P.above: 1
 .styles.P.below: 1
 .styles.P.desc: "Plain text"
@@ -450,63 +436,64 @@ Q dg@cowlark.com
 H1 I don't know, I only work here!
 P Enclosed are various translations of the phrase 'I don't know, I only work here', in a lot of different languages. These have been shamelessly stolen from http://crism.maden.org/dunno.html. Note that I've removed the right-to-left languages, as WordGrinder doesn't support that.
 P 
-LN Amharic: አኔ አላውቅም። አዚህ መሰራት ብቻ ካልሆነ። 
-LN Bulgarian: Не знам. Аз само работя тук.
-LN Bosnian: Ne znam. Ja samo radim ovdje.
-LN Welsh: Dwn i ddim. Dim ond gweithio fan hyn dw i.
-LN German: Keine Ahnung. Ich arbeite hier nur.
-LN Viennese: Waa? I net. I oarbeit do nur.
-LN Swiss German: I weiss es nid. I schaffe nume hie.
-LN Ruhrdeutsch: Wat weiß ich. Ich tu hier nur malochen.
-LN Danish: Det ved jeg ikke. Jeg arbejder her bare.
-LN Greek: Δεν ξέρω, εγώ απλά δουλεύω εδώ.
-LN English: I don't know. I only work here.
-LN Esperanto: Mi ne scias. Mi nur laboras ĉi tie.
-LN Spanish: Yo no sé. Yo nada mas que trabajo aquí.
-LN Colombian Spanish: No sé, yo sólo trabajo acá.
-LN Finnish: En tiedä. Olen täällä vain töissä.
-LN French: Je ne sais pas. Je ne fais que travailler ici.
-LN Irish Gaelic: Níl a fhios agam. Nílimse ach ag obair anseo.
-LN Gallegan: Non o sei. Eu so traballo aqui.
-LN Gothic: 𐌽𐌹 𐍅𐌰𐌹𐍄 𐌹𐌺 𐌸𐌰𐍄𐌰𐌹𐌽𐌴𐌹 𐍅𐌰𐌿𐍂𐌺𐌾𐌰 𐌷𐌴𐍂
-LN Hindi: मझ नही पता । म तो सिरफ यहा काम करता ह ।
-LN Hungarian: Nem tudom. Én csak itt dolgozom.
-LN Indonesian: Saya tidak tahu. Saya cuma bekerja disini.
-LN Ilocano: Diakammo. Agtrabtrabaho ak la ditoy.
-LN Icelandic: Ég veit það ekki, ég bara vinn hérna.
-LN Italian: Non lo so. Io qui lavoro soltanto.
-LN Japanese: 知りません。私はここで働いているだけです。
-LN Javanese: Kula mboten ngertos. Kula namung nyambut damel wonten mriki.
-LN Korean: 나는 몰라요. 난 여기서 일핀 뿐이에요.
-LN Latin: Nescio. Hic tantum laboro.
-LN Marathi: मला नाही माहित. मी फकत इथ काम करतो.
-LN Malay: Saya tak tahu. Saya cuma kerja sini.
-LN Norwegian (Bokmål): Jeg vet ikke. Jeg bare jobber her.
-LN Saxon: Wöß’sch nüsch. ’Sch tu’ hier bloß arbeidn.
-LN Nepali: मलाई थाहा छन । म यहा काम मातर गरछ ।
-LN Dutch: Geen idee. Ik werk hier alleen maar.
-LN Norwegian (Nynorsk): Eg veit ikkje. Eg berre arbeider her.
-LN Polish: Nie wiem. Ja tu tylko pracuję.
-LN Brazilian Portuguese: Eu não sei. Eu só trabalho aqui.
-LN Romanian: Nu ştiu. Eu doar lucrez aici.
-LN Russian: Не знаю. Я здесь только работаю.
-LN Swedish: Det vet jag inte. Jag arbetar bara här.
-LN Albanian: Nuk e di. Unë jam punëtor këtu.
-LN Serbian: Не знам. Ја само радим овде.
-LN Sudanese: Abdi teu ngartos. Abdi mung didamel di dieu.
-LN Thai: ผมไมร ผมเพยงแตทำงานทน
-LN Modern Filipino: Ewan ko. Empleyado lang ako dito.
-LN Tagalog: Di ko alam. Trabahador lang ako dito.
-LN Ukrainian: Я не знаю. Я лише працюю тут.
-LN Vietnamese: Tôi không biết. Tôi chỉ làm việc đây thôi.
-LN Klingon: jIH ta'Sov'be. jIH neH vum naDev.
-LN Aragonese: No sé pas. Yo aquí nomás i treballo.
-LN Lombard: Sô nò. Ghe laôri dômà chì ch’inscì.
-LN Neapolitan: Nunn’òssaccio. Ije accà ce fatico e bbasta.
-LN Sixilian: Nenti sacciu. Cà ci travagghiu sulamenti.
-LN Swabian: Des woiß doch i net. I schaff dähanna bloß.
-LN Chinese (simplified): 我不知道。我只在这里工作。
-LN Chinese (traditional): 我不知道。我只在這裡工作。
+P Amharic: አኔ አላውቅም። አዚህ መሰራት ብቻ ካልሆነ። 
+P Bulgarian: Не знам. Аз само работя тук.
+P Bosnian: Ne znam. Ja samo radim ovdje.
+P Welsh: Dwn i ddim. Dim ond gweithio fan hyn dw i.
+P German: Keine Ahnung. Ich arbeite hier nur.
+P Viennese: Waa? I net. I oarbeit do nur.
+P Swiss German: I weiss es nid. I schaffe nume hie.
+P Ruhrdeutsch: Wat weiß ich. Ich tu hier nur malochen.
+P Danish: Det ved jeg ikke. Jeg arbejder her bare.
+P Greek: Δεν ξέρω, εγώ απλά δουλεύω εδώ.
+P English: I don't know. I only work here.
+P Esperanto: Mi ne scias. Mi nur laboras ĉi tie.
+P Spanish: Yo no sé. Yo nada mas que trabajo aquí.
+P Colombian Spanish: No sé, yo sólo trabajo acá.
+P Finnish: En tiedä. Olen täällä vain töissä.
+P French: Je ne sais pas. Je ne fais que travailler ici.
+P Irish Gaelic: Níl a fhios agam. Nílimse ach ag obair anseo.
+P Gallegan: Non o sei. Eu so traballo aqui.
+P Gothic: 𐌽𐌹 𐍅𐌰𐌹𐍄 𐌹𐌺 𐌸𐌰𐍄𐌰𐌹𐌽𐌴𐌹 𐍅𐌰𐌿𐍂𐌺𐌾𐌰 𐌷𐌴𐍂
+P Hindi: मझ नही पता । म तो सिरफ यहा काम करता ह ।
+P Hungarian: Nem tudom. Én csak itt dolgozom.
+P Indonesian: Saya tidak tahu. Saya cuma bekerja disini.
+P Ilocano: Diakammo. Agtrabtrabaho ak la ditoy.
+P Icelandic: Ég veit það ekki, ég bara vinn hérna.
+P Italian: Non lo so. Io qui lavoro soltanto.
+P Japanese: 知りません。私はここで働いているだけです。
+P Javanese: Kula mboten ngertos. Kula namung nyambut damel wonten mriki.
+P Korean: 나는 몰라요. 난 여기서 일핀 뿐이에요.
+P Latin: Nescio. Hic tantum laboro.
+P Marathi: मला नाही माहित. मी फकत इथ काम करतो.
+P Malay: Saya tak tahu. Saya cuma kerja sini.
+P Norwegian (Bokmål): Jeg vet ikke. Jeg bare jobber her.
+P Saxon: Wöß’sch nüsch. ’Sch tu’ hier bloß arbeidn.
+P Nepali: मलाई थाहा छन । म यहा काम मातर गरछ ।
+P Dutch: Geen idee. Ik werk hier alleen maar.
+P Norwegian (Nynorsk): Eg veit ikkje. Eg berre arbeider her.
+P Polish: Nie wiem. Ja tu tylko pracuję.
+P Brazilian Portuguese: Eu não sei. Eu só trabalho aqui.
+P Romanian: Nu ştiu. Eu doar lucrez aici.
+P Russian: Не знаю. Я здесь только работаю.
+P Swedish: Det vet jag inte. Jag arbetar bara här.
+P Albanian: Nuk e di. Unë jam punëtor këtu.
+P Serbian: Не знам. Ја само радим овде.
+P Sudanese: Abdi teu ngartos. Abdi mung didamel di dieu.
+P Thai: ผมไมร ผมเพยงแตทำงานทน
+P Modern Filipino: Ewan ko. Empleyado lang ako dito.
+P Tagalog: Di ko alam. Trabahador lang ako dito.
+P Ukrainian: Я не знаю. Я лише працюю тут.
+P Vietnamese: Tôi không biết. Tôi chỉ làm việc đây thôi.
+P Klingon: jIH ta'Sov'be. jIH neH vum naDev.
+P Aragonese: No sé pas. Yo aquí nomás i treballo.
+P Lombard: Sô nò. Ghe laôri dômà chì ch’inscì.
+P Neapolitan: Nunn’òssaccio. Ije accà ce fatico e bbasta.
+P Sixilian: Nenti sacciu. Cà ci travagghiu sulamenti.
+P Swabian: Des woiß doch i net. I schaff dähanna bloß.
+P Chinese (simplified): 我不知道。我只在这里工作。
+P Chinese (traditional): 我不知道。我只在這裡工作。
+P 
 .
 #3
 P This is your user dictionary --- place words, one at a time, in V paragraphs and they will be considered valid in your document.

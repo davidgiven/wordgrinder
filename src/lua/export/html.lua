@@ -2,6 +2,8 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local string_format = string.format
+
 -----------------------------------------------------------------------------
 -- The exporter itself.
 
@@ -28,6 +30,8 @@ local style_tab =
 		on='<li style="list-style-type: none;">', off='</li>'},
 	["LB"] = {pre=false, list=true,
 		on='<li>', off='</li>'},
+	["LN"] = {pre=false, list=true,
+		on=nil, off='</li>'},
 	["Q"] =  {pre=false, list=false,
 		on='<blockquote>', off='</blockquote>'},
 	["V"] =  {pre=false, list=false,
@@ -40,15 +44,16 @@ local style_tab =
 
 local function callback(writer, document)
 	local settings = DocumentSet.addons.htmlexport
-	local currentpara = nil
+	local currentstylename = nil
 	local islist = false
 	
-	function changepara(newpara)
-		local currentstyle = style_tab[currentpara]
-		local newstyle = style_tab[newpara]
+	function changepara(para)
+		local newstylename = para and para.style
+		local currentstyle = style_tab[currentstylename]
+		local newstyle = style_tab[newstylename]
 		
-		if (newpara ~= currentpara) or
-			not newpara or
+		if (newstylename ~= currentstylename) or
+			not newstylename or
 			not currentstyle.pre or
 			not newstyle.pre
 		then
@@ -62,14 +67,18 @@ local function callback(writer, document)
 				islist = false
 			end
 			if (newstyle and newstyle.list) and not islist then
-				writer("<ul>\n")
 				islist = true
+				writer("<ul>\n")
 			end
 
 			if newstyle then
-				writer(newstyle.on)
+				if newstylename == "LN" then
+					writer(string.format('<li style="list-style-type: decimal;" value=%d>', para.number))
+				else
+					writer(newstyle.on)
+				end
 			end
-			currentpara = newpara
+			currentstylename = newstylename
 		else
 			writer("\n")
 		end
@@ -94,7 +103,7 @@ local function callback(writer, document)
 		end,
 		
 		notext = function(s)
-			if (currentpara ~= "PRE") then
+			if (currentstylename ~= "PRE") then
 				writer('<br/>')
 			end
 		end,
@@ -129,15 +138,15 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style)
-			changepara(style)
+		paragraph_start = function(para)
+			changepara(para)
 		end,		
 		
-		paragraph_end = function(style)
+		paragraph_end = function(para)
 		end,
 		
 		epilogue = function()
-			changepara(nil)
+			changepara(nil, nil)
 			writer('</body>\n')	
 			writer('</html>\n')
 		end
@@ -147,6 +156,10 @@ end
 function Cmd.ExportHTMLFile(filename)
 	return ExportFileWithUI(filename, "Export HTML File", ".html",
 		callback)
+end
+
+function Cmd.ExportToHTMLString()
+	return ExportToString(Document, callback)
 end
 
 -----------------------------------------------------------------------------

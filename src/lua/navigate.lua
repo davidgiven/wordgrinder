@@ -250,7 +250,7 @@ function Cmd.SplitCurrentWord()
 		paragraph:sub(cw+1))
 
 	Document.cw = cw + 1
-	Document.co = 1 + styleprimelen
+	Document.co = 1 + styleprimelen -- yes, this means that co has a minimum of 2
 
 	DocumentSet:touch()
 	QueueRedraw()
@@ -672,6 +672,18 @@ function Cmd.ChangeParagraphStyle(style)
 	return Cmd.UnsetMark()
 end
 
+local function rewind_past_style_bytes(p, w, o)
+	local word = Document[p][w]
+	o = PrevCharInWord(word, o)
+	if o then
+		o = NextCharInWord(word, o)
+	else
+		o = 1
+	end
+	return o
+end
+
+
 function Cmd.ToggleMark()
 	if Document.mp then
 		Document.mp = nil
@@ -681,7 +693,7 @@ function Cmd.ToggleMark()
 	else
 		Document.mp = Document.cp
 		Document.mw = Document.cw
-		Document.mo = Document.co
+		Document.mo = rewind_past_style_bytes(Document.cp, Document.cw, Document.co)
 		Document.sticky_selection = true
 	end
 
@@ -693,7 +705,7 @@ function Cmd.SetMark()
 	if not Document.mp then
 		Document.mp = Document.cp
 		Document.mw = Document.cw
-		Document.mo = Document.co
+		Document.mo = rewind_past_style_bytes(Document.cp, Document.cw, Document.co)
 		Document.sticky_selection = false
 	end
 	return true

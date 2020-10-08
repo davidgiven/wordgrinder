@@ -89,6 +89,7 @@ DocumentSetClass =
 
 		self:touch()
 		RebuildDocumentsMenu(self.documents)
+		return document
 	end,
 
 	moveDocumentIndexTo = function(self, name, targetIndex)
@@ -271,6 +272,25 @@ DocumentClass =
 	touch = function(self)
 		FireEvent(Event.DocumentModified, self)
 	end,
+
+	renumber = function(self)
+		local wc = 0
+		local pn = 1
+
+		for _, p in ipairs(self) do
+			wc = wc + #p
+
+			local style = DocumentStyles[p.style]
+			if style.numbered then
+				p.number = pn
+				pn = pn + 1
+			elseif not style.list then
+				pn = 1
+			end
+		end
+
+		Document.wordcount = wc
+	end
 }
 
 ParagraphClass =
@@ -288,9 +308,28 @@ ParagraphClass =
 		self.lines = nil
 		self.wrapwidth = nil
 		self.xs = nil
+		self.sentences = nil
 	end,
 
 	wrap = function(self, width)
+		local sentences = self.sentences
+		if (sentences == nil) then
+			local issentence = true
+			sentences = {}
+			for wn, word in ipairs(self) do
+				if issentence then
+					sentences[wn] = true
+					issentence = false
+				end
+
+				if word:find("%.$") then
+					issentence = true
+				end
+			end
+			sentences[#self] = true
+			self.sentences = sentences
+		end
+
 		width = width or Document.wrapwidth
 		if (self.wrapwidth ~= width) then
 			local lines = {}
@@ -346,7 +385,8 @@ ParagraphClass =
 			local payload = {
 				word = w,
 				ostyle = ostyle,
-				cstyle = cstyle
+				cstyle = cstyle,
+				firstword = self.sentences[wn]
 			}
 			FireEvent(Event.DrawWord, payload)
 
@@ -404,7 +444,8 @@ ParagraphClass =
 			local payload = {
 				word = self[w],
 				ostyle = ostyle,
-				cstyle = cstyle
+				cstyle = cstyle,
+				firstword = self.sentences[wn]
 			}
 			FireEvent(Event.DrawWord, payload)
 
@@ -532,8 +573,19 @@ function GetWordSimpleText(s)
 	s = s:gsub('[~#&^$"<>]+', "")
 	s = s:gsub("^[.'([{]+", "")
 	s = s:gsub("[',.!?:;)%]}]+$", "")
-	s = s:lower()
 	return s
+end
+
+function OnlyFirstCharIsUppercase(s)
+    -- Return true if only first character is uppercase
+    local first_char = s:sub(0, 1)
+    if first_char:upper() == first_char then
+        local remaining_chars = s:sub(2, s:len())
+        if remaining_chars:lower() == remaining_chars then
+            return true
+        end
+    end
+    return false
 end
 
 function UpdateDocumentStyles()
@@ -594,6 +646,16 @@ function UpdateDocumentStyles()
 			below = 1,
 			indent = 4,
 			bullet = "-",
+			list = true,
+		},
+		{
+			desc = "List item with number",
+			name = "LN",
+			above = 1,
+			below = 1,
+			indent = 4,
+			numbered = true,
+			list = true,
 		},
 		{
 			desc = "List item without bullet",
@@ -601,6 +663,7 @@ function UpdateDocumentStyles()
 			above = 1,
 			below = 1,
 			indent = 4,
+			list = true,
 		},
 		{
 			desc = "Indented text, run together",
