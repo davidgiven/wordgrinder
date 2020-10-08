@@ -33,9 +33,11 @@ jobs:
     steps:
     - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
     - name: pacman
       run: |
-        pacman -S --noconfirm --needed make ninja mingw-w64-i686-libusb mingw-w64-i686-sqlite3 mingw-w64-i686-zlib mingw-w64-i686-gcc zip
+        pacman -S --noconfirm --needed make ninja mingw-w64-i686-gcc gcc mingw-w64-i686-nsis zip
     - name: build
       run: |
         make
