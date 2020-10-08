@@ -37,7 +37,7 @@ jobs:
         fetch-depth: 1
     - name: pacman
       run: |
-        pacman -S --noconfirm --needed make ninja mingw-w64-i686-gcc gcc mingw-w64-i686-nsis mingw-w64-cross-binutils pkg-config zip
+        pacman -S --noconfirm --needed make ninja gcc mingw-w64-i686-nsis mingw-w64-cross-gcc pkg-config zip
     - name: build
       run: |
         make windows
