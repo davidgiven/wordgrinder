@@ -375,7 +375,7 @@ if has_binary(WINCC) and has_binary(WINDRES) and has_binary(MAKENSIS) then
     print("found")
     FRONTENDS["windows"] = true
 else
-    print(string.format("not found (WINCC=%s, WINDRES=%s, MAKENSIS=%s)",
+    print(string.format("not found (WINCC=%q, WINDRES=%q, MAKENSIS=%q)",
         has_binary(WINCC), has_binary(WINDRES), has_binary(MAKENSIS)))
 end
 
