@@ -300,6 +300,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/immutable-paragraphs.lua",
         "tests/import-from-html.lua",
         "tests/import-from-text.lua",
+        "tests/import-from-opendocument.lua",
         "tests/insert-space-with-style-hint.lua",
         "tests/io-open-enoent.lua",
         "tests/line-down-into-style.lua",
