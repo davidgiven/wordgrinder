@@ -18,7 +18,7 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-local function loadtextfile(fp)
+function Cmd.ImportTextFileFromStream(fp)
 	local document = CreateDocument()
 	for l in fp:lines() do
 		l = CanonicaliseString(l)
@@ -37,5 +37,5 @@ local function loadtextfile(fp)
 end
 
 function Cmd.ImportTextFile(filename)
-	return ImportFileWithUI(filename, "Import Text File", loadtextfile)
+	return ImportFileWithUI(filename, "Import Text File", Cmd.ImportTextFileFromStream)
 end
