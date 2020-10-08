@@ -39,7 +39,7 @@ local expected = [[
 
 one two three
 
-four b**olditalicunderline**
+four **bolditalicunderline**
 
 # heading
 

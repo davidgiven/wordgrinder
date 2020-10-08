@@ -43,7 +43,7 @@ local expected = [[
 </head><body>
 
 <p>one two three</p>
-<p>four b<b>olditalic<u>underline</u></b></p>
+<p>four <b>bolditalic<u>underline</u></b></p>
 <h1>heading</h1>
 <ul>
 <li>bullet</li>

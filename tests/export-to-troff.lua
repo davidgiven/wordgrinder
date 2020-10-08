@@ -43,7 +43,7 @@ main
 .LP
 one two three
 .LP
-four b\fBolditalic
+four \fBbolditalic
 .UL "\fBunderline\fB"
 \fR
 .NH 1

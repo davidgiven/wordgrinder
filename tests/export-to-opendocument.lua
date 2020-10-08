@@ -45,7 +45,7 @@ local expected = [[
 					<office:body><office:text>
 				
 <text:p text:style-name="P">one<text:s/>two<text:s/>three</text:p>
-<text:p text:style-name="P">four<text:s/>b<text:span text:style-name="B">olditalic<text:span text:style-name="UL">underline</text:span></text:span></text:p>
+<text:p text:style-name="P">four<text:s/><text:span text:style-name="B">bolditalic<text:span text:style-name="UL">underline</text:span></text:span></text:p>
 <text:h text:style-name="H1" text:outline-level="1">heading</text:h>
 <text:list text:style-name="LB"><text:list-item><text:p text:style-name="P">bullet</text:p></text:list-item></text:list>
 <text:list text:style-name="L"><text:list-item><text:p text:style-name="P">no<text:s/>bullet</text:p></text:list-item></text:list>
