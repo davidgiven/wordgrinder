@@ -294,6 +294,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/export-to-markdown.lua",
         "tests/export-to-opendocument.lua",
         "tests/export-to-text.lua",
+        "tests/export-to-troff.lua",
         "tests/find-and-replace.lua",
         "tests/get-style-from-word.lua",
         "tests/immutable-paragraphs.lua",
