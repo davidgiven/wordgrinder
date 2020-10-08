@@ -14,7 +14,7 @@ install:
   - pacman -S --noconfirm --needed make ninja mingw-w64-i686-zlib mingw-w64-i686-gcc zip
 
 build_script:
-  - make
+  - make windows
 #  - zip -9 fluxengine.zip fluxengine.exe brother120tool.exe brother240tool.exe FluxEngine.cydsn/CortexM3/ARM_GCC_541/Release/FluxEngine.hex
 #
 #artifacts:
