@@ -114,13 +114,6 @@ function ImportFileWithUI(filename, title, callback)
 
 	fp:close()
 
-	-- All the importers produce a blank line at the beginning of the
-	-- document (the default content made by CreateDocument()). Remove it.
-
-	if (#document > 1) then
-		document:deleteParagraphAt(1)
-	end
-
 	-- Add the document to the document set.
 
 	local docname = Leafname(filename)

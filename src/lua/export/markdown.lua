@@ -18,6 +18,7 @@ local style_tab =
 	["P"] =  {false, '', '\n'},
 	["L"] =  {false, '- ', ''},
 	["LB"] = {false, '- ', ''},
+	["LN"] = {false, '1. ', ''},
 	["Q"] =  {false, '> ', '\n'}, 
 	["V"] =  {false, '> ', '\n'},
 	["RAW"] = {false, '    ', ''},
@@ -66,25 +67,27 @@ local function callback(writer, document)
 		end,
 
 		italic_on = function()
-			writer("_")
+			writer("<i>")
 		end,
 
 		italic_off = function()
-			writer("_")
+			writer("</i>")
 		end,
 
 		underline_on = function()
+			writer("<u>")
 		end,
 
 		underline_off = function()
+			writer("</u>")
 		end,
 
 		bold_on = function()
-			writer("**")
+			writer("<b>")
 		end,
 
 		bold_off = function()
-			writer("**")
+			writer("</b>")
 		end,
 
 		list_start = function()
@@ -95,11 +98,11 @@ local function callback(writer, document)
 			writer("\n")
 		end,
 
-		paragraph_start = function(s)
-			changepara(s)
+		paragraph_start = function(para)
+			changepara(para.style)
 		end,
 
-		paragraph_end = function(s)
+		paragraph_end = function(para)
 		end,
 
 		epilogue = function()
@@ -111,3 +114,8 @@ end
 function Cmd.ExportMarkdownFile(filename)
 	return ExportFileWithUI(filename, "Export Markdown File", ".md", callback)
 end
+
+function Cmd.ExportToMarkdownString()
+	return ExportToString(Document, callback)
+end
+

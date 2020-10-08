@@ -162,6 +162,7 @@ local function import_paragraphs(styles, importer, xml, defaultstyle)
 	local LIST = TEXT_NS .. " list"
 	local OUTLINELEVEL = TEXT_NS .. " outline-level"
 	local STYLENAME = TEXT_NS .. " style-name"
+	local STARTVALUE = TEXT_NS .. " start-value"
 	
 	for _, element in ipairs(xml) do
 		if (element._name == PARAGRAPH) then
@@ -185,7 +186,10 @@ local function import_paragraphs(styles, importer, xml, defaultstyle)
 			importer:flushparagraph("H"..level)
 		elseif (element._name == LIST) then
 			for _, element in ipairs(element) do
-				import_paragraphs(styles, importer, element, "LB")
+				local hasnumber = element[STARTVALUE] ~= nil
+				import_paragraphs(styles, importer, element,
+					hasnumber and "LN" or "LB"
+				)
 			end
 		end
 	end

@@ -17,6 +17,7 @@ local time = wg.time
 -- table.
 
 function ExportFileUsingCallbacks(document, cb)
+	document:renumber()
 	cb.prologue()
 
 	local listmode = false
@@ -39,14 +40,9 @@ function ExportFileUsingCallbacks(document, cb)
 			writer = cb.text
 		end
 
-		if not italic and olditalic then
-			cb.italic_off()
-		end
-		if not underline and oldunderline then
+		-- Underline is stopping, so do so *before* the space
+		if wordbreak and not underline and oldunderline then
 			cb.underline_off()
-		end
-		if not bold and oldbold then
-			cb.bold_off()
 		end
 
 		if wordbreak then
@@ -54,14 +50,23 @@ function ExportFileUsingCallbacks(document, cb)
 			wordbreak = false
 		end
 
-		if bold and not oldbold then
+		if not wordbreak and oldunderline then
+			cb.underline_off()
+		end
+		if oldbold then
+			cb.bold_off()
+		end
+		if olditalic then
+			cb.italic_off()
+		end
+		if italic then
+			cb.italic_on()
+		end
+		if bold then
 			cb.bold_on()
 		end
-		if underline and not oldunderline then
+		if underline then
 			cb.underline_on()
-		end
-		if italic and not olditalic then
-			cb.italic_on()
 		end
 		writer(text)
 
@@ -73,20 +78,20 @@ function ExportFileUsingCallbacks(document, cb)
 
 	for _, paragraph in ipairs(Document) do
 		local name = paragraph.style
+		local style = DocumentStyles[name]
 
-		if (name == "L") or (name == "LB") then
-			if not listmode then
-				cb.list_start()
-				listmode = true
-			end
-		elseif listmode then
-			cb.list_end()
+		if listmode and not style.list then
+			cb.list_end(listmode)
 			listmode = false
+		end
+		if not listmode and style.list then
+			cb.list_start(name)
+			listmode = true
 		end
 
 		rawmode = (name == "RAW")
 
-		cb.paragraph_start(name)
+		cb.paragraph_start(paragraph)
 
 		if (#paragraph == 1) and (#paragraph[1] == 0) then
 			cb.notext()
@@ -114,18 +119,18 @@ function ExportFileUsingCallbacks(document, cb)
 				end
 			end
 
-			if italic then
-				cb.italic_off()
-			end
 			if underline then
 				cb.underline_off()
 			end
 			if bold then
 				cb.bold_off()
 			end
+			if italic then
+				cb.italic_off()
+			end
 		end
 
-		cb.paragraph_end(name)
+		cb.paragraph_end(paragraph)
 	end
 	if listmode then
 		cb.list_end()

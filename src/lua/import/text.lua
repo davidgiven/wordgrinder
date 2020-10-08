@@ -18,7 +18,7 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-local function loadtextfile(fp)
+function Cmd.ImportTextFileFromStream(fp)
 	local document = CreateDocument()
 	for l in fp:lines() do
 		l = CanonicaliseString(l)
@@ -27,9 +27,15 @@ local function loadtextfile(fp)
 		document:appendParagraph(p)
 	end
 
+	-- Remove the blank paragraph at the beginning of the document.
+	
+	if (#document > 1) then
+		document:deleteParagraphAt(1)
+	end
+		
 	return document
 end
 
 function Cmd.ImportTextFile(filename)
-	return ImportFileWithUI(filename, "Import Text File", loadtextfile)
+	return ImportFileWithUI(filename, "Import Text File", Cmd.ImportTextFileFromStream)
 end

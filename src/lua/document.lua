@@ -272,6 +272,25 @@ DocumentClass =
 	touch = function(self)
 		FireEvent(Event.DocumentModified, self)
 	end,
+
+	renumber = function(self)
+		local wc = 0
+		local pn = 1
+
+		for _, p in ipairs(self) do
+			wc = wc + #p
+
+			local style = DocumentStyles[p.style]
+			if style.numbered then
+				p.number = pn
+				pn = pn + 1
+			elseif not style.list then
+				pn = 1
+			end
+		end
+
+		Document.wordcount = wc
+	end
 }
 
 ParagraphClass =
@@ -627,6 +646,16 @@ function UpdateDocumentStyles()
 			below = 1,
 			indent = 4,
 			bullet = "-",
+			list = true,
+		},
+		{
+			desc = "List item with number",
+			name = "LN",
+			above = 1,
+			below = 1,
+			indent = 4,
+			numbered = true,
+			list = true,
 		},
 		{
 			desc = "List item without bullet",
@@ -634,6 +663,7 @@ function UpdateDocumentStyles()
 			above = 1,
 			below = 1,
 			indent = 4,
+			list = true,
 		},
 		{
 			desc = "Indented text, run together",
