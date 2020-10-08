@@ -27,16 +27,16 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.widescreen.enabled: false
 .addons.widescreen.maxwidth: 80
 .documents.1.co: 1
-.documents.1.cp: 163
+.documents.1.cp: 1
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
 .documents.1.wordcount: 3656
-.documents.2.co: 1
-.documents.2.cp: 3
-.documents.2.cw: 1
+.documents.2.co: 3
+.documents.2.cp: 1
+.documents.2.cw: 2
 .documents.2.margin: 0
 .documents.2.name: "Unicode test document"
 .documents.2.sticky_selection: false
@@ -189,17 +189,20 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.7.bullet: "-"
 .styles.7.desc: "List item with bullet"
 .styles.7.indent: 4
+.styles.7.list: true
 .styles.7.name: "LB"
 .styles.8.above: 1
 .styles.8.below: 1
 .styles.8.desc: "List item without bullet"
 .styles.8.indent: 4
+.styles.8.list: true
 .styles.8.name: "L"
 .styles.8.numbered: true
 .styles.9.above: 1
 .styles.9.below: 1
 .styles.9.desc: "List item without bullet"
 .styles.9.indent: 4
+.styles.9.list: true
 .styles.9.name: "L"
 .styles.10.above: 0
 .styles.10.below: 0
@@ -236,17 +239,20 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.L.below: 1
 .styles.L.desc: "List item without bullet"
 .styles.L.indent: 4
+.styles.L.list: true
 .styles.L.name: "L"
 .styles.LB.above: 1
 .styles.LB.below: 1
 .styles.LB.bullet: "-"
 .styles.LB.desc: "List item with bullet"
 .styles.LB.indent: 4
+.styles.LB.list: true
 .styles.LB.name: "LB"
 .styles.LN.above: 1
 .styles.LN.below: 1
 .styles.LN.desc: "List item without bullet"
 .styles.LN.indent: 4
+.styles.LN.list: true
 .styles.LN.name: "L"
 .styles.LN.numbered: true
 .styles.P.above: 1
@@ -274,7 +280,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .styles.V.desc: "Indented text, run together"
 .styles.V.indent: 4
 .styles.V.name: "V"
-.current: 2
+.current: 1
 #1
 H1 Welcome to WordGrinder
 H2 Important note for Windows users
