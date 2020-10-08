@@ -14,7 +14,7 @@ install:
   - pacman -S --noconfirm --needed make ninja mingw-w64-i686-nsis mingw-w64-i686-gcc msys2-w32api-headers msys2-w32api-runtime mingw-w64-i686-lua zip
 
 build_script:
-  - make windows LUA_INTERPRETER=/bin/lua5.3
+  - make windows LUA_INTERPRETER=/mingw32/bin/lua5.3
 #  - zip -9 fluxengine.zip fluxengine.exe brother120tool.exe brother240tool.exe FluxEngine.cydsn/CortexM3/ARM_GCC_541/Release/FluxEngine.hex
 #
 #artifacts:
