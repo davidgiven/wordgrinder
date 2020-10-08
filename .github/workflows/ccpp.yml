@@ -40,5 +40,5 @@ jobs:
         pacman -S --noconfirm --needed make ninja gcc mingw-w64-i686-nsis mingw-w64-cross-gcc pkg-config zip
     - name: build
       run: |
-        make windows
+        make windows WINCC=/opt/bin/i686-w64-mingw32-gcc.exe WINDRES=/opt/bin/i686-w64-mingw32-windres.exe MAKENSIS=/mingw32/bin/makensis.exe
 
