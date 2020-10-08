@@ -67,25 +67,27 @@ local function callback(writer, document)
 		end,
 
 		italic_on = function()
-			writer("_")
+			writer("<i>")
 		end,
 
 		italic_off = function()
-			writer("_")
+			writer("</i>")
 		end,
 
 		underline_on = function()
+			writer("<u>")
 		end,
 
 		underline_off = function()
+			writer("</u>")
 		end,
 
 		bold_on = function()
-			writer("**")
+			writer("<b>")
 		end,
 
 		bold_off = function()
-			writer("**")
+			writer("</b>")
 		end,
 
 		list_start = function()

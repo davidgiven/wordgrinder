@@ -10,10 +10,14 @@ Cmd.InsertStringIntoParagraph("bold")
 Cmd.SetStyle("b")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("italic")
-Cmd.SetStyle("b")
+Cmd.SetStyle("i")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("underline")
+Cmd.SplitCurrentWord()
+Cmd.InsertStringIntoParagraph("stillunderline")
 Cmd.SetStyle("u")
+Cmd.SetStyle("o")
+Cmd.InsertStringIntoParagraph("plain")
 Cmd.SplitCurrentParagraph()
 
 Cmd.InsertStringIntoParagraph("heading")
@@ -39,7 +43,7 @@ local expected = [[
 
 one two three
 
-four **bolditalicunderline**
+four <b>bold</b><i><b>italic</b></i><i><b><u>underline </u></b></i><i><b><u>stillunderline</u></b></i>plain
 
 # heading
 

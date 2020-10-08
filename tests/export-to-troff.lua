@@ -10,10 +10,14 @@ Cmd.InsertStringIntoParagraph("bold")
 Cmd.SetStyle("b")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("italic")
-Cmd.SetStyle("b")
+Cmd.SetStyle("i")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("underline")
+Cmd.SplitCurrentWord()
+Cmd.InsertStringIntoParagraph("stillunderline")
 Cmd.SetStyle("u")
+Cmd.SetStyle("o")
+Cmd.InsertStringIntoParagraph("plain")
 Cmd.SplitCurrentParagraph()
 
 Cmd.InsertStringIntoParagraph("heading")
@@ -43,9 +47,11 @@ main
 .LP
 one two three
 .LP
-four \fBbolditalic
-.UL "\fBunderline\fB"
-\fR
+four \fBbold\fR\fI\f(BIitalic\fI\fR\fI\f(BI
+.UL "\f(BIunderline \f(BI"
+\fI\fR\fI\f(BI
+.UL "\f(BIstillunderline\f(BI"
+\fI\fRplain
 .NH 1
 heading
 .IP \[bu] 3

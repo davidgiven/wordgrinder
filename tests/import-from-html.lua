@@ -40,7 +40,7 @@ local expected = [[
 \maketitle
 one two three
 
-four \textbf{bold\textit{italic}\underline{underline}}
+four \textbf{bold}\textit{\textbf{italic}}\textbf{\underline{underline}}
 
 \section{heading}
 \begin{enumerate}

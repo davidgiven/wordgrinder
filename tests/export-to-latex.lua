@@ -10,10 +10,14 @@ Cmd.InsertStringIntoParagraph("bold")
 Cmd.SetStyle("b")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("italic")
-Cmd.SetStyle("b")
+Cmd.SetStyle("i")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("underline")
+Cmd.SplitCurrentWord()
+Cmd.InsertStringIntoParagraph("stillunderline")
 Cmd.SetStyle("u")
+Cmd.SetStyle("o")
+Cmd.InsertStringIntoParagraph("plain")
 Cmd.SplitCurrentParagraph()
 
 Cmd.InsertStringIntoParagraph("heading")
@@ -47,7 +51,7 @@ local expected = [[
 \maketitle
 one two three
 
-four \textbf{bolditalic\underline{underline}}
+four \textbf{bold}\textit{\textbf{italic}}\textit{\textbf{\underline{underline }}}\textit{\textbf{\underline{stillunderline}}}plain
 
 \section{heading}
 \begin{enumerate}

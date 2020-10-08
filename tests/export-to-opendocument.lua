@@ -10,10 +10,14 @@ Cmd.InsertStringIntoParagraph("bold")
 Cmd.SetStyle("b")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("italic")
-Cmd.SetStyle("b")
+Cmd.SetStyle("i")
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("underline")
+Cmd.SplitCurrentWord()
+Cmd.InsertStringIntoParagraph("stillunderline")
 Cmd.SetStyle("u")
+Cmd.SetStyle("o")
+Cmd.InsertStringIntoParagraph("plain")
 Cmd.SplitCurrentParagraph()
 
 Cmd.InsertStringIntoParagraph("heading")
@@ -45,7 +49,7 @@ local expected = [[
 					<office:body><office:text>
 				
 <text:p text:style-name="P">one<text:s/>two<text:s/>three</text:p>
-<text:p text:style-name="P">four<text:s/><text:span text:style-name="B">bolditalic<text:span text:style-name="UL">underline</text:span></text:span></text:p>
+<text:p text:style-name="P">four<text:s/><text:span text:style-name="B">bold</text:span><text:span text:style-name="I"><text:span text:style-name="B">italic</text:span></text:span><text:span text:style-name="I"><text:span text:style-name="B"><text:span text:style-name="UL">underline<text:s/></text:span></text:span></text:span><text:span text:style-name="I"><text:span text:style-name="B"><text:span text:style-name="UL">stillunderline</text:span></text:span></text:span>plain</text:p>
 <text:h text:style-name="H1" text:outline-level="1">heading</text:h>
 <text:list text:style-name="LB"><text:list-item><text:p text:style-name="P">bullet</text:p></text:list-item></text:list>
 <text:list text:style-name="L"><text:list-item><text:p text:style-name="P">no<text:s/>bullet</text:p></text:list-item></text:list>

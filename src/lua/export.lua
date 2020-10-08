@@ -40,14 +40,9 @@ function ExportFileUsingCallbacks(document, cb)
 			writer = cb.text
 		end
 
-		if not italic and olditalic then
-			cb.italic_off()
-		end
-		if not underline and oldunderline then
+		-- Underline is stopping, so do so *before* the space
+		if wordbreak and not underline and oldunderline then
 			cb.underline_off()
-		end
-		if not bold and oldbold then
-			cb.bold_off()
 		end
 
 		if wordbreak then
@@ -55,14 +50,23 @@ function ExportFileUsingCallbacks(document, cb)
 			wordbreak = false
 		end
 
-		if bold and not oldbold then
+		if not wordbreak and oldunderline then
+			cb.underline_off()
+		end
+		if oldbold then
+			cb.bold_off()
+		end
+		if olditalic then
+			cb.italic_off()
+		end
+		if italic then
+			cb.italic_on()
+		end
+		if bold then
 			cb.bold_on()
 		end
-		if underline and not oldunderline then
+		if underline then
 			cb.underline_on()
-		end
-		if italic and not olditalic then
-			cb.italic_on()
 		end
 		writer(text)
 
@@ -115,14 +119,14 @@ function ExportFileUsingCallbacks(document, cb)
 				end
 			end
 
-			if italic then
-				cb.italic_off()
-			end
 			if underline then
 				cb.underline_off()
 			end
 			if bold then
 				cb.bold_off()
+			end
+			if italic then
+				cb.italic_off()
 			end
 		end
 
