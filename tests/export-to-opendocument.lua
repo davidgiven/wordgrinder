@@ -54,6 +54,6 @@ local expected = [[
 </office:text></office:body></office:document-content>
 ]]
 
-local output = Cmd.ExportToODTString(Document)
+local output = Cmd.ExportToODTString()
 AssertEquals(expected, output)
 

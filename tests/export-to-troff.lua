@@ -58,6 +58,6 @@ numbered
 normal text again
 ]]
 
-local output = Cmd.ExportToTroffString(Document)
+local output = Cmd.ExportToTroffString()
 AssertEquals(expected, output)
 

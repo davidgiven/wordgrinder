@@ -55,6 +55,6 @@ local expected = [[
 </html>
 ]]
 
-local output = Cmd.ExportToHTMLString(Document)
+local output = Cmd.ExportToHTMLString()
 AssertEquals(expected, output)
 

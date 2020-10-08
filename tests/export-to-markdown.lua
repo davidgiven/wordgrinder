@@ -52,6 +52,6 @@ normal text again
 
 ]]
 
-local output = Cmd.ExportToMarkdownString(Document)
+local output = Cmd.ExportToMarkdownString()
 AssertEquals(expected, output)
 

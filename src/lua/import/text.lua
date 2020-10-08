@@ -27,6 +27,12 @@ local function loadtextfile(fp)
 		document:appendParagraph(p)
 	end
 
+	-- Remove the blank paragraph at the beginning of the document.
+	
+	if (#document > 1) then
+		document:deleteParagraphAt(1)
+	end
+		
 	return document
 end
 

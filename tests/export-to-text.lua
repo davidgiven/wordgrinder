@@ -25,5 +25,5 @@ four bolditalicunderline
 heading
 ]]
 
-local output = Cmd.ExportToTextString(Document)
+local output = Cmd.ExportToTextString()
 AssertEquals(expected, output)

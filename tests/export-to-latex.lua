@@ -60,6 +60,6 @@ normal text again
 \end{document}
 ]]
 
-local output = Cmd.ExportToLatexString(Document)
+local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 

@@ -19,7 +19,7 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-local function loadhtmlfile(fp)
+function Cmd.ImportHTMLFileFromStream(fp)
 	local data = fp:read("*a")
 
 	-- Collapse whitespace; this makes things far easier to parse.
@@ -149,9 +149,15 @@ local function loadhtmlfile(fp)
 	end
 	flush()
 
+	-- Remove the blank paragraph at the beginning of the document.
+	
+	if (#document > 1) then
+		document:deleteParagraphAt(1)
+	end
+		
 	return document
 end
 
 function Cmd.ImportHTMLFile(filename)
-	return ImportFileWithUI(filename, "Import HTML File", loadhtmlfile)
+	return ImportFileWithUI(filename, "Import HTML File", Cmd.ImportHTMLFileFromStream)
 end

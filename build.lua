@@ -298,6 +298,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/find-and-replace.lua",
         "tests/get-style-from-word.lua",
         "tests/immutable-paragraphs.lua",
+        "tests/import-from-html.lua",
         "tests/insert-space-with-style-hint.lua",
         "tests/io-open-enoent.lua",
         "tests/line-down-into-style.lua",
