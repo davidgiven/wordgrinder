@@ -87,7 +87,7 @@ function ExportFileUsingCallbacks(document, cb)
 
 		rawmode = (name == "RAW")
 
-		cb.paragraph_start(name, paragraph)
+		cb.paragraph_start(paragraph)
 
 		if (#paragraph == 1) and (#paragraph[1] == 0) then
 			cb.notext()
@@ -126,7 +126,7 @@ function ExportFileUsingCallbacks(document, cb)
 			end
 		end
 
-		cb.paragraph_end(name, paragraph)
+		cb.paragraph_end(paragraph)
 	end
 	if listmode then
 		cb.list_end()

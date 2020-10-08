@@ -98,12 +98,12 @@ local function callback(writer, document)
 			writer('\\end{enumerate}\n')
 		end,
 		
-		paragraph_start = function(style)
-			writer(style_tab[style][1] or "")
+		paragraph_start = function(para)
+			writer(style_tab[para.style][1] or "")
 		end,		
 		
-		paragraph_end = function(style)
-			writer(style_tab[style][2] or "")
+		paragraph_end = function(para)
+			writer(style_tab[para.style][2] or "")
 			writer('\n')
 		end,
 		

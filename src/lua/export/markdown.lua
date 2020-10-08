@@ -96,11 +96,11 @@ local function callback(writer, document)
 			writer("\n")
 		end,
 
-		paragraph_start = function(s)
-			changepara(s)
+		paragraph_start = function(para)
+			changepara(para.style)
 		end,
 
-		paragraph_end = function(s)
+		paragraph_end = function(para)
 		end,
 
 		epilogue = function()

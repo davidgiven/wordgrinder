@@ -151,7 +151,8 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style, para)
+		paragraph_start = function(para)
+			local style = para.style
 			if (currentstyle ~= "PRE") or (style ~= "PRE") then
 				if (currentstyle == "PRE") then
 					writer(".DE\n")

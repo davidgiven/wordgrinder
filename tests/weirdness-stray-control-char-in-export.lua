@@ -29,15 +29,26 @@ end
 
 Document[2][1] = "\16"
 ExportToString(Document, callback)
-PurgeAllBarFirstParameter(result)
 
 AssertTableAndPropertiesEquals(
 	{
-		prologue = {{}},
-		paragraph_start = {{"P"}, {"P"}, {"P"}},
-		text = {{"one"}, {""}, {"two"}},
-		paragraph_end = {{"P"}, {"P"}, {"P"}},
-		epilogue = {{}}
-	},
+		["paragraph_start"] = {
+			{{"one", ["style"]="P"}},
+			{{"\16", ["style"]="P"}},
+			{{"two", ["style"]="P"}}
+		},
+		["paragraph_end"] = {
+			{{"one", ["style"]="P"}},
+			{{"\16", ["style"]="P"}},
+			{{"two", ["style"]="P"}}
+		},
+		["prologue"] = {{}},
+		["text"] = {
+			{"one"},
+			{""},
+			{"two"}
+		},
+		["epilogue"] = {{}}
+	}, 
 	result)
 

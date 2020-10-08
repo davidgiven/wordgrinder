@@ -110,16 +110,6 @@ function LoggingCallback()
 	return cb, log
 end
 
-function PurgeAllBarFirstParameter(result)
-	for _, calls in pairs(result) do
-		for _, call in ipairs(calls) do
-			for i = #call, 2, -1 do
-				call[i] = nil
-			end
-		end
-	end
-end
-
 local hidemessages =
 {
 	["Document upgraded"] = true

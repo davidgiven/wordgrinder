@@ -146,11 +146,11 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style, para)
+		paragraph_start = function(para)
 			changepara(para)
 		end,		
 		
-		paragraph_end = function(style, para)
+		paragraph_end = function(para)
 		end,
 		
 	})

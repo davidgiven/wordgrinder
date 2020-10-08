@@ -44,15 +44,16 @@ local style_tab =
 
 local function callback(writer, document)
 	local settings = DocumentSet.addons.htmlexport
-	local currentpara = nil
+	local currentstylename = nil
 	local islist = false
 	
-	function changepara(newpara, para)
-		local currentstyle = style_tab[currentpara]
-		local newstyle = style_tab[newpara]
+	function changepara(para)
+		local newstylename = para and para.style
+		local currentstyle = style_tab[currentstylename]
+		local newstyle = style_tab[newstylename]
 		
-		if (newpara ~= currentpara) or
-			not newpara or
+		if (newstylename ~= currentstylename) or
+			not newstylename or
 			not currentstyle.pre or
 			not newstyle.pre
 		then
@@ -71,13 +72,13 @@ local function callback(writer, document)
 			end
 
 			if newstyle then
-				if newpara == "LN" then
+				if newstylename == "LN" then
 					writer(string.format('<li style="list-style-type: decimal;" value=%d>', para.number))
 				else
 					writer(newstyle.on)
 				end
 			end
-			currentpara = newpara
+			currentstylename = newstylename
 		else
 			writer("\n")
 		end
@@ -102,7 +103,7 @@ local function callback(writer, document)
 		end,
 		
 		notext = function(s)
-			if (currentpara ~= "PRE") then
+			if (currentstylename ~= "PRE") then
 				writer('<br/>')
 			end
 		end,
@@ -137,11 +138,11 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style, paragraph)
-			changepara(style, paragraph)
+		paragraph_start = function(para)
+			changepara(para)
 		end,		
 		
-		paragraph_end = function(style, paragraph)
+		paragraph_end = function(para)
 		end,
 		
 		epilogue = function()

@@ -43,10 +43,10 @@ local function callback(writer, document)
 		list_end = function()
 		end,
 		
-		paragraph_start = function(style)
+		paragraph_start = function(para)
 		end,		
 		
-		paragraph_end = function(style)
+		paragraph_end = function(para)
 			writer('\n')
 		end,
 		
