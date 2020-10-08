@@ -74,14 +74,15 @@ function ExportFileUsingCallbacks(document, cb)
 
 	for _, paragraph in ipairs(Document) do
 		local name = paragraph.style
+		local style = DocumentStyles[name]
 
-		if listmode and (listmode ~= name) then
+		if listmode and not style.list then
 			cb.list_end(listmode)
-			listmode = nil
+			listmode = false
 		end
-		if not listmode and ((name == "L") or (name == "LB") or (name == "LN")) then
+		if not listmode and style.list then
 			cb.list_start(name)
-			listmode = name
+			listmode = true
 		end
 
 		rawmode = (name == "RAW")

@@ -24,17 +24,18 @@ end
 
 local style_tab =
 {
-	["H1"] = {'\\section{',           '}'},
-	["H2"] = {'\\subsection{',        '}'},
-	["H3"] = {'\\subsubsection{',     '}'},
-	["H4"] = {'\\paragraph{',         '}'},
-	["P"] =  {'',                     '\n'},
-	["L"] =  {'\\item[]{',            '}'},
-	["LB"] = {'\\item{',              '}'},
-	["Q"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
-	["V"] =  {'\\begin{quotation}\n', '\n\\end{quotation}'},
+	["H1"] = {'\\section{',            '}'},
+	["H2"] = {'\\subsection{',         '}'},
+	["H3"] = {'\\subsubsection{',      '}'},
+	["H4"] = {'\\paragraph{',          '}'},
+	["P"] =  {'',                      '\n'},
+	["L"] =  {'\\item[]{',             '}'},
+	["LB"] = {'\\item[\\textbullet]{', '}'},
+	["LN"] = {'\\item{',               '}'},
+	["Q"] =  {'\\begin{quotation}\n',  '\n\\end{quotation}'},
+	["V"] =  {'\\begin{quotation}\n',  '\n\\end{quotation}'},
 	["RAW"] = {'', ''},
-	["PRE"] = {'\\begin{verbatim}\n', '\n\\end{verbatim}'}
+	["PRE"] = {'\\begin{verbatim}\n',  '\n\\end{verbatim}'}
 }
 
 local function callback(writer, document)
@@ -90,11 +91,11 @@ local function callback(writer, document)
 		end,
 		
 		list_start = function()
-			writer('\\begin{itemize}\n')
+			writer('\\begin{enumerate}\n')
 		end,
 		
 		list_end = function()
-			writer('\\end{itemize}\n')
+			writer('\\end{enumerate}\n')
 		end,
 		
 		paragraph_start = function(style)
@@ -116,3 +117,8 @@ function Cmd.ExportLatexFile(filename)
 	return ExportFileWithUI(filename, "Export LaTeX File", ".tex",
 		callback)
 end
+
+function Cmd.ExportToLatexString()
+	return ExportToString(Document, callback)
+end
+
