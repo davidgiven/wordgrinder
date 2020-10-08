@@ -37,8 +37,8 @@ jobs:
         fetch-depth: 1
     - name: pacman
       run: |
-        pacman -S --noconfirm --needed make ninja mingw-w64-i686-gcc gcc mingw-w64-i686-nsis zip
+        pacman -S --noconfirm --needed make ninja mingw-w64-i686-gcc gcc mingw-w64-i686-nsis pkg-config zip
     - name: build
       run: |
-        make
+        make windows
 
