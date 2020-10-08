@@ -18,6 +18,7 @@ local style_tab =
 	["P"] =  {false, '', '\n'},
 	["L"] =  {false, '- ', ''},
 	["LB"] = {false, '- ', ''},
+	["LN"] = {false, '1. ', ''},
 	["Q"] =  {false, '> ', '\n'}, 
 	["V"] =  {false, '> ', '\n'},
 	["RAW"] = {false, '    ', ''},
@@ -111,3 +112,8 @@ end
 function Cmd.ExportMarkdownFile(filename)
 	return ExportFileWithUI(filename, "Export Markdown File", ".md", callback)
 end
+
+function Cmd.ExportToMarkdownString()
+	return ExportToString(Document, callback)
+end
+
