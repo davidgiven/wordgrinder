@@ -67,8 +67,7 @@ local function package_flags(package, kind)
         return clause
     end
 
-    local filename = os.tmpname()
-    print(filename)
+    local filename = "pkg-config-detection.tmp"
     local e = os.execute("pkg-config "..kind.." "..package.." > "..filename)
     if e ~= 0 then
         error("required package "..package.." is not available")
