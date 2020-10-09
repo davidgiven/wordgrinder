@@ -661,6 +661,11 @@ function Cmd.LoadDocumentSet(filename)
 			"Also, all keybindings defined in this file will get reset "..
 			"to their default values.")
 	end
+
+	-- The document is NOT dirty immediately after a load.
+	
+	DocumentSet.changed = false
+
 	return true
 end
 
