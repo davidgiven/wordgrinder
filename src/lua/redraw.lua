@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local int = math.floor
+local min = math.min
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local ClearArea = wg.cleararea
@@ -13,6 +14,11 @@ local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
+local ShowCursor = wg.showcursor
+local HideCursor = wg.hidecursor
+local Sync = wg.sync
+
+local BLINK_TIME = 0.8
 
 local messages = {}
 local leftpadding = 0
@@ -294,6 +300,30 @@ function RedrawScreen()
 	redrawstatus()
 
 	FireEvent(Event.Redraw)
+end
+
+function GetCharWithBlinkingCursor(timeout)
+	ShowCursor()
+
+	timeout = timeout or 1E10
+	local shown = true
+	while timeout > 0 do
+		local t = shown and BLINK_ON_TIME or BLINK_OFF_TIME
+		t = min(t, timeout)
+		local c = wg.getchar(t)
+		if (c ~= "KEY_TIMEOUT") then
+			ShowCursor();
+			return c
+		end
+
+		shown = not shown
+		local cb = shown and ShowCursor or HideCursor
+		cb()
+
+		timeout = timeout - t
+	end
+	
+	return "KEY_TIMEOUT"
 end
 
 -----------------------------------------------------------------------------

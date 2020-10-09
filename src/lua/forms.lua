@@ -13,6 +13,8 @@ local SetBold = wg.setbold
 local SetBright = wg.setbright
 local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
+local GetChar = wg.getchar
+local HideCursor = wg.hidecursor
 local string_rep = string.rep
 
 Form = {}
@@ -131,6 +133,7 @@ Form.Checkbox = makewidgetclass {
 
 Form.TextField = makewidgetclass {
 	focusable = true,
+	blinking_cursor = true,
 
 	init = function(self)
 		self.cursor = self.cursor or (self.value:len() + 1)
@@ -572,7 +575,12 @@ function Form.Run(dialogue, redraw, helptext)
 	-- Process keys.
 
 	while true do
-		local key = wg.getchar()
+		local getchar = GetChar
+		if dialogue.focus then
+			getchar = GetCharWithBlinkingCursor
+		end
+		HideCursor()
+		local key = getchar()
 
 		if (key == "KEY_RESIZE") then
 			ResizeScreen()

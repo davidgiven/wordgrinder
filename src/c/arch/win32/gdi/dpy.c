@@ -37,6 +37,7 @@ static int defaultattr = 0;
 
 static int cursorx = 0;
 static int cursory = 0;
+static bool cursorshown = true;
 
 static bool isfullscreen = false;
 static bool window_geometry_valid = false;
@@ -153,6 +154,7 @@ static void unicode_key(uni_t key, unsigned flags)
 		dpy_queuekey(-(VKM_CTRLASCII | key));
 		return;
 	}
+
 	if ((key == ' ') && (GetKeyState(VK_CONTROL) & 0x8000))
 	{
 		dpy_queuekey(-(VKM_CTRLASCII | 0));
@@ -164,54 +166,59 @@ static void unicode_key(uni_t key, unsigned flags)
 
 static bool special_key(int vk, unsigned flags)
 {
-	switch (vk)
+	if (GetKeyState(VK_LMENU) & 0x8000)
 	{
-		case VK_RETURN:
-			if (flags & (1<<29))
-			{
-				fullscreen_cb();
-				return true;
-			}
-			break;
-
-		case VK_SHIFT:
-		case VK_CONTROL:
-		case VK_CAPITAL:
-		case VK_MENU:
-		case VK_LWIN:
-		case VK_RWIN:
-		case VK_SNAPSHOT:
-		case VK_PAUSE:
-			return false;
-	}
-
-	if (vk > 0x90)
-		return false;
-
-	/* Numeric keypad. */
-	if ((vk >= 0x60) && (vk <= 0x6f))
-		return false;
-
-	if ((vk == ' ') || isdigit(vk) || isupper(vk))
-	{
-		if (flags & (1<<29))
+		if (vk == VK_RETURN)
 		{
-			/* ALT pressed */
+			fullscreen_cb();
+			return true;
+		}
+		else if ((vk == ' ') || isdigit(vk) || isupper(vk))
+		{
 			dpy_queuekey(-27);
 			dpy_queuekey(vk);
 			return true;
 		}
-
-		return false;
 	}
 
-	if (GetKeyState(VK_CONTROL) & 0x8000)
-		vk |= VKM_CTRL;
-	if (GetKeyState(VK_SHIFT) & 0x8000)
-		vk |= VKM_SHIFT;
+	switch (vk)
+	{
+		case VK_DOWN:
+		case VK_UP:
+		case VK_LEFT:
+		case VK_RIGHT:
+		case VK_HOME:
+		case VK_END:
+		case VK_BACK:
+		case VK_DELETE:
+		case VK_INSERT:
+		case VK_NEXT:
+		case VK_PRIOR:
+		case VK_TAB:
+		case VK_RETURN:
+		case VK_ESCAPE:
+		case VK_F1:
+		case VK_F2:
+		case VK_F3:
+		case VK_F4:
+		case VK_F5:
+		case VK_F6:
+		case VK_F7:
+		case VK_F8:
+		case VK_F9:
+		case VK_F10:
+		case VK_F11:
+		case VK_F12:
+			if (GetKeyState(VK_CONTROL) & 0x8000)
+				vk |= VKM_CTRL;
+			if (GetKeyState(VK_SHIFT) & 0x8000)
+				vk |= VKM_SHIFT;
 
-	dpy_queuekey(-vk);
-	return true;
+			dpy_queuekey(-vk);
+			return true;
+	}
+
+	return false;
 }
 
 static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
@@ -312,6 +319,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 
 	/* Draw the cursor caret. */
 
+	if (cursorshown)
 	{
 		int x = cursorx*textwidth;
 		int y = cursory*textheight;
@@ -813,13 +821,14 @@ void dpy_sync(void)
 	UpdateWindow(window);
 }
 
-void dpy_setcursor(int x, int y)
+void dpy_setcursor(int x, int y, bool shown)
 {
 	invalidate_character_at(cursorx, cursory);
 	invalidate_character_at(x, y);
 
 	cursorx = x;
 	cursory = y;
+	cursorshown = shown;
 
 	UpdateWindow(window);
 }

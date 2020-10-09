@@ -62,3 +62,8 @@ end
 -- Global definitions that the various source files need.
 
 Cmd = {}
+
+BLINK_ON_TIME = 0.8
+BLINK_OFF_TIME = 0.53
+IDLE_TIME = (BLINK_ON_TIME + BLINK_OFF_TIME) * 5
+

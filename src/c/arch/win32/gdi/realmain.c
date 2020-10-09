@@ -20,7 +20,7 @@ static int realargc;
 static const char** realargv;
 static uni_t queued[4];
 static int numqueued = 0;
-static int timeout = -1;
+static double timeout = -1;
 static uni_t currentkey;
 
 static LPVOID appfiber;
@@ -45,7 +45,7 @@ void dpy_queuekey(uni_t c)
 	numqueued++;
 }
 
-uni_t dpy_getchar(int t)
+uni_t dpy_getchar(double t)
 {
 	timeout = t;
 	SwitchToFiber(uifiber);
@@ -105,7 +105,7 @@ int main(int argc, const char* argv[])
 
 	/* And now the event loop. */
 
-	int oldtimeout = -1;
+	double oldtimeout = -1;
 	for (;;)
 	{
 		MSG msg;
@@ -113,11 +113,10 @@ int main(int argc, const char* argv[])
 		dpy_flushkeys();
 
 		if (timeout != oldtimeout)
+			KillTimer(window, TIMEOUT_TIMER_ID);
+		if (timeout != -1)
 		{
-			if (timeout == -1)
-				KillTimer(window, TIMEOUT_TIMER_ID);
-			else
-				SetTimer(window, TIMEOUT_TIMER_ID, timeout*1000, NULL);
+			SetTimer(window, TIMEOUT_TIMER_ID, timeout*1000, NULL);
 			oldtimeout = timeout;
 		}
 

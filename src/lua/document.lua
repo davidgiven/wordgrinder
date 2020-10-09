@@ -702,7 +702,6 @@ function CreateDocumentSet()
 	{
 		fileformat = FILEFORMAT,
 		statusbar = true,
-		idletime = 3,
 		documents = {},
 		addons = {},
 	}

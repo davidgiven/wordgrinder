@@ -742,5 +742,6 @@ function UpgradeDocument(oldversion)
 		-- WordGrinder files, even though they were never used.
 
 		DocumentSet.styles = nil
+		DocumentSet.idletime = nil
 	end
 end

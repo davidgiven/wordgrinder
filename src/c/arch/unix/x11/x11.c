@@ -45,6 +45,7 @@ static GC gc;
 
 static int screenwidth, screenheight;
 static int cursorx, cursory;
+static bool cursorshown;
 static unsigned int* frontbuffer = NULL;
 static unsigned int* backbuffer = NULL;
 static int defaultattr = 0;
@@ -160,6 +161,7 @@ void dpy_start(void)
 
 	screenwidth = screenheight = 0;
 	cursorx = cursory = 0;
+	cursorshown = true;
 }
 
 void dpy_shutdown(void)
@@ -184,7 +186,7 @@ void dpy_sync(void)
 	redraw();
 }
 
-void dpy_setcursor(int x, int y)
+void dpy_setcursor(int x, int y, bool shown)
 {
 	if (frontbuffer)
 	{
@@ -195,6 +197,7 @@ void dpy_setcursor(int x, int y)
 
 	cursorx = x;
 	cursory = y;
+	cursorshown = shown;
 }
 
 void dpy_setattr(int andmask, int ormask)
@@ -248,21 +251,23 @@ static void redraw(void)
 
 	/* Draw a caret where the cursor should be. */
 
-	int x = cursorx*fontwidth - 1;
-	if (x < 0)
-		x = 0;
-	int y = cursory*fontheight;
-	int h = fontheight;
-	XftColor* c = &colours[COLOUR_BRIGHT];
+	if (cursorshown) {
+		int x = cursorx*fontwidth - 1;
+		if (x < 0)
+			x = 0;
+		int y = cursory*fontheight;
+		int h = fontheight;
+		XftColor* c = &colours[COLOUR_BRIGHT];
 
-	XftDrawRect(draw, c, x,   y,   1, h);
-	XftDrawRect(draw, c, x-1, y-1, 1, 1);
-	XftDrawRect(draw, c, x+1, y-1, 1, 1);
-	XftDrawRect(draw, c, x-1, y+h, 1, 1);
-	XftDrawRect(draw, c, x+1, y+h, 1, 1);
+		XftDrawRect(draw, c, x,   y,   1, h);
+		XftDrawRect(draw, c, x-1, y-1, 1, 1);
+		XftDrawRect(draw, c, x+1, y-1, 1, 1);
+		XftDrawRect(draw, c, x-1, y+h, 1, 1);
+		XftDrawRect(draw, c, x+1, y+h, 1, 1);
+	}
 }
 
-uni_t dpy_getchar(int timeout)
+uni_t dpy_getchar(double timeout)
 {
 	while (numqueued == 0)
 	{
