@@ -112,12 +112,11 @@ int main(int argc, const char* argv[])
 
 		dpy_flushkeys();
 
-		if (timeout > oldtimeout)
+		if (timeout != oldtimeout)
+			KillTimer(window, TIMEOUT_TIMER_ID);
+		if (timeout != -1)
 		{
-			if (timeout == -1)
-				KillTimer(window, TIMEOUT_TIMER_ID);
-			else
-				SetTimer(window, TIMEOUT_TIMER_ID, timeout*1000, NULL);
+			SetTimer(window, TIMEOUT_TIMER_ID, timeout*1000, NULL);
 			oldtimeout = timeout;
 		}
 

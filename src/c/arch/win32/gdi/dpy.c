@@ -313,6 +313,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 
 	/* Draw the cursor caret. */
 
+	if (cursorshown)
 	{
 		int x = cursorx*textwidth;
 		int y = cursory*textheight;
