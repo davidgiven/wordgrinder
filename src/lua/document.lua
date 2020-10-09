@@ -147,6 +147,7 @@ DocumentSetClass =
 		end
 
 		self.current = Document
+		Document:renumber()
 		ResizeScreen()
 	end,
 
@@ -703,7 +704,6 @@ function CreateDocumentSet()
 		statusbar = true,
 		idletime = 3,
 		documents = {},
-		styles = DocumentStyles,
 		addons = {},
 	}
 

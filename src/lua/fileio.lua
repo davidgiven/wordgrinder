@@ -661,6 +661,11 @@ function Cmd.LoadDocumentSet(filename)
 			"Also, all keybindings defined in this file will get reset "..
 			"to their default values.")
 	end
+
+	-- The document is NOT dirty immediately after a load.
+	
+	DocumentSet.changed = false
+
 	return true
 end
 
@@ -732,5 +737,10 @@ function UpgradeDocument(oldversion)
 	if (oldversion < 8) then
 		-- This version added the LN paragraph style type; documents are forwards
 		-- compatible but not backward compatible.
+		
+		-- A bug on 0.7.2 meant that the styles were still exported in
+		-- WordGrinder files, even though they were never used.
+
+		DocumentSet.styles = nil
 	end
 end
