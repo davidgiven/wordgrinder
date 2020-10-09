@@ -147,6 +147,7 @@ DocumentSetClass =
 		end
 
 		self.current = Document
+		Document:renumber()
 		ResizeScreen()
 	end,
 
