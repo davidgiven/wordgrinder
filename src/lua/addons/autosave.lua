@@ -46,12 +46,7 @@ do
 			ImmediateMessage("Autosaving...")
 			
 			local filename = makefilename(settings.pattern)
-			
-			-- Note that autosaved documents should have autosave *dis*abled!
-			
-			settings.enabled = false
 			local r, e = SaveDocumentSetRaw(filename)
-			settings.enabled = true
 			
 			if not r then
 				ModalMessage("Autosave failed", "The document could not be autosaved: "..e)
