@@ -153,7 +153,7 @@ function WordProcessor(filename)
 					redrawpending = false
 				end
 
-				c = wg.getchar(DocumentSet.idletime)
+				c = GetCharWithBlinkingCursor(IDLE_TIME)
 				if (c == "KEY_TIMEOUT") then
 					FireEvent(Event.Idle)
 				end

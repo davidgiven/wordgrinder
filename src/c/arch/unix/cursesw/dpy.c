@@ -59,7 +59,7 @@ void dpy_sync(void)
 	refresh();
 }
 
-void dpy_setcursor(int x, int y)
+void dpy_setcursor(int x, int y, bool shown)
 {
 	move(y, x);
 }
@@ -113,7 +113,7 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
 			mvaddnstr(y, x, &cc, 1);
 }
 
-uni_t dpy_getchar(int timeout)
+uni_t dpy_getchar(double timeout)
 {
 	struct timeval then;
 	gettimeofday(&then, NULL);
@@ -128,7 +128,7 @@ uni_t dpy_getchar(int timeout)
 			gettimeofday(&now, NULL);
 			u_int64_t nowms = (now.tv_usec/1000) + ((u_int64_t) now.tv_sec*1000);
 
-			int delay = ((u_int64_t) timeout*1000) + nowms - thenms;
+			int delay = ((u_int64_t) (timeout*1000)) + nowms - thenms;
 			if (delay <= 0)
 				return -KEY_TIMEOUT;
 

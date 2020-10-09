@@ -70,6 +70,7 @@ extern void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup);
 #endif
 
 #define forceinteger(L, offset) (int)lua_tonumber(L, offset)
+#define forcedouble(L, offset) (double)lua_tonumber(L, offset)
 
 /* --- Screen management ------------------------------------------------- */
 
@@ -113,12 +114,12 @@ extern void dpy_shutdown(void);
 
 extern void dpy_setattr(int andmask, int ormask);
 extern void dpy_writechar(int x, int y, uni_t c);
-extern void dpy_setcursor(int x, int y);
+extern void dpy_setcursor(int x, int y, bool shown);
 extern void dpy_clearscreen(void);
 extern void dpy_sync(void);
 extern void dpy_cleararea(int x1, int y1, int x2, int y2);
 extern void dpy_getscreensize(int* x, int* y);
-extern uni_t dpy_getchar(int timeout);
+extern uni_t dpy_getchar(double timeout);
 extern const char* dpy_getkeyname(uni_t key);
 
 #endif

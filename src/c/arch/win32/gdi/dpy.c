@@ -37,6 +37,7 @@ static int defaultattr = 0;
 
 static int cursorx = 0;
 static int cursory = 0;
+static bool cursorshown = true;
 
 static bool isfullscreen = false;
 static bool window_geometry_valid = false;
@@ -813,13 +814,14 @@ void dpy_sync(void)
 	UpdateWindow(window);
 }
 
-void dpy_setcursor(int x, int y)
+void dpy_setcursor(int x, int y, bool shown)
 {
 	invalidate_character_at(cursorx, cursory);
 	invalidate_character_at(x, y);
 
 	cursorx = x;
 	cursory = y;
+	cursorshown = shown;
 
 	UpdateWindow(window);
 }

@@ -1,4 +1,4 @@
-/* © 2008 David Given.
+/* © 2020 David Given.
  * WordGrinder is licensed under the MIT open source license. See the COPYING
  * file in this distribution for the full text.
  */
@@ -9,6 +9,7 @@
 static bool running = false;
 static int cursorx = 0;
 static int cursory = 0;
+static bool cursorshown = true;
 
 void screen_deinit(void)
 {
@@ -36,7 +37,7 @@ static int clearscreen_cb(lua_State* L)
 
 static int sync_cb(lua_State* L)
 {
-	dpy_setcursor(cursorx, cursory);
+	dpy_setcursor(cursorx, cursory, cursorshown);
 	dpy_sync();
 	return 0;
 }
@@ -120,6 +121,18 @@ static int gotoxy_cb(lua_State* L)
 	return 0;
 }
 
+static int showcursor_cb(lua_State* L)
+{
+	cursorshown = true;
+	return 0;
+}
+
+static int hidecursor_cb(lua_State* L)
+{
+	cursorshown = false;
+	return 0;
+}
+
 static int getscreensize_cb(lua_State* L)
 {
 	int x, y;
@@ -184,11 +197,11 @@ static int getbytesofcharacter_cb(lua_State* L)
 
 static int getchar_cb(lua_State* L)
 {
-	int t = -1;
+	double t = -1.0;
 	if (!lua_isnone(L, 1))
-		t = forceinteger(L, 1);
+		t = forcedouble(L, 1);
 
-	dpy_setcursor(cursorx, cursory);
+	dpy_setcursor(cursorx, cursory, cursorshown);
 	dpy_sync();
 
 	for (;;)
@@ -239,6 +252,8 @@ void screen_init(const char* argv[])
 		{ "write",                     write_cb },
 		{ "cleararea",                 cleararea_cb },
 		{ "gotoxy",                    gotoxy_cb },
+		{ "showcursor",                showcursor_cb },
+		{ "hidecursor",                hidecursor_cb },
 		{ "getscreensize",             getscreensize_cb },
 		{ "getstringwidth",            getstringwidth_cb },
 		{ "getboundedstring",          getboundedstring_cb },
