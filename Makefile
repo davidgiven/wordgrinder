@@ -43,7 +43,7 @@ endif
 
 # Application version and file format.
 VERSION := 0.8
-FILEFORMAT := 7
+FILEFORMAT := 8
 DATE ?= $(shell date +'%-d %B %Y')
 
 # Which Lua do you want to use?

@@ -92,7 +92,6 @@ function GetUserDictionary()
 		local d = get_user_dictionary_document()
 		user_dictionary_cache = {}
 
-		local vstyle = DocumentSet.styles["V"]
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
 				local w = GetWordSimpleText(p[1])

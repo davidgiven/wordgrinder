@@ -50,7 +50,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.sticky_selection: false
 .documents.3.viewmode: 2
 .documents.3.wordcount: 161
-.fileformat: 7
+.fileformat: 8
 .findtext: "Wide"
 .idletime: 3
 .menu.accelerators.BACKSPACE: "ZDPC"
@@ -158,128 +158,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .name: "/.big/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
-.styles.1.above: 1
-.styles.1.below: 1
-.styles.1.desc: "Plain text"
-.styles.1.firstindent: 0
-.styles.1.name: "P"
-.styles.2.above: 3
-.styles.2.below: 1
-.styles.2.desc: "Heading #1"
-.styles.2.name: "H1"
-.styles.3.above: 2
-.styles.3.below: 1
-.styles.3.desc: "Heading #2"
-.styles.3.name: "H2"
-.styles.4.above: 1
-.styles.4.below: 1
-.styles.4.desc: "Heading #3"
-.styles.4.name: "H3"
-.styles.5.above: 1
-.styles.5.below: 1
-.styles.5.desc: "Heading #4"
-.styles.5.name: "H4"
-.styles.6.above: 1
-.styles.6.below: 1
-.styles.6.desc: "Indented text"
-.styles.6.indent: 4
-.styles.6.name: "Q"
-.styles.7.above: 1
-.styles.7.below: 1
-.styles.7.bullet: "-"
-.styles.7.desc: "List item with bullet"
-.styles.7.indent: 4
-.styles.7.list: true
-.styles.7.name: "LB"
-.styles.8.above: 1
-.styles.8.below: 1
-.styles.8.desc: "List item without bullet"
-.styles.8.indent: 4
-.styles.8.list: true
-.styles.8.name: "L"
-.styles.8.numbered: true
-.styles.9.above: 1
-.styles.9.below: 1
-.styles.9.desc: "List item without bullet"
-.styles.9.indent: 4
-.styles.9.list: true
-.styles.9.name: "L"
-.styles.10.above: 0
-.styles.10.below: 0
-.styles.10.desc: "Indented text, run together"
-.styles.10.indent: 4
-.styles.10.name: "V"
-.styles.11.above: 0
-.styles.11.below: 0
-.styles.11.desc: "Preformatted text"
-.styles.11.indent: 4
-.styles.11.name: "PRE"
-.styles.12.above: 0
-.styles.12.below: 0
-.styles.12.desc: "Raw data exported to output file"
-.styles.12.indent: 0
-.styles.12.name: "RAW"
-.styles.H1.above: 3
-.styles.H1.below: 1
-.styles.H1.desc: "Heading #1"
-.styles.H1.name: "H1"
-.styles.H2.above: 2
-.styles.H2.below: 1
-.styles.H2.desc: "Heading #2"
-.styles.H2.name: "H2"
-.styles.H3.above: 1
-.styles.H3.below: 1
-.styles.H3.desc: "Heading #3"
-.styles.H3.name: "H3"
-.styles.H4.above: 1
-.styles.H4.below: 1
-.styles.H4.desc: "Heading #4"
-.styles.H4.name: "H4"
-.styles.L.above: 1
-.styles.L.below: 1
-.styles.L.desc: "List item without bullet"
-.styles.L.indent: 4
-.styles.L.list: true
-.styles.L.name: "L"
-.styles.LB.above: 1
-.styles.LB.below: 1
-.styles.LB.bullet: "-"
-.styles.LB.desc: "List item with bullet"
-.styles.LB.indent: 4
-.styles.LB.list: true
-.styles.LB.name: "LB"
-.styles.LN.above: 1
-.styles.LN.below: 1
-.styles.LN.desc: "List item without bullet"
-.styles.LN.indent: 4
-.styles.LN.list: true
-.styles.LN.name: "L"
-.styles.LN.numbered: true
-.styles.P.above: 1
-.styles.P.below: 1
-.styles.P.desc: "Plain text"
-.styles.P.firstindent: 0
-.styles.P.name: "P"
-.styles.PRE.above: 0
-.styles.PRE.below: 0
-.styles.PRE.desc: "Preformatted text"
-.styles.PRE.indent: 4
-.styles.PRE.name: "PRE"
-.styles.Q.above: 1
-.styles.Q.below: 1
-.styles.Q.desc: "Indented text"
-.styles.Q.indent: 4
-.styles.Q.name: "Q"
-.styles.RAW.above: 0
-.styles.RAW.below: 0
-.styles.RAW.desc: "Raw data exported to output file"
-.styles.RAW.indent: 0
-.styles.RAW.name: "RAW"
-.styles.V.above: 0
-.styles.V.below: 0
-.styles.V.desc: "Indented text, run together"
-.styles.V.indent: 4
-.styles.V.name: "V"
 .current: 1
 #1
 H1 Welcome to WordGrinder

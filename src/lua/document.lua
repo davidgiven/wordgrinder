@@ -704,7 +704,6 @@ function CreateDocumentSet()
 		statusbar = true,
 		idletime = 3,
 		documents = {},
-		styles = DocumentStyles,
 		addons = {},
 	}
 
