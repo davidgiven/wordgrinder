@@ -240,9 +240,9 @@ local function loaddocument(filename)
 	end
 	local loader = nil
 	local magic = fp:read("*l")
-	if (magic == MAGIC) then
+	if (magic ~= ZMAGIC) then
 		fp:close()
-		return "cannot dump v1 files."
+		return "can only dump v2 files."
 	end
 
 	loadfromstreamz(fp)
