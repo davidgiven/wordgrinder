@@ -375,7 +375,10 @@ if has_binary(WINCC) and has_binary(WINDRES) and has_binary(MAKENSIS) then
     print("found")
     FRONTENDS["windows"] = true
 else
-    print("not found")
+    print(string.format("not found (WINCC=%s, WINDRES=%s, MAKENSIS=%s)",
+        tostring(has_binary(WINCC)),
+        tostring(has_binary(WINDRES)),
+        tostring(has_binary(MAKENSIS))))
 end
 
 FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)

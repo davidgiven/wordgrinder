@@ -25,17 +25,20 @@ jobs:
     - name: make
       run: make dev
 
-#  build-windows:
-#    runs-on: windows-latest
-#    steps:
-#    - uses: numworks/setup-msys2@v1
-#      with:
-#        path-type: inherit
-#    - uses: actions/checkout@v1
-#    - name: pacman
-#      run: |
-#        msys2do pacman -S --noconfirm --needed make ninja mingw-w64-i686-libusb mingw-w64-i686-sqlite3 mingw-w64-i686-zlib mingw-w64-i686-gcc zip
-#    - name: build
-#      run: |
-#        msys2do make
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - uses: msys2/setup-msys2@v2
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: pacman
+      run: |
+        pacman -S --noconfirm --needed make ninja gcc mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib pkg-config zip
+    - name: build
+      run: |
+        make windows WINCC=/opt/bin/i686-w64-mingw32-gcc.exe WINDRES=/opt/bin/i686-w64-mingw32-windres.exe MAKENSIS=/mingw32/bin/makensis.exe CFLAGS="-I/mingw32/include" LDFLAGS="-L/mingw32/lib"
 
