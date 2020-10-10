@@ -12,7 +12,7 @@ do
 	local function cb()
 		GlobalSettings.templates = MergeTables(GlobalSettings.templates,
 			{
-				templatedir = HOME.."/.wordgrinder"
+				templatedir = CONFIGDIR.."/templates"
 			}
 		)
 	end

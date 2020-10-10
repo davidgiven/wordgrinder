@@ -10,12 +10,14 @@ local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local GetStringWidth = wg.getstringwidth
 local GetCwd = wg.getcwd
+local Stat = wg.stat
 
 local redrawpending = true
 
 -- Determine the user's home directory.
 
 HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
+CONFIGDIR = HOME .. "/.wordgrinder"
 
 -- Determine the installation directory (Windows only).
 
@@ -24,10 +26,6 @@ if (ARCH == "windows") then
 	local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
 	WINDOWS_INSTALL_DIR = dir
 end
-
--- Which config file are we loading?
-
-local configfile = HOME .. "/.wordgrinder.lua"
 
 local oldcp, oldcw, oldco
 function QueueRedraw()
@@ -93,7 +91,37 @@ function WordProcessor(filename)
 	LoadGlobalSettings()
 	ResetDocumentSet()
 
+	-- Move legacy config files.
+
 	do
+		local _, e = Mkdirs(CONFIGDIR)
+		if e then
+			CLIError("cannot create configuration directory: "..e)
+		end
+
+		local function movefile(src, dest)
+			if not Stat(src) then
+				return
+			end
+			if Stat(dest) then
+				CLIError("both old and new config files exist: delete one and try again ("
+					..src.." vs "..dest)
+			end
+			
+			local _, e = os.rename(src, dest)
+			if e then
+				CLIError("unable to migrate legacy config file: "..e)
+			end
+		end
+
+		movefile(HOME.."/.wordgrinder.settings", CONFIGDIR.."/settings.dat")
+		movefile(HOME.."/.wordgrinder.lua", CONFIGDIR.."/startup.lua")
+	end
+
+	-- Which config file are we loading?
+
+	do
+		local configfile = CONFIGDIR.."/startup.lua"
         local fp, e, errno = io.open(configfile, "r")
 		if fp then
 			f, e = load(ChunkStream(fp:read("*a")), configfile)

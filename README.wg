@@ -56,7 +56,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.viewmode: 2
 .documents.3.wordcount: 161
 .fileformat: 8
-.findtext: "Wide"
+.findtext: "wordgrinder.lua"
 .idletime: 3
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
@@ -160,7 +160,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.name: "/.big/crouton/chroots/buster/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -322,7 +322,7 @@ P Each document set also carries with it a user dictionary; this is just anothe
 P You can jump to the next misspelt word with Edit→Spellchecker→Find next misspelt word.
 H3 Command line
 P There are some WordGrinder features which can be used from the command line, both on Unix and Windows. Firstly, it’s completely scriptable in Lua: write a file in Lua, then run WordGrinder with wordgrinder --lua filename.lua and it’ll run and then exit. Or use wordgrinder --lua "lua command". Nearly all of WordGrinder is written in Lua and it’s all available via this interface. The API is, unfortunately, beyond the scope of this document; if you’re interested, ask the author (or look at the source code).
-P Secondly, the file .wordgrinder.lua in your home directory will be automatically loaded and run whenever WordGrinder starts; see the section above on configuring WordGrinder for information.
+P Secondly, the file .wordgrinder/startup.lua in your home directory will be automatically loaded and run whenever WordGrinder starts; see the section above on configuring WordGrinder for information.
 P Thirdly, you can use WordGrinder to automatically convert between any supported document formats. For example:
 Q wordgrinder --convert sourcefile.wg destfile.odt
 P ...will convert the default document in sourcefile.wg to OpenDocument format.

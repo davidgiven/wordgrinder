@@ -4,7 +4,7 @@
 
 GlobalSettings = {}
 
-local filename = HOME .. "/.wordgrinder.settings"
+local filename = CONFIGDIR.."/settings.dat"
 
 function LoadGlobalSettings(f)
 	if not f then
