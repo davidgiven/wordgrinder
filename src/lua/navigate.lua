@@ -817,7 +817,8 @@ function Cmd.Copy(keepselection)
 			paragraph:sub(2))
 	end
 
-	NonmodalMessage("Selected area copied to clipboard.")
+	buffer:renumber()
+	NonmodalMessage(buffer.wordcount.." words copied to clipboard.")
 	if not keepselection then
 		return Cmd.UnsetMark()
 	else

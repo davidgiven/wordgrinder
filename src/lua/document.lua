@@ -290,7 +290,7 @@ DocumentClass =
 			end
 		end
 
-		Document.wordcount = wc
+		self.wordcount = wc
 	end
 }
 
