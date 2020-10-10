@@ -48,6 +48,10 @@ extern int main(int argc, const char* argv[]);
 #include <lualib.h>
 #include <lauxlib.h>
 
+#if defined WINSHIM
+#include "winshim.h"
+#endif
+
 extern lua_State* L;
 
 typedef struct

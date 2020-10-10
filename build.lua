@@ -134,7 +134,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     if luapackage == "builtin" then
         cflags[#cflags+1] = "-Isrc/c/emu/lua-5.1.5"
-        cflags[#cflags+1] = "-DLUA_USE_MKSTEMP"
+        cflags[#cflags+1] = "-DLUA_USE_MKSTEMP -DWINSHIM"
     else
         cflags[#cflags+1] = package_flags(luapackage, "--cflags")
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
@@ -238,6 +238,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/emu/lua-5.1.5/lundump.c")
         srcfile("src/c/emu/lua-5.1.5/lvm.c")
         srcfile("src/c/emu/lua-5.1.5/lzio.c")
+        srcfile("src/c/emu/lua-5.1.5/winshim.c")
     end
 
     -- Frontends

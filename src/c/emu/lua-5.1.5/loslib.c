@@ -18,6 +18,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "winshim.h"
 
 
 static int os_pushresult (lua_State *L, int i, const char *filename) {
@@ -43,14 +44,24 @@ static int os_execute (lua_State *L) {
 
 static int os_remove (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
-  return os_pushresult(L, remove(filename) == 0, filename);
+  #if defined WIN32
+    int i = _wremove(utf8_to_wide(L, filename));
+  #else
+    int i = remove(filename);
+  #endif
+  return os_pushresult(L, i == 0, filename);
 }
 
 
 static int os_rename (lua_State *L) {
   const char *fromname = luaL_checkstring(L, 1);
   const char *toname = luaL_checkstring(L, 2);
-  return os_pushresult(L, rename(fromname, toname) == 0, fromname);
+  #if defined WIN32
+    int i = _wrename(utf8_to_wide(L, fromname), utf8_to_wide(L, toname));
+  #else
+    int i = rename(fromname, toname);
+  #endif
+  return os_pushresult(L, i == 0, fromname);
 }
 
 

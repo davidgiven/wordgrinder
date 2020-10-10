@@ -11,10 +11,6 @@
 #include <unistd.h>
 #include <dirent.h>
 
-#if defined WIN32
-#include <windows.h>
-#endif
-
 static int pusherrno(lua_State* L)
 {
 	lua_pushnil(L);
@@ -27,8 +23,12 @@ static int chdir_cb(lua_State* L)
 {
 	const char* filename = luaL_checklstring(L, 1, NULL);
 
-	if (chdir(filename) != 0)
-		return pusherrno(L);
+	#if defined WIN32
+		if (_wchdir(utf8_to_wide(L, filename)) != 0)
+	#else
+		if (chdir(filename) != 0)
+	#endif
+			return pusherrno(L);
 
 	lua_pushboolean(L, true);
 	return 1;
@@ -39,12 +39,11 @@ static int mkdir_cb(lua_State* L)
 	const char* filename = luaL_checklstring(L, 1, NULL);
 
 	#if defined WIN32
-		if (mkdir(filename) != 0)
-			return pusherrno(L);
+		if (_wmkdir(utf8_to_wide(L, filename)) != 0)
 	#else
 		if (mkdir(filename, 0755) != 0)
-			return pusherrno(L);
 	#endif
+			return pusherrno(L);
 
 	lua_pushboolean(L, true);
 	return 1;
@@ -67,24 +66,47 @@ static int readdir_cb(lua_State* L)
 
 	lua_newtable(L);
 
-	DIR* dp = opendir(filename);
-	if (!dp)
-		return pusherrno(L);
+	#if defined WIN32
+		wchar_t* wide = utf8_to_wide(L, filename);
+		_WDIR* dp = _wopendir(wide);
+		lua_pop(L, 1);
+		if (!dp)
+			return pusherrno(L);
 
-	int index = 1;
-	for (;;)
-	{
-		struct dirent* de = readdir(dp);
-		if (!de)
-			break;
+		int index = 1;
+		for (;;)
+		{
+			struct _wdirent* de = _wreaddir(dp);
+			if (!de)
+				break;
 
-		lua_pushinteger(L, index);
-		lua_pushstring(L, de->d_name);
-		lua_settable(L, -3);
-		index++;
-	}
+			lua_pushinteger(L, index);
+			lua_pushwstring(L, de->d_name);
+			lua_settable(L, -3);
+			index++;
+		}
 
-	closedir(dp);
+		_wclosedir(dp);
+	#else
+		DIR* dp = opendir(filename);
+		if (!dp)
+			return pusherrno(L);
+
+		int index = 1;
+		for (;;)
+		{
+			struct dirent* de = readdir(dp);
+			if (!de)
+				break;
+
+			lua_pushinteger(L, index);
+			lua_pushstring(L, de->d_name);
+			lua_settable(L, -3);
+			index++;
+		}
+
+		closedir(dp);
+	#endif
 	return 1;
 }
 
@@ -92,9 +114,15 @@ static int stat_cb(lua_State* L)
 {
 	const char* filename = luaL_checklstring(L, 1, NULL);
 
-	struct stat st;
-	if (stat(filename, &st) != 0)
-		return pusherrno(L);
+	#if defined WIN32
+		struct _stat st;
+		if (_wstat(utf8_to_wide(L, filename), &st) != 0)
+			return pusherrno(L);
+	#else
+		struct stat st;
+		if (stat(filename, &st) != 0)
+			return pusherrno(L);
+	#endif
 
 	lua_newtable(L);
 	
