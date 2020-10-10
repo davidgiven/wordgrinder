@@ -26,6 +26,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.spellchecker.useuserdictionary: true
 .addons.widescreen.enabled: false
 .addons.widescreen.maxwidth: 80
+.clipboard.co: 1
+.clipboard.cp: 1
+.clipboard.cw: 1
+.clipboard.margin: 0
+.clipboard.viewmode: 1
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -33,7 +38,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3656
+.documents.1.wordcount: 3760
 .documents.2.co: 3
 .documents.2.cp: 1
 .documents.2.cw: 2
@@ -159,6 +164,9 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .replacetext: ""
 .statusbar: true
 .current: 1
+#clipboard
+P File→Manage Documents
+.
 #1
 H1 Welcome to WordGrinder
 H2 Important note for Windows users
@@ -203,7 +211,10 @@ P Each WordGrinder file can contain multiple pieces of text. A file is referred 
 P You can have as many documents in a document set as you like (within reason). You can manage them using the File→Manage Documents... menu item, and can quickly see and switch between documents using the Documents menu (ESC, D).
 P Documents have their own text, selection, viewing style, cursor position, etc. The clipboard, however, is shared across the entire document set. This allows you to move pieces of text around within the document set using the clipboard.
 P Importing non-WordGrinder files always results in a new document being added to the current document set.
-H2 Menu customisation
+H2 Templates
+P You may save a WordGrinder file as a template using File→Save as template. These files get set in a special (configurable) template directory. When creating a new document with File→Create from template, the template will be loaded but the current document will not be set. This means that when saving, you’ll be prompted for a filename in the normal way.
+P Templates may contain anything which can be saved into a document set, including content, multiple subdocuments, keyboard bindings, local settings, etc. Use templates if you have a particular set of bindings you like and want them automatically set up for any new document.
+H2 Menu customisation
 P You can change any of the keyboard shortcuts assigned to menu items. These are then saved as part of the document set, so each WordGrinder file takes its keyboard configuration with it.
 P To do this, open the menu, navigate to the entry you want to change, and then press CTRL+V followed by the key you want to bind. You can’t bind keys used to type text into your document (e.g. A). You also can’t bind a key that’s already in use elsewhere. You can remove a binding by navigating to the appropriate menu item and pressing CTRL+X. Watch the status bar while a menu’s open for reminders.
 P All WordGrinder keybindings (except ESC, and menu and dialogue navigation) appear on the menus, so they’re all configurable. Things like the cursor keys appear in the Navigation menu.
