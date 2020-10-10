@@ -3,7 +3,8 @@ require("tests/testsuite")
 local tmpfile = os.tmpname()
 local dir = tmpfile..".dir"
 
-AssertEquals(true, Mkdirs(dir.."/foo/bar/baz"))
+local t, _, errno = Mkdirs(dir.."/foo/bar/baz")
+AssertEquals(nil, errno)
 
 local t, _, errno = wg.readdir(dir.."/foo/bar")
 AssertEquals(nil, errno)
