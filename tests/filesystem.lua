@@ -7,6 +7,7 @@ AssertEquals(true, Mkdirs(dir.."/foo/bar/baz"))
 
 local t, _, errno = wg.readdir(dir.."/foo/bar")
 AssertEquals(nil, errno)
+table.sort(t)
 AssertTableEquals({ ".", "..", "baz" }, t)
 
 t, _, errno = wg.stat(dir.."/foo/bar/baz")
