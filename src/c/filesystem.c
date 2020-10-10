@@ -123,4 +123,7 @@ void filesystem_init(void)
 
 	lua_pushinteger(L, EACCES);
 	lua_setfield(L, -2, "EACCES");
+
+	lua_pushinteger(L, EISDIR);
+	lua_setfield(L, -2, "EISDIR");
 }
