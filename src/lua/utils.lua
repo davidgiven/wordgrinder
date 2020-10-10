@@ -12,6 +12,7 @@ local table_concat = table.concat
 local Mkdir = wg.mkdir
 local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
+local EISDIR = wg.EISDIR
 
 function max(a, b)
 	if (a > b) then
@@ -310,8 +311,10 @@ function Mkdirs(dir)
 		end
 
 		local r, e, errno = Mkdir(d)
-		if (not r) and (errno ~= EEXIST) and (errno ~= EACCES) then
-			return r, e
+		if (not r) and (errno ~= EEXIST) and (errno ~= EACCES)
+			and (errno ~= EISDIR)
+		then
+			return r, e, errno
 		end
 	end
 	return true
