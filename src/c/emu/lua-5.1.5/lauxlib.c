@@ -23,6 +23,7 @@
 #include "lua.h"
 
 #include "lauxlib.h"
+#include "winshim.h"
 
 
 #define FREELIST_REF	0	/* free list of references */
@@ -561,7 +562,12 @@ LUALIB_API int luaL_loadfile (lua_State *L, const char *filename) {
   }
   else {
     lua_pushfstring(L, "@%s", filename);
-    lf.f = fopen(filename, "r");
+	#if defined WIN32
+      lf.f = _wfopen(utf8_to_wide(L, filename), L"r");
+      lua_pop(L, 1);
+	#else
+      lf.f = fopen(filename, "r");
+	#endif
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
   }
   c = getc(lf.f);
@@ -571,7 +577,12 @@ LUALIB_API int luaL_loadfile (lua_State *L, const char *filename) {
     if (c == '\n') c = getc(lf.f);
   }
   if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
-    lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
+	#if defined WIN32
+      lf.f = _wfreopen(utf8_to_wide(L, filename), L"rb", lf.f);  /* reopen in binary mode */
+      lua_pop(L, 1);
+    #else
+      lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
+    #endif
     if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
     /* skip eventual `#!...' */
     while ((c = getc(lf.f)) != EOF && c != LUA_SIGNATURE[0]) ;

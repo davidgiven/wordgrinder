@@ -20,6 +20,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "winshim.h"
 
 
 /* prefix for open functions in C libraries */
@@ -329,8 +330,13 @@ static int ll_loadlib (lua_State *L) {
 */
 
 
-static int readable (const char *filename) {
-  FILE *f = fopen(filename, "r");  /* try to open file */
+static int readable (lua_State* L, const char *filename) {
+  #if defined WIN32
+    FILE *f = _wfopen(utf8_to_wide(L, filename), L"r");  /* try to open file */
+    lua_pop(L, 1);
+  #else
+    FILE *f = fopen(filename, "r");  /* try to open file */
+  #endif
   if (f == NULL) return 0;  /* open failed */
   fclose(f);
   return 1;
@@ -361,7 +367,7 @@ static const char *findfile (lua_State *L, const char *name,
     const char *filename;
     filename = luaL_gsub(L, lua_tostring(L, -1), LUA_PATH_MARK, name);
     lua_remove(L, -2);  /* remove path template */
-    if (readable(filename))  /* does file exist and is readable? */
+    if (readable(L, filename))  /* does file exist and is readable? */
       return filename;  /* return that file name */
     lua_pushfstring(L, "\n\tno file " LUA_QS, filename);
     lua_remove(L, -2);  /* remove file name */

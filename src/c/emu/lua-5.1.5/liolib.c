@@ -17,6 +17,7 @@
 
 #include "lauxlib.h"
 #include "lualib.h"
+#include "winshim.h"
 
 
 
@@ -162,7 +163,12 @@ static int io_open (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
   const char *mode = luaL_optstring(L, 2, "r");
   FILE **pf = newfile(L);
-  *pf = fopen(filename, mode);
+  #if defined WIN32
+	  *pf = _wfopen(utf8_to_wide(L, filename), utf8_to_wide(L, mode));
+	  lua_pop(L, 2);
+  #else
+	  *pf = fopen(filename, mode);
+  #endif
   return (*pf == NULL) ? pushresult(L, 0, filename) : 1;
 }
 
@@ -202,7 +208,12 @@ static int g_iofile (lua_State *L, int f, const char *mode) {
     const char *filename = lua_tostring(L, 1);
     if (filename) {
       FILE **pf = newfile(L);
-      *pf = fopen(filename, mode);
+	  #if defined WIN32
+		  *pf = _wfopen(utf8_to_wide(L, filename), utf8_to_wide(L, mode));
+		  lua_pop(L, 2);
+	  #else
+		  *pf = fopen(filename, mode);
+	  #endif
       if (*pf == NULL)
         fileerror(L, 1, filename);
     }
@@ -254,7 +265,12 @@ static int io_lines (lua_State *L) {
   else {
     const char *filename = luaL_checkstring(L, 1);
     FILE **pf = newfile(L);
-    *pf = fopen(filename, "r");
+	#if defined WIN32
+      *pf = _wfopen(utf8_to_wide(L, filename), L"r");
+      lua_pop(L, 1);
+    #else
+      *pf = fopen(filename, "r");
+	#endif
     if (*pf == NULL)
       fileerror(L, 1, filename);
     aux_lines(L, lua_gettop(L), 1);
