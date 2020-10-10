@@ -12,12 +12,6 @@ if jit then
 		";/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so"
 end
 
--- Load the LFS module if needed (Windows has it built in).
-
-if not lfs then
-	lfs = require "lfs"
-end
-
 -- Bit library fallbacks. (LuaJIT vs Lua 5.2 incompatibilities.)
 
 if not bit32 then

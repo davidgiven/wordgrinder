@@ -3,6 +3,8 @@
 -- file in this distribution for the full text.
 
 local GetWordText = wg.getwordtext
+local GetCwd = wg.getcwd
+local ChDir = wg.chdir
 
 local USER_DICTIONARY_NAME = "User dictionary"
 
@@ -346,13 +348,13 @@ end
 function Cmd.ConfigureSystemDictionary()
 	local settings = GlobalSettings.systemdictionary
 
-	local oldcwd = lfs.currentdir()
+	local oldcwd = GetCwd()
 	local filename = FileBrowser(
 		"Load new system dictionary",
 		"Select the dictionary file to load.",
 		false,
 		settings.filename)
-	lfs.chdir(oldcwd)
+	ChDir(oldcwd)
 
 	if filename then
 		system_dictionary_cache = nil
