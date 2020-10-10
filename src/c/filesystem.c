@@ -11,6 +11,10 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#if defined WIN32
+#include <windows.h>
+#endif
+
 static int pusherrno(lua_State* L)
 {
 	lua_pushnil(L);
@@ -34,8 +38,13 @@ static int mkdir_cb(lua_State* L)
 {
 	const char* filename = luaL_checklstring(L, 1, NULL);
 
-	if (mkdir(filename, 0755) != 0)
-		return pusherrno(L);
+	#if defined WIN32
+		if (mkdir(filename) != 0)
+			return pusherrno(L);
+	#else
+		if (mkdir(filename, 0755) != 0)
+			return pusherrno(L);
+	#endif
 
 	lua_pushboolean(L, true);
 	return 1;
