@@ -4,7 +4,6 @@
  */
 
 #include "globals.h"
-#include "lfs.h"
 #if LUA_VERSION_NUM == 501
 #include "lua-bitop.h"
 #endif
@@ -76,7 +75,6 @@ void script_init(void)
 	L = luaL_newstate();
 	luaL_openlibs(L);
 
-	luaopen_lfs(L);
 #if LUA_VERSION_NUM == 501
 	luaopen_bit(L);
 #endif

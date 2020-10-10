@@ -92,6 +92,7 @@ extern uni_t readu8(const char** ptr);
 extern void writeu8(char** ptr, uni_t value);
 
 extern void utils_init(void);
+extern void filesystem_init(void);
 
 /* --- Display layer ----------------------------------------------------- */
 

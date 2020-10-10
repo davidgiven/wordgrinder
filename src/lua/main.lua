@@ -9,6 +9,7 @@ local SetBold = wg.setbold
 local SetUnderline = wg.setunderline
 local SetReverse = wg.setreverse
 local GetStringWidth = wg.getstringwidth
+local GetCwd = wg.getcwd
 
 local redrawpending = true
 
@@ -361,7 +362,7 @@ the program starts up (but after any --lua files). It defaults to:
 	if filename and
 			not filename:find("^/") and
 			not filename:find("^[a-zA-Z]:[/\\]") then
-		filename = lfs.currentdir() .. "/" .. filename
+		filename = GetCwd() .. "/" .. filename
 	end
 
 	WordProcessor(filename)

@@ -15,6 +15,10 @@ local SetReverse = wg.setreverse
 local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
+local GetCwd = wg.getcwd
+local ChDir = wg.chdir
+local ReadDir = wg.readdir
+local Stat = wg.stat
 
 function FileBrowser(title, message, saving, default)
 	-- Prevent the first item being selected if no default is supplied; as
@@ -25,17 +29,17 @@ function FileBrowser(title, message, saving, default)
 	do
 		local _, _, dir, leaf = default:find("(.*)/([^/]*)$")
 		if dir then
-			lfs.chdir(dir)
+			ChDir(dir)
 			default = leaf
 		end
 	end
 
 	local files = {}
-	for i in lfs.dir(".") do
-		if (i ~= ".") and ((i == "..") or not i:match("^%.")) then
-			local attr = lfs.attributes(i)
+	for _, filename in ipairs(ReadDir(".")) do
+		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
+			local attr = Stat(filename)
 			if attr then
-				attr.name = i
+				attr.name = filename
 				files[#files+1] = attr
 			end
 		end
@@ -77,7 +81,7 @@ function FileBrowser(title, message, saving, default)
 		}
 	end
 
-	local f = Browser(title, lfs.currentdir(), message, labels,
+	local f = Browser(title, GetCwd(), message, labels,
 		default, defaultn)
 	if not f then
 		return nil
@@ -88,14 +92,14 @@ function FileBrowser(title, message, saving, default)
 		f = f.."/"
 	end
 
-	local attr, e = lfs.attributes(f)
+	local attr, e, errno = Stat(f)
 	if not saving and e then
 		ModalMessage("File inaccessible", "The file '"..f.."' could not be accessed: "..e)
 		return FileBrowser(title, message, saving)
 	end
 
 	if attr and (attr.mode == "directory") then
-		lfs.chdir(f)
+		ChDir(f)
 		return FileBrowser(title, message, saving, default)
 	end
 	
@@ -104,13 +108,13 @@ function FileBrowser(title, message, saving, default)
 		if (r == nil) then
 			return nil
 		elseif r then
-			return lfs.currentdir().."/"..f
+			return GetCwd().."/"..f
 		else
 			return FileBrowser(title, message, saving)
 		end
 	end
 	
-	return lfs.currentdir().."/"..f
+	return GetCwd().."/"..f
 end
 
 function Browser(title, topmessage, bottommessage, data, default, defaultn)

@@ -140,13 +140,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
     end
 
-    if LUAFILESYSTEM_PACKAGE == "builtin" then
-        cflags[#cflags+1] = "-Isrc/c/emu/lfs"
-    else
-        cflags[#cflags+1] = package_flags(LUAFILESYSTEM_PACKAGE, "--cflags")
-        ldflags[#ldflags+1] = package_flags(LUAFILESYSTEM_PACKAGE, "--libs")
-    end
-
     if LUABITOP_PACKAGE == "builtin" then
         cflags[#cflags+1] = "-Isrc/c/emu/luabitop"
     else
@@ -195,6 +188,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     -- Main core
 
     srcfile("src/c/utils.c")
+    srcfile("src/c/filesystem.c")
     srcfile("src/c/zip.c")
     srcfile("src/c/main.c")
     srcfile("src/c/lua.c")
@@ -203,10 +197,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     srcfile(OBJDIR.."/luascripts.c")
 
     -- Additional optional libraries
-
-    if LUAFILESYSTEM_PACKAGE == "builtin" then
-        srcfile("src/c/emu/lfs/lfs.c")
-    end
 
     if (buildstyle == "static") or (frontend == "windows") then
         srcfile("src/c/emu/wcwidth.c")
@@ -295,12 +285,13 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/export-to-opendocument.lua",
         "tests/export-to-text.lua",
         "tests/export-to-troff.lua",
+        "tests/filesystem.lua",
         "tests/find-and-replace.lua",
         "tests/get-style-from-word.lua",
         "tests/immutable-paragraphs.lua",
         "tests/import-from-html.lua",
-        "tests/import-from-text.lua",
         "tests/import-from-opendocument.lua",
+        "tests/import-from-text.lua",
         "tests/insert-space-with-style-hint.lua",
         "tests/io-open-enoent.lua",
         "tests/line-down-into-style.lua",
@@ -311,8 +302,8 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/load-0.3.3.lua",
         "tests/load-0.4.1.lua",
         "tests/load-0.5.3.lua",
-        "tests/load-0.6.lua",
         "tests/load-0.6-v6.lua",
+        "tests/load-0.6.lua",
         "tests/load-0.7.2.lua",
         "tests/load-failed.lua",
         "tests/move-while-selected.lua",

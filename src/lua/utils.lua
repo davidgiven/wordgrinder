@@ -7,7 +7,11 @@ local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
 local string_byte = string.byte
 local string_format = string.format
+local string_find = string.find
 local table_concat = table.concat
+local Mkdir = wg.mkdir
+local EEXIST = wg.EEXIST
+local EACCES = wg.EACCES
 
 function max(a, b)
 	if (a > b) then
@@ -284,5 +288,32 @@ function ArrayToMap(array)
 		map[i] = true
 	end
 	return map
+end
+
+-- Make a directory and all necessary parents.
+
+function Mkdirs(dir)
+	local i = 1
+	while i ~= nil do
+		local newi = dir:find("/", i)
+		local d
+		if not newi then
+			d = dir
+			i = nil
+		else
+			d = dir:sub(1, newi-1)
+			i = newi + 1
+		end
+		if (d == "") then
+			-- Root directory?
+			d = "/"
+		end
+
+		local r, e, errno = Mkdir(d)
+		if (not r) and (errno ~= EEXIST) and (errno ~= EACCES) then
+			return r, e
+		end
+	end
+	return true
 end
 

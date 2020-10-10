@@ -2,6 +2,9 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local Chdir = wg.chdir
+local GetCwd = wg.getcwd
+
 -----------------------------------------------------------------------------
 -- Addon registration. Create the default settings in the DocumentSet.
 
@@ -22,12 +25,12 @@ end
 
 function Cmd.SaveCurrentDocumentAsTemplate()
 	local settings = GlobalSettings.templates;
-	local oldcwd = lfs.currentdir()
-	lfs.mkdir(settings.templatedir)
+	local oldcwd = GetCwd()
+	Mkdirs(settings.templatedir)
 
-	lfs.chdir(settings.templatedir)
+	Chdir(settings.templatedir)
 	local filename = FileBrowser("Save Document Set as template", "New template:", true)
-	lfs.chdir(oldcwd)
+	Chdir(oldcwd)
 	if not filename then
 		return false
 	end
@@ -57,12 +60,12 @@ function Cmd.CreateDocumentSetFromTemplate()
 	end
 
 	local settings = GlobalSettings.templates
-	local oldcwd = lfs.currentdir()
-	lfs.mkdir(settings.templatedir)
+	local oldcwd = GetCwd()
+	Mkdirs(settings.templatedir)
 
-	lfs.chdir(settings.templatedir)
+	Chdir(settings.templatedir)
 	local filename = FileBrowser("Create Document Set from template", "Select template:", false)
-	lfs.chdir(oldcwd)
+	Chdir(oldcwd)
 	if not filename then
 		return false
 	end
