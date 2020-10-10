@@ -44,6 +44,11 @@ static bool window_geometry_valid = false;
 static RECT window_geometry;
 static bool window_created = false;
 
+static int shadowwidth;
+static int shadowheight;
+static HBITMAP shadow = NULL;
+
+static void resize_shadow(int width, int height);
 static void resize_buffer(bool force);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
@@ -221,10 +226,16 @@ static bool special_key(int vk, unsigned flags)
 	return false;
 }
 
-static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
+static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC wdc)
 {
 	int textwidth, textheight;
 	glyphcache_getfontsize(&textwidth, &textheight);
+
+	if (!shadow)
+		return;
+
+	HDC dc = CreateCompatibleDC(wdc);
+	SelectObject(dc, shadow);
 
 	int x1 = ps->rcPaint.left / textwidth;
 	x1 -= 1; /* because of overlapping characters */
@@ -254,7 +265,6 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 		y2 = screenheight-1;
 	}
 
-	int state = SaveDC(dc);
 
 	for (int y = y1; y <= y2; y++)
 	{
@@ -278,7 +288,7 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 			{
 				BitBlt(dc, sx+glyph->xoffset, sy+glyph->yoffset,
 					glyph->realwidth, glyph->realheight,
-					glyph->dc, 0, 0, SRCPAINT);
+					glyph->dc, 0, 0, SRCCOPY);
 
 				if (id & DPY_UNDERLINE)
 				{
@@ -338,7 +348,16 @@ static void paint_cb(HWND window, PAINTSTRUCT* ps, HDC dc)
 	DeleteObject(normalpen);
 	DeleteObject(dimpen);
 	DeleteObject(blackbrush);
-	RestoreDC(dc, state);
+
+	BitBlt(wdc,
+		ps->rcPaint.left, ps->rcPaint.top,
+		ps->rcPaint.right - ps->rcPaint.left,
+		ps->rcPaint.bottom - ps->rcPaint.top,
+		dc,
+		ps->rcPaint.left, ps->rcPaint.top,
+		SRCCOPY);
+
+	DeleteDC(dc);
 }
 
 static void setfont_cb(void)
@@ -477,6 +496,7 @@ static LRESULT CALLBACK window_cb(HWND window, UINT message,
 				create_cb();
 				window_created = true;
 			}
+			resize_shadow(lparam & 0xffff, lparam >> 16);
 			resize_buffer(false);
 			break;
 
@@ -578,6 +598,22 @@ void dpy_init(const char* argv[])
 			 SPIF_UPDATEINIFILE | SPIF_SENDCHANGE);
 
 	read_window_geometry();
+}
+
+static void resize_shadow(int width, int height)
+{
+	if (shadow && (shadowwidth == width) && (shadowheight == height))
+		return;
+	if (shadow)
+		DeleteObject(shadow);
+
+	HDC dc = GetDC(window);
+
+	shadow = CreateCompatibleBitmap(dc, width, height);
+	shadowwidth = width;
+	shadowheight = height;
+
+	ReleaseDC(window, dc);
 }
 
 static void resize_buffer(bool force)
