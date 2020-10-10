@@ -60,7 +60,7 @@ packages:
     lua lua-devel lua-libs lua-filesystem zlib-devel libXft-devel ncurses ncurses-devel ninja-build
 
   If you have OSX with Homebrew (ncurses only, sorry):
-    ninja
+    ninja pkg-config
 
 To build, simply do:
 
