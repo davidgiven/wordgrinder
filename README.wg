@@ -38,7 +38,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3760
+.documents.1.wordcount: 3787
 .documents.2.co: 3
 .documents.2.cp: 1
 .documents.2.cw: 2
@@ -160,7 +160,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/crouton/chroots/buster/home/dg/nonshared/wordgrinder/README.wg"
+.name: "/.big/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -299,6 +299,7 @@ P The undo stack is not saved along with your document --- the undo stack alway
 H3 Autosave
 P WordGrinder also has a feature that will save a timestamped snapshot of your document set periodically. This is disabled by default; to enable this, go to File→Document Settings→Autosave. You can specify how long between snapshots and what filename pattern you want WordGrinder to use.
 P Note that autosaving will only happen if you don’t touch the keyboard for a few seconds, to prevent a dialogue box from being popped up just as you’re about to press a key. Autosaving will also only happen if your document set contains unsaved changes. (In this situation, autosaving does not count as saving your changes, and your document set will remain dirty.)
+P By default, autosaves will be placed next to the original document, but if you specify a custom directory in the configuration dialogue, they’ll be put there instead.
 H3 Unicode
 P WordGrinder supports ＵＮＩＣＯＤＥ!
 P (If you see a bunch of boxes in the above line, it means that your platform doesn’t support displaying exotic Unicode characters. WordGrinder will still let you edit them, you just won’t be able to see what you’re doing.)

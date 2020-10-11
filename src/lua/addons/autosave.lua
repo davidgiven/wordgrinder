@@ -2,6 +2,8 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local Stat = wg.stat
+
 local function announce()
 	local settings = DocumentSet.addons.autosave
 
@@ -14,18 +16,19 @@ local function announce()
 	end	
 end
 
-local function makefilename(pattern)
-	local basefilename = DocumentSet.name
-	basefilename = basefilename:gsub("%.wg$", "")
-	basefilename = basefilename:gsub("%%", "%%%%")
+local function makefilename(dirname, pattern)
+	local leafname = Leafname(DocumentSet.name)
+	dirname = dirname or Dirname(DocumentSet.name)
+	leafname = leafname:gsub("%.wg$", "")
+	leafname = leafname:gsub("%%", "%%%%")
 	
 	local timestamp = os.date("%Y-%m-%d.%H%M")
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
-	pattern = pattern:gsub("%%[fF]", basefilename)
+	pattern = pattern:gsub("%%[fF]", leafname)
 	pattern = pattern:gsub("%%[tT]", timestamp)
 	pattern = pattern:gsub("%%%%", "%%")
-	return pattern
+	return dirname.."/"..pattern
 end
 
 -----------------------------------------------------------------------------
@@ -45,7 +48,7 @@ do
 		if ((os.time() - settings.lastsaved) > (settings.period * 60)) then
 			ImmediateMessage("Autosaving...")
 			
-			local filename = makefilename(settings.pattern)
+			local filename = makefilename(settings.directory, settings.pattern)
 			local r, e = SaveDocumentSetRaw(filename)
 			
 			if not r then
@@ -83,7 +86,8 @@ do
 		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {
 			enabled = false,
 			period = 10,
-			pattern = "%F.autosave.%T.wg" 
+			pattern = "%F.autosave.%T.wg",
+			directory = nil,
 		}
 	end
 	
@@ -120,12 +124,28 @@ function Cmd.ConfigureAutosave()
 		
 	local example_label =
 		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = -1, y2 = 7,
-			value = "(Example filename: README.autosave.2008-08-07.1829.wg)"
+			x1 = 1, y1 = 10,
+			x2 = -1, y2 = 10,
+			value = ""
 		}
 		
-	local pattern_textfield =
+	local pattern_textfield
+	local directory_textfield
+	local function update_example()
+		local d = directory_textfield.value
+		if (d == "") then
+			d = nil
+		end
+		local f = makefilename(d, pattern_textfield.value)
+		if (#f > example_label.realwidth) then
+			example_label.value = "..."..f:sub(-(example_label.realwidth-3))
+		else
+			example_label.value = f
+		end
+		example_label:draw()
+	end
+
+	pattern_textfield =
 		Form.TextField {
 			x1 = 33, y1 = 5,
 			x2 = -1, y2 = 5,
@@ -133,18 +153,27 @@ function Cmd.ConfigureAutosave()
 			
 			draw = function(self)
 				self.class.draw(self)
-				
-				local f = Leafname(makefilename(self.value))
-				example_label.value = "(e.g.: .../"..f..")"
-				example_label:draw()
+				update_example()
 			end
 		}
 	
+	directory_textfield =
+		Form.TextField {
+			x1 = 33, y1 = 7,
+			x2 = -1, y2 = 7,
+			value = settings.directory or "",
+			
+			draw = function(self)
+				self.class.draw(self)
+				update_example()
+			end
+		}
+
 	local dialogue =
 	{
 		title = "Configure Autosave",
 		width = Form.Large,
-		height = 9,
+		height = 12,
 		stretchy = false,
 
 		["KEY_^C"] = "cancel",
@@ -169,6 +198,20 @@ function Cmd.ConfigureAutosave()
 		},
 		pattern_textfield,
 		
+		Form.Label {
+			x1 = 1, y1 = 7,
+			x2 = 32, y2 = 7,
+			align = Form.Left,
+			value = "Autosave directory:"
+		},
+		Form.Label {
+			x1 = 1, y1 = 8,
+			x2 = 32, y2 = 8,
+			align = Form.Left,
+			value = "(Leave empty for default)"
+		},
+		directory_textfield,
+
 		example_label,
 	}
 	
@@ -182,7 +225,16 @@ function Cmd.ConfigureAutosave()
 		local enabled = enabled_checkbox.value
 		local period = tonumber(period_textfield.value)
 		local pattern = pattern_textfield.value
+		local directory = directory_textfield.value
 		
+		local dstat = nil
+		if directory == "" then
+			directory = nil
+		end
+		if directory then
+			dstat = Stat(directory)
+		end
+
 		if not period then
 			ModalMessage("Parameter error", "The period field must be a valid number.")
 		elseif (pattern:len() == 0) then
@@ -190,11 +242,14 @@ function Cmd.ConfigureAutosave()
 		elseif pattern:find("%%[^%%ftFT]") then
 			ModalMessage("Parameter error", "The filename pattern can only contain "..
 				"%%, %F or %T fields.")
+		elseif directory and (not dstat or (dstat.mode ~= "directory")) then
+			ModalMessage("Parameter error", "The autosave directory is not accessible.")
 		else
 			settings.enabled = enabled
 			settings.period = period
 			settings.pattern = pattern
 			settings.lastsaved = nil
+			settings.directory = directory
 			DocumentSet:touch()
 
 			announce()			
