@@ -34,6 +34,63 @@ function Cmd.ManageDocumentsUI()
 		end
 	}
 	
+	local function up_cb()
+		if (browser.cursor > 1) then
+			local document = browser.data[browser.cursor].document
+			DocumentSet:moveDocumentIndexTo(document.name, browser.cursor - 1)
+			browser.cursor = browser.cursor - 1
+			return "confirm"
+		end
+		return "nop"
+	end
+		
+	local function down_cb()
+		if (browser.cursor < #browser.data) then
+			DocumentSet:moveDocumentIndexTo(Document.name, browser.cursor + 1)
+			browser.cursor = browser.cursor + 1
+			return "confirm"
+		end
+		return "nop"
+	end
+		
+	local function rename_cb()
+		local name = PromptForString("Change name of current document", "Please enter the new document name:", Document.name)
+		if not name or (name == Document.name) then
+			return "confirm"
+		end
+		
+		if not DocumentSet:renameDocument(Document.name, name) then
+			ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
+			return "confirm"
+		end
+	
+		return "confirm"
+	end
+		
+	local function delete_cb()
+		if (#browser.data == 1) then
+			ModalMessage("Unable to delete document", "You can't delete the last document from the document set.")
+			return "confirm"
+		end
+		
+		if not PromptForYesNo("Delete this document?", "Are you sure you want to delete the document '"
+			.. Document.name .."'? It will be removed from the current document set, and will be gone forever.") then
+			return false
+		end
+		
+		if not DocumentSet:deleteDocument(Document.name) then
+			ModalMessage("Unable to delete document", "You can't delete that document.")
+			return "confirm"
+		end
+	
+		return "confirm"
+	end
+		
+	local function new_cb()
+		Cmd.AddBlankDocument()
+		return "confirm"
+	end
+
 	local dialogue =
 	{
 		title = "Document Manager",
@@ -45,62 +102,20 @@ function Cmd.ManageDocumentsUI()
 		["KEY_RETURN"] = "cancel",
 		["KEY_ENTER"] = "cancel",
 		
-		["u"] = function()
-			if (browser.cursor > 1) then
-				local document = browser.data[browser.cursor].document
-				DocumentSet:moveDocumentIndexTo(document.name, browser.cursor - 1)
-				browser.cursor = browser.cursor - 1
-				return "confirm"
-			end
-			return "nop"
-		end,
+		["u"] = up_cb,
+		["U"] = up_cb,
 		
-		["d"] = function()
-			if (browser.cursor < #browser.data) then
-				DocumentSet:moveDocumentIndexTo(Document.name, browser.cursor + 1)
-				browser.cursor = browser.cursor + 1
-				return "confirm"
-			end
-			return "nop"
-		end,
+		["d"] = down_cb,
+		["D"] = down_cb,
 		
-		["r"] = function()
-			local name = PromptForString("Change name of current document", "Please enter the new document name:", Document.name)
-			if not name or (name == Document.name) then
-				return "confirm"
-			end
-			
-			if not DocumentSet:renameDocument(Document.name, name) then
-				ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
-				return "confirm"
-			end
+		["r"] = rename_cb,
+		["R"] = rename_cb,
 		
-			return "confirm"
-		end,
+		["x"] = delete_cb,
+		["X"] = delete_cb,
 		
-		["x"] = function()
-			if (#browser.data == 1) then
-				ModalMessage("Unable to delete document", "You can't delete the last document from the document set.")
-				return "confirm"
-			end
-			
-			if not PromptForYesNo("Delete this document?", "Are you sure you want to delete the document '"
-				.. Document.name .."'? It will be removed from the current document set, and will be gone forever.") then
-				return false
-			end
-			
-			if not DocumentSet:deleteDocument(Document.name) then
-				ModalMessage("Unable to delete document", "You can't delete that document.")
-				return "confirm"
-			end
-		
-			return "confirm"
-		end,
-		
-		["n"] = function()
-			Cmd.AddBlankDocument()
-			return "confirm"
-		end,
+		["n"] = new_cb,
+		["N"] = new_cb,
 		
 		Form.Label {
 			x1 = 1, y1 = 1,
