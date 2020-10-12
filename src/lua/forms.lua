@@ -101,6 +101,7 @@ Form.Label = makewidgetclass {
 
 local checkbox_toggle = function(self, key)
 	self.value = not self.value
+	self:changed()
 	self:draw()
 end
 
@@ -127,6 +128,8 @@ Form.Checkbox = makewidgetclass {
 			GotoXY(self.realx2, self.realy1)
 		end
 	end,
+
+	changed = function(self) end,
 
 	[" "] = checkbox_toggle
 }
@@ -178,6 +181,8 @@ Form.TextField = makewidgetclass {
 		end
 	end,
 
+	changed = function(self) end,
+
 	["KEY_LEFT"] = function(self, key)
 		if (self.cursor > 1) then
 			while true do
@@ -228,6 +233,7 @@ Form.TextField = makewidgetclass {
 
 			self.value = self.value:sub(1, self.cursor - 1) ..
 				self.value:sub(self.cursor + w)
+			self:changed()
 			self:draw()
 		end
 
@@ -240,6 +246,7 @@ Form.TextField = makewidgetclass {
 			local w = GetBytesOfCharacter(self.value:byte(self.cursor))
 			self.value = self.value:sub(1, self.cursor - 1) ..
 				self.value:sub(self.cursor + w)
+			self:changed()
 			self:draw()
 		end
 
@@ -250,6 +257,7 @@ Form.TextField = makewidgetclass {
 		self.cursor = 1
 		self.offset = 1
 		self.value = ""
+			self:changed()
 		self:draw()
 
 		return "nop"
@@ -259,6 +267,7 @@ Form.TextField = makewidgetclass {
 		if not key:match("^KEY_") then
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
 			self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
+			self:changed()
 			self:draw()
 
 			return "nop"

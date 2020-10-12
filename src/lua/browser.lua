@@ -63,6 +63,7 @@ function FileBrowser(title, message, saving, default)
 		end
 		labels[#labels+1] = {
 			data = attr.name,
+			key = attr.name,
 			label = dmarker..attr.name
 		}
 		if (attr.name == default) then
@@ -131,6 +132,21 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		x1 = GetStringWidth(bottommessage) + 3, y1 = -3,
 		x2 = -1, y2 = -2,
 		value = default or data[1].data,
+
+		-- Only fired if changed _by the text field_.
+		changed = function(self)
+			local value = self.value
+			if (#value == 0) then
+				return
+			end
+			for index, item in ipairs(data) do
+				if item.key and (item.key:sub(1, #value) == value) then
+					browser.cursor = index
+					browser:draw()
+					return
+				end
+			end
+		end,
 	}
 		
 	local function navigate(self, key)
@@ -140,6 +156,14 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		textfield.offset = 1
 		textfield:draw()
 		return action
+	end
+
+	local function autocomplete(self)
+		textfield.value = data[browser.cursor].data
+		textfield.cursor = textfield.value:len() + 1
+		textfield.offset = 1
+		textfield:draw()
+		return "nop"
 	end
 
 	local function go_to_parent(self, key)
@@ -171,6 +195,8 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		["KEY_PGDN"] = navigate,
 		["KEY_PGUP"] = navigate,
 			
+		["KEY_TAB"] = autocomplete,
+
 		Form.Label {
 			x1 = 1, y1 = 1,
 			x2 = -1, y2 = 1,
