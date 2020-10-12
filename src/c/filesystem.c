@@ -137,6 +137,23 @@ static int stat_cb(lua_State* L)
 	return 1;
 }
 
+static int access_cb(lua_State* L)
+{
+	const char* filename = luaL_checklstring(L, 1, NULL);
+	int mode = forceinteger(L, 2);
+
+	#if defined WIN32
+		if (_waccess(utf8_to_wide(L, filename), mode) != 0)
+			return pusherrno(L);
+	#else
+		if (access(filename, mode) != 0)
+			return pusherrno(L);
+	#endif
+
+	lua_pushboolean(L, true);
+	return 1;
+}
+
 void filesystem_init(void)
 {
 	const static luaL_Reg funcs[] =
@@ -146,6 +163,7 @@ void filesystem_init(void)
 		{ "getcwd",                    getcwd_cb },
 		{ "readdir",                   readdir_cb },
 		{ "stat",                      stat_cb },
+		{ "access",                    access_cb },
 		{ NULL,                        NULL }
 	};
 
@@ -163,4 +181,7 @@ void filesystem_init(void)
 
 	lua_pushinteger(L, EISDIR);
 	lua_setfield(L, -2, "EISDIR");
+
+	lua_pushinteger(L, W_OK);
+	lua_setfield(L, -2, "W_OK");
 }

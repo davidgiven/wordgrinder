@@ -297,6 +297,19 @@ function Format(w)
 	return table_concat(ss)
 end
 
+-- Splits a string by whitespace.
+
+function ParseStringIntoWords(s)
+	local words = {}
+	for w in s:gmatch("[^ \t\r\n]+") do
+		words[#words + 1] = w
+	end
+	if (#words == 0) then
+		return {""}
+	end
+	return words
+end
+
 -- Convert an array to a map.
 
 function ArrayToMap(array)

@@ -490,6 +490,7 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/addons/undo.lua",
     "src/lua/addons/spillchocker.lua",
     "src/lua/addons/templates.lua",
+    "src/lua/addons/directories.lua",
     "src/lua/menu.lua",
     "src/lua/cli.lua",
 }, " "))

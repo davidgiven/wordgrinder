@@ -15,17 +15,6 @@ local string_find = string.find
 local string_sub = string.sub
 local table_concat = table.concat
 
-function ParseStringIntoWords(s)
-	local words = {}
-	for w in s:gmatch("[^ \t\r\n]+") do
-		words[#words + 1] = w
-	end
-	if (#words == 0) then
-		return {""}
-	end
-	return words
-end
-
 -- Import helper functions. These functions build styled words and paragraphs.
 
 function CreateImporter(document)

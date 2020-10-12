@@ -110,11 +110,11 @@ local DocumentSettingsMenu = addmenu("Document settings",
 
 local GlobalSettingsMenu = addmenu("Global settings",
 {
-	{"FSlookandfeel","L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
-	{"FSDictionary", "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
-	{"FSTemplates",  "T", "Change templates...",           nil,   Cmd.ConfigureTemplates},
+	{"FSlookandfeel", "L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
+	{"FSDictionary",  "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
+	{"FSdirectories", "R", "Change directories...",         nil,   Cmd.ConfigureDirectories},
 	"-",
-	{"FSDebug",      "X", "Debugging options...",    nil,         Cmd.ConfigureDebug},
+	{"FSDebug",       "X", "Debugging options...",    nil,         Cmd.ConfigureDebug},
 })
 
 local FileMenu = addmenu("File",
