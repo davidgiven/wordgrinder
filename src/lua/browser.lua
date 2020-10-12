@@ -6,6 +6,7 @@ local min = min
 local max = max
 local int = math.floor
 local string_rep = string.rep
+local table_sort = table.sort
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local SetNormal = wg.setnormal
@@ -118,7 +119,58 @@ function FileBrowser(title, message, saving, default)
 	return GetCwd().."/"..f
 end
 
+function Autocomplete(filename, x1, x2, y)
+	local dirname = Dirname(filename)
+	local leafname = Leafname(filename)
+	local files = ReadDir(dirname)
+	if not files then
+		return filename
+	end
+	if (dirname == ".") then
+		dirname = ""
+	elseif (dirname ~= "/") then
+		dirname = dirname.."/"
+	end
+
+	local candidates = {}
+	for _, f in ipairs(files) do
+		if (f:sub(1, #leafname) == leafname) then
+			local st = Stat(dirname.."/"..f)
+			if st and (st.mode == "directory") then
+				f = f.."/"
+			end
+			candidates[#candidates+1] = f
+		end
+	end
+
+	-- Only one candidate --- match it.
+	if (#candidates == 1) then
+		return dirname..candidates[1]
+	end
+
+	-- Does the LCP advance the filename? If so, return it.
+	local prefix = LargestCommonPrefix(candidates)
+	if (prefix == nil) then
+		return filename
+	elseif prefix ~= leafname then
+		return dirname..prefix
+	end
+
+	-- Display the autocompletion list to the user.
+	local boxw = x2 - x1
+	local boxh = min(y-1, #candidates)
+	local boxx = x1
+	local boxy = y - 1 - boxh
+	DrawBox(boxx, boxy, boxw, boxh)
+	for i = 1, boxh do
+		Write(x1+1, y-i, candidates[i])
+	end
+	return filename
+end
+
 function Browser(title, topmessage, bottommessage, data, default, defaultn)
+	local dialogue
+
 	local browser = Form.Browser {
 		focusable = false,
 		type = Form.Browser,
@@ -159,10 +211,12 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 	end
 
 	local function autocomplete(self)
-		textfield.value = data[browser.cursor].data
+		textfield.value = Autocomplete(textfield.value,
+			textfield.realx1-1, textfield.realx2-1, textfield.realy1)
 		textfield.cursor = textfield.value:len() + 1
 		textfield.offset = 1
 		textfield:draw()
+		dialogue.transient = true
 		return "nop"
 	end
 
@@ -173,12 +227,12 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 
 	local helptext
 	if (ARCH == "windows") then
-		helptext = "enter an absolute path or drive letter ('c:') to go there"
+		helptext = "enter an path or drive letter ('c:') to go there; TAB completes"
 	else
-		helptext = "enter an absolute path to go there"
+		helptext = "enter an path to go there; TAB completes"
 	end
 
-	local dialogue =
+	dialogue =
 	{
 		title = title,
 		width = Form.Large,
