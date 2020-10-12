@@ -21,6 +21,14 @@ local ChDir = wg.chdir
 local ReadDir = wg.readdir
 local Stat = wg.stat
 
+local function compare_filenames(f1, f2)
+	if (ARCH == "windows") then
+		return f1:lower() == f2:lower()
+	else
+		return f1 == f2
+	end
+end
+
 function FileBrowser(title, message, saving, default)
 	-- Prevent the first item being selected if no default is supplied; as
 	-- it's always .., it's never helpful.
@@ -143,7 +151,7 @@ function Autocomplete(filename, x1, x2, y)
 
 	local candidates = {}
 	for _, f in ipairs(files) do
-		if (f:sub(1, #leafname) == leafname) then
+		if (compare_filenames(f:sub(1, #leafname), leafname)) then
 			local st = Stat(dirname.."/"..f)
 			if st and (st.mode == "directory") then
 				f = f.."/"
@@ -158,7 +166,9 @@ function Autocomplete(filename, x1, x2, y)
 	end
 
 	-- Does the LCP advance the filename? If so, return it.
-	local prefix = LargestCommonPrefix(candidates)
+	local prefix = (ARCH == "windows")
+		and LargestCommonPrefixCaseInsensitive(candidates)
+		or LargestCommonPrefix(candidates)
 	if (prefix == nil) then
 		return filename
 	elseif prefix ~= leafname then
@@ -201,7 +211,7 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 				return
 			end
 			for index, item in ipairs(data) do
-				if item.key and (item.key:sub(1, #value) == value) then
+				if item.key and compare_filenames(item.key:sub(1, #value), value) then
 					browser.cursor = index
 					browser:draw()
 					return

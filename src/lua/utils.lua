@@ -391,3 +391,43 @@ function LargestCommonPrefix(array)
 	return prefix
 end
 
+-- As for LargestCommonPrefix, but case insensitive.
+
+function LargestCommonPrefixCaseInsensitive(array)
+	if (#array == 0) then
+		return nil
+	end
+
+	local function all_strings_contain(p1, p2, s)
+		s = s:sub(p1, p2):lower()
+		for _, ss in ipairs(array) do
+			if (ss:sub(p1, p2):lower() ~= s) then
+				return false
+			end
+		end
+		return true
+	end
+
+	local index = HUGE
+	for _, s in ipairs(array) do
+		if (#s < index) then
+			index = #s
+		end
+	end
+
+	local prefix = ""
+	local low = 1
+	local high = index
+	while (low <= high) do
+		local mid = math_floor((low + high) / 2)
+		if all_strings_contain(low, mid, array[1]) then
+			prefix = prefix .. array[1]:sub(low, mid)
+			low = mid + 1
+		else
+			high = mid - 1
+		end
+	end
+
+	return prefix
+end
+
