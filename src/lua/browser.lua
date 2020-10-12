@@ -89,6 +89,11 @@ function FileBrowser(title, message, saving, default)
 		return nil
 	end
 	
+	if f:match("[/\\]$") then
+		-- Remove any trailing directory specifier (autocompletion
+		-- tends to leave these).
+		f = f:sub(1, -2)
+	end
 	if (ARCH == "windows") and f:match("^%a:$") then
 		-- The user has typed a drive specifier; turn it into a path.
 		f = f.."/"
@@ -122,14 +127,18 @@ end
 function Autocomplete(filename, x1, x2, y)
 	local dirname = Dirname(filename)
 	local leafname = Leafname(filename)
+
+	if (dirname ~= "/") then
+		dirname = dirname.."/"
+	end
+
 	local files = ReadDir(dirname)
 	if not files then
 		return filename
 	end
-	if (dirname == ".") then
+
+	if (dirname == "./") then
 		dirname = ""
-	elseif (dirname ~= "/") then
-		dirname = dirname.."/"
 	end
 
 	local candidates = {}
