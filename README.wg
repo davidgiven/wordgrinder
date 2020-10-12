@@ -31,6 +31,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.cw: 1
 .clipboard.margin: 0
 .clipboard.viewmode: 1
+.clipboard.wordcount: 12
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -38,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3760
+.documents.1.wordcount: 3810
 .documents.2.co: 3
 .documents.2.cp: 1
 .documents.2.cw: 2
@@ -160,12 +161,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/crouton/chroots/buster/home/dg/nonshared/wordgrinder/README.wg"
+.name: "/.big/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
 #clipboard
-P File→Manage Documents
+P The directory in which templates are stored is configured via File→Global Settings→Directories.
 .
 #1
 H1 Welcome to WordGrinder
@@ -214,6 +215,7 @@ P Importing non-WordGrinder files always results in a new document being added t
 H2 Templates
 P You may save a WordGrinder file as a template using File→Save as template. These files get set in a special (configurable) template directory. When creating a new document with File→Create from template, the template will be loaded but the current document will not be set. This means that when saving, you’ll be prompted for a filename in the normal way.
 P Templates may contain anything which can be saved into a document set, including content, multiple subdocuments, keyboard bindings, local settings, etc. Use templates if you have a particular set of bindings you like and want them automatically set up for any new document.
+P The directory in which templates are stored is configured via File→Global Settings→Directories.
 H2 Menu customisation
 P You can change any of the keyboard shortcuts assigned to menu items. These are then saved as part of the document set, so each WordGrinder file takes its keyboard configuration with it.
 P To do this, open the menu, navigate to the entry you want to change, and then press CTRL+V followed by the key you want to bind. You can’t bind keys used to type text into your document (e.g. A). You also can’t bind a key that’s already in use elsewhere. You can remove a binding by navigating to the appropriate menu item and pressing CTRL+X. Watch the status bar while a menu’s open for reminders.
@@ -299,6 +301,7 @@ P The undo stack is not saved along with your document --- the undo stack alway
 H3 Autosave
 P WordGrinder also has a feature that will save a timestamped snapshot of your document set periodically. This is disabled by default; to enable this, go to File→Document Settings→Autosave. You can specify how long between snapshots and what filename pattern you want WordGrinder to use.
 P Note that autosaving will only happen if you don’t touch the keyboard for a few seconds, to prevent a dialogue box from being popped up just as you’re about to press a key. Autosaving will also only happen if your document set contains unsaved changes. (In this situation, autosaving does not count as saving your changes, and your document set will remain dirty.)
+P By default, autosaves will be placed next to the original document, but if you specify a custom directory in File→Global Settings→Directories, they’ll be put there instead.
 H3 Unicode
 P WordGrinder supports ＵＮＩＣＯＤＥ!
 P (If you see a bunch of boxes in the above line, it means that your platform doesn’t support displaying exotic Unicode characters. WordGrinder will still let you edit them, you just won’t be able to see what you’re doing.)
@@ -308,7 +311,7 @@ P This document set contains a Unicode test document containing a rather more st
 H3 Scrapbook
 P Edit→Scrapbook provides various options to allow you to quickly copy fragments of document to a scrapbook document. Fragments get appended onto the end of the scrapbook with an optional timestamp; this is configurable in File→Document Settings→Scrapbook. (The scrapbook itself is just another document; you can even copy things to the scrapbook while viewing it, but it probably won’t behave the way you want!)
 H3 Page count
-P For some applications it’s important to know --- roughly --- how many pages you’ve written, rather than how many words. WordGrinder doesn’t know what pages are, but there’s a feature to allow you to show you a rough estimate as to how many pages you’ve got based on the number of words. See File→Document Settings→Page Count.
+P For some applications it’s important to know --- roughly --- how many pages you’ve written, rather than how many words. WordGrinder doesn’t know what pages are, but there’s a feature to allow you to show you a rough estimate as to how many pages you’ve got based on the number of words. See File→Document Settings→Page Count. The industry standard for publisher submission manuscripts, by the way, is 250.
 H3 Widescreen mode
 P Running WordGrinder full screen on a widescreen monitor is typically pretty uncomfortable, as you end up with very long lines. Widescreen mode allows you to restrict the text to a column in the centre of the screen. (Dialogue boxes are not affected.) See File→Global Settings→Look and Feel. I find that 80 or 100 columns is the most comfortable.
 P This is a global setting and isn’t saved with your document (because I tend to want to set it per machine, rather than per document).

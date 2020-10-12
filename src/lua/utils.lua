@@ -55,7 +55,7 @@ function Pluralise(n, singular, plural)
 	end
 end
 
---- Extracts the leaf part of a filename by truncating at the last / or \.
+--- Extracts the leaf part of a filename by returning everything after the last / or \.
 --
 -- @param filename           filename
 -- @return                   leaf
@@ -66,6 +66,22 @@ function Leafname(filename)
 		return f
 	end
 	return filename
+end
+
+--- Extracts the directory part of a filename by truncating at the last / or \.
+--
+-- @param filename           filename
+-- @return                   directory
+
+function Dirname(filename)
+	local _, _, f = filename:find("(.*)[/\\][^/\\]*$")
+	if f then
+		if (f == "") then
+			return "/"
+		end
+		return f
+	end
+	return "."
 end
 
 --- Produces an exception traceback.
@@ -279,6 +295,19 @@ function Format(w)
 	end
 	ss[#ss+1] = '"'
 	return table_concat(ss)
+end
+
+-- Splits a string by whitespace.
+
+function ParseStringIntoWords(s)
+	local words = {}
+	for w in s:gmatch("[^ \t\r\n]+") do
+		words[#words + 1] = w
+	end
+	if (#words == 0) then
+		return {""}
+	end
+	return words
 end
 
 -- Convert an array to a map.

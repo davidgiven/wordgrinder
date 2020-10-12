@@ -2,6 +2,8 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local Stat = wg.stat
+
 local function announce()
 	local settings = DocumentSet.addons.autosave
 
@@ -15,17 +17,18 @@ local function announce()
 end
 
 local function makefilename(pattern)
-	local basefilename = DocumentSet.name
-	basefilename = basefilename:gsub("%.wg$", "")
-	basefilename = basefilename:gsub("%%", "%%%%")
+	local leafname = Leafname(DocumentSet.name)
+	local dirname = GlobalSettings.directories.autosaves or Dirname(DocumentSet.name)
+	leafname = leafname:gsub("%.wg$", "")
+	leafname = leafname:gsub("%%", "%%%%")
 	
 	local timestamp = os.date("%Y-%m-%d.%H%M")
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
-	pattern = pattern:gsub("%%[fF]", basefilename)
+	pattern = pattern:gsub("%%[fF]", leafname)
 	pattern = pattern:gsub("%%[tT]", timestamp)
 	pattern = pattern:gsub("%%%%", "%%")
-	return pattern
+	return dirname.."/"..pattern
 end
 
 -----------------------------------------------------------------------------
@@ -83,7 +86,7 @@ do
 		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {
 			enabled = false,
 			period = 10,
-			pattern = "%F.autosave.%T.wg" 
+			pattern = "%F.autosave.%T.wg",
 		}
 	end
 	
@@ -122,7 +125,7 @@ function Cmd.ConfigureAutosave()
 		Form.Label {
 			x1 = 1, y1 = 7,
 			x2 = -1, y2 = 7,
-			value = "(Example filename: README.autosave.2008-08-07.1829.wg)"
+			value = ""
 		}
 		
 	local pattern_textfield =
@@ -133,9 +136,13 @@ function Cmd.ConfigureAutosave()
 			
 			draw = function(self)
 				self.class.draw(self)
-				
-				local f = Leafname(makefilename(self.value))
-				example_label.value = "(e.g.: .../"..f..")"
+
+				local f = makefilename(self.value)
+				if (#f > example_label.realwidth) then
+					example_label.value = "..."..f:sub(-(example_label.realwidth-3))
+				else
+					example_label.value = f
+				end
 				example_label:draw()
 			end
 		}
@@ -168,7 +175,7 @@ function Cmd.ConfigureAutosave()
 			value = "Autosave filename pattern:"
 		},
 		pattern_textfield,
-		
+
 		example_label,
 	}
 	

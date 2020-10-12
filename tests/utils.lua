@@ -28,3 +28,11 @@ AssertEquals('"fo\\"o"',      Format('fo"o'))
 AssertEquals('"\\17foo"',     Format("\17foo"))
 AssertEquals('"\\17foo\\17"', Format("\17foo\17"))
 
+AssertEquals("/foo/bar",      Dirname("/foo/bar/baz"))
+AssertEquals("/foo/bar",      Dirname("/foo/bar/"))
+AssertEquals("/foo",          Dirname("/foo/bar"))
+AssertEquals("/foo",          Dirname("/foo/"))
+AssertEquals("/",             Dirname("/foo"))
+AssertEquals("/",             Dirname("/"))
+AssertEquals(".",             Dirname("foo"))
+
