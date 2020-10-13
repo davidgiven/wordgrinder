@@ -36,3 +36,17 @@ AssertEquals("/",             Dirname("/foo"))
 AssertEquals("/",             Dirname("/"))
 AssertEquals(".",             Dirname("foo"))
 
+AssertEquals("baz",           Leafname("/foo/bar/baz"))
+AssertEquals("",              Leafname("/foo/bar/"))
+AssertEquals("bar",           Leafname("/foo/bar"))
+AssertEquals("",              Leafname("/foo/"))
+AssertEquals("foo",           Leafname("/foo"))
+AssertEquals("",              Leafname("/"))
+AssertEquals("foo",           Leafname("foo"))
+
+AssertEquals("foo", LargestCommonPrefix({ "foo", "foobar" }))
+AssertEquals("foo", LargestCommonPrefix({ "foof", "foobar" }))
+AssertEquals("foo", LargestCommonPrefix({ "foonly", "foobar", "footle" }))
+AssertEquals("foo", LargestCommonPrefix({ "foo" }))
+AssertEquals(nil,   LargestCommonPrefix({ }))
+

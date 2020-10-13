@@ -122,10 +122,6 @@ The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
 The distribution contains a copy of LuaBitOp. This is also MIT licensed and is ©
 2008-2012 Mike Pall. See http://bitop.luajit.org/ for more information.
 
-The distribution contains a copy of the LuaFileSystem code. This is also MIT
-licensed and is © The Kepler Project. See
-http://www.keplerproject.org/luafilesystem for more information.
-
 The distribution contains a copy of the MiniZip library. This is © 1998-2010
 Gilles Vollant and Mathis Svenson, and is available under the BSD license.
 
@@ -148,10 +144,10 @@ REVISION HISTORY
 WordGrinder 0.8: 2020-xx-xx: bugfix release (mostly). New features: a paragraph
 style for numbered bulletpoints; more look-and-feel options; the caret now
 flashes; basic template support; word count display of selected text; custom
-autosave directory. Bugfixes: lots of import and export fixes (and tests so
-that they stay fixed); spellchecker fixes; selection position fixes; keyboard
-entry fixes on Windows; graphics fixes on Windows; filesystem fixes on Windwos;
-assorted other minor tweaks.
+autosave directory; autocompletion in file dialogues. Bugfixes: lots of import
+and export fixes (and tests so that they stay fixed); spellchecker fixes;
+selection position fixes; keyboard entry fixes on Windows; graphics fixes on
+Windows; filesystem fixes on Windwos; assorted other minor tweaks.
 
 WordGrinder 0.7.2: 2018-11-29: bugfix release. Pasting immediately after
 loading a document no longer hard crashes. Don't buffer overrun if given
