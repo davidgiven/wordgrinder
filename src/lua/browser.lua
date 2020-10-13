@@ -189,6 +189,7 @@ function Browser(title, topmessage, bottommessage, data)
 		x1 = GetStringWidth(bottommessage) + 3, y1 = -3,
 		x2 = -1, y2 = -2,
 		value = data[1].data,
+		transient = true,
 
 		-- Only fired if changed _by the text field_.
 		changed = function(self)
@@ -211,6 +212,7 @@ function Browser(title, topmessage, bottommessage, data)
 		textfield.value = data[browser.cursor].data
 		textfield.cursor = textfield.value:len() + 1
 		textfield.offset = 1
+		textfield.transient = true
 		textfield:draw()
 		return action
 	end
@@ -220,6 +222,7 @@ function Browser(title, topmessage, bottommessage, data)
 			textfield.realx1-1, textfield.realx2-1, textfield.realy1)
 		textfield.cursor = textfield.value:len() + 1
 		textfield.offset = 1
+		textfield.transient = false
 		textfield:draw()
 		dialogue.transient = true
 		return "nop"

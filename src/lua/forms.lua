@@ -134,9 +134,21 @@ Form.Checkbox = makewidgetclass {
 	[" "] = checkbox_toggle
 }
 
+local function keep_transient_textfield(self)
+	self.transient = false
+end
+
+local function discard_transient_textfield(self)
+	if self.transient then
+		self.value = ""
+		self.cursor = 1
+		self.transient = false
+	end
+end
+
 Form.TextField = makewidgetclass {
 	focusable = true,
-	blinking_cursor = true,
+	transient = false,
 
 	init = function(self)
 		self.cursor = self.cursor or (self.value:len() + 1)
@@ -173,6 +185,9 @@ Form.TextField = makewidgetclass {
 
 		local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
 		SetBright()
+		if self.transient then
+			SetReverse()
+		end
 		Write(self.realx1, self.realy1, s)
 		SetNormal()
 
@@ -184,6 +199,7 @@ Form.TextField = makewidgetclass {
 	changed = function(self) end,
 
 	["KEY_LEFT"] = function(self, key)
+		keep_transient_textfield(self)
 		if (self.cursor > 1) then
 			while true do
 				self.cursor = self.cursor - 1
@@ -198,6 +214,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_RIGHT"] = function(self, key)
+		keep_transient_textfield(self)
 		if (self.cursor <= self.value:len()) then
 			self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
 			self:draw()
@@ -207,6 +224,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_HOME"] = function(self, key)
+		keep_transient_textfield(self)
 		self.cursor = 1
 		self:draw()
 
@@ -214,6 +232,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_END"] = function(self, key)
+		keep_transient_textfield(self)
 		self.cursor = self.value:len() + 1
 		self:draw()
 
@@ -221,6 +240,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_BACKSPACE"] = function(self, key)
+		discard_transient_textfield(self)
 		if (self.cursor > 1) then
 			local w
 			while true do
@@ -241,6 +261,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_DELETE"] = function(self, key)
+		discard_transient_textfield(self)
 		local v = self.value:byte(self.cursor)
 		if v then
 			local w = GetBytesOfCharacter(self.value:byte(self.cursor))
@@ -254,6 +275,7 @@ Form.TextField = makewidgetclass {
 	end,
 
 	["KEY_^U"] = function(self, key)
+		discard_transient_textfield(self)
 		self.cursor = 1
 		self.offset = 1
 		self.value = ""
@@ -265,6 +287,7 @@ Form.TextField = makewidgetclass {
 
 	key = function(self, key)
 		if not key:match("^KEY_") then
+			discard_transient_textfield(self)
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
 			self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
 			self:changed()
