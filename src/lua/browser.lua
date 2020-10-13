@@ -29,20 +29,7 @@ local function compare_filenames(f1, f2)
 	end
 end
 
-function FileBrowser(title, message, saving, default)
-	-- Prevent the first item being selected if no default is supplied; as
-	-- it's always .., it's never helpful.
-	default = default or ""
-
-	-- If the default has a slash in it, it's a subdirectory, so go there.
-	do
-		local _, _, dir, leaf = default:find("(.*)/([^/]*)$")
-		if dir then
-			ChDir(dir)
-			default = leaf
-		end
-	end
-
+function FileBrowser(title, message, saving)
 	local files = {}
 	for _, filename in ipairs(ReadDir(".")) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
@@ -64,7 +51,6 @@ function FileBrowser(title, message, saving, default)
 	end)
 	
 	local labels = {}
-	local defaultn = 1
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
@@ -75,9 +61,6 @@ function FileBrowser(title, message, saving, default)
 			key = attr.name,
 			label = dmarker..attr.name
 		}
-		if (attr.name == default) then
-			defaultn = #labels
-		end
 	end
 	
 	-- Windows will sometimes give you a directory with no entries
@@ -91,8 +74,7 @@ function FileBrowser(title, message, saving, default)
 		}
 	end
 
-	local f = Browser(title, GetCwd(), message, labels,
-		default, defaultn)
+	local f = Browser(title, GetCwd(), message, labels)
 	if not f then
 		return nil
 	end
@@ -115,7 +97,7 @@ function FileBrowser(title, message, saving, default)
 
 	if attr and (attr.mode == "directory") then
 		ChDir(f)
-		return FileBrowser(title, message, saving, default)
+		return FileBrowser(title, message, saving)
 	end
 	
 	if saving and not e then
@@ -129,7 +111,11 @@ function FileBrowser(title, message, saving, default)
 		end
 	end
 	
-	return GetCwd().."/"..f
+	if not f:find("^[/\\]") then
+		return GetCwd().."/"..f
+	else
+		return f
+	end
 end
 
 function Autocomplete(filename, x1, x2, y)
@@ -187,7 +173,7 @@ function Autocomplete(filename, x1, x2, y)
 	return filename
 end
 
-function Browser(title, topmessage, bottommessage, data, default, defaultn)
+function Browser(title, topmessage, bottommessage, data)
 	local dialogue
 
 	local browser = Form.Browser {
@@ -196,13 +182,13 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		x1 = 1, y1 = 2,
 		x2 = -1, y2 = -5,
 		data = data,
-		cursor = defaultn or 1
+		cursor = 1
 	}
 	
 	local textfield = Form.TextField {
 		x1 = GetStringWidth(bottommessage) + 3, y1 = -3,
 		x2 = -1, y2 = -2,
-		value = default or data[1].data,
+		value = data[1].data,
 
 		-- Only fired if changed _by the text field_.
 		changed = function(self)
