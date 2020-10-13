@@ -317,6 +317,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/spellchecker.lua",
         "tests/type-while-selected.lua",
         "tests/undo.lua",
+        "tests/utf8.lua",
         "tests/utils.lua",
         "tests/weirdness-cannot-save-settings.lua",
         "tests/weirdness-combining-words.lua",
