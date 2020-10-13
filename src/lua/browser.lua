@@ -6,6 +6,7 @@ local min = min
 local max = max
 local int = math.floor
 local string_rep = string.rep
+local table_sort = table.sort
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local SetNormal = wg.setnormal
@@ -20,20 +21,15 @@ local ChDir = wg.chdir
 local ReadDir = wg.readdir
 local Stat = wg.stat
 
-function FileBrowser(title, message, saving, default)
-	-- Prevent the first item being selected if no default is supplied; as
-	-- it's always .., it's never helpful.
-	default = default or ""
-
-	-- If the default has a slash in it, it's a subdirectory, so go there.
-	do
-		local _, _, dir, leaf = default:find("(.*)/([^/]*)$")
-		if dir then
-			ChDir(dir)
-			default = leaf
-		end
+local function compare_filenames(f1, f2)
+	if (ARCH == "windows") then
+		return f1:lower() == f2:lower()
+	else
+		return f1 == f2
 	end
+end
 
+function FileBrowser(title, message, saving)
 	local files = {}
 	for _, filename in ipairs(ReadDir(".")) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
@@ -55,7 +51,6 @@ function FileBrowser(title, message, saving, default)
 	end)
 	
 	local labels = {}
-	local defaultn = 1
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
@@ -63,11 +58,9 @@ function FileBrowser(title, message, saving, default)
 		end
 		labels[#labels+1] = {
 			data = attr.name,
+			key = attr.name,
 			label = dmarker..attr.name
 		}
-		if (attr.name == default) then
-			defaultn = #labels
-		end
 	end
 	
 	-- Windows will sometimes give you a directory with no entries
@@ -81,12 +74,16 @@ function FileBrowser(title, message, saving, default)
 		}
 	end
 
-	local f = Browser(title, GetCwd(), message, labels,
-		default, defaultn)
+	local f = Browser(title, GetCwd(), message, labels)
 	if not f then
 		return nil
 	end
 	
+	if f:match("[/\\]$") then
+		-- Remove any trailing directory specifier (autocompletion
+		-- tends to leave these).
+		f = f:sub(1, -2)
+	end
 	if (ARCH == "windows") and f:match("^%a:$") then
 		-- The user has typed a drive specifier; turn it into a path.
 		f = f.."/"
@@ -100,7 +97,7 @@ function FileBrowser(title, message, saving, default)
 
 	if attr and (attr.mode == "directory") then
 		ChDir(f)
-		return FileBrowser(title, message, saving, default)
+		return FileBrowser(title, message, saving)
 	end
 	
 	if saving and not e then
@@ -114,23 +111,100 @@ function FileBrowser(title, message, saving, default)
 		end
 	end
 	
-	return GetCwd().."/"..f
+	if not f:find("^[/\\]") then
+		return GetCwd().."/"..f
+	else
+		return f
+	end
 end
 
-function Browser(title, topmessage, bottommessage, data, default, defaultn)
+function Autocomplete(filename, x1, x2, y)
+	local dirname = Dirname(filename)
+	local leafname = Leafname(filename)
+
+	if (dirname ~= "/") then
+		dirname = dirname.."/"
+	end
+
+	local files = ReadDir(dirname)
+	if not files then
+		return filename
+	end
+
+	if (dirname == "./") then
+		dirname = ""
+	end
+
+	local candidates = {}
+	for _, f in ipairs(files) do
+		if (compare_filenames(f:sub(1, #leafname), leafname)) then
+			local st = Stat(dirname.."/"..f)
+			if st and (st.mode == "directory") then
+				f = f.."/"
+			end
+			candidates[#candidates+1] = f
+		end
+	end
+
+	-- Only one candidate --- match it.
+	if (#candidates == 1) then
+		return dirname..candidates[1]
+	end
+
+	-- Does the LCP advance the filename? If so, return it.
+	local prefix = (ARCH == "windows")
+		and LargestCommonPrefixCaseInsensitive(candidates)
+		or LargestCommonPrefix(candidates)
+	if (prefix == nil) then
+		return filename
+	elseif prefix ~= leafname then
+		return dirname..prefix
+	end
+
+	-- Display the autocompletion list to the user.
+	local boxw = x2 - x1
+	local boxh = min(y-1, #candidates)
+	local boxx = x1
+	local boxy = y - 1 - boxh
+	DrawBox(boxx, boxy, boxw, boxh)
+	for i = 1, boxh do
+		Write(x1+1, y-i, candidates[i])
+	end
+	return filename
+end
+
+function Browser(title, topmessage, bottommessage, data)
+	local dialogue
+
 	local browser = Form.Browser {
 		focusable = false,
 		type = Form.Browser,
 		x1 = 1, y1 = 2,
 		x2 = -1, y2 = -5,
 		data = data,
-		cursor = defaultn or 1
+		cursor = 1
 	}
 	
 	local textfield = Form.TextField {
 		x1 = GetStringWidth(bottommessage) + 3, y1 = -3,
 		x2 = -1, y2 = -2,
-		value = default or data[1].data,
+		value = data[1].data,
+		transient = true,
+
+		-- Only fired if changed _by the text field_.
+		changed = function(self)
+			local value = self.value
+			if (#value == 0) then
+				return
+			end
+			for index, item in ipairs(data) do
+				if item.key and compare_filenames(item.key:sub(1, #value), value) then
+					browser.cursor = index
+					browser:draw()
+					return
+				end
+			end
+		end,
 	}
 		
 	local function navigate(self, key)
@@ -138,8 +212,20 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		textfield.value = data[browser.cursor].data
 		textfield.cursor = textfield.value:len() + 1
 		textfield.offset = 1
+		textfield.transient = true
 		textfield:draw()
 		return action
+	end
+
+	local function autocomplete(self)
+		textfield.value = Autocomplete(textfield.value,
+			textfield.realx1-1, textfield.realx2-1, textfield.realy1)
+		textfield.cursor = textfield.value:len() + 1
+		textfield.offset = 1
+		textfield.transient = false
+		textfield:draw()
+		dialogue.transient = true
+		return "nop"
 	end
 
 	local function go_to_parent(self, key)
@@ -149,12 +235,12 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 
 	local helptext
 	if (ARCH == "windows") then
-		helptext = "enter an absolute path or drive letter ('c:') to go there"
+		helptext = "enter an path or drive letter ('c:') to go there; TAB completes"
 	else
-		helptext = "enter an absolute path to go there"
+		helptext = "enter an path to go there; TAB completes"
 	end
 
-	local dialogue =
+	dialogue =
 	{
 		title = title,
 		width = Form.Large,
@@ -171,6 +257,8 @@ function Browser(title, topmessage, bottommessage, data, default, defaultn)
 		["KEY_PGDN"] = navigate,
 		["KEY_PGUP"] = navigate,
 			
+		["KEY_TAB"] = autocomplete,
+
 		Form.Label {
 			x1 = 1, y1 = 1,
 			x2 = -1, y2 = 1,
