@@ -1,3 +1,5 @@
+#!/usr/bin/env -S wordgrinder --lua
+
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.

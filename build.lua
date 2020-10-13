@@ -276,6 +276,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
     local alltests = {}
     for _, test in ipairs({
         "tests/apply-markup.lua",
+        "tests/argument-parser.lua",
         "tests/change-paragraph-style.lua",
         "tests/clipboard.lua",
         "tests/delete-selection.lua",

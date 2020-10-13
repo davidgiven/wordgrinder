@@ -1,3 +1,5 @@
+#!/usr/bin/env -S wordgrinder --lua
+
 -- © 2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,7 +8,7 @@
 --
 -- To use:
 --
---     wordgrinder --lua exportall.lua "mynovel.wg output.html"
+--     wordgrinder --lua exportall.lua mynovel.wg output.html
 --
 -- (Note the quoting.)
 --
@@ -15,9 +17,7 @@
 
 -- Main program
 
-local function main(args)
-    local inputfile, template = unpack(SplitString(args, " "))
-
+local function main(inputfile, template)
 	if not template then
 		print("Syntax: wordgrinder --lua exportall.lua '<inputfile.wg> <outputfiletemplate>'")
 		os.exit(1)
