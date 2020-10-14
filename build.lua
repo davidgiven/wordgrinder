@@ -111,6 +111,10 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     }
     local objs = {}
 
+    if (buildstyle == "release") or (buildstyle == "static") then
+        ldflags[#ldflags+1] = "-s"
+    end
+
     if frontend == "x11" then
         cflags[#cflags+1] = "$X11_CFLAGS"
         ldflags[#ldflags+1] = "$X11_LDFLAGS"
@@ -122,7 +126,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-lcomdlg32"
     end
 
-    if (buildstyle == "static") or (frontend == "windows") then
+    if (buildstyle == "static") or (frontend == "windows") or (frontend == "cwindows") then
         cflags[#cflags+1] = "-DEMULATED_WCWIDTH"
     end
 
@@ -165,6 +169,15 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
         ldflags[#ldflags+1] = "-mwindows"
+    elseif frontend == "cwindows" then
+        cc = WINCC
+        cflags[#cflags+1] = "-DARCH='\"windows\"'"
+        cflags[#cflags+1] = "-DWIN32"
+        cflags[#cflags+1] = "-DWINVER=0x0501"
+        cflags[#cflags+1] = "-Dmain=appMain"
+        cflags[#cflags+1] = "-mconsole"
+        ldflags[#ldflags+1] = "-static"
+        ldflags[#ldflags+1] = "-mconsole"
     else
         cc = CC
         cflags[#cflags+1] = "-DARCH='\"unix\"'"
@@ -198,7 +211,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     -- Additional optional libraries
 
-    if (buildstyle == "static") or (frontend == "windows") then
+    if (buildstyle == "static") or (frontend == "windows") or (frontend == "cwindows") then
         srcfile("src/c/emu/wcwidth.c")
     end
 
@@ -253,6 +266,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/arch/win32/gdi/glyphcache.c")
         srcfile("src/c/arch/win32/gdi/realmain.c")
         objs[#objs+1] = OBJDIR.."/wordgrinder.rc.o"
+    elseif frontend == "cwindows" then
+        srcfile("src/c/arch/win32/console/dpy.c")
+        srcfile("src/c/arch/win32/console/realmain.c")
     end
 
     -- Minizip
@@ -569,13 +585,14 @@ end
 if want_frontend("windows") then
     for _, buildstyle in ipairs({"release", "debug"}) do
         build_wordgrinder_binary("bin/wordgrinder.exe", "builtin", "windows", buildstyle)
+        build_wordgrinder_binary("bin/wordgrinder.exe", "builtin", "cwindows", buildstyle)
     end
 
     emit("build ", OBJDIR, "/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml")
 
     local installer = "bin/WordGrinder-"..VERSION.."-setup.exe"
     allbinaries[#allbinaries+1] = installer
-    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe")
+    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe bin/wordgrinder-builtin-cwindows-release.exe")
 end
 
 emit("build clean: phony")

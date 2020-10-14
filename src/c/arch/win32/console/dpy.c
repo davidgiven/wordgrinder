@@ -23,7 +23,7 @@ static CHAR_INFO defaultChar;
 static int screenwidth;
 static int screenheight;
 
-static uni_t queued[3];
+static uni_t queued[4];
 static int numqueued = 0;
 
 static uni_t dequeue(void)
@@ -85,13 +85,16 @@ void dpy_start(void)
 	defaultChar.Char.UnicodeChar = ' ';
 	defaultChar.Attributes = 0x07;
 
-	SetConsoleTitleA("WordGrinder");
+	SetConsoleTitleA("CWordGrinder");
 
 	update_buffer_info();
 }
 
 void dpy_shutdown(void)
 {
+	dpy_clearscreen();
+	dpy_setcursor(0, 0, true);
+	dpy_sync();
 	free(buffer);
 }
 
@@ -116,7 +119,7 @@ void dpy_sync(void)
 			buffercoord, &destregion );
 }
 
-void dpy_setcursor(int x, int y)
+void dpy_setcursor(int x, int y, bool shown)
 {
 	COORD coord = {
 		x + csbi.srWindow.Left,
@@ -244,7 +247,7 @@ static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
 	return false;
 }
 
-uni_t dpy_getchar(int timeout)
+uni_t dpy_getchar(double timeout)
 {
 	for (;;)
 	{

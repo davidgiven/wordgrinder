@@ -92,6 +92,7 @@ Section "WordGrinder (required)"
 	SectionIn RO
 	SetOutPath $INSTDIR
 	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-windows-release.exe"
+	File /oname=cwordgrinder.exe "bin\wordgrinder-builtin-cwindows-release.exe"
 	File "README.wg"
 	File "licenses\COPYING.*"
 
