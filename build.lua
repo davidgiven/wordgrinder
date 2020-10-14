@@ -284,10 +284,12 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     emit("  cc = ", cc)
 end
 
-function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
+function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
     name = package_name(luapackage).."-"..frontend.."-"..buildstyle
     exe = addname(exe, name)
-    allbinaries[#allbinaries+1] = "test-"..name
+    if not noauto then
+        allbinaries[#allbinaries+1] = "test-"..name
+    end
 
     local alltests = {}
     for _, test in ipairs({
@@ -595,7 +597,7 @@ if want_frontend("windows") then
     emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe bin/wordgrinder-builtin-cwindows-release.exe")
 
     emit("build wintests: phony test-builtin-cwindows-debug")
-    run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug")
+    run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug", true)
 end
 
 emit("build clean: phony")
