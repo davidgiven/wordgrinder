@@ -578,7 +578,6 @@ function LoadFromStream(filename)
 		loader = loadfromstreamt
 	else
 		fp:close()
-		print("<"..magic..">")
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 
