@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3810
+.documents.1.wordcount: 3938
 .documents.2.co: 3
 .documents.2.cp: 1
 .documents.2.cw: 2
@@ -59,6 +59,33 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .fileformat: 8
 .findtext: "wordgrinder.lua"
 .idletime: 3
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
+.menu.accelerators.^C: "EC"
+.menu.accelerators.^DOWN: "ZNP"
+.menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
 .menu.accelerators.DOWN: "ZD"
@@ -71,8 +98,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.ET: "^X"
 .menu.accelerators.Eredo: "^Y"
+.menu.accelerators.ET: "^X"
 .menu.accelerators.Eundo: "^Z"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
@@ -81,6 +108,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.PGDN: "ZPGDN"
 .menu.accelerators.PGUP: "ZPGUP"
 .menu.accelerators.RIGHT: "ZR"
+.menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.SB: "^B"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
@@ -94,12 +127,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
 .menu.accelerators.SUP: "ZSU"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
-.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.UP: "ZU"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
@@ -134,34 +161,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
-.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.name: "D:\\cygwin64\\home\\dg\\wordgrinder\\bin/../README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -285,13 +285,17 @@ H3 Apple OS X
 P The Unix build of WordGrinder will run happily on OS X, in a Terminal window, behaving exactly like any other Unix system.
 P For best use it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
 P Fullscreen mode works very well.
-H3 Windows
-P WordGrinder will also run as a Window application. Some menu options have been added to the titlebar menu (single click on the icon on the top-left corner of the screen) to allow you to change the font, colours and toggle full-screen mode on and off; this last may also be done with ALT+ENTER (note that this is not rebindable).
+H3 Windows GUI
+P WordGrinder will also run as a Window application. Some menu options have been added to the titlebar menu (single click on the icon on the top-left corner of the screen) to allow you to change the font, colours and toggle full-screen mode on and off; this last may also be done with ALT+ENTER (note that this is not rebindable). However, you can’t use the GUI version for command-line work, such as converting documents or running user scripts; see the console version below for that.
 P Underline, bold and italics are displayed as underline, bold and italics.
 P The Windows version provides good keyboard support and most key combinations are supported.
 P WordGrinder will do its best to display Unicode characters. If the font you choose does not contain a particular glyph, WordGrinder will attempt to find a glyph from the closest matching font. Unfortunately this works quite badly with bitmap fonts, resulting in ugly results, but it does work.
 P I strongly suggest installing a decent TrueType Unicode monospaced font. Consolas is good and is supplied by default on most Windows systems, but I like DejaVu Sans Mono:
 P http://dejavu.sourceforge.net/wiki/index.php/Download
+H3 Windows console
+P There is also a port to Windows which will run in a console window. This is useful if you want to do any work from the command line or via a remote login, which I’ll admit is unlikely for Windows. While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
+P Italics, bold and underline are displayed as various colours.
+P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
