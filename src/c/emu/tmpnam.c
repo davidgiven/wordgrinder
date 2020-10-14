@@ -18,18 +18,18 @@
 int emu_tmpnam(char* buffer)
 {
 	#if defined WIN32
-		int len = GetTempPathA(L_tmpnam, buffer);
-		if (!len)
+		int len = GetTempPathA(PATH_MAX, buffer);
+		if (!len || (len > PATH_MAX))
 			return 1;
-		strcat(buffer, "/wg_XXXXXX");
 	#else
 		const char* tmpdir = getenv("TMPDIR");
 		if (!tmpdir)
 			tmpdir = "/tmp";
 		strcpy(buffer, tmpdir);
+		strcat(buffer, "/");
 	#endif
 
-	strcat(buffer, "/wg_XXXXXX");
+	strcat(buffer, "wg_XXXXXX");
 	int fd = mkstemp(buffer);
 	if (fd != -1)
 		close(fd);
