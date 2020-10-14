@@ -111,6 +111,10 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     }
     local objs = {}
 
+    if (buildstyle == "release") or (buildstyle == "static") then
+        ldflags[#ldflags+1] = "-s"
+    end
+
     if frontend == "x11" then
         cflags[#cflags+1] = "$X11_CFLAGS"
         ldflags[#ldflags+1] = "$X11_LDFLAGS"
@@ -122,7 +126,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-lcomdlg32"
     end
 
-    if (buildstyle == "static") or (frontend == "windows") then
+    if (buildstyle == "static") or (frontend == "windows") or (frontend == "cwindows") then
         cflags[#cflags+1] = "-DEMULATED_WCWIDTH"
     end
 
@@ -134,7 +138,8 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     if luapackage == "builtin" then
         cflags[#cflags+1] = "-Isrc/c/emu/lua-5.1.5"
-        cflags[#cflags+1] = "-DLUA_USE_MKSTEMP -DWINSHIM"
+        cflags[#cflags+1] = "-DWINSHIM"
+        cflags[#cflags+1] = "-DLUA_USE_EMU_TMPNAM"
     else
         cflags[#cflags+1] = package_flags(luapackage, "--cflags")
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
@@ -165,6 +170,15 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
         ldflags[#ldflags+1] = "-mwindows"
+    elseif frontend == "cwindows" then
+        cc = WINCC
+        cflags[#cflags+1] = "-DARCH='\"windows\"'"
+        cflags[#cflags+1] = "-DWIN32"
+        cflags[#cflags+1] = "-DWINVER=0x0501"
+        cflags[#cflags+1] = "-Dmain=appMain"
+        cflags[#cflags+1] = "-mconsole"
+        ldflags[#ldflags+1] = "-static"
+        ldflags[#ldflags+1] = "-mconsole"
     else
         cc = CC
         cflags[#cflags+1] = "-DARCH='\"unix\"'"
@@ -198,7 +212,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     -- Additional optional libraries
 
-    if (buildstyle == "static") or (frontend == "windows") then
+    if (buildstyle == "static") or (frontend == "windows") or (frontend == "cwindows") then
         srcfile("src/c/emu/wcwidth.c")
     end
 
@@ -239,6 +253,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/emu/lua-5.1.5/lvm.c")
         srcfile("src/c/emu/lua-5.1.5/lzio.c")
         srcfile("src/c/emu/lua-5.1.5/winshim.c")
+        srcfile("src/c/emu/tmpnam.c")
     end
 
     -- Frontends
@@ -253,6 +268,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/arch/win32/gdi/glyphcache.c")
         srcfile("src/c/arch/win32/gdi/realmain.c")
         objs[#objs+1] = OBJDIR.."/wordgrinder.rc.o"
+    elseif frontend == "cwindows" then
+        srcfile("src/c/arch/win32/console/dpy.c")
+        srcfile("src/c/arch/win32/console/realmain.c")
     end
 
     -- Minizip
@@ -268,14 +286,17 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     emit("  cc = ", cc)
 end
 
-function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
+function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
     name = package_name(luapackage).."-"..frontend.."-"..buildstyle
     exe = addname(exe, name)
-    allbinaries[#allbinaries+1] = "test-"..name
+    if not noauto then
+        allbinaries[#allbinaries+1] = "test-"..name
+    end
 
     local alltests = {}
     for _, test in ipairs({
         "tests/apply-markup.lua",
+        "tests/argument-parser.lua",
         "tests/change-paragraph-style.lua",
         "tests/clipboard.lua",
         "tests/delete-selection.lua",
@@ -317,6 +338,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle)
         "tests/spellchecker.lua",
         "tests/type-while-selected.lua",
         "tests/undo.lua",
+        "tests/utf8.lua",
         "tests/utils.lua",
         "tests/weirdness-cannot-save-settings.lua",
         "tests/weirdness-combining-words.lua",
@@ -567,13 +589,17 @@ end
 if want_frontend("windows") then
     for _, buildstyle in ipairs({"release", "debug"}) do
         build_wordgrinder_binary("bin/wordgrinder.exe", "builtin", "windows", buildstyle)
+        build_wordgrinder_binary("bin/wordgrinder.exe", "builtin", "cwindows", buildstyle)
     end
 
     emit("build ", OBJDIR, "/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml")
 
     local installer = "bin/WordGrinder-"..VERSION.."-setup.exe"
     allbinaries[#allbinaries+1] = installer
-    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe")
+    emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe bin/wordgrinder-builtin-cwindows-release.exe")
+
+    emit("build wintests: phony test-builtin-cwindows-debug")
+    run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug", true)
 end
 
 emit("build clean: phony")

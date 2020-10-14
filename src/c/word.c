@@ -24,6 +24,11 @@ enum
 
 #define OVERHEAD (3*2 + 1)
 
+static bool iscontrolbyte(int c)
+{
+	return (c >= 0) && (c <= 31);
+}
+
 /* Parse a styled word. */
 
 static int parseword_cb(lua_State* L)
@@ -150,12 +155,12 @@ static int getwordtext_cb(lua_State* L)
 
 	for (;;)
 	{
-		int c = *src++;
+		uni_t c = readu8(&src);
 		if (c == '\0')
 			break;
 
-		if (!iscntrl(c))
-			*p++ = c;
+		if (!iswcntrl(c))
+			writeu8(&p, c);
 	}
 
 	lua_pushlstring(L, dest, p - dest);
@@ -181,7 +186,7 @@ static int nextcharinword_cb(lua_State* L)
 
 	/* Skip any control codes. */
 
-	while (*p && iscntrl(*p))
+	while (*p && iscontrolbyte(*p))
 		p++;
 
 	if (*p == '\0')
@@ -216,7 +221,7 @@ static int prevcharinword_cb(lua_State* L)
 
 		p--;
 	}
-	while (iscntrl(*p));
+	while (iscontrolbyte(*p));
 
 	/* We now know that there is a character, and it's definitively not a
 	 * control code. Skip any UTF-8 trailing bytes. */
@@ -228,7 +233,7 @@ static int prevcharinword_cb(lua_State* L)
 
 	while (p != src)
 	{
-		if (iscntrl(*(p-1)))
+		if (iscontrolbyte(*(p-1)))
 			p--;
 		else
 			break;

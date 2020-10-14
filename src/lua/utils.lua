@@ -8,9 +8,10 @@ local WriteU8 = wg.writeu8
 local string_byte = string.byte
 local string_format = string.format
 local string_find = string.find
+local table_concat = table.concat
+local table_remove = table.remove
 local HUGE = math.huge
 local math_floor = math.floor
-local table_concat = table.concat
 local Mkdir = wg.mkdir
 local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
@@ -349,6 +350,61 @@ function Mkdirs(dir)
 		end
 	end
 	return true
+end
+
+-- Argument parser.
+
+FILENAME_ARG = {}
+UNKNOWN_ARG = {}
+function ParseArguments(argv, callbacks)
+	local function popn(n)
+		if (n == nil) then
+			return
+		end
+		if (n < 0) then
+			CLIError("malformed argument")
+		end
+		while (n ~= 0) do
+			table_remove(argv, 1)
+			n = n - 1
+		end
+	end
+
+	while next(argv) do
+		local o = argv[1]
+		table_remove(argv, 1)
+
+		if (o:byte(1) == 45) then
+			-- This is an option.
+			if (o:byte(2) == 45) then
+				-- ...with a -- prefix.
+				o = o:sub(3)
+				local fn = callbacks[o]
+				if not fn then
+					callbacks[UNKNOWN_ARG](o)
+					return
+				end
+				popn(fn(unpack(argv)))
+			else
+				-- ...without a -- prefix.
+				local od = o:sub(2, 2)
+				local fn = callbacks[od]
+				if not fn then
+					callbacks[UNKNOWN_ARG](od)
+					return
+				end
+				local op = o:sub(3)
+				if (op == "") then
+					popn(fn(unpack(argv)))
+				else
+					popn(fn(op, unpack(argv)) - 1)
+				end
+			end
+		else
+			local fn = callbacks[FILENAME_ARG]
+			popn(fn(o, unpack(argv)) - 1)
+		end
+	end
 end
 
 -- Returns the largest common prefix of the array.

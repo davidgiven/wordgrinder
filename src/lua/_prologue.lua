@@ -1,6 +1,10 @@
--- © 2008 David Given.
+-- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
+
+-- Lua 5.3 moved unpack into table.unpack.
+
+unpack = unpack or table.unpack
 
 -- Urrgh, luajit's path defaults to all the wrong places. This is painfully
 -- evil but does at least work.

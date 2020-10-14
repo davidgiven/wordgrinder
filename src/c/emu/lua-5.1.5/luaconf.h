@@ -652,6 +652,10 @@ union luai_Cast { double l_d; long l_l; };
 	if (e != -1) close(e); \
 	e = (e == -1); }
 
+#elif defined(LUA_USE_EMU_TMPNAM)
+#define LUA_TMPNAMBUFSIZE	PATH_MAX
+#define lua_tmpnam(b,e)     { e = emu_tmpnam(b); }
+extern int emu_tmpnam(char* buffer);
 #else
 #define LUA_TMPNAMBUFSIZE	L_tmpnam
 #define lua_tmpnam(b,e)		{ e = (tmpnam(b) == NULL); }

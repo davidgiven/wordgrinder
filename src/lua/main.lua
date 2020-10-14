@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local int = math.floor
+local table_remove = table.remove
 local Write = wg.write
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
@@ -242,13 +243,15 @@ function Main(...)
 
 	ResetDocumentSet()
 
+	local arg = {...}
+	table_remove(arg, 1) -- contains the executable name
 	local filename = nil
 	do
 		local stdout = io.stdout
 		local stderr = io.stderr
 
-		local function do_help(opt)
-			stdout:write("WordGrinder version ", VERSION, " © 2007-2008 David Given\n")
+		local function do_help()
+			stdout:write("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
 			if DEBUG then
 				stdout:write("(This version has been compiled with debugging enabled.)\n")
 			end
@@ -259,6 +262,7 @@ Options:
    -h    --help                Displays this message.
          --lua file.lua        Loads and executes file.lua and then exits
 		                       (or file.lua can be some Lua statements)
+							   (remaining arguments are passed to the script)
    -c    --convert src dest    Converts from one file format to another
          --config file.lua     Sets the name of the user config file
 
@@ -284,20 +288,20 @@ the program starts up (but after any --lua files). It defaults to:
 			os.exit(0)
 		end
 
-		local function do_lua(opt1, opt2)
-			if not opt1 then
+		local function do_lua(opt, ...)
+			if not opt then
 				CLIError("--lua must have an argument")
 			end
 
-			local f, e = loadfile(opt1)
+			local f, e = loadfile(opt)
 			if e and e:find("No such file or directory") then
-				f, e = loadstring(opt1)
+				f, e = loadstring(opt)
 			end
 			if e then
 				CLIError("user script compilation error: "..e)
 			end
 
-			f(opt2)
+			f(...)
 			os.exit(0)
 		end
 
@@ -307,84 +311,44 @@ the program starts up (but after any --lua files). It defaults to:
 			end
 
 			CliConvert(opt1, opt2)
+			return 2
 		end
 
-		local function do_config(opt1, opt2)
-			if not opt1 then
+		local function do_config(opt)
+			if not opt then
 				CLIError("--config must have an argument")
 			end
 
-			configfile = opt1
+			configfile = opt
 			return 1
 		end
 
-		local function needarg(opt)
-			if not opt then
-				CLIError("missing option parameter")
+		local function do_filename(fn)
+			if filename then
+				CLIError("you may only specify one filename")
 			end
+			filename = fn
+			return 1
 		end
-
-		local argmap = {
-			["h"]           = do_help,
-			["help"]        = do_help,
-			["lua"]         = do_lua,
-			["c"]           = do_convert,
-			["convert"]     = do_convert,
-			["config"]      = do_config,
-		}
-
-		if DEBUG then
-			-- argmap["p"] = do_profile
-			-- argmap["profile"] = do_profile
-		end
-
-		-- Called on an unrecognised option.
 
 		local function unrecognisedarg(arg)
 			CLIError("unrecognised option '", arg, "' --- try --help for help")
 		end
 
+		local argmap = {
+			["h"]          = do_help,
+			["help"]       = do_help,
+			["lua"]        = do_lua,
+			["c"]          = do_convert,
+			["convert"]    = do_convert,
+			["config"]     = do_config,
+			[FILENAME_ARG] = do_filename,
+			[UNKNOWN_ARG]  = unrecognisedarg,
+		}
+
 		-- Do the actual argument parsing.
 
-		local arg = {...}
-		local i = 2
-		while (i <= #arg) do
-			local o = arg[i]
-			local op
-
-			if (o:byte(1) == 45) then
-				-- This is an option.
-				if (o:byte(2) == 45) then
-					-- ...with a -- prefix.
-					o = o:sub(3)
-					local fn = argmap[o]
-					if not fn then
-						unrecognisedarg("--"..o)
-					end
-					i = i + fn(arg[i+1], arg[i+2])
-				else
-					-- ...without a -- prefix.
-					local od = o:sub(2, 2)
-					local fn = argmap[od]
-					if not fn then
-						unrecognisedarg("-"..od)
-					end
-					op = o:sub(3)
-					if (op == "") then
-						i = i + fn(arg[i+1], arg[i+2])
-					else
-						fn(op)
-					end
-				end
-			else
-				if filename then
-					CLIError("you may only specify one filename")
-				end
-				filename = o
-			end
-
-			i = i + 1
-		end
+		ParseArguments(arg, argmap)
 	end
 
 	if filename and

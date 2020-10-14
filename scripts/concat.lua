@@ -1,3 +1,5 @@
+#!/usr/bin/env -S wordgrinder --lua
+
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,7 +8,7 @@
 --
 -- To use:
 --
---     wordgrinder --lua concat.lua "mynovel.wg output.wg"
+--     wordgrinder --lua concat.lua mynovel.wg output.wg
 --
 -- (Note the quoting.)
 --
@@ -16,11 +18,9 @@
 
 -- Main program
 
-local function main(args)
-    local inputfile, outputfile = unpack(SplitString(args, " "))
-
+local function main(inputfile, outputfile)
 	if not outputfile then
-		print("Syntax: wordgrinder --lua concat.lua '<inputfile.wg> <outputfile.wg>'")
+		print("Syntax: wordgrinder --lua concat.lua <inputfile.wg> <outputfile.wg>")
 		os.exit(1)
 	end
 
@@ -50,6 +50,7 @@ local function main(args)
 	end
 end
 
+print(...)
 main(...)
 os.exit(0)
 
