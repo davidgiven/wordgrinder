@@ -49,7 +49,7 @@ end
 function ResetDocumentSet()
 	UpdateDocumentStyles()
 	DocumentSet = CreateDocumentSet()
-	DocumentSet.menu = CreateMenu()
+	DocumentSet.menu = CreateMenuBindings()
 	Document = CreateDocument()
 	DocumentSet:addDocument(CreateDocument(), "main")
 	RebuildParagraphStylesMenu(DocumentStyles)
