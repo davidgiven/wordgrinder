@@ -133,10 +133,16 @@ install-notests: $(OBJDIR)/build.ninja
 dev: $(OBJDIR)/build.ninja
 	$(NINJABUILD) dev
 
-# Builds Windows (but doesn't test it because that's hard).
+# Builds Windows, possibly via cross-compilation (but doesn't test it because
+# we can only do that on actual Windows).
 .PHONY: windows
 windows: $(OBJDIR)/build.ninja
-	$(NINJABUILD) bin/WordGrinder-$(VERSION)-setup.exe
+	$(NINJABUILD) bin/WordGrinder-$(VERSION)-setup.exe 
+
+# Run the Windows tests
+.PHONY: wintests
+wintests: $(OBJDIR)/build.ninja
+	$(NINJABUILD) wintests
 
 $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 	@mkdir -p $(dir $@)
@@ -174,6 +180,6 @@ ifeq ($(LUA_INTERPRETER),$(OBJDIR)/lua)
 $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]
 	@echo Bootstrapping build
 	@mkdir -p $(dir $@)
-	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c -lm -DLUA_USE_MKSTEMP
+	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c -lm
 endif
 

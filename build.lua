@@ -138,7 +138,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
 
     if luapackage == "builtin" then
         cflags[#cflags+1] = "-Isrc/c/emu/lua-5.1.5"
-        cflags[#cflags+1] = "-DLUA_USE_MKSTEMP -DWINSHIM"
+        cflags[#cflags+1] = "-DWINSHIM"
     else
         cflags[#cflags+1] = package_flags(luapackage, "--cflags")
         ldflags[#ldflags+1] = package_flags(luapackage, "--libs")
@@ -593,6 +593,9 @@ if want_frontend("windows") then
     local installer = "bin/WordGrinder-"..VERSION.."-setup.exe"
     allbinaries[#allbinaries+1] = installer
     emit("build ", installer, ": makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-windows-release.exe bin/wordgrinder-builtin-cwindows-release.exe")
+
+    emit("build wintests: phony test-builtin-cwindows-debug")
+    run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug")
 end
 
 emit("build clean: phony")
