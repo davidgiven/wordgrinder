@@ -47,7 +47,7 @@ function WantFullStopSpaces()
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default global settings.
 
 do
 	local function cb()

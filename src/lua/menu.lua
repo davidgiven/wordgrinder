@@ -17,7 +17,7 @@ local menu_tab = {}
 local key_tab = {}
 local menu_stack = {}
 
-local function addmenu(n, m, menu)
+function CreateMenu(n, m, menu)
 	local w = n:len()
 	menu = menu or {}
 	menu.label = n
@@ -47,13 +47,15 @@ local function addmenu(n, m, menu)
 				menu.mks[item.mk] = item
 			end
 
-			if menu_tab[item.id] then
-				error("Dupicate menu ID "..item.id)
-			end
-			menu_tab[item.id] = item
+			if item.id then
+				if menu_tab[item.id] then
+					error("Dupicate menu ID "..item.id)
+				end
+				menu_tab[item.id] = item
 
-			if item.ak then
-				key_tab[item.ak] = item.id
+				if item.ak then
+					key_tab[item.ak] = item.id
+				end
 			end
 
 			if (item.label:len() > w) then
@@ -75,19 +77,19 @@ local function submenu(menu)
 	end
 end
 
-local DocumentsMenu = addmenu("Documents", {})
-local ParagraphStylesMenu = addmenu("Paragraph Styles", {})
+local DocumentsMenu = CreateMenu("Documents", {})
+local ParagraphStylesMenu = CreateMenu("Paragraph Styles", {})
 
 local cp = Cmd.Checkpoint
 
-local ImportMenu = addmenu("Import new document",
+local ImportMenu = CreateMenu("Import new document",
 {
 	{"FIodt",  "O", "Import ODT file...",        nil,         Cmd.ImportODTFile},
 	{"FIhtml", "H", "Import HTML file...",       nil,         Cmd.ImportHTMLFile},
 	{"FItxt",  "T", "Import text file...",       nil,         Cmd.ImportTextFile},
 })
 
-local ExportMenu = addmenu("Export current document",
+local ExportMenu = CreateMenu("Export current document",
 {
 	{"FEodt",  "O", "Export to ODT...",          nil,         Cmd.ExportODTFile},
 	{"FEhtml", "H", "Export to HTML...",         nil,         Cmd.ExportHTMLFile},
@@ -98,7 +100,7 @@ local ExportMenu = addmenu("Export current document",
 --	{"FErtf",  "R", "Export to Rtf...",          nil,         Cmd.ExportRTFFile},
 })
 
-local DocumentSettingsMenu = addmenu("Document settings",
+local DocumentSettingsMenu = CreateMenu("Document settings",
 {
     {"FSautosave",     "A", "Autosave...",           nil,         Cmd.ConfigureAutosave},
     {"FSscrapbook",    "S", "Scrapbook...",          nil,         Cmd.ConfigureScrapbook},
@@ -108,7 +110,7 @@ local DocumentSettingsMenu = addmenu("Document settings",
 	{"FSSpellchecker", "K", "Spellchecker...",       nil,         Cmd.ConfigureSpellchecker},
 })
 
-local GlobalSettingsMenu = addmenu("Global settings",
+local GlobalSettingsMenu = CreateMenu("Global settings",
 {
 	{"FSlookandfeel", "L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
 	{"FSDictionary",  "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
@@ -117,12 +119,13 @@ local GlobalSettingsMenu = addmenu("Global settings",
 	{"FSDebug",       "X", "Debugging options...",    nil,         Cmd.ConfigureDebug},
 })
 
-local FileMenu = addmenu("File",
+local FileMenu = CreateMenu("File",
 {
 	{"FN",         "N", "New document set",          nil,         Cmd.CreateBlankDocumentSet},
 	{"FO",         "O", "Load document set...",      nil,         Cmd.LoadDocumentSet},
 	{"FS",         "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument},
 	{"FA",         "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs},
+	{"FR",         "R", "Load recent document ▷",    nil,         Cmd.LoadRecentDocument},
 	"-",
 	{"FCtemplate", "C", "Create from template...",   nil,         Cmd.CreateDocumentSetFromTemplate},
 	{"FMtemplate", "M", "Save as template...",       nil,         Cmd.SaveCurrentDocumentAsTemplate},
@@ -139,20 +142,20 @@ local FileMenu = addmenu("File",
 	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
 })
 
-local ScrapbookMenu = addmenu("Scrapbook",
+local ScrapbookMenu = CreateMenu("Scrapbook",
 {
 	{"EScut",      "T", "Cut to scrapbook",          nil,         { cp, Cmd.CutToScrapbook }},
 	{"EScopy",     "C", "Copy to scrapbook",         nil,         Cmd.CopyToScrapbook},
 	{"ESpaste",    "P", "Paste to scrapbook",        nil,         { cp, Cmd.PasteToScrapbook }},
 })
 
-local SpellcheckMenu = addmenu("Spellchecker",
+local SpellcheckMenu = CreateMenu("Spellchecker",
 {
 	{"ECfind",     "F", "Find next misspelt word",        "^L",   Cmd.FindNextMisspeltWord },
 	{"ECadd",      "A", "Add current word to dictionary", "^M",   { cp, Cmd.AddToUserDictionary }},
 })
 
-local EditMenu = addmenu("Edit",
+local EditMenu = CreateMenu("Edit",
 {
 	{"ET",         "T", "Cut",                       "^X",        { cp, Cmd.Cut }},
 	{"EC",         "C", "Copy",                      "^C",        Cmd.Copy},
@@ -173,7 +176,7 @@ local EditMenu = addmenu("Edit",
 	{"Espell",     "K", "Spellchecker ▷",            nil,         SpellcheckMenu},
 })
 
-local MarginMenu = addmenu("Margin",
+local MarginMenu = CreateMenu("Margin",
 {
 	{"SM1",    "H", "Hide margin",                nil,         function() Cmd.SetViewMode(1) end},
 	{"SM2",    "S", "Show paragraph styles",      nil,         function() Cmd.SetViewMode(2) end},
@@ -181,7 +184,7 @@ local MarginMenu = addmenu("Margin",
 	{"SM4",    "W", "Show paragraph word counts", nil,         function() Cmd.SetViewMode(4) end},
 })
 
-local StyleMenu = addmenu("Style",
+local StyleMenu = CreateMenu("Style",
 {
 	{"SI",     "I", "Set italic",                 "^I",        { cp, function() Cmd.SetStyle("i") end }},
 	{"SU",     "U", "Set underline",              "^U",        { cp, function() Cmd.SetStyle("u") end }},
@@ -193,7 +196,7 @@ local StyleMenu = addmenu("Style",
 	{"SS",     "S", "Toggle status bar",          nil,         Cmd.ToggleStatusBar},
 })
 
-local NavigationMenu = addmenu("Navigation",
+local NavigationMenu = CreateMenu("Navigation",
 {
 	{"ZU",     nil, "Cursor up",                    "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
 	{"ZR",     nil, "Cursor right",                 "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
@@ -230,7 +233,7 @@ local NavigationMenu = addmenu("Navigation",
 	{"ZM",     nil, "Toggle mark",                  "^@",        Cmd.ToggleMark},
 })
 
-local MainMenu = addmenu("Main Menu",
+local MainMenu = CreateMenu("Main Menu",
 {
 	{"F",  "F", "File ▷",           nil,  FileMenu},
 	{"E",  "E", "Edit ▷",           nil,  EditMenu},
@@ -356,8 +359,12 @@ MenuClass = {
 		local n = 1
 		local top = 1
 
+		local function stackmenu(newmenu)
+			return nil
+		end
+
 		while true do
-			local id
+			local item
 
 			while true do
 				local visiblelen = min(#menu, ScreenHeight-y-3)
@@ -385,7 +392,7 @@ MenuClass = {
 					n = int(max(n - visiblelen/2, 1))
 				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
 					if (type(menu[n]) ~= "string") then
-						id = menu[n].id
+						item = menu[n]
 						break
 					end
 				elseif (c == "KEY_LEFT") then
@@ -396,7 +403,7 @@ MenuClass = {
 					return false
 				elseif (c == "KEY_^X") then
 					local item = menu[n]
-					if (type(item) ~= "string") then
+					if (type(item) ~= "string") and item.id then
 						local ak = self.accelerators[item.id]
 						if ak then
 							self.accelerators[ak] = nil
@@ -406,7 +413,7 @@ MenuClass = {
 					end
 				elseif (c == "KEY_^V") then
 					local item = menu[n]
-					if (type(item) ~= "string") then
+					if (type(item) ~= "string") and item.id then
 						DrawStatusLine("Press new accelerator key for menu item.")
 
 						local oak = self.accelerators[item.id]
@@ -432,7 +439,7 @@ MenuClass = {
 					if PromptForYesNo("Reset menu keybindings?",
 						"Are you sure you want to reset all the menu "..
 						"keybindings back to their defaults?") then
-						DocumentSet.menu = CreateMenu()
+						DocumentSet.menu = CreateMenuBindings()
 						DocumentSet:touch()
 						NonmodalMessage("All keybindings have been reset to their default settings.")
 						menu_stack = {}
@@ -440,13 +447,28 @@ MenuClass = {
 					end
 					self:drawmenustack()
 				elseif menu.mks[c] then
-					id = menu.mks[c].id
+					item = menu.mks[c]
 					break
 				end
 			end
 
-			local item = menu_tab[id]
 			local f = item.fn
+
+			if not IsMenu(f) then
+				if not f then
+					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
+				else
+					local msg
+					f, msg = RunMenuAction(f)
+					if not IsMenu(f) then
+						if msg then
+							NonmodalMessage(msg)
+						end
+						menu_stack = {}
+						return true
+					end
+				end
+			end
 
 			if IsMenu(f) then
 				menu_stack[#menu_stack+1] = {
@@ -465,17 +487,6 @@ MenuClass = {
 				end
 
 				self:drawmenustack()
-			else
-				if not f then
-					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
-				else
-					local _, msg = RunMenuAction(f)
-					if msg then
-						NonmodalMessage(msg)
-					end
-				end
-				menu_stack = {}
-				return true
 			end
 		end
 	end,
@@ -511,7 +522,7 @@ MenuClass = {
 	end,
 }
 
-function CreateMenu()
+function CreateMenuBindings()
 	local my_key_tab = {}
 	for ak, id in pairs(key_tab) do
 		my_key_tab[ak] = id
@@ -544,7 +555,7 @@ function RebuildParagraphStylesMenu(styles)
 			end}
 	end
 
-	addmenu("Paragraph Styles", m, ParagraphStylesMenu)
+	CreateMenu("Paragraph Styles", m, ParagraphStylesMenu)
 end
 
 function RebuildDocumentsMenu(documents)
@@ -579,7 +590,7 @@ function RebuildDocumentsMenu(documents)
 
 	-- Hook it.
 
-	addmenu("Documents", m, DocumentsMenu)
+	CreateMenu("Documents", m, DocumentsMenu)
 end
 
 function ListMenuItems()

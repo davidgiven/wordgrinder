@@ -471,7 +471,7 @@ end
 
 function loadfromstreamt(fp)
 	local data = CreateDocumentSet()
-	data.menu = CreateMenu()
+	data.menu = CreateMenuBindings()
 	data.documents = {}
 
 	while true do
@@ -641,7 +641,7 @@ function Cmd.LoadDocumentSet(filename)
 		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
 
 		DocumentSet.fileformat = FILEFORMAT
-		DocumentSet.menu = CreateMenu()
+		DocumentSet.menu = CreateMenuBindings()
 	end
 	FireEvent(Event.RegisterAddons)
 	DocumentSet:touch()

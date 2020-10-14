@@ -336,6 +336,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
         "tests/smartquotes-selection.lua",
         "tests/smartquotes-typing.lua",
         "tests/spellchecker.lua",
+        "tests/tableio.lua",
         "tests/type-while-selected.lua",
         "tests/undo.lua",
         "tests/utf8.lua",
@@ -513,6 +514,7 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/addons/spillchocker.lua",
     "src/lua/addons/templates.lua",
     "src/lua/addons/directories.lua",
+    "src/lua/addons/recents.lua",
     "src/lua/menu.lua",
     "src/lua/cli.lua",
 }, " "))
