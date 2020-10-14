@@ -180,6 +180,6 @@ ifeq ($(LUA_INTERPRETER),$(OBJDIR)/lua)
 $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]
 	@echo Bootstrapping build
 	@mkdir -p $(dir $@)
-	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c -lm
+	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c src/c/emu/tmpnam.c -lm -DLUA_USE_EMU_TMPNAM
 endif
 
