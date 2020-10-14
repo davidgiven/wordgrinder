@@ -140,7 +140,7 @@ void dpy_setattr(int andmask, int ormask)
 		fg = FOREGROUND_RED | FOREGROUND_GREEN;
 	if (attr & DPY_DIM)
 		fg = FOREGROUND_BLUE;
-	if (attr & DPY_BOLD)
+	if (attr & (DPY_BOLD|DPY_ITALIC))
 		fg |= FOREGROUND_INTENSITY;
 	if (attr & DPY_REVERSE)
 	{
