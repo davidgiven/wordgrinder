@@ -5,6 +5,12 @@ for _, arg in ipairs({...}) do
     end
 end
 
+-- Sanity check
+
+if (not WANT_STRIPPED_BINARIES) or (WANT_STRIPPED_BINARIES == "") then
+    WANT_STRIPPED_BINARIES = "yes"
+end
+
 local allbinaries = {}
 local outfp = io.open(BUILDFILE, "w")
 local function emit(...)
@@ -111,7 +117,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     }
     local objs = {}
 
-    if (buildstyle == "release") or (buildstyle == "static") then
+    if ((buildstyle == "release") or (buildstyle == "static")) and (not WANT_STRIPPED_BINARIES) then
         ldflags[#ldflags+1] = "-s"
     end
 
@@ -375,12 +381,6 @@ function install_file(mode, src, dest)
     emit("build ", dest, ": install ", src)
     emit("  mode = ", mode)
     installables[#installables+1] = dest
-end
-
--- Sanity check
-
-if (not WANT_STRIPPED_BINARIES) or (WANT_STRIPPED_BINARIES == "") then
-    WANT_STRIPPED_BINARIES = "yes"
 end
 
 -- Detect what tools we have available.
