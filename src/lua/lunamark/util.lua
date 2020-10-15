@@ -79,14 +79,14 @@ local M = lunamark.util
 --  io.stderr:write("lunamark: " .. msg .. "\n")
 --  os.exit(exit_code or 1)
 --end
---
------ Shallow table copy including metatables.
---function M.table_copy(t)
---  local u = { }
---  for k, v in pairs(t) do u[k] = v end
---  return setmetatable(u, getmetatable(t))
---end
---
+
+--- Shallow table copy including metatables.
+function M.table_copy(t)
+  local u = { }
+  for k, v in pairs(t) do u[k] = v end
+  return setmetatable(u, getmetatable(t))
+end
+
 ----- Expand tabs in a line of text.
 ---- `s` is assumed to be a single line of text.
 ---- From *Programming Lua*.
@@ -99,36 +99,36 @@ local M = lunamark.util
 --          return rep(" ",sp)
 --        end))
 --end
---
------ Walk a rope `t`, applying a function `f` to each leaf element in order.
----- A rope is an array whose elements may be ropes, strings, numbers,
----- or functions. If a leaf element is a function, call it and get the return value
----- before proceeding.
---local function walk(t, f)
---    local typ = type(t)
---    if typ == "string" then
---      f(t)
---    elseif typ == "table" then
---      local i = 1
---      local n
---      n = t[i]
---      while n do
---        walk(n, f)
---        i = i + 1
---        n = t[i]
---      end
---    elseif typ == "function" then
---      local ok, val = pcall(t)
---      if ok then
---        walk(val,f)
---      end
---    else
---      f(tostring(t))
---    end
---end
---
---M.walk = walk
---
+
+--- Walk a rope `t`, applying a function `f` to each leaf element in order.
+-- A rope is an array whose elements may be ropes, strings, numbers,
+-- or functions. If a leaf element is a function, call it and get the return value
+-- before proceeding.
+local function walk(t, f)
+    local typ = type(t)
+    if typ == "string" then
+      f(t)
+    elseif typ == "table" then
+      local i = 1
+      local n
+      n = t[i]
+      while n do
+        walk(n, f)
+        i = i + 1
+        n = t[i]
+      end
+    elseif typ == "function" then
+      local ok, val = pcall(t)
+      if ok then
+        walk(val,f)
+      end
+    else
+      f(tostring(t))
+    end
+end
+
+M.walk = walk
+
 ----- Flatten an array `ary`.
 --local function flatten(ary)
 --  local new = {}
@@ -145,16 +145,16 @@ local M = lunamark.util
 --end
 --
 --M.flatten = flatten
---
------ Convert a rope to a string.
---local function rope_to_string(rope)
---  local buffer = {}
---  walk(rope, function(x) buffer[#buffer + 1] = x end)
---  return table.concat(buffer)
---end
---
---M.rope_to_string = rope_to_string
---
+
+--- Convert a rope to a string.
+local function rope_to_string(rope)
+  local buffer = {}
+  walk(rope, function(x) buffer[#buffer + 1] = x end)
+  return table.concat(buffer)
+end
+
+M.rope_to_string = rope_to_string
+
 ---- assert(rope_to_string{"one","two"} == "onetwo")
 ---- assert(rope_to_string{"one",{"1","2"},"three"} == "one12three")
 --

@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3938
+.documents.1.wordcount: 4034
 .documents.2.co: 3
 .documents.2.cp: 1
 .documents.2.cw: 2
@@ -59,33 +59,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .fileformat: 8
 .findtext: "wordgrinder.lua"
 .idletime: 3
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
 .menu.accelerators.DOWN: "ZD"
@@ -98,8 +71,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.ET: "^X"
+.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.Eundo: "^Z"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
@@ -108,12 +81,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.PGDN: "ZPGDN"
 .menu.accelerators.PGUP: "ZPGUP"
 .menu.accelerators.RIGHT: "ZR"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
-.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.SB: "^B"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
@@ -127,6 +94,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
 .menu.accelerators.SUP: "ZSU"
+.menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.UP: "ZU"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
@@ -161,7 +134,34 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.name: "D:\\cygwin64\\home\\dg\\wordgrinder\\bin/../README.wg"
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
+.menu.accelerators.^C: "EC"
+.menu.accelerators.^DOWN: "ZNP"
+.menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
+.name: "/.big/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -231,15 +231,20 @@ LB OpenDocument
 L Imports basic content from ODT files. OpenDocument is complicated and hard to parse but WordGrinder will do its best to apply appropriate styles. Unsupported features are ignored.
 LB HTML
 L Imports ‘tag soup’ UTF-8 encoded HTML. All unknown tags are ignored. <i> (or <em>), <u> and <b> are mapped to italic, underline and bold, respectively; <h1>..<h4> become paragraph styles H1 to H4; all <li> become LB. Paragraphs are delimited by either <p> or <br>.
+LB Markdown
+L Imports basic Markdown. This supports headers, simple lists, preformatted text, block quotations, inline style, and a few other things; however, it can be easily confused by complex markup like nested lists or list items with continuations, and a lot of things it won’t even try on. It’s intended to read basic text only.
 H2 Exporting
 P Once you’re done with your document, you can export it to a small but growing variety of other formats using the File→Export current document menu option. The following formats are available:
 LB Plain text
 L This produces a simple, flat UTF-8 text file. Character and paragraph styles are lost, but all your text remains. Paragraphs are delimited by newlines, so you end up with one very long line per paragraph.
 LB OpenDocument
 L This produces an ODT file which can be read by LibreOffice and a variety of other major word processors. Character and paragraph styles are exported and are mapped to OpenDocument styles called P, H1, H2 etc.
-L Note that you can’t losslessly convert a WordGrinder document to OpenDocument and back again.
+L Note that you can’t losslessly convert a WordGrinder document to OpenDocument and back again (or vice versa).
 LB HTML
 L This generates a very basic UTF-8 encoded HTML document, nominally HTML 4. Practically everything will read this. Character and paragraph styles are exported. There are some customisation options in the File→Document Settings→HTML export dialogue; I use these when writing program documentation to cause underlined text appear as <code>.
+LB Markdown
+L This generates simple Markdown, supporting basic text, headers, simple lists, inline style, etc. Complex features like mixed list types aren’t supported.
+L Note that you can’t losslessly convert a WordGrinder document to Markdown and back again (or vice versa).
 LB LaTeX
 L This generates a UTF-8 LaTeX document suitable for running through XeTeX using the ‘xelatex’ command. You can use stock LaTeX if you wish, but you will need to edit the file to remove the xunicode package --- any non-ASCII characters probably won’t work correctly. Character and paragraph styles are supported; H1..H4 are mapped to \section, \subsection, \subsubsection and \paragraph respectively.
 L Note that even when using XeTeX, TeX’s Unicode support is currently rather poor, and that which characters are supported depends strongly on what font you’re using: read the Unicode section below. You’ll probably need to edit the output file to set an appropriate font or set of fonts.

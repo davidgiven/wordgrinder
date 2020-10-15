@@ -171,7 +171,7 @@ parsers.closeticks  = parsers.space^-1
                     * Cb("ticks"), captures_equal_length)
 
 parsers.intickschar = (parsers.any - S(" \n\r`"))
-                    + (parsers.newline * -parsers.blankline)
+                    + (parsers.newline)
                     + (parsers.space - parsers.closeticks)
                     + (parsers.backtick^1 - parsers.closeticks)
 
@@ -1378,7 +1378,7 @@ function M.new(writer, options)
         inp = rest
       end
       local result = { writer.start_document(), parse_blocks(inp), writer.stop_document() }
-      return rope_to_string(result), writer.get_metadata()
+      return result, writer.get_metadata()
     end
 
   return parse_markdown

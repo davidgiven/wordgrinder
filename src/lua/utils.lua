@@ -145,6 +145,8 @@ function TableToString(t)
 			return nil
 		elseif (type(n) == "boolean") then
 			return tostring(n)
+		elseif (type(n) == "function") then
+			return "function()"
 		else
 			return TableToString(n)
 		end
@@ -485,5 +487,34 @@ function LargestCommonPrefixCaseInsensitive(array)
 	end
 
 	return prefix
+end
+
+-- Flattens an array, in depth first order.
+
+function FlattenArray(array)
+	local t = {}
+	for _, v in ipairs(array) do
+		if (type(v) == "table") then
+			for _, vv in ipairs(FlattenArray(v)) do
+				t[#t+1] = vv
+			end
+		else
+			t[#t+1] = v
+		end
+	end
+	return t
+end
+
+-- Given an array, returns a new array with x between each item.
+
+function InterleaveArray(array, x)
+	local t = {}
+	for i, v in ipairs(array) do
+		if (i ~= 1) then
+			t[#t+1] = x
+		end
+		t[#t+1] = v
+	end
+	return t
 end
 
