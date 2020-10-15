@@ -119,6 +119,10 @@ WordGrinder is © 2007-2017 David Given, and is available under the MIT license.
 The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
 1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
 
+The distribution contains a copy of the Lpeg parser library. This is also MIT
+licensed and is © 2007-2019 Lua.org, PUC-Rio. See
+http://inf.puc-rio.br/~roberto/lpeg for more information.
+
 The distribution contains a copy of LuaBitOp. This is also MIT licensed and is ©
 2008-2012 Mike Pall. See http://bitop.luajit.org/ for more information.
 
