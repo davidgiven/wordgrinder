@@ -60,6 +60,7 @@ end
 -- Global definitions that the various source files need.
 
 Cmd = {}
+lunamark = {}
 
 BLINK_ON_TIME = 0.8
 BLINK_OFF_TIME = 0.53

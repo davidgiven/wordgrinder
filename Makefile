@@ -90,7 +90,7 @@ endif
 # these only makes sense with 'make all' --- don't use this with
 # 'make dev' (but you probably won't be doing this anyway).
 
-LUAFILESYSTEM_PACKAGE ?= builtin
+LPEG_PACKAGE ?= builtin
 LUABITOP_PACKAGE ?= builtin
 MINIZIP_PACKAGE ?= builtin
 UTHASH_PACKAGE ?= builtin
@@ -158,7 +158,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		FILEFORMAT="$(FILEFORMAT)" \
 		LDFLAGS="$(LDFLAGS)" \
 		LUABITOP_PACKAGE="$(LUABITOP_PACKAGE)" \
-		LUAFILESYSTEM_PACKAGE="$(LUAFILESYSTEM_PACKAGE)" \
+		LPEG_PACKAGE="$(LPEG_PACKAGE)" \
 		LUA_INTERPRETER="$(LUA_INTERPRETER)" \
 		LUA_PACKAGE="$(LUA_PACKAGE)" \
 		MAKENSIS="$(MAKENSIS)" \

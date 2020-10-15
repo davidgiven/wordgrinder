@@ -197,6 +197,13 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(MINIZIP_PACKAGE, "--libs")
     end
 
+    if LPEG_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/emu/lpeg"
+    else
+        cflags[#cflags+1] = package_flags(LPEG_PACKAGE, "--cflags")
+        ldflags[#ldflags+1] = package_flags(LPEG_PACKAGE, "--libs")
+    end
+
     local function srcfile(cfile)
         ofile = cfile:gsub("^(.*)%.c$", OBJDIR.."/"..name.."/%1.o")
         objs[#objs+1] = ofile
@@ -287,6 +294,14 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/emu/minizip/unzip.c")
     end
 
+    if LPEG_PACKAGE == "builtin" then
+        srcfile("src/c/emu/lpeg/lpvm.c")
+        srcfile("src/c/emu/lpeg/lpcap.c")
+        srcfile("src/c/emu/lpeg/lptree.c")
+        srcfile("src/c/emu/lpeg/lpcode.c")
+        srcfile("src/c/emu/lpeg/lpprint.c")
+    end
+
     emit("build ", exe, ": ld ", table.concat(objs, " "))
     emit("  ldflags = ", table.concat(ldflags, " "))
     emit("  cc = ", cc)
@@ -320,6 +335,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
         "tests/import-from-html.lua",
         "tests/import-from-opendocument.lua",
         "tests/import-from-text.lua",
+        "tests/import-from-markdown.lua",
         "tests/insert-space-with-style-hint.lua",
         "tests/io-open-enoent.lua",
         "tests/line-down-into-style.lua",
@@ -400,7 +416,7 @@ FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)
 FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("Xft", XFT_PACKAGE)
 
 detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
-detect_mandatory_package("LuaFileSystem", LUAFILESYSTEM_PACKAGE)
+detect_mandatory_package("lpeg", LPEG_PACKAGE)
 detect_mandatory_package("uthash", UTHASH_PACKAGE)
 detect_mandatory_package("LuaBitOp", LUABITOP_PACKAGE)
 
@@ -497,6 +513,7 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/import/html.lua",
     "src/lua/import/text.lua",
     "src/lua/import/opendocument.lua",
+    "src/lua/import/markdown.lua",
     "src/lua/navigate.lua",
     "src/lua/addons/goto.lua",
     "src/lua/addons/autosave.lua",
@@ -517,6 +534,9 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/addons/recents.lua",
     "src/lua/menu.lua",
     "src/lua/cli.lua",
+    "src/lua/lunamark/util.lua",
+    "src/lua/lunamark/entities.lua",
+    "src/lua/lunamark/markdown.lua",
 }, " "))
 
 if want_frontend("x11") or want_frontend("curses") then
