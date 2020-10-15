@@ -15,7 +15,7 @@
 #include "lua.h"
 
 
-#define VERSION         "1.0.2"
+#define LPEG_VERSION         "1.0.2"
 
 
 #define PATTERN_T	"lpeg-pattern"

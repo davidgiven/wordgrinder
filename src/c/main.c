@@ -8,6 +8,8 @@
 #include <locale.h>
 #include "globals.h"
 
+extern int luaopen_lpeg (lua_State *L);
+
 static void findlocale(void)
 {
 	static const char* locales[] =
@@ -37,6 +39,7 @@ int main(int argc, const char* argv[])
 	utils_init();
 	filesystem_init();
 	zip_init();
+	luaopen_lpeg(L);
 
 	script_load_from_table(script_table);
 	script_run(argv);

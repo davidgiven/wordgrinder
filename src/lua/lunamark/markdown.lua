@@ -1,9 +1,9 @@
 -- (c) 2009-2011 John MacFarlane, Hans Hagen.  Released under MIT license.
 -- See the file LICENSE in the source for details.
 
-local util = require("lunamark.util")
+local util = lunamark.util
 local lpeg = require("lpeg")
-local entities = require("lunamark.entities")
+local entities = lunamark.entities
 local lower, upper, gsub, format, length =
   string.lower, string.upper, string.gsub, string.format, string.len
 local P, R, S, V, C, Cg, Cb, Cmt, Cc, Ct, B, Cs =
@@ -11,17 +11,6 @@ local P, R, S, V, C, Cg, Cb, Cmt, Cc, Ct, B, Cs =
   lpeg.Cmt, lpeg.Cc, lpeg.Ct, lpeg.B, lpeg.Cs
 local lpegmatch = lpeg.match
 local expand_tabs_in_line = util.expand_tabs_in_line
-local utf8_lower do
-  if pcall(require, "lua-utf8") then -- try luautf8
-    local luautf8 = require("lua-utf8")
-    utf8_lower = luautf8.lower
-  elseif pcall(require, "unicode") then -- try slnunicode
-    local slnunicde = require "unicode"
-    utf8_lower = slnunicde.utf8.lower
-  else
-    error "no unicode library found"
-  end
-end
 
 local load = load -- lua 5.2/5.3 style `load` function
 if _VERSION == "Lua 5.1" then
@@ -41,14 +30,17 @@ if _VERSION == "Lua 5.1" then
   end
 end
 
-local M = {}
+lunamark.reader = {}
+local M = lunamark.reader
 
 local rope_to_string = util.rope_to_string
 
 -- Normalize a markdown reference tag.  (Make lowercase, and collapse
 -- adjacent whitespace characters.)
 local function normalize_tag(tag)
-  return utf8_lower(gsub(rope_to_string(tag), "[ \n\r\t]+", " "))
+  -- dtrg: footnotes aren't supported
+  --return utf8_lower(gsub(rope_to_string(tag), "[ \n\r\t]+", " "))
+  return gsub(rope_to_string(tag), "[ \n\r\t]+", " ")
 end
 
 ------------------------------------------------------------------------------

@@ -253,6 +253,11 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/emu/lua-5.1.5/lvm.c")
         srcfile("src/c/emu/lua-5.1.5/lzio.c")
         srcfile("src/c/emu/lua-5.1.5/winshim.c")
+        srcfile("src/c/emu/lpeg/lpvm.c")
+        srcfile("src/c/emu/lpeg/lpcap.c")
+        srcfile("src/c/emu/lpeg/lptree.c")
+        srcfile("src/c/emu/lpeg/lpcode.c")
+        srcfile("src/c/emu/lpeg/lpprint.c")
         srcfile("src/c/emu/tmpnam.c")
     end
 
@@ -517,6 +522,9 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/addons/recents.lua",
     "src/lua/menu.lua",
     "src/lua/cli.lua",
+    "src/lua/lunamark/util.lua",
+    "src/lua/lunamark/entities.lua",
+    "src/lua/lunamark/markdown.lua",
 }, " "))
 
 if want_frontend("x11") or want_frontend("curses") then

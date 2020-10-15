@@ -1196,7 +1196,7 @@ static int lp_setmax (lua_State *L) {
 
 
 static int lp_version (lua_State *L) {
-  lua_pushstring(L, VERSION);
+  lua_pushstring(L, LPEG_VERSION);
   return 1;
 }
 

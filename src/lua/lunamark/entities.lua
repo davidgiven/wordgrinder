@@ -3,24 +3,10 @@
 
 --- Functions for dealing with HTML/XML entities.
 
-local M = {}
+lunamark.entities = {}
+local M = lunamark.entities
 
-local utf8_char do
-  if utf8 then
-    utf8_char = utf8.char
-  elseif pcall(require, "compat53.module") then
-    local utf8 = require "compat53.module".utf8
-    utf8_char = utf8.char
-  elseif pcall(require, "lua-utf8") then -- try luautf8
-    local luautf8 = require("lua-utf8")
-    utf8_char = luautf8.char
-  elseif pcall(require, "unicode") then -- try slnunicode
-    local slnunicode = require "unicode"
-    utf8_char = slnunicode.utf8.char
-  else
-    error "no unicode library found"
-  end
-end
+local utf8_char = wg.writeu8
 
 local character_entities = {
   ["Tab"] = 9,
