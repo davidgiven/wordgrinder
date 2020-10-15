@@ -2,7 +2,6 @@
 -- See the file LICENSE in the source for details.
 
 local util = lunamark.util
-local lpeg = require("lpeg")
 local entities = lunamark.entities
 local lower, upper, gsub, format, length =
   string.lower, string.upper, string.gsub, string.format, string.len

@@ -39,7 +39,12 @@ int main(int argc, const char* argv[])
 	utils_init();
 	filesystem_init();
 	zip_init();
-	luaopen_lpeg(L);
+	#if (LUA_VERSION_NUM < 502)
+		luaopen_lpeg(L);
+	#else
+		luaL_requiref(L, "lpeg", luaopen_lpeg, 1);
+		lua_pop(L, 1);
+	#endif
 
 	script_load_from_table(script_table);
 	script_run(argv);
