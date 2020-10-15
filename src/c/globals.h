@@ -11,8 +11,13 @@
 		#define _XOPEN_SOURCE
 	#endif
 
-	#define _XOPEN_SOURCE_EXTENDED
-	#define _GNU_SOURCE
+	#if !defined _XOPEN_SOURCE_EXTENDED
+		#define _XOPEN_SOURCE_EXTENDED
+	#endif
+
+	#if !defined _GNU_SOURCE
+		#define _GNU_SOURCE
+	#endif
 #endif
 
 #include <stdlib.h>

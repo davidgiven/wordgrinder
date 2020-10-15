@@ -117,10 +117,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     }
     local objs = {}
 
-    if ((buildstyle == "release") or (buildstyle == "static")) and (not WANT_STRIPPED_BINARIES) then
-        ldflags[#ldflags+1] = "-s"
-    end
-
     if frontend == "x11" then
         cflags[#cflags+1] = "$X11_CFLAGS"
         ldflags[#ldflags+1] = "$X11_LDFLAGS"
@@ -176,6 +172,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
         ldflags[#ldflags+1] = "-mwindows"
+        if (buildstyle == "release") and (WANT_STRIPPED_BINARIES == "yes") then
+            ldflags[#ldflags+1] = "-s"
+        end
     elseif frontend == "cwindows" then
         cc = WINCC
         cflags[#cflags+1] = "-DARCH='\"windows\"'"
@@ -185,6 +184,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-mconsole"
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-mconsole"
+        if (buildstyle == "release") and (WANT_STRIPPED_BINARIES == "yes") then
+            ldflags[#ldflags+1] = "-s"
+        end
     else
         cc = CC
         cflags[#cflags+1] = "-DARCH='\"unix\"'"
