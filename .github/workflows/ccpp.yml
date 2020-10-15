@@ -10,7 +10,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev lua-lpeg-dev libncursesw5-dev zlib1g-dev libxft-dev
     - name: make
       run: make dev
 
