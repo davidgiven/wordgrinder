@@ -597,13 +597,19 @@ if want_frontend("x11") or want_frontend("curses") then
         install_file("755", preferred_x11, DESTDIR..BINDIR.."/xwordgrinder")
     end
     install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
+    install_file("644", "bin/xwordgrinder.1", DESTDIR..MANDIR.."/man1/xwordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
 
     emit("build bin/wordgrinder.1: manpage wordgrinder.man")
     emit("  date = ", DATE)
     emit("  version = ", VERSION)
 
-    emit("build binaries: phony bin/wordgrinder.1 ", preferred_curses or "", " ", preferred_x11 or "", " ")
+    emit("build bin/xwordgrinder.1: manpage xwordgrinder.man")
+    emit("  date = ", DATE)
+    emit("  version = ", VERSION)
+
+    emit("build binaries: phony bin/wordgrinder.1 bin/xwordgrinder.1 ",
+        preferred_curses or "", " ", preferred_x11 or "", " ")
     emit("build tests: phony ", preferred_test)
     emit("build all: phony binaries tests")
     emit("build install: phony all ", table.concat(installables, " "))

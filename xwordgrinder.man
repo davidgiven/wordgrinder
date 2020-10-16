@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH WORDGRINDER 1 "@@@DATE@@@" "@@@VERSION@@@" "Simple word processor for writing first drafts"
+.TH XWORDGRINDER 1 "@@@DATE@@@" "@@@VERSION@@@" "Simple word processor for writing first drafts"
 .\"
 .\" Some roff macros, for reference:
 .\" .nh        disable hyphenation
@@ -12,7 +12,7 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-wordgrinder \- console-based word processor
+xwordgrinder \- Xlib-based word processor
 
 
 
@@ -26,8 +26,8 @@ wordgrinder \- console-based word processor
 
 .SH DESCRIPTION
 
-.B wordgrinder
-is a simple character cell word processor that runs on the console. It is
+.B xwordgrinder
+is a simple character cell word processor that runs on X11. It is
 primarily designed for text entry. It's designed to get the hell out of
 your way and let you write; it does very little, but what it does it does well.
 
@@ -84,3 +84,4 @@ the program starts up. It defaults to:
 was written by David Given.
 .br
 http://cowlark.com/wordgrinder
+
