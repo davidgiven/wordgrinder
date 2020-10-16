@@ -149,11 +149,13 @@ windows: $(OBJDIR)/build.ninja
 wintests: $(OBJDIR)/build.ninja
 	$(NINJABUILD) wintests
 
+.DELETE_ON_ERROR:
+
 $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 	@mkdir -p $(dir $@)
 	$(hide) $(LUA_INTERPRETER) build.lua \
 		BINDIR="$(BINDIR)" \
-		BUILDFILE="$@" \
+		BUILDFILE="$@.tmp" \
 		CC="$(CC)" \
 		CFLAGS="$(CFLAGS)" \
 		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
@@ -176,6 +178,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
 		XFT_PACKAGE="$(XFT_PACKAGE)" \
+	$(hide) mv $@.tmp $@
 
 clean:
 	@echo CLEAN
@@ -187,4 +190,50 @@ $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]
 	@mkdir -p $(dir $@)
 	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c src/c/emu/tmpnam.c -lm -DLUA_USE_EMU_TMPNAM
 endif
+
+.PHONY: distr
+distr: wordgrinder-$(VERSION).tar.xz
+
+.PHONY: debian-distr
+debian-distr: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+
+.PHONY: wordgrinder-$(VERSION).tar.xz
+wordgrinder-$(VERSION).tar.xz:
+	tar cvaf $@ \
+		--transform "s,^,wordgrinder-$(VERSION)/," \
+		extras \
+		licenses \
+		scripts \
+		src \
+		testdocs \
+		tests \
+		tools \
+		build.lua \
+		Makefile \
+		README \
+		README.wg \
+		README.Windows.txt \
+		wordgrinder.man \
+		xwordgrinder.man
+
+.PHONY: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
+	tar cvaf $@ \
+		--transform "s,^,wordgrinder-for-debian-$(VERSION)/," \
+		--exclude "*.dictionary" \
+		--exclude "src/c/emu" \
+		extras \
+		licenses \
+		scripts \
+		src \
+		testdocs \
+		tests \
+		tools \
+		build.lua \
+		Makefile \
+		README \
+		README.wg \
+		README.Windows.txt \
+		wordgrinder.man \
+		xwordgrinder.man
 

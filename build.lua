@@ -45,8 +45,8 @@ end
 local function detect_mandatory_package(name, package)
     if not detect_package(name, package) then
         print()
-        print("Mandatory package is missing --- cannot build. (There's probably a built-")
-        print("in one; try 'builtin'.")
+        print("Mandatory package '"..name.."' is missing --- cannot build.")
+        print("(There's probably a built-in one; try 'builtin'.")
         print()
         os.exit(1)
     end
