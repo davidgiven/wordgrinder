@@ -30,7 +30,8 @@ local function has_package(package)
     if package == "builtin" then
         return true
     end
-    return os.execute("pkg-config "..package) == 0
+    local r = os.execute("pkg-config "..package)
+    return (r == 0) or (r == true)
 end
 
 local function detect_package(name, package)
@@ -75,7 +76,7 @@ local function package_flags(package, kind)
 
     local filename = os.tmpname()
     local e = os.execute("pkg-config "..kind.." "..package.." > "..filename)
-    if e ~= 0 then
+    if (e ~= 0) and (e ~= true) then
         error("required package "..package.." is not available")
     end
     local s = io.open(filename):read("*a")

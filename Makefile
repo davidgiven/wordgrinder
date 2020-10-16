@@ -133,7 +133,9 @@ install: $(OBJDIR)/build.ninja
 install-notests: $(OBJDIR)/build.ninja
 	$(NINJABUILD) install-notests
 
-# Builds and tests everything that's buildable on your machine.
+# Builds and tests everything that's buildable on your machine. Don't use this
+# unless you know what you're doing (it's pretty brittle given non-standard
+# build flags).
 .PHONY: dev
 dev: $(OBJDIR)/build.ninja
 	$(NINJABUILD) dev
@@ -177,7 +179,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		WANT_STRIPPED_BINARIES="$(WANT_STRIPPED_BINARIES)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
-		XFT_PACKAGE="$(XFT_PACKAGE)" \
+		XFT_PACKAGE="$(XFT_PACKAGE)"
 	$(hide) mv $@.tmp $@
 
 clean:
