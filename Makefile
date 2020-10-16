@@ -11,7 +11,7 @@ MANDIR ?= $(PREFIX)/share/man
 DESTDIR ?=
 
 # Where do the temporary files go?
-OBJDIR = /tmp/wg-build
+OBJDIR = .obj
 
 # The compiler used for the native build (curses, X11)
 CC ?= cc
@@ -44,7 +44,12 @@ endif
 # Application version and file format.
 VERSION := 0.8
 FILEFORMAT := 8
-DATE ?= $(shell date +'%-d %B %Y')
+
+ifdef SOURCE_DATE_EPOCH
+       DATE := $(shell LC_ALL date --utc --date="@$(SOURCE_DATE_EPOCH)" +'%-d %B %Y')
+else
+       DATE := $(shell date +'%-d %B %Y')
+endif
 
 # Which Lua do you want to use?
 #
