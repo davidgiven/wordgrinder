@@ -113,7 +113,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         "$LDFLAGS",
         "-lz",
         "-lm",
-        "-Wl,--as-needed",
         "-Wl,--gc-sections",
         "-g",
     }
