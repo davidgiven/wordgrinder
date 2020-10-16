@@ -11,7 +11,7 @@ MANDIR ?= $(PREFIX)/share/man
 DESTDIR ?=
 
 # Where do the temporary files go?
-OBJDIR = /tmp/wg-build
+OBJDIR = .obj
 
 # The compiler used for the native build (curses, X11)
 CC ?= cc
