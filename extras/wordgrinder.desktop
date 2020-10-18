@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=WordGrinder
+Comment=Word processor for processing words
+Exec=xwordgrinder %f
+Icon=wordgrinder
+MimeType=application/x-wordgrinder
+Terminal=false
+Type=Application
+Categories=WordProcessor
