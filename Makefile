@@ -223,7 +223,7 @@ wordgrinder-$(VERSION).tar.xz:
 .PHONY: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
 wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
 	tar cvaf $@ \
-		--transform "s,^,wordgrinder-for-debian-$(VERSION)/," \
+		--transform "s,^,wordgrinder-$(VERSION)/," \
 		--exclude "*.dictionary" \
 		--exclude "src/c/emu" \
 		extras \
