@@ -6,8 +6,9 @@
 
 PREFIX ?= $(HOME)
 BINDIR ?= $(PREFIX)/bin
-DOCDIR ?= $(PREFIX)/share/doc
-MANDIR ?= $(PREFIX)/share/man
+SHAREDIR ?= $(PREFIX)/share
+DOCDIR ?= $(SHAREDIR)/doc
+MANDIR ?= $(SHAREDIR)/man
 DESTDIR ?=
 
 # Where do the temporary files go?
@@ -174,6 +175,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		MANDIR="$(MANDIR)" \
 		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		OBJDIR="$(OBJDIR)" \
+		SHAREDIR="$(SHAREDIR)" \
 		UTHASH_PACKAGE="$(UTHASH_PACKAGE)" \
 		VERSION="$(VERSION)" \
 		WANT_STRIPPED_BINARIES="$(WANT_STRIPPED_BINARIES)" \
