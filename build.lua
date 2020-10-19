@@ -30,7 +30,8 @@ local function has_package(package)
     if package == "builtin" then
         return true
     end
-    return os.execute("pkg-config "..package) == 0
+    local r = os.execute("pkg-config "..package)
+    return (r == 0) or (r == true)
 end
 
 local function detect_package(name, package)
@@ -45,8 +46,8 @@ end
 local function detect_mandatory_package(name, package)
     if not detect_package(name, package) then
         print()
-        print("Mandatory package is missing --- cannot build. (There's probably a built-")
-        print("in one; try 'builtin'.")
+        print("Mandatory package '"..name.."' is missing --- cannot build.")
+        print("(There's probably a built-in one; try 'builtin'.")
         print()
         os.exit(1)
     end
@@ -75,7 +76,7 @@ local function package_flags(package, kind)
 
     local filename = os.tmpname()
     local e = os.execute("pkg-config "..kind.." "..package.." > "..filename)
-    if e ~= 0 then
+    if (e ~= 0) and (e ~= true) then
         error("required package "..package.." is not available")
     end
     local s = io.open(filename):read("*a")
@@ -599,6 +600,9 @@ if want_frontend("x11") or want_frontend("curses") then
     install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
     install_file("644", "bin/xwordgrinder.1", DESTDIR..MANDIR.."/man1/xwordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
+    install_file("644", "extras/wordgrinder.desktop", DESTDIR..SHAREDIR.."/applications/wordgrinder.desktop")
+    install_file("644", "extras/wordgrinder.mime", DESTDIR..SHAREDIR.."/mime-info/wordgrinder.mime")
+    install_file("644", "extras/icon.png", DESTDIR..SHAREDIR.."/pixmaps/wordgrinder.png")
 
     emit("build bin/wordgrinder.1: manpage wordgrinder.man")
     emit("  date = ", DATE)

@@ -6,8 +6,9 @@
 
 PREFIX ?= $(HOME)
 BINDIR ?= $(PREFIX)/bin
-DOCDIR ?= $(PREFIX)/share/doc
-MANDIR ?= $(PREFIX)/share/man
+SHAREDIR ?= $(PREFIX)/share
+DOCDIR ?= $(SHAREDIR)/doc
+MANDIR ?= $(SHAREDIR)/man
 DESTDIR ?=
 
 # Where do the temporary files go?
@@ -133,7 +134,9 @@ install: $(OBJDIR)/build.ninja
 install-notests: $(OBJDIR)/build.ninja
 	$(NINJABUILD) install-notests
 
-# Builds and tests everything that's buildable on your machine.
+# Builds and tests everything that's buildable on your machine. Don't use this
+# unless you know what you're doing (it's pretty brittle given non-standard
+# build flags).
 .PHONY: dev
 dev: $(OBJDIR)/build.ninja
 	$(NINJABUILD) dev
@@ -149,11 +152,13 @@ windows: $(OBJDIR)/build.ninja
 wintests: $(OBJDIR)/build.ninja
 	$(NINJABUILD) wintests
 
+.DELETE_ON_ERROR:
+
 $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 	@mkdir -p $(dir $@)
 	$(hide) $(LUA_INTERPRETER) build.lua \
 		BINDIR="$(BINDIR)" \
-		BUILDFILE="$@" \
+		BUILDFILE="$@.tmp" \
 		CC="$(CC)" \
 		CFLAGS="$(CFLAGS)" \
 		CURSES_PACKAGE="$(CURSES_PACKAGE)" \
@@ -170,12 +175,14 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		MANDIR="$(MANDIR)" \
 		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		OBJDIR="$(OBJDIR)" \
+		SHAREDIR="$(SHAREDIR)" \
 		UTHASH_PACKAGE="$(UTHASH_PACKAGE)" \
 		VERSION="$(VERSION)" \
 		WANT_STRIPPED_BINARIES="$(WANT_STRIPPED_BINARIES)" \
 		WINCC="$(WINCC)" \
 		WINDRES="$(WINDRES)" \
-		XFT_PACKAGE="$(XFT_PACKAGE)" \
+		XFT_PACKAGE="$(XFT_PACKAGE)"
+	$(hide) mv $@.tmp $@
 
 clean:
 	@echo CLEAN
@@ -187,4 +194,50 @@ $(LUA_INTERPRETER): src/c/emu/lua-5.1.5/*.[ch]
 	@mkdir -p $(dir $@)
 	@$(CC) -o $(LUA_INTERPRETER) -O src/c/emu/lua-5.1.5/*.c src/c/emu/tmpnam.c -lm -DLUA_USE_EMU_TMPNAM
 endif
+
+.PHONY: distr
+distr: wordgrinder-$(VERSION).tar.xz
+
+.PHONY: debian-distr
+debian-distr: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+
+.PHONY: wordgrinder-$(VERSION).tar.xz
+wordgrinder-$(VERSION).tar.xz:
+	tar cvaf $@ \
+		--transform "s,^,wordgrinder-$(VERSION)/," \
+		extras \
+		licenses \
+		scripts \
+		src \
+		testdocs \
+		tests \
+		tools \
+		build.lua \
+		Makefile \
+		README \
+		README.wg \
+		README.Windows.txt \
+		wordgrinder.man \
+		xwordgrinder.man
+
+.PHONY: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
+	tar cvaf $@ \
+		--transform "s,^,wordgrinder-$(VERSION)/," \
+		--exclude "*.dictionary" \
+		--exclude "src/c/emu" \
+		extras \
+		licenses \
+		scripts \
+		src \
+		testdocs \
+		tests \
+		tools \
+		build.lua \
+		Makefile \
+		README \
+		README.wg \
+		README.Windows.txt \
+		wordgrinder.man \
+		xwordgrinder.man
 

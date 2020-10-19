@@ -6,4 +6,4 @@ Icon=wordgrinder
 MimeType=application/x-wordgrinder
 Terminal=false
 Type=Application
-Categories=WordProcessor
+Categories=Office;WordProcessor
