@@ -601,6 +601,7 @@ if want_frontend("x11") or want_frontend("curses") then
     install_file("644", "bin/xwordgrinder.1", DESTDIR..MANDIR.."/man1/xwordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
     install_file("644", "extras/wordgrinder.desktop", DESTDIR..SHAREDIR.."/applications/wordgrinder.desktop")
+    install_file("644", "extras/wordgrinder.mime", DESTDIR..SHAREDIR.."/mime-info/wordgrinder.mime")
     install_file("644", "extras/icon.png", DESTDIR..SHAREDIR.."/pixmaps/wordgrinder.png")
 
     emit("build bin/wordgrinder.1: manpage wordgrinder.man")
