@@ -261,7 +261,8 @@ Syntax: wordgrinder [<options...>] [<filename>]
 Options:
    -h    --help                Displays this message.
          --lua file.lua        Loads and executes file.lua and then exits
-		                       (or file.lua can be some Lua statements)
+							   (remaining arguments are passed to the script)
+         --exec 'lua code'     Loads and executes the supplied code and then exits
 							   (remaining arguments are passed to the script)
    -c    --convert src dest    Converts from one file format to another
          --config file.lua     Sets the name of the user config file
@@ -294,9 +295,20 @@ the program starts up (but after any --lua files). It defaults to:
 			end
 
 			local f, e = loadfile(opt)
-			if e and e:find("No such file or directory") then
-				f, e = loadstring(opt)
+			if e then
+				CLIError("user script compilation error: "..e)
 			end
+
+			f(...)
+			os.exit(0)
+		end
+
+		local function do_exec(opt, ...)
+			if not opt then
+				CLIError("--exec must have an argument")
+			end
+
+			local f, e = loadstring(opt)
 			if e then
 				CLIError("user script compilation error: "..e)
 			end
@@ -339,6 +351,7 @@ the program starts up (but after any --lua files). It defaults to:
 			["h"]          = do_help,
 			["help"]       = do_help,
 			["lua"]        = do_lua,
+			["exec"]       = do_exec,
 			["c"]          = do_convert,
 			["convert"]    = do_convert,
 			["config"]     = do_config,
