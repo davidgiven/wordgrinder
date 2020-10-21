@@ -19,11 +19,12 @@
 -- Main program
 
 local function main(inputfile, outputfile)
-	if not outputfile then
+	if not outputfile or not inputfile then
 		print("Syntax: wordgrinder --lua concat.lua <inputfile.wg> <outputfile.wg>")
 		os.exit(1)
 	end
 
+	print("Loading "..inputfile)
     if not Cmd.LoadDocumentSet(inputfile) then
         print("failed to load document")
         os.exit(1)
@@ -44,15 +45,13 @@ local function main(inputfile, outputfile)
 		DocumentSet:deleteDocument(doc.name)
     end
 
+	print("Writing "..outputfile)
 	if not Cmd.SaveCurrentDocumentAs(outputfile) then
 		print("failed to save new document")
 		os.exit(1)
 	end
 end
 
-print(...)
 main(...)
 os.exit(0)
-
-
 
