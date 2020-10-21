@@ -57,7 +57,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.viewmode: 2
 .documents.3.wordcount: 161
 .fileformat: 8
-.findtext: "wordgrinder.lua"
+.findtext: "--lua"
 .idletime: 3
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
@@ -259,7 +259,7 @@ P To use, run this command:
 Q wordgrinder --help
 P This will show the command line options, and at the bottom will tell you where your configuration file lives. Open this in a (non-WordGrinder) text editor.
 P Now run:
-Q wordgrinder --lua "ListMenuItems()"
+Q wordgrinder --exec "ListMenuItems()"
 P WordGrinder will display all the menu items it knows about, plus their menu ID. You can now enter lines like this in your configuration file:
 Q OverrideKey("^Z", "ZM")
 Q OverrideKey("F1", "D1")
@@ -333,7 +333,7 @@ P WordGrinder supports standard wordlist dictionaries which are just a big text 
 P Each document set also carries with it a user dictionary; this is just another document in the document set. It contains a list of words which will be considered correctly spelt. Words can be added to this with Edit→Spellchecker→Add current word to dictionary. Alternatively the user dictionary can be modified at any time.
 P You can jump to the next misspelt word with Edit→Spellchecker→Find next misspelt word.
 H3 Command line
-P There are some WordGrinder features which can be used from the command line, both on Unix and Windows. Firstly, it’s completely scriptable in Lua: write a file in Lua, then run WordGrinder with wordgrinder --lua filename.lua and it’ll run and then exit. Or use wordgrinder --lua "lua command". Nearly all of WordGrinder is written in Lua and it’s all available via this interface. The API is, unfortunately, beyond the scope of this document; if you’re interested, ask the author (or look at the source code).
+P There are some WordGrinder features which can be used from the command line, both on Unix and Windows. Firstly, it’s completely scriptable in Lua: write a file in Lua, then run WordGrinder with wordgrinder --lua filename.lua and it’ll run and then exit. Or use wordgrinder --exec "lua command". Nearly all of WordGrinder is written in Lua and it’s all available via this interface. The API is, unfortunately, beyond the scope of this document; if you’re interested, ask the author (or look at the source code).
 P Secondly, the file .wordgrinder/startup.lua in your home directory will be automatically loaded and run whenever WordGrinder starts; see the section above on configuring WordGrinder for information.
 P Thirdly, you can use WordGrinder to automatically convert between any supported document formats. For example:
 Q wordgrinder --convert sourcefile.wg destfile.odt
