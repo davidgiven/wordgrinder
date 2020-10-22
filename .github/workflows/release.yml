@@ -16,31 +16,15 @@ jobs:
       run: sudo apt update && sudo apt install ninja-build mingw-w64 libz-mingw-w64-dev nsis
     - name: make
       run: make windows distr debian-distr
-    - name: "Upload wordgrinder-0.8.tar.xz"
-      uses: actions/upload-release-asset@v1
+    - name: release
+      uses: softprops/action-gh-release@v1
+      with:
+        body: |
+          Automatic release.
+        files:
+          wordgrinder-*.tar.xz
+          bin/WordGrinder-*-setup.exe
+        tag_name: dev
+        fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: ./wordgrinder-0.8.tar.xz
-        asset_name: wordgrinder-0.8.tar.xz
-        asset_content_type: application/x-gtar
-    - name: "Upload wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz"
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: ./wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
-        asset_name: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
-        asset_content_type: application/x-gtar
-    - name: "Upload WordGrinder-0.8-setup.exe"
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: ./bin/WordGrinder-0.8-setup.exe
-        asset_name: WordGrinder-0.8-setup.exe
-        asset_content_type: application/vnd.microsoft.portable-executable
-
