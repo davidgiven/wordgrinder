@@ -6,8 +6,8 @@ on:
       - "master"
 
 jobs:
-  prerelease:
-    runs-on: ubuntu-latest
+  dev-release:
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v1
       with:
@@ -25,4 +25,21 @@ jobs:
         upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
         asset_path: wordgrinder-0.8.tar.xz
         asset_name: wordgrinder-0.8.tar.xz
-        asset_content_type: application/zip
+    - name: "Upload wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz"
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
+        asset_path: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
+        asset_name: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
+    - name: "Upload WordGrinder-0.8-setup.exe"
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
+        asset_path: "bin/WordGrinder-0.8-setup.exe"
+        asset_name: WordGrinder-0.8-setup.exe
