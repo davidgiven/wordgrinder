@@ -16,6 +16,10 @@ jobs:
       run: sudo apt update && sudo apt install ninja-build mingw-w64 libz-mingw-w64-dev nsis
     - name: make
       run: make windows distr debian-distr
+    - uses: hole19/git-tag-action@master
+      env:
+        TAG: dev
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: release
       uses: softprops/action-gh-release@latest
       with:
