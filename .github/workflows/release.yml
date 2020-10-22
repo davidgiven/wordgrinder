@@ -15,7 +15,7 @@ jobs:
     - name: apt
       run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
     - name: make
-      run: make dev distr debian-distr
+      run: make windows distr debian-distr
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
