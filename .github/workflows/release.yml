@@ -22,7 +22,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: wordgrinder-0.8.tar.xz
+        asset_path: ./wordgrinder-0.8.tar.xz
         asset_name: wordgrinder-0.8.tar.xz
         asset_content_type: application/x-gtar
     - name: "Upload wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz"
@@ -31,7 +31,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
+        asset_path: ./wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
         asset_name: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
         asset_content_type: application/x-gtar
     - name: "Upload WordGrinder-0.8-setup.exe"
@@ -40,7 +40,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
-        asset_path: "bin/WordGrinder-0.8-setup.exe"
+        asset_path: ./bin/WordGrinder-0.8-setup.exe
         asset_name: WordGrinder-0.8-setup.exe
         asset_content_type: application/vnd.microsoft.portable-executable
 
