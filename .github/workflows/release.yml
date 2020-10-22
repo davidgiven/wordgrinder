@@ -21,7 +21,7 @@ jobs:
         TAG: dev
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: release
-      uses: softprops/action-gh-release@latest
+      uses: softprops/action-gh-release@v1
       with:
         name: Development build
         body: |
