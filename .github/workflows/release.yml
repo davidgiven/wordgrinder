@@ -1,0 +1,29 @@
+name: Autorelease
+
+on:
+  push:
+    branches:
+      - "master"
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: apt
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
+    - name: make
+      run: make dev distr debian-distr
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "dev"
+        prerelease: true
+        title: "Development Build"
+        files: |
+          wordgrinder-0.8.tar.xz
+          wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
+          bin/WordGrinder-0.8-setup.exe
+
