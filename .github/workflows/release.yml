@@ -27,9 +27,9 @@ jobs:
         name: Development build
         body: |
           Automatic release.
-        files:
-          wordgrinder-0.8.tar.xz
-          bin/WordGrinder-0.8-setup.exe
+        files: |
+          wordgrinder-*.tar.xz
+          bin/WordGrinder-*-setup.exe
         tag_name: dev
         prerelease: true
       env:
