@@ -17,8 +17,9 @@ jobs:
     - name: make
       run: make windows distr debian-distr
     - name: release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v0.1.5
       with:
+        name: Development build
         body: |
           Automatic release.
         files:
@@ -26,5 +27,6 @@ jobs:
           bin/WordGrinder-*-setup.exe
         tag_name: dev
         fail_on_unmatched_files: true
+        prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
