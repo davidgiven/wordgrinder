@@ -13,17 +13,16 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
+      run: sudo apt update && sudo apt install ninja-build mingw-w64
     - name: make
       run: make windows distr debian-distr
-    - uses: "marvinpinto/action-automatic-releases@latest"
+    - name: "Upload wordgrinder-0.8.tar.xz"
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "dev"
-        prerelease: true
-        title: "Development Build"
-        files: |
-          wordgrinder-0.8.tar.xz
-          wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
-          bin/WordGrinder-0.8-setup.exe
-
+        upload_url: "https://uploads.github.com/repos/davidgiven/wordgrinder/releases/dev/assets{?name,label}"
+        asset_path: wordgrinder-0.8.tar.xz
+        asset_name: wordgrinder-0.8.tar.xz
+        asset_content_type: application/zip
