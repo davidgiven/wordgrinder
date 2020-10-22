@@ -17,7 +17,6 @@ jobs:
     - name: make
       run: make windows distr debian-distr
     - name: "Upload wordgrinder-0.8.tar.xz"
-      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +25,6 @@ jobs:
         asset_path: wordgrinder-0.8.tar.xz
         asset_name: wordgrinder-0.8.tar.xz
     - name: "Upload wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz"
-      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -35,7 +33,6 @@ jobs:
         asset_path: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
         asset_name: wordgrinder-0.8-minimal-dependencies-for-debian.tar.xz
     - name: "Upload WordGrinder-0.8-setup.exe"
-      id: upload-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
