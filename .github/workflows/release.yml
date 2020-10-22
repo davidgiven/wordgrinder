@@ -16,7 +16,8 @@ jobs:
       run: sudo apt update && sudo apt install ninja-build mingw-w64 libz-mingw-w64-dev nsis
     - name: make
       run: make windows distr debian-distr
-    - uses: hole19/git-tag-action@master
+    - name: tag
+      uses: hole19/git-tag-action@master
       env:
         TAG: dev
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,10 +28,9 @@ jobs:
         body: |
           Automatic release.
         files:
-          wordgrinder-*.tar.xz
-          bin/WordGrinder-*-setup.exe
+          wordgrinder-0.8.tar.xz
+          bin/WordGrinder-0.8-setup.exe
         tag_name: dev
-        fail_on_unmatched_files: true
         prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
