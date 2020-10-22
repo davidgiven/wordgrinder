@@ -15,7 +15,7 @@ jobs:
     - name: apt
       run: sudo apt update && sudo apt install ninja-build mingw-w64 libz-mingw-w64-dev nsis
     - name: make
-      run: make windows distr debian-distr
+      run: make windows debian-distr
     - name: tag
       uses: hole19/git-tag-action@master
       env:
