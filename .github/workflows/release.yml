@@ -28,7 +28,7 @@ jobs:
         tag: dev
         assets: | 
           wordgrinder-*.tar.xz
-          bin/WordGrinder-*-setup.exe
+          WordGrinder-*-setup.exe
     - name: release
       uses: softprops/action-gh-release@v1
       with:
