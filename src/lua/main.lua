@@ -19,6 +19,7 @@ local redrawpending = true
 
 HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
 CONFIGDIR = HOME .. "/.wordgrinder"
+local configfile = CONFIGDIR.."/startup.lua"
 
 -- Determine the installation directory (Windows only).
 
@@ -122,7 +123,6 @@ function WordProcessor(filename)
 	-- Which config file are we loading?
 
 	do
-		local configfile = CONFIGDIR.."/startup.lua"
         local fp, e, errno = io.open(configfile, "r")
 		if fp then
 			f, e = load(ChunkStream(fp:read("*a")), configfile)
