@@ -1,8 +1,8 @@
-                              WORDGRINDER V0.7.2
-                              ==================
+                               WORDGRINDER V0.8
+                               ================
 
-                           © 2007-2018 David Given
-                                 2018-11-29
+                           © 2007-2020 David Given
+                                 2020-10-23
 
                                Windows version
 
@@ -43,7 +43,9 @@ USAGE
 =====
 
 Run WordGrinder from the start menu. There's an option for the menu. Please
-read it, as WordGrinder doesn't work like other Windows applications.
+read it, as WordGrinder doesn't work like other Windows applications. There's
+also a command line version for scripting use, or running from a cmd shell; I
+assume that if you want this, you know where to find it!
 
 Press ESC to get the menu. Press ESC, F, O to open a file.
 
@@ -63,17 +65,17 @@ WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
 look in the licenses directory for the full license text.
 
-WordGrinder is © 2007-2017 David Given, and is available under the MIT license.
+WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
 The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
 1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
 
+The distribution contains a copy of the Lpeg parser library. This is also MIT
+licensed and is © 2007-2019 Lua.org, PUC-Rio. See
+http://inf.puc-rio.br/~roberto/lpeg for more information.
+
 The distribution contains a copy of LuaBitOp. This is also MIT licensed and is ©
 2008-2012 Mike Pall. See http://bitop.luajit.org/ for more information.
-
-The distribution contains a copy of the LuaFileSystem code. This is also MIT
-licensed and is © The Kepler Project. See
-http://www.keplerproject.org/luafilesystem for more information.
 
 The distribution contains a copy of the MiniZip library. This is © 1998-2010
 Gilles Vollant and Mathis Svenson, and is available under the BSD license.
@@ -89,10 +91,24 @@ The distribution contains a copy of the xpattern module. This is also MIT
 licensed and is © 2008-2009 David Manura. See
 http://lua-users.org/wiki/ExPattern for more information.
 
+The distribution contains a (thoroughly hacked up) copy of the Lunamark
+Markdown parser. This is also MIT licensed and is © 2009-2016 John MacFarlane.
+See https://github.com/jgm/lunamark for more information.
+
 
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
+carried away. New features: a paragraph style for numbered bulletpoints; more
+look-and-feel options; the caret now flashes; basic template support; word
+count display of selected text; custom autosave directory; autocompletion in
+file dialogues; Windows console version; recent documents list; Markdown
+import. Bugfixes: lots of import and export fixes (and tests so that they stay
+fixed); spellchecker fixes; selection position fixes; keyboard entry fixes on
+Windows; graphics fixes on Windows; filesystem fixes on Windows; assorted other
+minor tweaks.
 
 WordGrinder 0.7.2: 2017-03-21: bugfix release. Pasting immediately after
 loading a document no longer hard crashes. Don't buffer overrun if given

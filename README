@@ -2,7 +2,7 @@
                                ================
 
                            © 2007-2020 David Given
-                                 2018-11-29
+                                 2020-10-23
 
                                 Unix version
 
@@ -114,7 +114,7 @@ WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
 look in the licenses directory for the full license text.
 
-WordGrinder is © 2007-2017 David Given, and is available under the MIT license.
+WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
 The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
 1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
@@ -149,7 +149,7 @@ See https://github.com/jgm/lunamark for more information.
 REVISION HISTORY
 ================
 
-WordGrinder 0.8: 2020-xx-xx: started out as a bugfix release but then I got
+WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more
 look-and-feel options; the caret now flashes; basic template support; word
 count display of selected text; custom autosave directory; autocompletion in
