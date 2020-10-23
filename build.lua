@@ -137,6 +137,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-O0"
     else
         cflags[#cflags+1] = "-Os"
+        cflags[#cflags+1] = "-DNDEBUG"
     end
 
     if luapackage == "builtin" then
