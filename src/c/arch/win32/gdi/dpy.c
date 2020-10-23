@@ -47,12 +47,14 @@ static bool window_created = false;
 static int shadowwidth;
 static int shadowheight;
 static HBITMAP shadow = NULL;
+static WINDOWPLACEMENT nonFullScreenSize = { sizeof(WINDOWPLACEMENT) };
 
 static void resize_shadow(int width, int height);
 static void resize_buffer(bool force);
 static void fullscreen_cb(void);
 static void switch_to_full_screen(void);
 static void switch_to_windowed(void);
+static void create_window(void);
 
 static COLORREF custom_colours[16];
 
@@ -667,39 +669,6 @@ static void resize_buffer(bool force)
 	InvalidateRect(window, &r, 0);
 }
 
-static void switch_to_full_screen(void)
-{
-	HMONITOR monitor;
-
-	if (window)
-	{
-		monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
-		DestroyWindow(window);
-	}
-	else
-		monitor = MonitorFromWindow(HWND_DESKTOP, MONITOR_DEFAULTTONEAREST);
-
-	MONITORINFO mi;
-	mi.cbSize = sizeof(mi);
-	GetMonitorInfo(monitor, &mi);
-
-	window = CreateWindowExW(
-		WS_EX_TOPMOST,                  /* Extended class style */
-		L"WordGrinder",                 /* Class Name */
-		L"WordGrinder",                 /* Title */
-		WS_POPUP,                       /* Style */
-		mi.rcMonitor.left,              /* x */
-		mi.rcMonitor.top,               /* y */
-		mi.rcMonitor.right - mi.rcMonitor.left, /* width */
-		mi.rcMonitor.bottom - mi.rcMonitor.top, /* height */
-		HWND_DESKTOP,                   /* Parent */
-		NULL,                           /* No menu */
-		GetModuleHandle(NULL),          /* Instance */
-		0);                             /* No special parameters */
-
-	ShowWindow(window, SW_SHOWDEFAULT);
-}
-
 /* Actually invalidates a 3x3 square around the character, to deal with
  * overdraw. */
 static void invalidate_character_at(int x, int y)
@@ -728,7 +697,7 @@ static void insert_item_on_menu(const char* msg, int id, HMENU menu)
 	InsertMenuItem(menu, count+1, TRUE, &mii);
 }
 
-static void switch_to_windowed(void)
+static void create_window(void)
 {
 	if (window)
 		DestroyWindow(window);
@@ -789,6 +758,36 @@ static void switch_to_windowed(void)
 	ShowWindow(window, SW_SHOWDEFAULT);
 }
 
+static void switch_to_full_screen(void)
+{
+	HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+
+	MONITORINFO mi;
+	mi.cbSize = sizeof(mi);
+	GetMonitorInfo(monitor, &mi);
+
+	GetWindowPlacement(window, &nonFullScreenSize);
+
+	uint32_t style = GetWindowLong(window, GWL_STYLE);
+	SetWindowLong(window, GWL_STYLE, style & ~WS_OVERLAPPEDWINDOW);
+	SetWindowPos(window, HWND_TOP,
+		mi.rcMonitor.left,              /* x */
+		mi.rcMonitor.top,               /* y */
+		mi.rcMonitor.right - mi.rcMonitor.left, /* width */
+		mi.rcMonitor.bottom - mi.rcMonitor.top, /* height */
+		SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+}
+
+static void switch_to_windowed(void)
+{
+	uint32_t style = GetWindowLong(window, GWL_STYLE);
+	SetWindowLong(window, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
+	SetWindowPlacement(window, &nonFullScreenSize);
+	SetWindowPos(window, NULL, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                 SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
+}
+
 void dpy_start(void)
 {
 	/* Register our window class. */
@@ -813,7 +812,7 @@ void dpy_start(void)
 		}
 	}
 
-	switch_to_windowed();
+	create_window();
 }
 
 void dpy_shutdown(void)
