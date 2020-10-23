@@ -23,13 +23,13 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: delete-old-assets
       uses: mknejp/delete-release-assets@v1
-        with:
-          token: ${{ github.token }}
-          tag: dev
-          assets: | 
-            wordgrinder-*.tar.xz
-            bin/WordGrinder-*-setup.exe
-    - name: release
+      with:
+        token: ${{ github.token }}
+        tag: dev
+        assets: | 
+          wordgrinder-*.tar.xz
+          bin/WordGrinder-*-setup.exe
+    - me: release
       uses: softprops/action-gh-release@v1
       with:
         name: Development build
