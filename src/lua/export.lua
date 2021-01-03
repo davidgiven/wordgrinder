@@ -164,7 +164,7 @@ function ExportFileWithUI(filename, title, extension, callback)
 		end
 	end
 
-	ImmediateMessage("Exporting...")
+	ImmediateMessage("Exporting "..filename.."...")
 	local fp, e = io.open(filename, "w")
 	if not fp then
 		ModalMessage(nil, "Unable to open the output file "..e..".")
