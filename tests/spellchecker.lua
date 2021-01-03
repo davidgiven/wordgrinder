@@ -65,13 +65,21 @@ FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
-Cmd.InsertStringIntoParagraph("foo bar baz")
+-- FindNextMisspeltWord
+
+SetSystemDictionaryForTesting({"bar", "exclamation", "correct"})
+
+Cmd.InsertStringIntoParagraph("foo bar baz exclamation! Correct. incorroct")
 Cmd.GotoBeginningOfDocument()
 Cmd.FindNextMisspeltWord()
 AssertTableEquals({1, 1, 1}, {Document.mp, Document.mw, Document.mo})
 AssertTableEquals({1, 1, 4}, {Document.cp, Document.cw, Document.co})
 
 Cmd.FindNextMisspeltWord()
-AssertTableEquals({1, 2, 1}, {Document.mp, Document.mw, Document.mo})
-AssertTableEquals({1, 2, 4}, {Document.cp, Document.cw, Document.co})
+AssertTableEquals({1, 3, 1}, {Document.mp, Document.mw, Document.mo})
+AssertTableEquals({1, 3, 4}, {Document.cp, Document.cw, Document.co})
+
+Cmd.FindNextMisspeltWord()
+AssertTableEquals({1, 6, 1}, {Document.mp, Document.mw, Document.mo})
+AssertTableEquals({1, 6, 10}, {Document.cp, Document.cw, Document.co})
 
