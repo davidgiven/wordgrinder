@@ -299,6 +299,7 @@ the program starts up (but after any --lua files). It defaults to:
                 CLIError("user script compilation error: "..e)
             end
 
+            EngageCLI()
             f(...)
             os.exit(0)
         end

@@ -613,7 +613,7 @@ function Cmd.LoadDocumentSet(filename)
 		end
 	end
 
-	ImmediateMessage("Loading...")
+	ImmediateMessage("Loading "..filename.."...")
 	local d, e = loaddocument(filename)
 	if not d then
 		if not e then
