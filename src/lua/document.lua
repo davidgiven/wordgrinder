@@ -323,7 +323,7 @@ ParagraphClass =
 					issentence = false
 				end
 
-				if word:find("%.$") then
+				if word:find("[^%a]$") then
 					issentence = true
 				end
 			end

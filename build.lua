@@ -472,7 +472,7 @@ rule luascripts
     command = $LUA_INTERPRETER tools/multibin2c.lua script_table $in > $out
 
 rule wordgrindertest
-    command = $exe --lua $in > $out 2>&1 || rm -f $out
+    command = $exe --lua $in > $out 2>&1 || (cat $out && rm -f $out)
 
 rule rcfile
     command = $WINDRES $in $out
