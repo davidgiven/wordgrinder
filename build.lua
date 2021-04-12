@@ -519,7 +519,6 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/import/text.lua",
     "src/lua/import/opendocument.lua",
     "src/lua/import/markdown.lua",
-    "src/lua/import/org.lua",
     "src/lua/navigate.lua",
     "src/lua/addons/goto.lua",
     "src/lua/addons/autosave.lua",
