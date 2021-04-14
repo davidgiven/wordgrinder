@@ -329,6 +329,7 @@ function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
         "tests/export-to-html.lua",
         "tests/export-to-latex.lua",
         "tests/export-to-markdown.lua",
+        "tests/export-to-org.lua",
         "tests/export-to-opendocument.lua",
         "tests/export-to-text.lua",
         "tests/export-to-troff.lua",

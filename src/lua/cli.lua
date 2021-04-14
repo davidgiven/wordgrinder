@@ -23,6 +23,7 @@ local export_table =
 	["tex"] = Cmd.ExportLatexFile, 
 	["txt"] = Cmd.ExportTextFile,
 	["md"] = Cmd.ExportMarkdownFile,
+	["org"] = Cmd.ExportOrgFile,
 --	["rtf"] = Cmd.ExportRTFFile,
 }
 
