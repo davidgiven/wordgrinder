@@ -40,12 +40,13 @@ Cmd.InsertStringIntoParagraph("normal text again")
 Cmd.ChangeParagraphStyle("P")
 
 local expected = [[
+#+TITLE: main
 
 one two three
 
 four *bold*/*italic*//*_underline _*//*_stillunderline_*/plain
 
-# heading
+* heading
 
 
 - bullet
