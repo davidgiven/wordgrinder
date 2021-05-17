@@ -518,7 +518,6 @@ add_nsis() {
 
 add_install() {
     install_file extras/wordgrinder.desktop $PREFIX/share/applications/wordgrinder.desktop 644
-    install_file extras/wordgrinder.mime    $PREFIX/share/mime-info/wordgrinder.mime 644
     install_file extras/wordgrinder.xml     $PREFIX/share/mime/packages/wordgrinder.xml 644
     install_file extras/icon.png            $PREFIX/share/icons/hicolor/256x256/apps/wordgrinder.png 644
     install_file README.wg                  $PREFIX/doc/wordgrinder/README.wg 644
