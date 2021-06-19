@@ -211,6 +211,10 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(LPEG_PACKAGE, "--libs")
     end
 
+    if SDLFONTCACHE_PACKAGE == "builtin" then
+        cflags[#cflags+1] = "-Isrc/c/emu/SDL_FontCache"
+    end
+
     local function srcfile(cfile)
         ofile = cfile:gsub("^(.*)%.c$", OBJDIR.."/"..name.."/%1.o")
         objs[#objs+1] = ofile
@@ -294,6 +298,10 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     elseif frontend == "sdl" then
         srcfile("src/c/arch/sdl/dpy.c")
         srcfile("src/c/arch/sdl/main.c")
+
+        if SDLFONTCACHE_PACKAGE == "builtin" then
+            srcfile("src/c/emu/SDL_FontCache/SDL_FontCache.c")
+        end
     else
         error("unsupported frontend '"..frontend.."'")
     end
@@ -428,6 +436,10 @@ FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)
 FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("Xft", XFT_PACKAGE)
 
 FRONTENDS["sdl"] = detect_package("SDL 2", "sdl2")
+if FRONTENDS["sdl"] then
+    detect_mandatory_package("SDL2_ttf", "SDL2_ttf")
+    detect_mandatory_package("SDL_FontCache", SDLFONTCACHE_PACKAGE)
+end
 
 detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
 detect_mandatory_package("lpeg", LPEG_PACKAGE)
@@ -464,6 +476,10 @@ if want_frontend("x11") then
     " ", package_flags(XFT_PACKAGE, "--cflags"))
     emit("X11_LDFLAGS = ", package_flags("freetype2", "--libs"),
     " ",  package_flags(XFT_PACKAGE, "--libs"))
+end
+if want_frontend("sdl") then
+    emit("SDL_CFLAGS = ", package_flags("sdl2 SDL2_ttf", "--cflags"))
+    emit("SDL_LDFLAGS = ", package_flags("sdl2 SDL2_ttf", "--libs"))
 end
 emit("LUA_INTERPRETER = ", LUA_INTERPRETER)
 emit("WINDRES = ", WINDRES)

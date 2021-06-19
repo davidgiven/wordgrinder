@@ -100,6 +100,7 @@ LPEG_PACKAGE ?= builtin
 LUABITOP_PACKAGE ?= builtin
 MINIZIP_PACKAGE ?= builtin
 UTHASH_PACKAGE ?= builtin
+SDLFONTCACHE_PACKAGE ?= builtin
 
 # Do you want your binaries stripped on installation?
 
@@ -175,6 +176,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		MANDIR="$(MANDIR)" \
 		MINIZIP_PACKAGE="$(MINIZIP_PACKAGE)" \
 		OBJDIR="$(OBJDIR)" \
+		SDLFONTCACHE_PACKAGE="$(SDLFONTCACHE_PACKAGE)" \
 		SHAREDIR="$(SHAREDIR)" \
 		UTHASH_PACKAGE="$(UTHASH_PACKAGE)" \
 		VERSION="$(VERSION)" \
