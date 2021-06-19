@@ -9,8 +9,8 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev
+    - name: ap
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev libsdl2-dev libsdl2-ttf-dev
     - name: make
       run: make dev
 
@@ -21,7 +21,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: brew
-      run: brew install pkg-config ninja
+      run: brew install pkg-config ninja SDL2_ttf SDL2
     - name: make
       run: make dev
 
@@ -37,7 +37,7 @@ jobs:
         fetch-depth: 1
     - name: pacman
       run: |
-        pacman -S --noconfirm --needed make ninja gcc mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib pkg-config zip
+        pacman -S --noconfirm --needed make ninja gcc mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf
     - name: build
       run: |
         make windows wintests WINCC=/opt/bin/i686-w64-mingw32-gcc.exe WINDRES=/opt/bin/i686-w64-mingw32-windres.exe MAKENSIS=/mingw32/bin/makensis.exe CFLAGS="-I/mingw32/include" LDFLAGS="-L/mingw32/lib"
