@@ -144,6 +144,10 @@ The distribution contains a (thoroughly hacked up) copy of the Lunamark
 Markdown parser. This is also MIT licensed and is © 2009-2016 John MacFarlane.
 See https://github.com/jgm/lunamark for more information.
 
+The distribution contains a copy of the SDL_FontCache library. This is also MIT
+licensed and is © 2015 Jonathon Dearborn. See
+https://github.com/grimfang4/SDL_FontCache for more information.
+
 
 
 REVISION HISTORY
