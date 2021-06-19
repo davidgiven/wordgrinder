@@ -124,6 +124,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     elseif frontend == "curses" then
         cflags[#cflags+1] = "$CURSES_CFLAGS"
         ldflags[#ldflags+1] = "$CURSES_LDFLAGS"
+    elseif frontend == "sdl" then
+        cflags[#cflags+1] = "$SDL_CFLAGS"
+        ldflags[#ldflags+1] = "$SDL_LDFLAGS"
     elseif frontend == "windows" then
         ldflags[#ldflags+1] = "-lgdi32"
         ldflags[#ldflags+1] = "-lcomdlg32"
@@ -288,6 +291,11 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     elseif frontend == "cwindows" then
         srcfile("src/c/arch/win32/console/dpy.c")
         srcfile("src/c/arch/win32/console/realmain.c")
+    elseif frontend == "sdl" then
+        srcfile("src/c/arch/sdl/dpy.c")
+        srcfile("src/c/arch/sdl/main.c")
+    else
+        error("unsupported frontend '"..frontend.."'")
     end
 
     -- Minizip
@@ -418,6 +426,8 @@ end
 
 FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)
 FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("Xft", XFT_PACKAGE)
+
+FRONTENDS["sdl"] = detect_package("SDL 2", "sdl2")
 
 detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
 detect_mandatory_package("lpeg", LPEG_PACKAGE)
@@ -598,6 +608,11 @@ if want_frontend("x11") or want_frontend("curses") then
         preferred_x11 = strip_binary(preferred_x11)
         install_file("755", preferred_x11, DESTDIR..BINDIR.."/xwordgrinder")
     end
+    if want_frontend("sdl") then
+        preferred_sdl = "bin/xwordgrinder-"..package_name(LUA_PACKAGE).."-sdl-release"
+        preferred_sdl = strip_binary(preferred_sdl)
+        install_file("755", preferred_sdl, DESTDIR..BINDIR.."/xwordgrinder-sdl")
+    end
     install_file("644", "bin/wordgrinder.1", DESTDIR..MANDIR.."/man1/wordgrinder.1")
     install_file("644", "bin/xwordgrinder.1", DESTDIR..MANDIR.."/man1/xwordgrinder.1")
     install_file("644", "README.wg", DESTDIR..DOCDIR.."/wordgrinder/README.wg")
@@ -637,6 +652,12 @@ if want_frontend("windows") then
     run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug", true)
 end
 
+if want_frontend("sdl") then
+    for _, buildstyle in ipairs({"release", "debug"}) do
+        build_wordgrinder_binary("bin/xwordgrinder", "builtin", "sdl", buildstyle)
+    end
+end
+	
 emit("build clean: phony")
 emit("build dev: phony ", table.concat(allbinaries, " "))
 
