@@ -8,11 +8,11 @@
 #include <SDL2/SDL.h>
 #include "SDL_FontCache.h"
 
-#define VKM_SHIFT      0x100
-#define VKM_CTRL       0x200
-#define VKM_CTRLASCII  0x400
-#define SDLK_RESIZE     0x10000000
-#define SDLK_TIMEOUT    0x10000001
+#define VKM_SHIFT       0x10000
+#define VKM_CTRL        0x20000
+#define VKM_CTRLASCII   0x40000
+#define SDLK_RESIZE     0x80000
+#define SDLK_TIMEOUT    0x80001
 
 #define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
@@ -73,6 +73,7 @@ void dpy_start(void)
 void dpy_shutdown(void)
 {
     SDL_DestroyWindow(window);
+    SDL_Quit();
 }
 
 void dpy_clearscreen(void)
@@ -121,6 +122,8 @@ uni_t dpy_getchar(double timeout)
 {
     SDL_Event e;
     int expiry_ms = SDL_GetTicks() + timeout*1000.0;
+    if (timeout == -1)
+        expiry_ms = INT_MAX;
     for (;;)
     {
         int now_ms = SDL_GetTicks();
@@ -133,16 +136,51 @@ uni_t dpy_getchar(double timeout)
                 case SDL_QUIT:
                     break;
 
+                case SDL_TEXTINPUT:
+		        {
+                    const char* p = &e.text.text[0];
+                    uni_t key = readu8(&p);
+                    if (!key)
+                        break;
+
+                    return key;
+                }
+
                 case SDL_KEYDOWN:
-                    if ((e.key.keysym.sym < 0x80)
-                        && (e.key.keysym.sym > 0))
-                        return e.key.keysym.sym;
-                    return -e.key.keysym.sym;
+                {
+                    uni_t key = e.key.keysym.sym;
+                    if ((key >= 0x20) && (key < 0x80))
+                    {
+                        if (e.key.keysym.mod & KMOD_CTRL)
+                        {
+                            key = toupper(key);
+                            if (key == ' ')
+                            {
+                                key = -(VKM_CTRLASCII | 0);
+                                goto check_shift;
+                            }
+                            if ((key >= 'A') && (key <= 'Z'))
+                            {
+                                key = (key & 0x1f) | VKM_CTRLASCII;
+                                goto check_shift;
+                            }
+                        }
+                        break;
+                    }
+                    
+                    if (e.key.keysym.mod & KMOD_CTRL)
+                        key |= VKM_CTRL;
+                check_shift:
+                    if (e.key.keysym.mod & KMOD_SHIFT)
+                        key |= VKM_SHIFT;
+                    key = -key;
+                    return key;
+                }
             }
         }
     }
 
-    return 0;
+    return SDLK_TIMEOUT;
 }
 
 const char* dpy_getkeyname(uni_t k)
@@ -154,7 +192,7 @@ const char* dpy_getkeyname(uni_t k)
     }
 
     int mods = -k;
-    int key = (-k & 0xFF);
+    int key = (-k & 0xfff0ffff);
     static char buffer[32];
 
     if (mods & VKM_CTRLASCII)
