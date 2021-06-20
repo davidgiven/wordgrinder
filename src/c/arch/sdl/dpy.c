@@ -11,19 +11,35 @@
 #define VKM_SHIFT       0x10000
 #define VKM_CTRL        0x20000
 #define VKM_CTRLASCII   0x40000
-#define SDLK_RESIZE     0x80000
-#define SDLK_TIMEOUT    0x80001
-
-#define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
+#define VK_RESIZE     0x80000
+#define VK_TIMEOUT    0x80001
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
 static FC_Font* font;
-static int screenwidth;
-static int screenheight;
 static int cursorx;
 static int cursory;
 static bool cursor_shown;
+static int charwidth;
+static int charheight;
+
+enum
+{
+    COLOUR_BLACK = 0,
+    COLOUR_DIM,
+    COLOUR_NORMAL,
+    COLOUR_BRIGHT,
+
+    NUM_COLOURS
+};
+
+static SDL_Color colourmap[NUM_COLOURS] =
+{
+    [COLOUR_BLACK] =  {0x00, 0x00, 0x00, 0xff},
+    [COLOUR_DIM] =    {0x55, 0x55, 0x55, 0xff},
+    [COLOUR_NORMAL] = {0x88, 0x88, 0x88, 0xff},
+    [COLOUR_BRIGHT] = {0xff, 0xff, 0xff, 0xff},
+};
 
 static void fatal(const char* s, ...)
 {
@@ -37,10 +53,6 @@ static void fatal(const char* s, ...)
 }
 
 void dpy_init(const char* argv[])
-{
-}
-
-void dpy_start(void)
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         fatal("could not initialize sdl2: %s", SDL_GetError());
@@ -63,11 +75,16 @@ void dpy_start(void)
     font = FC_CreateFont();  
     if (!FC_LoadFont(font, renderer, "/System/Library/Fonts/SFNSMono.ttf", 20, FC_MakeColor(255, 255, 255, 255), TTF_STYLE_NORMAL))
         fatal("could not load font: %s", SDL_GetError());
+    charwidth = FC_GetWidth(font, "m");
+    charheight = FC_GetLineSpacing(font);
+fprintf(stderr, "%d %d\n", charwidth, charheight);
 
-    screenwidth = 80;
-    screenheight = 25;
     cursorx = cursory = 0;
     cursor_shown = false;
+}
+
+void dpy_start(void)
+{
 }
 
 void dpy_shutdown(void)
@@ -83,8 +100,12 @@ void dpy_clearscreen(void)
 
 void dpy_getscreensize(int* x, int* y)
 {
-    *x = screenwidth;
-    *y = screenheight;
+    int screenwidth;
+    int screenheight;
+    SDL_GetWindowSize(window, &screenwidth, &screenheight);
+
+    *x = screenwidth / charwidth;
+    *y = screenheight / charheight;
 }
 
 void dpy_sync(void)
@@ -111,7 +132,7 @@ void dpy_writechar(int x, int y, uni_t c)
     writeu8(&p, c);
     *p = '\0';
 
-    FC_Draw(font, renderer, x*8, y*8, buffer);
+    FC_Draw(font, renderer, x*charwidth, y*charheight, buffer);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
@@ -180,15 +201,15 @@ uni_t dpy_getchar(double timeout)
         }
     }
 
-    return SDLK_TIMEOUT;
+    return VK_TIMEOUT;
 }
 
 const char* dpy_getkeyname(uni_t k)
 {
     switch (-k)
     {
-        case SDLK_RESIZE:      return "KEY_RESIZE";
-        case SDLK_TIMEOUT:     return "KEY_TIMEOUT";
+        case VK_RESIZE:      return "KEY_RESIZE";
+        case VK_TIMEOUT:     return "KEY_TIMEOUT";
     }
 
     int mods = -k;
