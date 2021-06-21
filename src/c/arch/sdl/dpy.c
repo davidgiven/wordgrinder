@@ -21,9 +21,19 @@ static int cursory = 0;
 static bool cursor_shown = false;
 static int charwidth;
 static int charheight;
-static int defaultattr = 0;
+static int screenwidth;
+static int screenheight;
+static uint8_t defaultattr = 0;
 
 static const int font_size = 14;
+
+struct cell_s
+{
+    uni_t c;
+    uint8_t attr;
+};
+
+static struct cell_s* screen = NULL;
 
 enum
 {
@@ -48,6 +58,31 @@ static void fatal(const char* s, ...)
     fprintf(stderr, "\n");
     va_end(ap);
     exit(1);
+}
+
+static void sput(int x, int y, unsigned int id)
+{
+	if (!screen)
+        return;
+	if ((x < 0) || (x >= screenwidth))
+		return;
+	if ((y < 0) || (y >= screenheight))
+		return;
+
+    struct cell_s* p = &screen[y*screenwidth + x];
+    p->c = id;
+    p->attr = defaultattr;
+}
+
+static void change_screen_size(void)
+{
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    screenwidth = w / charwidth;
+    screenheight = h / charheight;
+
+    free(screen);
+    screen = calloc(screenwidth * screenheight, sizeof(struct cell_s));
 }
 
 static FC_Font* load_font(const char* filename)
@@ -84,6 +119,8 @@ void dpy_init(const char* argv[])
     fonts[BOLD|ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-BoldItalic.ttf");
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
+    
+    change_screen_size();
 }
 
 void dpy_start(void)
@@ -98,22 +135,66 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
-    SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
-    SDL_RenderClear(renderer);
+    dpy_cleararea(0, 0, screenwidth-1, screenheight-1);
 }
 
 void dpy_getscreensize(int* x, int* y)
 {
-    int screenwidth;
-    int screenheight;
-    SDL_GetWindowSize(window, &screenwidth, &screenheight);
-
-    *x = screenwidth / charwidth;
-    *y = screenheight / charheight;
+    *x = screenwidth;
+    *y = screenheight;
 }
 
 void dpy_sync(void)
 {
+    SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
+    SDL_RenderClear(renderer);
+
+    for (int y = 0; y < screenheight; y++)
+    {
+        struct cell_s* cp = &screen[y*screenwidth];
+        for (int x = 0; x < screenwidth; x++)
+        {
+            char buffer[8];
+            char* p = &buffer[0];
+            writeu8(&p, cp->c);
+            *p = '\0';
+
+            SDL_Rect r =
+            {
+                .x = x*charwidth,
+                .y = y*charheight,
+                .w = charwidth,
+                .h = charheight
+            };
+
+            SDL_Color fg;
+            int attr = cp->attr;
+            if (attr & DPY_BRIGHT)
+                fg = bright_colour;
+            else if (attr & DPY_DIM)
+                fg = dim_colour;
+            else
+                fg = normal_colour;
+
+            if (attr & DPY_REVERSE)
+            {
+                SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
+                SDL_RenderFillRect(renderer, &r);
+                fg = background_colour;
+            }
+
+            int style = REGULAR;
+            if (attr & DPY_BOLD)
+                style |= BOLD;
+            if (attr & DPY_ITALIC)
+                style |= ITALIC;
+
+            FC_DrawColor(fonts[style], renderer, r.x, r.y, fg, buffer);
+
+            cp++;
+        }
+    }
+
     SDL_RenderPresent(renderer);
     SDL_UpdateWindowSurface(window);
 }
@@ -133,57 +214,21 @@ void dpy_setattr(int andmask, int ormask)
 
 void dpy_writechar(int x, int y, uni_t c)
 {
-    char buffer[8];
-    char* p = &buffer[0];
-    writeu8(&p, c);
-    *p = '\0';
-
-    SDL_Color fg;
-    SDL_Color bg;
-	if (defaultattr & DPY_BRIGHT)
-		fg = bright_colour;
-	else if (defaultattr & DPY_DIM)
-		fg = dim_colour;
-	else
-		fg = normal_colour;
-
-	if (defaultattr & DPY_REVERSE)
-	{
-		bg = fg;
-		fg = background_colour;
-	}
-	else
-		bg = background_colour;
-
-	int style = REGULAR;
-	if (defaultattr & DPY_BOLD)
-		style |= BOLD;
-	if (defaultattr & DPY_ITALIC)
-		style |= ITALIC;
-
-    SDL_Rect r =
-    {
-        .x = x*charwidth,
-        .y = y*charheight,
-        .w = charwidth,
-        .h = charheight
-    };
-    SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 0xff);
-    SDL_RenderFillRect(renderer, &r);
-    FC_DrawColor(fonts[style], renderer, r.x, r.y, fg, buffer);
+    sput(x, y, c);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
-    SDL_Rect r =
+    for (int y = y1; y <= y2; y++)
     {
-        .x = x1*charwidth,
-        .y = y1*charheight,
-        .w = (x2-x1)*charwidth,
-        .h = (y2-y1)*charheight,
-    };
-    SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
-    SDL_RenderFillRect(renderer, &r);
+        struct cell_s* p = &screen[y*screenwidth + x1];
+        for (int x = x1; x <= x2; x++)
+        {
+            p->c = 0;
+            p->attr = 0;
+            p++;
+        }
+    }
 }
 
 uni_t dpy_getchar(double timeout)
@@ -204,6 +249,15 @@ uni_t dpy_getchar(double timeout)
                 case SDL_QUIT:
                     break;
 
+                case SDL_WINDOWEVENT:
+                    switch (e.window.event)
+                    {
+                        case SDL_WINDOWEVENT_SIZE_CHANGED:
+                            change_screen_size();
+                            return -VK_RESIZE;
+                    }
+                    break;
+                    
                 case SDL_TEXTINPUT:
 		        {
                     const char* p = &e.text.text[0];
