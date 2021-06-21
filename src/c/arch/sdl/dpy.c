@@ -16,30 +16,28 @@
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
-static FC_Font* font;
-static int cursorx;
-static int cursory;
-static bool cursor_shown;
+static int cursorx = 0;
+static int cursory = 0;
+static bool cursor_shown = false;
 static int charwidth;
 static int charheight;
+static int defaultattr = 0;
+
+static const int font_size = 14;
 
 enum
 {
-    COLOUR_BLACK = 0,
-    COLOUR_DIM,
-    COLOUR_NORMAL,
-    COLOUR_BRIGHT,
-
-    NUM_COLOURS
+	REGULAR = 0,
+	ITALIC = (1<<0),
+	BOLD = (1<<1),
 };
 
-static SDL_Color colourmap[NUM_COLOURS] =
-{
-    [COLOUR_BLACK] =  {0x00, 0x00, 0x00, 0xff},
-    [COLOUR_DIM] =    {0x55, 0x55, 0x55, 0xff},
-    [COLOUR_NORMAL] = {0x88, 0x88, 0x88, 0xff},
-    [COLOUR_BRIGHT] = {0xff, 0xff, 0xff, 0xff},
-};
+static FC_Font* fonts[4];
+
+static const SDL_Color background_colour = {0x00, 0x00, 0x00, 0xff};
+static const SDL_Color dim_colour        = {0x55, 0x55, 0x55, 0xff};
+static const SDL_Color normal_colour     = {0xaa, 0xaa, 0xaa, 0xff};
+static const SDL_Color bright_colour     = {0xff, 0xff, 0x00, 0xff};
 
 static void fatal(const char* s, ...)
 {
@@ -50,6 +48,14 @@ static void fatal(const char* s, ...)
     fprintf(stderr, "\n");
     va_end(ap);
     exit(1);
+}
+
+static FC_Font* load_font(const char* filename)
+{
+    FC_Font* font = FC_CreateFont();  
+    if (!FC_LoadFont(font, renderer, filename, font_size, normal_colour, TTF_STYLE_NORMAL))
+        fatal("could not load font %s: %s", filename, SDL_GetError());
+    return font;
 }
 
 void dpy_init(const char* argv[])
@@ -72,15 +78,12 @@ void dpy_init(const char* argv[])
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
-    font = FC_CreateFont();  
-    if (!FC_LoadFont(font, renderer, "/System/Library/Fonts/SFNSMono.ttf", 20, FC_MakeColor(255, 255, 255, 255), TTF_STYLE_NORMAL))
-        fatal("could not load font: %s", SDL_GetError());
-    charwidth = FC_GetWidth(font, "m");
-    charheight = FC_GetLineSpacing(font);
-fprintf(stderr, "%d %d\n", charwidth, charheight);
-
-    cursorx = cursory = 0;
-    cursor_shown = false;
+    fonts[REGULAR] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Regular.ttf");
+    fonts[ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Italic.ttf");
+    fonts[BOLD] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Bold.ttf");
+    fonts[BOLD|ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-BoldItalic.ttf");
+    charwidth = FC_GetWidth(fonts[REGULAR], "m");
+    charheight = FC_GetLineHeight(fonts[REGULAR]);
 }
 
 void dpy_start(void)
@@ -95,6 +98,7 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
+    SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
     SDL_RenderClear(renderer);
 }
 
@@ -123,6 +127,8 @@ void dpy_setcursor(int x, int y, bool shown)
 
 void dpy_setattr(int andmask, int ormask)
 {
+	defaultattr &= andmask;
+	defaultattr |= ormask;
 }
 
 void dpy_writechar(int x, int y, uni_t c)
@@ -132,11 +138,52 @@ void dpy_writechar(int x, int y, uni_t c)
     writeu8(&p, c);
     *p = '\0';
 
-    FC_Draw(font, renderer, x*charwidth, y*charheight, buffer);
+    SDL_Color fg;
+    SDL_Color bg;
+	if (defaultattr & DPY_BRIGHT)
+		fg = bright_colour;
+	else if (defaultattr & DPY_DIM)
+		fg = dim_colour;
+	else
+		fg = normal_colour;
+
+	if (defaultattr & DPY_REVERSE)
+	{
+		bg = fg;
+		fg = background_colour;
+	}
+	else
+		bg = background_colour;
+
+	int style = REGULAR;
+	if (defaultattr & DPY_BOLD)
+		style |= BOLD;
+	if (defaultattr & DPY_ITALIC)
+		style |= ITALIC;
+
+    SDL_Rect r =
+    {
+        .x = x*charwidth,
+        .y = y*charheight,
+        .w = charwidth,
+        .h = charheight
+    };
+    SDL_SetRenderDrawColor(renderer, bg.r, bg.g, bg.b, 0xff);
+    SDL_RenderFillRect(renderer, &r);
+    FC_DrawColor(fonts[style], renderer, r.x, r.y, fg, buffer);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
+    SDL_Rect r =
+    {
+        .x = x1*charwidth,
+        .y = y1*charheight,
+        .w = (x2-x1)*charwidth,
+        .h = (y2-y1)*charheight,
+    };
+    SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
+    SDL_RenderFillRect(renderer, &r);
 }
 
 uni_t dpy_getchar(double timeout)
@@ -236,8 +283,8 @@ const char* dpy_getkeyname(uni_t k)
         case SDLK_BACKSPACE:   template = "BACKSPACE"; break;
         case SDLK_DELETE:      template = "DELETE"; break;
         case SDLK_INSERT:      template = "INSERT"; break;
-        case SDLK_PAGEUP:      template = "PGDN"; break;
-        case SDLK_PAGEDOWN:    template = "PGUP"; break;
+        case SDLK_PAGEUP:      template = "PGUP"; break;
+        case SDLK_PAGEDOWN:    template = "PGDN"; break;
         case SDLK_TAB:         template = "TAB"; break;
         case SDLK_RETURN:      template = "RETURN"; break;
         case SDLK_ESCAPE:      template = "ESCAPE"; break;
