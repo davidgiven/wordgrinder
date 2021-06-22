@@ -297,7 +297,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/arch/win32/console/realmain.c")
     elseif frontend == "sdl" then
         srcfile("src/c/arch/sdl/dpy.c")
-        srcfile("src/c/arch/sdl/main.c")
+        srcfile(OBJDIR.."/fonts.c")
 
         if SDLFONTCACHE_PACKAGE == "builtin" then
             srcfile("src/c/emu/SDL_FontCache/SDL_FontCache.c")
@@ -494,8 +494,8 @@ rule cc
 rule ld
     command = $cc $in -o $out $ldflags
 
-rule luascripts
-    command = $LUA_INTERPRETER tools/multibin2c.lua script_table $in > $out
+rule multibin
+    command = $LUA_INTERPRETER tools/multibin2c.lua $sym $in > $out
 
 rule wordgrindertest
     command = $exe --lua $in > $out 2>&1 || (cat $out && rm -f $out && false)
@@ -516,7 +516,7 @@ rule manpage
     command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
 ]])
 
-emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
+emit("build ", OBJDIR.."/luascripts.c: multibin ", table.concat({
     "src/lua/_prologue.lua",
     "src/lua/events.lua",
     "src/lua/main.lua",
@@ -568,6 +568,15 @@ emit("build ", OBJDIR.."/luascripts.c: luascripts ", table.concat({
     "src/lua/lunamark/entities.lua",
     "src/lua/lunamark/markdown.lua",
 }, " "))
+emit("  sym = script_table")
+
+emit("build ", OBJDIR.."/fonts.c: multibin ", table.concat({
+    "extras/fonts/FantasqueSansMono-Regular.ttf",
+    "extras/fonts/FantasqueSansMono-Italic.ttf",
+    "extras/fonts/FantasqueSansMono-Bold.ttf",
+    "extras/fonts/FantasqueSansMono-BoldItalic.ttf",
+}, " "))
+emit("  sym = font_table")
 
 if want_frontend("x11") or want_frontend("curses") then
     for _, buildstyle in ipairs({"release", "debug", "static"}) do

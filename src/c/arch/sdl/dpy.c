@@ -87,8 +87,26 @@ static void change_screen_size(void)
 
 static FC_Font* load_font(const char* filename)
 {
+    SDL_RWops* rwops = SDL_RWFromFile(filename, "rb");
+
+    if (!rwops)
+    {
+        extern const FileDescriptor font_table[];
+        const FileDescriptor* table = font_table;
+        while (table->data)
+        {
+            if (strcmp(table->name, filename) == 0)
+            {
+                rwops = SDL_RWFromConstMem(table->data, table->size);
+                break;
+            }
+
+            table++;
+        }
+    }
+
     FC_Font* font = FC_CreateFont();  
-    if (!FC_LoadFont(font, renderer, filename, font_size, normal_colour, TTF_STYLE_NORMAL))
+    if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
         fatal("could not load font %s: %s", filename, SDL_GetError());
     return font;
 }
@@ -113,10 +131,10 @@ void dpy_init(const char* argv[])
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
-    fonts[REGULAR] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Regular.ttf");
-    fonts[ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Italic.ttf");
-    fonts[BOLD] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Bold.ttf");
-    fonts[BOLD|ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-BoldItalic.ttf");
+    fonts[REGULAR] = load_font("extras/fonts/FantasqueSansMono-Regular.ttf");
+    fonts[ITALIC] = load_font("extras/fonts/FantasqueSansMono-Italic.ttf");
+    fonts[BOLD] = load_font("extras/fonts/FantasqueSansMono-Bold.ttf");
+    fonts[BOLD|ITALIC] = load_font("extras/fonts/FantasqueSansMono-BoldItalic.ttf");
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
     
