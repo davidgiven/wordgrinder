@@ -112,7 +112,7 @@ LICENSE
 
 WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
-look in the licenses directory for the full license text.
+look in the `licenses` directory for the full license text.
 
 WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
@@ -147,6 +147,11 @@ See https://github.com/jgm/lunamark for more information.
 The distribution contains a copy of the SDL_FontCache library. This is also MIT
 licensed and is © 2015 Jonathon Dearborn. See
 https://github.com/grimfang4/SDL_FontCache for more information.
+
+The distribution contains a copy of the LargeLineHeight-NoLoopK version of the
+Fantasque Sans Mono font family. This is distributable under the terms of the
+Open Font License 1.1 © 2013-2017 Jany Belluz. See
+https://github.com/belluzj/fantasque-sans for more information.
 
 
 
