@@ -25,7 +25,7 @@ static int screenwidth;
 static int screenheight;
 static uint8_t defaultattr = 0;
 
-static const int font_size = 14;
+static const int font_size = 18;
 
 struct cell_s
 {
@@ -113,10 +113,10 @@ void dpy_init(const char* argv[])
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
-    fonts[REGULAR] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Regular.ttf");
-    fonts[ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Italic.ttf");
-    fonts[BOLD] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-Bold.ttf");
-    fonts[BOLD|ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/Normal/TTF/FantasqueSansMono-BoldItalic.ttf");
+    fonts[REGULAR] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Regular.ttf");
+    fonts[ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Italic.ttf");
+    fonts[BOLD] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-Bold.ttf");
+    fonts[BOLD|ITALIC] = load_font("/usr/share/fonts/truetype/fantasque-sans/LargeLineHeight-NoLoopK/TTF/FantasqueSansMono-BoldItalic.ttf");
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
     
@@ -195,6 +195,20 @@ void dpy_sync(void)
         }
     }
 
+    if (cursor_shown)
+    {
+		int x = cursorx*charwidth - 1;
+		if (x < 0)
+			x = 0;
+		int y = cursory*charheight;
+		int h = charheight;
+
+        SDL_SetRenderDrawColor(renderer, bright_colour.r, bright_colour.g, bright_colour.b, 0xff);
+		SDL_RenderDrawLine(renderer, x,   y,   x, y+h);
+		SDL_RenderDrawLine(renderer, x-1, y, x+1, y);
+		SDL_RenderDrawLine(renderer, x-1, y+h, x+1, y+h);
+    }
+
     SDL_RenderPresent(renderer);
     SDL_UpdateWindowSurface(window);
 }
@@ -224,8 +238,8 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
         struct cell_s* p = &screen[y*screenwidth + x1];
         for (int x = x1; x <= x2; x++)
         {
-            p->c = 0;
-            p->attr = 0;
+            p->c = ' ';
+            p->attr = defaultattr;
             p++;
         }
     }
@@ -241,7 +255,7 @@ uni_t dpy_getchar(double timeout)
     {
         int now_ms = SDL_GetTicks();
         if (now_ms >= expiry_ms)
-            return 0;
+            return -VK_TIMEOUT;
         if (SDL_WaitEventTimeout(&e, expiry_ms - now_ms))
         {
             switch (e.type)
@@ -301,8 +315,6 @@ uni_t dpy_getchar(double timeout)
             }
         }
     }
-
-    return VK_TIMEOUT;
 }
 
 const char* dpy_getkeyname(uni_t k)
