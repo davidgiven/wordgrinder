@@ -29,7 +29,8 @@ local stylemarkup =
 	["H2"] = BRIGHT + BOLD + UNDERLINE,
 	["H3"] = ITALIC + BRIGHT + BOLD,
 	["H4"] = BRIGHT + BOLD,
-	["PRE"] = BRIGHT + ITALIC
+	["PRE"] = BRIGHT + ITALIC,
+	["RAW"] = BRIGHT + BOLD
 }
 
 DocumentSetClass =
