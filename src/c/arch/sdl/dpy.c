@@ -7,6 +7,7 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "SDL_FontCache.h"
+#include "keyqueue.h"
 
 #define VKM_SHIFT       0x10000
 #define VKM_CTRL        0x20000
@@ -345,6 +346,10 @@ uni_t dpy_getchar(double timeout)
         expiry_ms = INT_MAX;
     for (;;)
     {
+        uni_t k = get_queued_key();
+        if (k)
+            return k;
+
         int now_ms = SDL_GetTicks();
         if (now_ms >= expiry_ms)
             return -VK_TIMEOUT;
@@ -367,11 +372,14 @@ uni_t dpy_getchar(double timeout)
                 case SDL_TEXTINPUT:
 		        {
                     const char* p = &e.text.text[0];
-                    uni_t key = readu8(&p);
-                    if (!key)
-                        break;
-
-                    return key;
+                    for (;;)
+                    {
+                        uni_t key = readu8(&p);
+                        if (!key)
+                            break;
+                        put_queued_key(key);
+                    }
+                    break;
                 }
 
                 case SDL_KEYDOWN:
@@ -407,6 +415,11 @@ uni_t dpy_getchar(double timeout)
                                 goto check_shift;
                             }
                         }
+                        if (e.key.keysym.mod & KMOD_ALT)
+                        {
+                            put_queued_key(-27);
+                            put_queued_key(key);
+                        }
                         break;
                     }
                     
@@ -415,8 +428,8 @@ uni_t dpy_getchar(double timeout)
                 check_shift:
                     if (e.key.keysym.mod & KMOD_SHIFT)
                         key |= VKM_SHIFT;
-                    key = -key;
-                    return key;
+                    put_queued_key(-key);
+                    break;
                 }
             }
         }

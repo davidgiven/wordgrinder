@@ -297,6 +297,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/arch/win32/console/realmain.c")
     elseif frontend == "sdl" then
         srcfile("src/c/arch/sdl/dpy.c")
+        srcfile("src/c/arch/sdl/keyqueue.c")
         srcfile(OBJDIR.."/fonts.c")
 
         if SDLFONTCACHE_PACKAGE == "builtin" then
