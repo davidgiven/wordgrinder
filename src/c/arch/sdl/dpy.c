@@ -377,6 +377,20 @@ uni_t dpy_getchar(double timeout)
                 case SDL_KEYDOWN:
                 {
                     uni_t key = e.key.keysym.sym;
+                    switch (key)
+                    {
+                        case SDLK_CAPSLOCK:
+                        case SDLK_LCTRL:
+                        case SDLK_RCTRL:
+                        case SDLK_LSHIFT:
+                        case SDLK_RSHIFT:
+                        case SDLK_LALT:
+                        case SDLK_RALT:
+                        case SDLK_LGUI:
+                        case SDLK_RGUI:
+                        case SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_UNKNOWN):
+                            continue;
+                    }
                     if ((key >= 0x20) && (key < 0x80))
                     {
                         if (e.key.keysym.mod & KMOD_CTRL)
@@ -384,7 +398,7 @@ uni_t dpy_getchar(double timeout)
                             key = toupper(key);
                             if (key == ' ')
                             {
-                                key = -(VKM_CTRLASCII | 0);
+                                key = VKM_CTRLASCII | 0;
                                 goto check_shift;
                             }
                             if ((key >= 'A') && (key <= 'Z'))
@@ -446,6 +460,7 @@ const char* dpy_getkeyname(uni_t k)
         case SDLK_TAB:         template = "TAB"; break;
         case SDLK_RETURN:      template = "RETURN"; break;
         case SDLK_ESCAPE:      template = "ESCAPE"; break;
+        case SDLK_MENU:        template = "MENU"; break;
     }
 
     if (template)
