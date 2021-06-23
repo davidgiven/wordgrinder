@@ -162,6 +162,83 @@ void dpy_getscreensize(int* x, int* y)
     *y = screenheight;
 }
 
+static void draw_char(int x, int y, int c, FC_Font* font, SDL_Color* fg)
+{
+    const int w = charwidth;
+    const int h = charheight;
+    const int w2 = charwidth / 2.0;
+    const int h2 = charheight / 2.0;
+
+    SDL_SetRenderDrawColor(renderer, fg->r, fg->g, fg->b, 0xff);
+    switch (c)
+    {
+		case 32:
+		case 160: /* Non-breaking space */
+			break;
+
+		case 0x2500: /* ─ */
+		case 0x2501: /* ━ */
+			SDL_RenderDrawLine(renderer, x+0, y+h2, x+w, y+h2);
+			break;
+
+		case 0x2502: /* │ */
+		case 0x2503: /* ┃ */
+			SDL_RenderDrawLine(renderer, x+w2, y, x+w2, y+h);
+			break;
+
+		case 0x250c: /* ┌ */
+		case 0x250d: /* ┍ */
+		case 0x250e: /* ┎ */
+		case 0x250f: /* ┏ */
+			SDL_RenderDrawLine(renderer, x+w2, y+h2, x+w2, y+h);
+			SDL_RenderDrawLine(renderer, x+w2, y+h2, x+w, y+h2);
+			break;
+
+		case 0x2510: /* ┐ */
+		case 0x2511: /* ┑ */
+		case 0x2512: /* ┒ */
+		case 0x2513: /* ┓ */
+			SDL_RenderDrawLine(renderer, x+w2, y+h2, x+w2, y+h);
+			SDL_RenderDrawLine(renderer, x+0, y+h2, x+w2, y+h2);
+			break;
+
+		case 0x2514: /* └ */
+		case 0x2515: /* ┕ */
+		case 0x2516: /* ┖ */
+		case 0x2517: /* ┗ */
+			SDL_RenderDrawLine(renderer, x+w2, y+0, x+w2, y+h2);
+			SDL_RenderDrawLine(renderer, x+w2, y+h2, x+w, y+h2);
+			break;
+
+		case 0x2518: /* ┘ */
+		case 0x2519: /* ┙ */
+		case 0x251a: /* ┚ */
+		case 0x251b: /* ┛ */
+			SDL_RenderDrawLine(renderer, x+w2, y+0, x+w2, y+h2);
+			SDL_RenderDrawLine(renderer, x+0, y+h2, x+w2, y+h2);
+			break;
+
+		case 0x2551: /* ║ */
+			SDL_RenderDrawLine(renderer, x+w2-1, y, x+w2-1, y+h);
+			SDL_RenderDrawLine(renderer, x+w2+1, y, x+w2+1, y+h);
+			break;
+
+		case 0x2594: /* ▔ */
+			SDL_RenderDrawLine(renderer, x, y+2, x+w, y+2);
+			break;
+	
+        default:
+        {
+            char buffer[8];
+            char* p = &buffer[0];
+            writeu8(&p, c);
+            *p = '\0';
+
+            FC_DrawColor(font, renderer, x, y, *fg, buffer);
+        }
+    }
+}
+
 void dpy_sync(void)
 {
     SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
@@ -172,11 +249,6 @@ void dpy_sync(void)
         struct cell_s* cp = &screen[y*screenwidth];
         for (int x = 0; x < screenwidth; x++)
         {
-            char buffer[8];
-            char* p = &buffer[0];
-            writeu8(&p, cp->c);
-            *p = '\0';
-
             SDL_Rect r =
             {
                 .x = x*charwidth,
@@ -197,9 +269,12 @@ void dpy_sync(void)
             if (attr & DPY_REVERSE)
             {
                 SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
-                SDL_RenderFillRect(renderer, &r);
                 fg = background_colour;
             }
+            else
+                SDL_SetRenderDrawColor(renderer,
+                    background_colour.r, background_colour.g, background_colour.b, 0xff);
+            SDL_RenderFillRect(renderer, &r);
 
             int style = REGULAR;
             if (attr & DPY_BOLD)
@@ -207,8 +282,7 @@ void dpy_sync(void)
             if (attr & DPY_ITALIC)
                 style |= ITALIC;
 
-            FC_DrawColor(fonts[style], renderer, r.x, r.y, fg, buffer);
-
+            draw_char(r.x, r.y, cp->c, fonts[style], &fg);
             cp++;
         }
     }
