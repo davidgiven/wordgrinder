@@ -103,6 +103,9 @@ extern void writeu8(char** ptr, uni_t value);
 extern void utils_init(void);
 extern void filesystem_init(void);
 
+#define STRINGIFY1(x) #x
+#define STRINGIFY(x) STRINGIFY1(x)
+
 /* --- Display layer ----------------------------------------------------- */
 
 enum

@@ -83,13 +83,13 @@ void script_init(void)
 
 	/* Set some global variables. */
 
-	lua_pushstring(L, VERSION);
+	lua_pushstring(L, STRINGIFY(VERSION));
 	lua_setglobal(L, "VERSION");
 
 	lua_pushnumber(L, FILEFORMAT);
 	lua_setglobal(L, "FILEFORMAT");
 
-	lua_pushstring(L, ARCH);
+	lua_pushstring(L, STRINGIFY(ARCH));
 	lua_setglobal(L, "ARCH");
 
 	lua_newtable(L);
