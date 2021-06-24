@@ -30,8 +30,23 @@ static void findlocale(void)
 	}
 }
 
+#if defined WIN32
+#include <windows.h>
+static void find_exe(void)
+{
+	char path[MAX_PATH] = "WINDOWS_EXE=";
+	const int len = strlen(path);
+	GetModuleFileName(NULL, path+len, sizeof(path)-len);
+	putenv(path);
+}
+#endif
+
 int main(int argc, char* argv[])
 {
+	#if defined WIN32
+		find_exe();
+	#endif
+
 	findlocale();
 	script_init();
 	screen_init((const char**) argv);

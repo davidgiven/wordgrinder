@@ -99,7 +99,7 @@ local function sdl_flags(kind)
     local f = cached_sdl_flags[kind]
     if not f then
         local filename = os.tmpname()
-        local e = os.execute("sdl2-config "..kind.." > "..filename)
+        local e = os.execute("sh -c 'sdl2-config "..kind.."' > "..filename)
         if (e ~= 0) and (e ~= true) then
             error("couldn't fetch SDL2 config "..kind.." is not available")
         end
@@ -108,7 +108,7 @@ local function sdl_flags(kind)
         f = f:gsub("\n", " ")
         os.remove(filename)
 
-        flags[kind] = f
+        cached_sdl_flags[kind] = f
     end
     return f
 end
@@ -204,21 +204,11 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         cflags[#cflags+1] = "-mwindows"
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
-        ldflags[#ldflags+1] = "-lwinmm"
-        ldflags[#ldflags+1] = "-ldinput8"
-        ldflags[#ldflags+1] = "-lshell32"
-        ldflags[#ldflags+1] = "-lsetupapi"
-        ldflags[#ldflags+1] = "-luuid"
-        ldflags[#ldflags+1] = "-lversion"
-        ldflags[#ldflags+1] = "-loleaut32"
-        ldflags[#ldflags+1] = "-lole32"
-        ldflags[#ldflags+1] = "-limm32"
-        ldflags[#ldflags+1] = "-mwindows"
         ldflags[#ldflags+1] = "-lstdc++"
         ldflags[#ldflags+1] = "-lusp10"
         ldflags[#ldflags+1] = "-lrpcrt4"
         ldflags[#ldflags+1] = package_flags("freetype2 libpng harfbuzz bzip2 graphite2", "--libs")
-        ldflags[#ldflags+1] = "-lbrotlddec-static"
+        ldflags[#ldflags+1] = "-lbrotlidec-static"
         ldflags[#ldflags+1] = "-lbrotlicommon-static"
         ldflags[#ldflags+1] = sdl_flags("--static-libs")
         if (buildstyle == "release") and (WANT_STRIPPED_BINARIES == "yes") then
