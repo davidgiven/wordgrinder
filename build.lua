@@ -18,6 +18,10 @@ local function emit(...)
     outfp:write("\n")
 end
 
+function string.ninjad(self)
+    return self:gsub(":", "$:"):gsub(" ", "$ ")
+end
+
 FRONTENDS = {}
 local function want_frontend(name)
     return not not FRONTENDS[name]
@@ -61,7 +65,11 @@ local function package_name(package)
 end
 
 local function has_binary(binary)
-    return os.execute("type "..binary.." >/dev/null 2>&1") == 0
+    if os.getenv("OS") == "Windows_NT" then
+        return os.execute("sh -c 'type "..binary.."' >nul") == 0
+    else
+        return os.execute("type "..binary.." >/dev/null 2&>1") == 0
+    end
 end
 
 local function package_flags(package, kind)
@@ -84,6 +92,25 @@ local function package_flags(package, kind)
     s = s:gsub("\n", " ")
     os.remove(filename)
     return s
+end
+
+local cached_sdl_flags = {}
+local function sdl_flags(kind)
+    local f = cached_sdl_flags[kind]
+    if not f then
+        local filename = os.tmpname()
+        local e = os.execute("sdl2-config "..kind.." > "..filename)
+        if (e ~= 0) and (e ~= true) then
+            error("couldn't fetch SDL2 config "..kind.." is not available")
+        end
+        f = io.open(filename):read("*a")
+        f = f:gsub("^%s*(.-)%s*$", "%1")
+        f = f:gsub("\n", " ")
+        os.remove(filename)
+
+        flags[kind] = f
+    end
+    return f
 end
 
 local function addname(exe, name)
@@ -115,6 +142,7 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         "-lz",
         "-lm",
         "-g",
+        "-Wl,--start-group"
     }
     local objs = {}
 
@@ -124,12 +152,9 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
     elseif frontend == "curses" then
         cflags[#cflags+1] = "$CURSES_CFLAGS"
         ldflags[#ldflags+1] = "$CURSES_LDFLAGS"
-    elseif frontend == "sdl" then
+    elseif frontend == "windows" then
         cflags[#cflags+1] = "$SDL_CFLAGS"
         ldflags[#ldflags+1] = "$SDL_LDFLAGS"
-    elseif frontend == "windows" then
-        ldflags[#ldflags+1] = "-lgdi32"
-        ldflags[#ldflags+1] = "-lcomdlg32"
     end
 
     if (buildstyle == "static") or (frontend == "windows") or (frontend == "cwindows") then
@@ -166,17 +191,36 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         ldflags[#ldflags+1] = package_flags(UTHASH_PACKAGE, "--libs")
     end
 
+    cflags[#cflags+1] = package_flags(ZLIB_PACKAGE, "--cflags")
+    ldflags[#ldflags+1] = package_flags(ZLIB_PACKAGE, "--libs")
+    
     local cc
     if frontend == "windows" then
         cc = WINCC
+        linkcc = WINLINK
         cflags[#cflags+1] = "-DARCH='\"windows\"'"
         cflags[#cflags+1] = "-DWIN32"
         cflags[#cflags+1] = "-DWINVER=0x0501"
-        cflags[#cflags+1] = "-Dmain=appMain"
         cflags[#cflags+1] = "-mwindows"
         ldflags[#ldflags+1] = "-static"
         ldflags[#ldflags+1] = "-lcomctl32"
+        ldflags[#ldflags+1] = "-lwinmm"
+        ldflags[#ldflags+1] = "-ldinput8"
+        ldflags[#ldflags+1] = "-lshell32"
+        ldflags[#ldflags+1] = "-lsetupapi"
+        ldflags[#ldflags+1] = "-luuid"
+        ldflags[#ldflags+1] = "-lversion"
+        ldflags[#ldflags+1] = "-loleaut32"
+        ldflags[#ldflags+1] = "-lole32"
+        ldflags[#ldflags+1] = "-limm32"
         ldflags[#ldflags+1] = "-mwindows"
+        ldflags[#ldflags+1] = "-lstdc++"
+        ldflags[#ldflags+1] = "-lusp10"
+        ldflags[#ldflags+1] = "-lrpcrt4"
+        ldflags[#ldflags+1] = package_flags("freetype2 libpng harfbuzz bzip2 graphite2", "--libs")
+        ldflags[#ldflags+1] = "-lbrotlddec-static"
+        ldflags[#ldflags+1] = "-lbrotlicommon-static"
+        ldflags[#ldflags+1] = sdl_flags("--static-libs")
         if (buildstyle == "release") and (WANT_STRIPPED_BINARIES == "yes") then
             ldflags[#ldflags+1] = "-s"
         end
@@ -288,14 +332,15 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/arch/unix/x11/x11.c")
         srcfile("src/c/arch/unix/x11/glyphcache.c")
     elseif frontend == "windows" then
-        srcfile("src/c/arch/win32/gdi/dpy.c")
-        srcfile("src/c/arch/win32/gdi/glyphcache.c")
-        srcfile("src/c/arch/win32/gdi/realmain.c")
         objs[#objs+1] = OBJDIR.."/wordgrinder.rc.o"
     elseif frontend == "cwindows" then
         srcfile("src/c/arch/win32/console/dpy.c")
         srcfile("src/c/arch/win32/console/realmain.c")
-    elseif frontend == "sdl" then
+    else
+        error("unsupported frontend '"..frontend.."'")
+    end
+
+    if (frontend == "windows") then
         srcfile("src/c/arch/sdl/dpy.c")
         srcfile("src/c/arch/sdl/keyqueue.c")
         srcfile(OBJDIR.."/fonts.c")
@@ -303,8 +348,6 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         if SDLFONTCACHE_PACKAGE == "builtin" then
             srcfile("src/c/emu/SDL_FontCache/SDL_FontCache.c")
         end
-    else
-        error("unsupported frontend '"..frontend.."'")
     end
 
     -- Minizip
@@ -322,10 +365,14 @@ function build_wordgrinder_binary(exe, luapackage, frontend, buildstyle)
         srcfile("src/c/emu/lpeg/lpcode.c")
         srcfile("src/c/emu/lpeg/lpprint.c")
     end
-
+   
+    ldflags[#ldflags+1] = "-Wl,--end-group"
+    if not linkcc then
+        linkcc = cc
+    end
     emit("build ", exe, ": ld ", table.concat(objs, " "))
     emit("  ldflags = ", table.concat(ldflags, " "))
-    emit("  cc = ", cc)
+    emit("  cc = ", linkcc)
 end
 
 function run_wordgrinder_tests(exe, luapackage, frontend, buildstyle, noauto)
@@ -415,26 +462,29 @@ end
 
 local installables = {}
 function install_file(mode, src, dest)
-    emit("build ", dest, ": install ", src)
+    emit("build ", dest:ninjad(), ": install ", src)
     emit("  mode = ", mode)
-    installables[#installables+1] = dest
+    installables[#installables+1] = dest:ninjad()
 end
 
 -- Detect what tools we have available.
 
 io.write("Windows toolchain: ")
-if has_binary(WINCC) and has_binary(WINDRES) and has_binary(MAKENSIS) then
+if has_binary(WINCC) and has_binary(WINLINK) and has_binary(WINDRES) and has_binary(MAKENSIS) then
     print("found")
     FRONTENDS["windows"] = true
 else
-    print(string.format("not found (WINCC=%s, WINDRES=%s, MAKENSIS=%s)",
+    print(string.format("not found (WINCC=%s, WINLINK=%s, WINDRES=%s, MAKENSIS=%s)",
         tostring(has_binary(WINCC)),
+        tostring(has_binary(WINLINK)),
         tostring(has_binary(WINDRES)),
         tostring(has_binary(MAKENSIS))))
 end
 
+local has_freetype = detect_package("FreeType2", "freetype2")
+
 FRONTENDS["curses"] = detect_package("Curses", CURSES_PACKAGE)
-FRONTENDS["x11"] = detect_package("FreeType2", "freetype2") and detect_package("Xft", XFT_PACKAGE)
+FRONTENDS["x11"] = has_freetype and detect_package("Xft", XFT_PACKAGE)
 
 FRONTENDS["sdl"] = detect_package("SDL 2", "sdl2")
 if FRONTENDS["sdl"] then
@@ -446,6 +496,7 @@ detect_mandatory_package("Minizip", MINIZIP_PACKAGE)
 detect_mandatory_package("lpeg", LPEG_PACKAGE)
 detect_mandatory_package("uthash", UTHASH_PACKAGE)
 detect_mandatory_package("LuaBitOp", LUABITOP_PACKAGE)
+detect_mandatory_package("zlib", ZLIB_PACKAGE)
 
 local lua_packages = {}
 local function add_lua_package(package)
@@ -677,15 +728,17 @@ if want_frontend("windows") then
     emit("build wintests: phony test-builtin-cwindows-debug")
     run_wordgrinder_tests("bin/wordgrinder.exe", "builtin", "cwindows", "debug", true)
 end
-
-if want_frontend("sdl") then
-    for _, buildstyle in ipairs({"release", "debug"}) do
-        build_wordgrinder_binary("bin/xwordgrinder", "builtin", "sdl", buildstyle)
-    end
-end
 	
 emit("build clean: phony")
 emit("build dev: phony ", table.concat(allbinaries, " "))
+
+io.write("Building frontends:")
+for k, v in pairs(FRONTENDS) do
+    if v then
+        io.write(" ", k)
+    end
+end
+io.write("\n")
 
 -- vim: sw=4 ts=4 et
 

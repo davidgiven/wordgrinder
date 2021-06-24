@@ -45,7 +45,7 @@ extern int emu_wcwidth(uni_t c);
 #define emu_wcwidth(c) wcwidth(c)
 #endif
 
-extern int main(int argc, const char* argv[]);
+extern int main(int argc, char* argv[]);
 
 /* --- Lua --------------------------------------------------------------- */
 

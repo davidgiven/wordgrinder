@@ -30,11 +30,11 @@ static void findlocale(void)
 	}
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
 	findlocale();
 	script_init();
-	screen_init(argv);
+	screen_init((const char**) argv);
 	word_init();
 	utils_init();
 	filesystem_init();
@@ -47,7 +47,7 @@ int main(int argc, const char* argv[])
 	#endif
 
 	script_load_from_table(script_table);
-	script_run(argv);
+	script_run((const char**) argv);
 
 	return 0;
 }

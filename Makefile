@@ -34,13 +34,9 @@ LDFLAGS ?=
 
 # Used for the Windows build (either cross or native)
 WINCC ?= i686-w64-mingw32-gcc
+WINLINK ?= i686-w64-mingw32-g++
 WINDRES ?= i686-w64-mingw32-windres
 MAKENSIS ?= makensis
-ifneq ($(strip $(shell type $(MAKENSIS) >/dev/null 2>&1; echo $$?)),0)
-	# If makensis isn't on the path, chances are we're on Cygwin doing a
-	# Windows build --- so look in the default installation directory.
-	MAKENSIS := /cygdrive/c/Program\ Files\ \(x86\)/NSIS/makensis.exe
-endif
 
 # Application version and file format.
 VERSION := 0.8
@@ -101,6 +97,8 @@ LUABITOP_PACKAGE ?= builtin
 MINIZIP_PACKAGE ?= builtin
 UTHASH_PACKAGE ?= builtin
 SDLFONTCACHE_PACKAGE ?= builtin
+ZLIB_PACKAGE = zlib
+FREETYPE2_PACKAGE = freetype2
 
 # Do you want your binaries stripped on installation?
 
@@ -167,6 +165,7 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		DESTDIR="$(DESTDIR)" \
 		DOCDIR="$(DOCDIR)" \
 		FILEFORMAT="$(FILEFORMAT)" \
+		FREETYPE2_PACKAGE="$(FREETYPE2_PACKAGE)" \
 		LDFLAGS="$(LDFLAGS)" \
 		LUABITOP_PACKAGE="$(LUABITOP_PACKAGE)" \
 		LPEG_PACKAGE="$(LPEG_PACKAGE)" \
@@ -182,8 +181,10 @@ $(OBJDIR)/build.ninja:: $(LUA_INTERPRETER) build.lua Makefile
 		VERSION="$(VERSION)" \
 		WANT_STRIPPED_BINARIES="$(WANT_STRIPPED_BINARIES)" \
 		WINCC="$(WINCC)" \
+		WINLINK="$(WINLINK)" \
 		WINDRES="$(WINDRES)" \
-		XFT_PACKAGE="$(XFT_PACKAGE)"
+		XFT_PACKAGE="$(XFT_PACKAGE)" \
+		ZLIB_PACKAGE="$(ZLIB_PACKAGE)"
 	$(hide) mv $@.tmp $@
 
 clean:
