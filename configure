@@ -13,8 +13,11 @@ if [ $# = 0 ]; then
     if [ "$OS" = "Windows_NT" ]; then
         echo "Building for Windows"
         set release wincon windows test -and release sdl windows
+    elif type sdl2-config > /dev/null; then
+        echo "Building a basic Unix build with SDL"
+        set debug ncurses test -and release ncurses test -and release sdl
     else
-        echo "Building a basic Unix build"
+        echo "Building a basic Unix build without SDL"
         set debug ncurses test -and release ncurses test
     fi
 fi
