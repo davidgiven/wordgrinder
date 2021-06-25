@@ -55,7 +55,7 @@ rule makensis
     command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule strip
-    command = strip $in -o $out
+    command = $strip $in -o $out
 
 rule install
     command = install -m $mode $in $out
@@ -153,6 +153,7 @@ fi
 reset_configuration() {
     CC=cc
     LINKCC=
+    STRIP=
     CFLAGS=
     LDFLAGS=
     PACKAGES=zlib
@@ -169,6 +170,7 @@ reset_configuration() {
     LUA=builtin
     TEST=n
     WINDOWS=n
+    X=
 
     add CFLAGS -g
     add CFLAGS -DVERSION=$VERSION
@@ -223,6 +225,8 @@ add_configuration() {
 
         CC=i686-w64-mingw32-gcc
         LINKCC=i686-w64-mingw32-g++
+        STRIP=i686-w64-mingw32-strip
+        X=.exe
 
         if [ "$done_common_windows" != "y" ]; then
             done_common_windows=y
@@ -360,9 +364,11 @@ add_configuration() {
         LINKCC=$CC
     fi
 
-    echo "build $EXE : ld $OBJS" >&3
+    echo "build $EXE-unstripped$X : ld $OBJS" >&3
     echo "  ldflags = $LDFLAGS" >&3
     echo "  cc = $LINKCC" >&3
+    echo "build $EXE$X : strip $EXE-unstripped$X" >&3
+    echo "  strip = $STRIP" >&3
 
     if [ "$TEST" = "y" ]; then
         local tests
@@ -436,8 +442,8 @@ add_configuration() {
 
         for f in $tests; do
             stampfile=$O/${f%*.lua}.stamp
-            echo "build $stampfile : wordgrindertest $f | $EXE" >&3
-            echo "  exe = $EXE" >&3
+            echo "build $stampfile : wordgrindertest $f | $EXE$X" >&3
+            echo "  exe = $EXE$X" >&3
         done
     fi
 }
