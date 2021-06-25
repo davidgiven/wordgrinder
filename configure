@@ -12,7 +12,7 @@ if [ $# = 0 ]; then
     echo "Autodetecting a sensible configuration..."
     if [ "$OS" = "Windows_NT" ]; then
         echo "Building for Windows"
-        set release wincon windows test -and release sdl windows
+        set release wincon windows test -and release sdl windows -nsis
     elif type sdl2-config > /dev/null; then
         echo "Building a basic Unix build with SDL"
         set debug ncurses test -and release ncurses test -and release sdl
@@ -52,7 +52,7 @@ rule rcfile
     command = $windres $in $out
 
 rule makensis
-    command = $makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
+    command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule strip
     command = strip $in -o $out
@@ -442,6 +442,10 @@ add_configuration() {
     fi
 }
 
+add_nsis() {
+    echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-sdl-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+}
+
 reset_configuration
 while [ $# != 0 ]; do
     case $1 in
@@ -463,6 +467,11 @@ while [ $# != 0 ]; do
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
         test)           TEST=y ;;
         windows)        WINDOWS=y ;;
+
+        -nsis)
+            add_nsis
+            ;;
+
         *)
             echo "Unknown keyword '$1'"
             exit 1

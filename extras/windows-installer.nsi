@@ -91,8 +91,8 @@ FunctionEnd
 Section "WordGrinder (required)"
 	SectionIn RO
 	SetOutPath $INSTDIR
-	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-windows-release.exe"
-	File /oname=cwordgrinder.exe "bin\wordgrinder-builtin-cwindows-release.exe"
+	File /oname=wordgrinder.exe "bin\wordgrinder-builtin-sdl-release.exe"
+	File /oname=cwordgrinder.exe "bin\wordgrinder-builtin-wincon-release.exe"
 	File "README.wg"
 	File "licenses\COPYING.*"
 
@@ -129,6 +129,7 @@ Section "Start Menu Shortcuts"
 	CreateShortCut "$SMPROGRAMS\WordGrinder\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
 	SetOutPath "$DOCUMENTS"
 	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder.lnk" "$INSTDIR\wordgrinder.exe" "" "$INSTDIR\wordgrinder.exe" 0
+	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder (console version).lnk" "$INSTDIR\cwordgrinder.exe" "" "$INSTDIR\cwordgrinder.exe" 0
 	CreateShortCut "$SMPROGRAMS\WordGrinder\WordGrinder manual.lnk" "$INSTDIR\wordgrinder.exe" '"$INSTDIR\README.wg"' "$INSTDIR\wordgrinder.exe" 0
 SectionEnd
 
