@@ -49,10 +49,10 @@ rule wordgrindertest
     command = $exe --lua $in > $out 2>&1 || (cat $out && rm -f $out && false)
 
 rule rcfile
-    command = $WINDRES $in $out
+    command = $windres $in $out
 
 rule makensis
-    command = $MAKENSIS -v2 -nocd -dVERSION=$VERSION -dOUTFILE=$out $in
+    command = $makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule strip
     command = strip $in -o $out
@@ -158,6 +158,7 @@ reset_configuration() {
     PACKAGES=zlib
     FRONTEND=
     SRCS=
+    OBJS=
     ARCH=normal
     BUILTIN_LUA=y
     BUILTIN_LUABITOP=y
@@ -216,11 +217,18 @@ add_configuration() {
         add CFLAGS -DEMULATED_WCWIDTH
         add CFLAGS -DWINSHIM
         add LDFLAGS -static
+        add OBJS $OBJDIR/wordgrinder.rc.o
         add SRCS src/c/emu/wcwidth.c
         add SRCS src/c/emu/lua-5.1.5/winshim.c
 
         CC=i686-w64-mingw32-gcc
         LINKCC=i686-w64-mingw32-g++
+
+        if [ "$done_common_windows" != "y" ]; then
+            done_common_windows=y
+            echo "build $OBJDIR/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml" >&3
+            echo "  windres = i686-w64-mingw32-windres" >&3
+        fi
     fi
 
     # External dependencies
@@ -340,10 +348,9 @@ add_configuration() {
     esac
 
     local objs
-    objs=
     for f in $SRCS; do
         obj=$O/${f%*.c}.o
-        objs=$objs" $obj"
+        add OBJS $obj
         echo "build $obj : cc $f" >&3
         echo "  cflags = $CFLAGS" >&3
         echo "  cc = $CC" >&3
@@ -353,7 +360,7 @@ add_configuration() {
         LINKCC=$CC
     fi
 
-    echo "build $EXE : ld $objs" >&3
+    echo "build $EXE : ld $OBJS" >&3
     echo "  ldflags = $LDFLAGS" >&3
     echo "  cc = $LINKCC" >&3
 
