@@ -10,10 +10,10 @@ jobs:
       with:
         fetch-depth: 1
     - name: ap
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-dev liblua5.2-dev libncursesw5-dev zlib1g-dev libxft-dev libsdl2-dev libsdl2-ttf-dev
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev liblua5.4-dev libluajit-dev libncursesw5-dev zlib1g-dev libsdl2-dev libsdl2-ttf-dev
     - name: make
       run: |
-        ./configure
+        ./configure dev
         make
 
   build-macos:
