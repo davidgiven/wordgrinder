@@ -78,6 +78,8 @@ extern void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup);
 #define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX)
 #endif
 
+extern void bit32_init(lua_State* L);
+
 #define forceinteger(L, offset) (int)lua_tonumber(L, offset)
 #define forcedouble(L, offset) (double)lua_tonumber(L, offset)
 

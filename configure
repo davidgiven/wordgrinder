@@ -15,7 +15,7 @@ if [ $# = 0 ]; then
         set release wincon windows test -and release sdl windows -nsis
     elif type sdl2-config > /dev/null; then
         echo "Building a basic Unix build with SDL"
-        set debug ncurses test -and release ncurses test -and release sdl
+        set debug ncurses test -and release ncurses test -and debug sdl -and release sdl
     else
         echo "Building a basic Unix build without SDL"
         set debug ncurses test -and release ncurses test
@@ -23,7 +23,20 @@ if [ $# = 0 ]; then
 fi
 if [ "$*" = "dev" ]; then
     echo "Development build"
-    set debug ncurses test -and release ncurses test -and debug sdl -and release sdl
+    set debug ncurses test \
+        -and release ncurses test \
+        -and release ncurses lua=lua5.1 test \
+        -and release ncurses lua=lua5.2 test \
+        -and release ncurses lua=lua5.3 test \
+        -and release ncurses lua=lua5.4 test \
+        -and release ncurses lua=luajit test \
+        -and debug sdl \
+        -and release sdl \
+        -and release sdl lua=lua5.1 \
+        -and release sdl lua=lua5.2 \
+        -and release sdl lua=lua5.3 \
+        -and release sdl lua=lua5.4 \
+        -and release sdl lua=luajit
 fi
 
 OBJDIR=.obj
@@ -313,6 +326,7 @@ add_configuration() {
     add SRCS src/c/lua.c
     add SRCS src/c/word.c
     add SRCS src/c/screen.c
+    add SRCS src/c/bit32.c
     add SRCS $OBJDIR/luascripts.c
 
     # Frontends
