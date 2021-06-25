@@ -181,7 +181,6 @@ reset_configuration() {
     add CFLAGS --std=gnu99
 
     add LDFLAGS -g
-    add LDFLAGS -Wl,--start-group
     add LDFLAGS -lm
     add LDFLAGS -lz
 }
@@ -325,15 +324,17 @@ add_configuration() {
             if [ "$WINDOWS" = "y" ]; then
                 add LDFLAGS $(sdl2-config --static-libs) $(pkg-config --libs SDL2_ttf)
                 add LDFLAGS $(pkg-config --libs freetype2 libpng harfbuzz bzip2 graphite2)
+                # Yes, again --- resolve recursive dependencies
+                add LDFLAGS $(pkg-config --libs freetype2)
+                # The pkg-config file for these is wrong
                 add LDFLAGS -lbrotlidec-static -lbrotlicommon-static
+                # sdl2-config is wrong
                 add LDFLAGS -lusp10 -lrpcrt4
             else
                 add LDFLAGS $(sdl2-config --libs) $(pkg-config --libs SDL2_ttf)
             fi
             ;;
     esac
-
-    add LDFLAGS -Wl,--end-group
 
     local objs
     objs=
