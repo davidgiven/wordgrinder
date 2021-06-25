@@ -55,7 +55,7 @@ rule makensis
     command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule strip
-    command = $strip $in -o $out
+    command = cp $in $out && $strip $out
 
 rule install
     command = install -m $mode $in $out
@@ -153,7 +153,7 @@ fi
 reset_configuration() {
     CC=cc
     LINKCC=
-    STRIP=
+    STRIP=strip
     CFLAGS=
     LDFLAGS=
     PACKAGES=zlib
