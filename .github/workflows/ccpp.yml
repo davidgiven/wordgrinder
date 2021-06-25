@@ -44,7 +44,6 @@ jobs:
         pacman -S --noconfirm --needed make ninja mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf
     - name: build
       run: |
-        PATH=/mingw32/bin:$PATH
-        ./configure
-        make
+        PATH=/mingw32/bin:$PATH ./configure
+        PATH=/mingw32/bin:$PATH make
 
