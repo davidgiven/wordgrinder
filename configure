@@ -10,6 +10,16 @@ FILEFORMAT=8
 
 if [ $# = 0 ]; then
     echo "Autodetecting a sensible configuration..."
+    if [ "$OS" = "Windows_NT" ]; then
+        echo "Building for Windows"
+        set release wincon windows test -and release sdl windows
+    else
+        echo "Building a basic Unix build"
+        set debug ncurses test -and release ncurses test
+    fi
+fi
+if [ "$*" = "dev" ]; then
+    echo "Development build"
     set debug ncurses test -and release ncurses test -and debug sdl -and release sdl
 fi
 
@@ -142,7 +152,7 @@ reset_configuration() {
     LINKCC=
     CFLAGS=
     LDFLAGS=
-    PACKAGES=
+    PACKAGES=zlib
     FRONTEND=
     SRCS=
     ARCH=normal
@@ -154,6 +164,7 @@ reset_configuration() {
     DEBUG=
     LUA=builtin
     TEST=n
+    WINDOWS=n
 
     add CFLAGS -g
     add CFLAGS -DVERSION=$VERSION
@@ -197,13 +208,23 @@ add_configuration() {
     O=$OBJDIR/$PROFILE
     mkdir -p $O
 
-    if [ "$PACKAGES" != "" ]; then
-        add CFLAGS $(pkg-config --cflags $PACKAGES)
-        add LDFLAGS $(pkg-config --libs $PACKAGES)
+    # Windows special stuff
+
+    if [ "$WINDOWS" = "y" ]; then
+        add CFLAGS -DEMULATED_WCWIDTH
+        add CFLAGS -DWINSHIM
+        add LDFLAGS -static
+        add SRCS src/c/emu/wcwidth.c
+        add SRCS src/c/emu/lua-5.1.5/winshim.c
+
+        CC=i686-w64-mingw32-gcc
+        LINKCC=i686-w64-mingw32-g++
     fi
 
+    # External dependencies
+
     if [ "$BUILTIN_LUA" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/lua-5.1.5 -DWINSHIM -DLUA_USE_EMU_TMPNAM
+        add CFLAGS -Isrc/c/emu/lua-5.1.5 -DLUA_USE_EMU_TMPNAM
         add SRCS src/c/emu/lua-5.1.5/lapi.c
         add SRCS src/c/emu/lua-5.1.5/lauxlib.c
         add SRCS src/c/emu/lua-5.1.5/lbaselib.c
@@ -233,7 +254,6 @@ add_configuration() {
         add SRCS src/c/emu/lua-5.1.5/lundump.c
         add SRCS src/c/emu/lua-5.1.5/lvm.c
         add SRCS src/c/emu/lua-5.1.5/lzio.c
-        add SRCS src/c/emu/lua-5.1.5/winshim.c
         add SRCS src/c/emu/tmpnam.c
     fi
 
@@ -262,6 +282,14 @@ add_configuration() {
         add SRCS src/c/emu/minizip/unzip.c
     fi
 
+    # This must go *after* any other include or library path configuration,
+    # to make sure any builtin headers get found before the system ones.
+
+    if [ "$PACKAGES" != "" ]; then
+        add CFLAGS $(pkg-config --cflags $PACKAGES)
+        add LDFLAGS $(pkg-config --libs $PACKAGES)
+    fi
+
     # Main core
 
     add SRCS src/c/utils.c
@@ -280,13 +308,28 @@ add_configuration() {
             add SRCS src/c/arch/unix/cursesw/dpy.c
             ;;
 
+        wincon)
+            add SRCS src/c/arch/win32/console/dpy.c
+            add SRCS src/c/arch/win32/console/realmain.c
+            add CFLAGS -Dmain=appMain
+            add CFLAGS -mconsole
+            add LDFLAGS -mconsole
+            ;;
+
         sdl)
             add SRCS src/c/arch/sdl/dpy.c
             add SRCS src/c/arch/sdl/keyqueue.c
             add SRCS src/c/emu/SDL_FontCache/SDL_FontCache.c
             add SRCS $OBJDIR/fonts.c
             add CFLAGS $(sdl2-config --cflags) $(pkg-config --cflags SDL2_ttf)
-            add LDFLAGS $(sdl2-config --libs) $(pkg-config --libs SDL2_ttf)
+            if [ "$WINDOWS" = "y" ]; then
+                add LDFLAGS $(sdl2-config --static-libs) $(pkg-config --libs SDL2_ttf)
+                add LDFLAGS $(pkg-config --libs freetype2 libpng harfbuzz bzip2 graphite2)
+                add LDFLAGS -lbrotlidec-static -lbrotlicommon-static
+                add LDFLAGS -lusp10 -lrpcrt4
+            else
+                add LDFLAGS $(sdl2-config --libs) $(pkg-config --libs SDL2_ttf)
+            fi
             ;;
     esac
 
@@ -408,6 +451,7 @@ while [ $# != 0 ]; do
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
         test)           TEST=y ;;
+        windows)        WINDOWS=y ;;
         *)
             echo "Unknown keyword '$1'"
             exit 1
