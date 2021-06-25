@@ -40,7 +40,7 @@ rule ld
     command = $cc $in -o $out $ldflags
 
 rule multibin
-    command = $LUA_INTERPRETER tools/multibin2c.lua $sym $in > $out
+    command = tools/multibin2c.sh $sym $in > $out
 
 rule wordgrindertest
     command = $exe --lua $in > $out 2>&1 || (cat $out && rm -f $out && false)

@@ -61,7 +61,7 @@ extern lua_State* L;
 
 typedef struct
 {
-	const char* data;
+	const uint8_t* data;
 	size_t size;
 	const char* name;
 } FileDescriptor;

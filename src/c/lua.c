@@ -116,8 +116,8 @@ void script_load_from_table(const FileDescriptor* table)
 {
 	while (table->data)
 	{
-		int status = luaL_loadbuffer(L, table->data, table->size,
-				table->name);
+		int status = luaL_loadbuffer(L, (const char*) table->data,
+				table->size, table->name);
 		status = status || docall(L, 0, 1);
 		if (status)
 		{
