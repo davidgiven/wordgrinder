@@ -357,6 +357,14 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
     }
 }
 
+void toggle_full_screen(void)
+{
+    static int state = 0;
+
+    state = state ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP;
+    SDL_SetWindowFullscreen(window, state);
+}
+
 uni_t dpy_getchar(double timeout)
 {
     SDL_Event e;
@@ -417,6 +425,11 @@ uni_t dpy_getchar(double timeout)
                         case SDLK_RGUI:
                         case SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_UNKNOWN):
                             continue;
+                    }
+                    if ((key == SDLK_RETURN) && (e.key.keysym.mod & KMOD_ALT))
+                    {
+                        toggle_full_screen();
+                        continue;
                     }
                     if ((key >= 0x20) && (key < 0x7f))
                     {

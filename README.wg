@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3818
+.documents.1.wordcount: 3824
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -286,6 +286,7 @@ P While fully functional, the main purpose of this version is for scripting, all
 P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
 H3 Unix X11, Windows GUI, OSX GUI
 P There is also a specific version of WordGrinder which uses the SDL library for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
+P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
 P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
 LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
