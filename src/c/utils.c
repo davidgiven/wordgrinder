@@ -6,59 +6,80 @@
 #include "globals.h"
 #include <sys/time.h>
 
-static const uint8_t masks[6] = {
-	0xff, 0x1f, 0x0f, 0x07, 0x03, 0x01
-};
-
-static const signed char trailing_bytes[256] = {
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 0
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 1
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 2
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 3
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 4
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 5
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 6
-     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  // 7
-    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,  // 8
-    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,  // 9
-    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,  // A
-    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,  // B
-     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // C
-     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  // D
-     2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,  // E
-     3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5,  // F
-};
-
 int getu8bytes(char c)
 {
-	return trailing_bytes[(unsigned char) c] + 1;
+	uint8_t cc = c;
+	if (cc < 0x80)
+		return 1;
+	else if (cc < 0xc0)
+		return 0;
+	else if (cc < 0xe0)
+		return 2;
+	else if (cc < 0xf0)
+		return 3;
+	else if (cc < 0xf8)
+		return 4;
+	else if (cc < 0xfc)
+		return 5;
+	return 6;
 }
 
 uni_t readu8(const char** srcp)
 {
-	const char* src = *srcp;
+	const uint8_t* src = (const uint8_t*) *srcp;
 
-	int nb = trailing_bytes[*(unsigned char*)src];
-	if (nb == -1)
+	uni_t c = *src++;
+	if (c < 0x80)
 	{
-		/* Invalid character! */
-		(*srcp)++;
-		return 0xfffd;
+		/* Do nothing! */
+		goto zero;
+	}
+	else if (c < 0xc0)
+	{
+		/* Invalid character */
+		c = -1;
+		goto zero;
+	}
+	else if (c < 0xe0)
+	{
+		/* One trailing byte */
+		c &= 0x1f;
+		goto one;
+	}
+	else if (c < 0xf0)
+	{
+		/* Two trailing bytes */
+		c &= 0x0f;
+		goto two;
+	}
+	else if (c < 0xf8)
+	{
+		/* Three trailing bytes */
+		c &= 0x07;
+		goto three;
+	}
+	else if (c < 0xfc)
+	{
+		/* Four trailing bytes */
+		c &= 0x03;
+		goto four;
+	}
+	else
+	{
+		/* Five trailing bytes */
+		c &= 0x01;
+		goto five;
 	}
 
-	uni_t ch = (unsigned char)*src++ & masks[nb];
-	switch (nb) {
-	    /* these fall through deliberately */
-		case 5: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f; 
-		case 4: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 3: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 2: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 1: if (!*src) break; ch <<= 6; ch += (unsigned char)*src++ & 0x3f;
-		case 0: break;
-	}
-
-	*srcp = src;
-	return ch;
+	uint8_t d;
+	five:   d = *src; src += (d != 0); c <<= 6; c += d & 0x3f; 
+	four:   d = *src; src += (d != 0); c <<= 6; c += d & 0x3f;
+	three:  d = *src; src += (d != 0); c <<= 6; c += d & 0x3f;
+	two:    d = *src; src += (d != 0); c <<= 6; c += d & 0x3f;
+	one:    d = *src; src += (d != 0); c <<= 6; c += d & 0x3f;
+	zero:
+	*srcp = (const char*) src;
+	return c;
 }
 
 void writeu8(char** destp, uni_t ch)
