@@ -307,7 +307,7 @@ void dpy_sync(void)
             if (attr & DPY_UNDERLINE)
             {
                 SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
-                SDL_RenderDrawLine(renderer, r.x, r.y+charascent, r.x+charwidth, r.y+charascent);
+                SDL_RenderDrawLine(renderer, r.x-1, r.y+charascent, r.x+charwidth+1, r.y+charascent);
             }
 
             cp++;
