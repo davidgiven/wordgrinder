@@ -474,6 +474,7 @@ while [ $# != 0 ]; do
 
         debug)          add CFLAGS -O0; add LDFLAGS -O0; DEBUG=debug ;;
         release)        add CFLAGS -Os -DNDEBUG; add LDFLAGS -Os; DEBUG=release ;;
+        profile)        add CFLAGS -pg -Os -DNDEBUG; add LDFLAGS -pg -Os; DEBUG=release ;;
         lua=*)          BUILTIN_LUA=n;          add PACKAGES ${1#*=}; LUA=${1#*=} ;;
         luabitop=*)     BUILTIN_LUABITOP=n;     add PACKAGES ${1#*=} ;;
         lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
