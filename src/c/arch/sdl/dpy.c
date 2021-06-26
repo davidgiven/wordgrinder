@@ -27,8 +27,6 @@ static int screenwidth;
 static int screenheight;
 static uint8_t defaultattr = 0;
 
-static const int font_size = 18;
-
 struct cell_s
 {
     uni_t c;
@@ -87,6 +85,21 @@ static void change_screen_size(void)
     screen = calloc(screenwidth * screenheight, sizeof(struct cell_s));
 }
 
+static int ivar_or_default(const char* name, int fallback)
+{
+	lua_getglobal(L, name);
+    if (lua_isnil(L, -1))
+        return fallback;
+    return luaL_checkinteger(L, -1);
+}
+
+static const char* svar_or_default(const char* name, const char* fallback)
+{
+	lua_getglobal(L, name);
+	const char* value = lua_tostring(L, -1);
+    return value ? value : fallback;
+}
+
 static FC_Font* load_font(const char* filename)
 {
     SDL_RWops* rwops = SDL_RWFromFile(filename, "rb");
@@ -107,17 +120,12 @@ static FC_Font* load_font(const char* filename)
         }
     }
 
+    int font_size = ivar_or_default("FONT_SIZE", 20);
+
     FC_Font* font = FC_CreateFont();  
     if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
         fatal("could not load font %s: %s", filename, SDL_GetError());
     return font;
-}
-
-static const char* var_or_default(const char* name, const char* fallback)
-{
-	lua_getglobal(L, name);
-	const char* value = lua_tostring(L, -1);
-    return value ? value : fallback;
 }
 
 void dpy_init(const char* argv[])
@@ -144,13 +152,13 @@ void dpy_start(void)
         fatal("could not create renderer: %s", SDL_GetError());
     
     fonts[REGULAR] = load_font(
-            var_or_default("FONT_REGULAR", "extras/fonts/FantasqueSansMono-Regular.ttf"));
+            svar_or_default("FONT_REGULAR", "extras/fonts/FantasqueSansMono-Regular.ttf"));
     fonts[ITALIC] = load_font(
-            var_or_default("FONT_ITALIC", "extras/fonts/FantasqueSansMono-Italic.ttf"));
+            svar_or_default("FONT_ITALIC", "extras/fonts/FantasqueSansMono-Italic.ttf"));
     fonts[BOLD] = load_font(
-            var_or_default("FONT_BOLD", "extras/fonts/FantasqueSansMono-Bold.ttf"));
+            svar_or_default("FONT_BOLD", "extras/fonts/FantasqueSansMono-Bold.ttf"));
     fonts[BOLD|ITALIC] = load_font(
-            var_or_default("FONT_BOLDITALIC", "extras/fonts/FantasqueSansMono-BoldItalic.ttf"));
+            svar_or_default("FONT_BOLDITALIC", "extras/fonts/FantasqueSansMono-BoldItalic.ttf"));
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
     charascent = FC_GetBaseline(fonts[REGULAR]) + 1;

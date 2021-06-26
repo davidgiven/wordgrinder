@@ -32,14 +32,14 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.margin: 0
 .clipboard.viewmode: 1
 .clipboard.wordcount: 100
-.documents.1.co: 1
+.documents.1.co: 1.0
 .documents.1.cp: 1
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3824
+.documents.1.wordcount: 3836
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -57,7 +57,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.viewmode: 2
 .documents.3.wordcount: 161
 .fileformat: 8
-.findtext: "--lua"
+.findtext: "font_regul"
 .idletime: 3
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
@@ -161,7 +161,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.name: "/.big/crouton/chroots/buster/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -290,6 +290,7 @@ P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
 P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
 LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
+LB FONT_SIZE: size of the font, in points. The default is (approximately) 20.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
