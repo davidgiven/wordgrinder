@@ -22,6 +22,7 @@ static int cursory = 0;
 static bool cursor_shown = false;
 static int charwidth;
 static int charheight;
+static int charascent;
 static int screenwidth;
 static int screenheight;
 static uint8_t defaultattr = 0;
@@ -38,12 +39,12 @@ static struct cell_s* screen = NULL;
 
 enum
 {
-	REGULAR = 0,
-	ITALIC = (1<<0),
-	BOLD = (1<<1),
+	REGULAR   = 0,
+	ITALIC    = (1<<0),
+	BOLD      = (1<<1),
 };
 
-static FC_Font* fonts[4];
+static FC_Font* fonts[8];
 
 static const SDL_Color background_colour = {0x00, 0x00, 0x00, 0xff};
 static const SDL_Color dim_colour        = {0x55, 0x55, 0x55, 0xff};
@@ -112,6 +113,13 @@ static FC_Font* load_font(const char* filename)
     return font;
 }
 
+static const char* var_or_default(const char* name, const char* fallback)
+{
+	lua_getglobal(L, name);
+	const char* value = lua_tostring(L, -1);
+    return value ? value : fallback;
+}
+
 void dpy_init(const char* argv[])
 {
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -132,12 +140,17 @@ void dpy_init(const char* argv[])
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
-    fonts[REGULAR] = load_font("extras/fonts/FantasqueSansMono-Regular.ttf");
-    fonts[ITALIC] = load_font("extras/fonts/FantasqueSansMono-Italic.ttf");
-    fonts[BOLD] = load_font("extras/fonts/FantasqueSansMono-Bold.ttf");
-    fonts[BOLD|ITALIC] = load_font("extras/fonts/FantasqueSansMono-BoldItalic.ttf");
+    fonts[REGULAR] = load_font(
+            var_or_default("FONT_REGULAR", "extras/fonts/FantasqueSansMono-Regular.ttf"));
+    fonts[ITALIC] = load_font(
+            var_or_default("FONT_ITALIC", "extras/fonts/FantasqueSansMono-Italic.ttf"));
+    fonts[BOLD] = load_font(
+            var_or_default("FONT_BOLD", "extras/fonts/FantasqueSansMono-Bold.ttf"));
+    fonts[BOLD|ITALIC] = load_font(
+            var_or_default("FONT_BOLDITALIC", "extras/fonts/FantasqueSansMono-BoldItalic.ttf"));
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
+    charascent = FC_GetBaseline(fonts[REGULAR]) + 1;
     
     change_screen_size();
 }
@@ -173,9 +186,9 @@ static void draw_char(int x, int y, int c, FC_Font* font, SDL_Color* fg)
     SDL_SetRenderDrawColor(renderer, fg->r, fg->g, fg->b, 0xff);
     switch (c)
     {
-		case 32:
-		case 160: /* Non-breaking space */
-			break;
+        case 32:
+        case 160: /* non-breaking space */
+            break;
 
 		case 0x2500: /* ─ */
 		case 0x2501: /* ━ */
@@ -284,6 +297,12 @@ void dpy_sync(void)
                 style |= ITALIC;
 
             draw_char(r.x, r.y, cp->c, fonts[style], &fg);
+            if (attr & DPY_UNDERLINE)
+            {
+                SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
+                SDL_RenderDrawLine(renderer, r.x, r.y+charascent, r.x+charwidth, r.y+charascent);
+            }
+
             cp++;
         }
     }

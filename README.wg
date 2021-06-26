@@ -31,7 +31,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.cw: 1
 .clipboard.margin: 0
 .clipboard.viewmode: 1
-.clipboard.wordcount: 12
+.clipboard.wordcount: 100
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -39,10 +39,10 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 4034
-.documents.2.co: 3
-.documents.2.cp: 1
-.documents.2.cw: 2
+.documents.1.wordcount: 3818
+.documents.2.co: 1
+.documents.2.cp: 52
+.documents.2.cw: 1
 .documents.2.margin: 0
 .documents.2.name: "Unicode test document"
 .documents.2.sticky_selection: false
@@ -166,7 +166,9 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .statusbar: true
 .current: 1
 #clipboard
-P The directory in which templates are stored is configured via File→Global Settings→Directories.
+H3 There is also a port to Windows which will run in a console window. This is useful if you want to do any work from the command line or via a remote login, which I’ll admit is unlikely for Windows. While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
+P Italics, bold and underline are displayed as various colours.
+P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
 .
 #1
 H1 Welcome to WordGrinder
@@ -174,7 +176,6 @@ H2 Important note for Windows users
 P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
 LB the mouse is ignored. WordGrinder is keyboard driven.
 LB the close button at the top right hand corner of the window won’t work. Instead, to quit, type CTRL+Q (or press ESC to open the menu and pick File→Quit with the cursor keys and RETURN).
-LB by clicking on the icon at the top-left corner of the window you can change the font (the default one is pretty ugly; I recommend Consolas) and switch in and out of full-screen mode.
 P There’s more information on using WordGrinder with Windows further down in this file.
 H2 Introduction
 P WordGrinder is a word processor for processing words.
@@ -267,40 +268,27 @@ Q OverrideKey("F2", "D2")
 P ...where the first item is the key to override, and the second is the menu ID over the thing you want to happen when the key is pressed.
 P These settings override any document set settings, but they are not saved with the document set --- if you load the document set into an instance of WordGrinder which doesn’t have that configuration file available, the standard keybindings apply. The settings are not shown in the menus and rebinding menu items will not affect them.
 P Some global settings use variables. Change these with:
-Q X11_FONT = "comic sans"
+Q FONT_REGULAR = "c:\\fonts\\myfont.ttf"
 P This whole area needs some work. We apologise for the inconvenience.
 H2 Platforms
 P WordGrinder can be used on several platforms.
-H3 Unix terminal
+H3 Unix terminal, OSX console
 P WordGrinder will run in a terminal on practically any Unix platform with a modern curses library; I use Linux with ncurses.
 P Underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also displayed highlighted. Sorry. That’s the best ncurses can do.
 P ncurses’ keyboard support is hugely variant on what terminal you’re using, and some terminals don’t support things like SHIFT+UP/DOWN, CTRL+arrows, SHIFT+function keys, etc. In addition, ncurses enforces a one second delay when responding to the ESCAPE key. This is really annoying, but can be avoided by using ALT+letter instead.
 P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrinder can’t tell them apart; which is why pressing TAB toggles italics. Sorry. Use the X11 port instead.
-P You will also need a decent terminal emulator with Unicode support. I use xfce4-terminal with the Terminus font.
-H3 Unix X11
-P There is also a specific version of WordGrinder which will run natively on X. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys).
-P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage.
-P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
-LB X11_FONT: name of the font to use. WordGrinder uses Xft names. The default is “monospace”. Italic, bold and underlined versions are selected automatically, which might not work on some fonts (this isn’t WordGrinder’s fault).
-LB X11_BLACK_COLOUR: background colour. Any X11 colour name will work. The default is “#000000”.
-LB X11_DIM_COLOUR: colour used for unimportant UI elements. The default is “#555555”.
-LB X11_NORMAL_COLOUR: colour used for ordinary text. The default is “#888888”.
-LB X11_BRIGHT_COLOUR: colour used for highlighted text. The default is “#ffffff”.
-H3 Apple OS X
-P The Unix build of WordGrinder will run happily on OS X, in a Terminal window, behaving exactly like any other Unix system.
-P For best use it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
-P Fullscreen mode works very well.
-H3 Windows GUI
-P WordGrinder will also run as a Window application. Some menu options have been added to the titlebar menu (single click on the icon on the top-left corner of the screen) to allow you to change the font, colours and toggle full-screen mode on and off; this last may also be done with ALT+ENTER (note that this is not rebindable). However, you can’t use the GUI version for command-line work, such as converting documents or running user scripts; see the console version below for that.
-P Underline, bold and italics are displayed as underline, bold and italics.
-P The Windows version provides good keyboard support and most key combinations are supported.
-P WordGrinder will do its best to display Unicode characters. If the font you choose does not contain a particular glyph, WordGrinder will attempt to find a glyph from the closest matching font. Unfortunately this works quite badly with bitmap fonts, resulting in ugly results, but it does work.
-P I strongly suggest installing a decent TrueType Unicode monospaced font. Consolas is good and is supplied by default on most Windows systems, but I like DejaVu Sans Mono:
-P http://dejavu.sourceforge.net/wiki/index.php/Download
+P You will also need a decent terminal emulator with Unicode support. On Linux, I use xfce4-terminal with the Terminus font.
+P For OSX it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
 H3 Windows console
-P There is also a port to Windows which will run in a console window. This is useful if you want to do any work from the command line or via a remote login, which I’ll admit is unlikely for Windows. While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
-P Italics, bold and underline are displayed as various colours.
+P There’s a version of WordGrinder which will run in a Windows console (a cmd.exe shell window). This mostly works as for the ncurses version above, but uses highlight text for italics, bold and underlining. The keyboard support is pretty good with most key combinations working.
+P However, Unicode is not supported at all well, due to limitations of the Windows console, and this isn’t really recommended for everyday use. Use the GUI version below.
+P While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
 P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
+H3 Unix X11, Windows GUI, OSX GUI
+P There is also a specific version of WordGrinder which uses the SDL library for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
+P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
+P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
+LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
