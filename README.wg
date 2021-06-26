@@ -32,14 +32,14 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.margin: 0
 .clipboard.viewmode: 1
 .clipboard.wordcount: 100
-.documents.1.co: 1.0
+.documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3836
+.documents.1.wordcount: 3909
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -291,6 +291,8 @@ P Unicode support is not so great as font substitution is not done, so you’re 
 P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
 LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
 LB FONT_SIZE: size of the font, in points. The default is (approximately) 20.
+H3 Rasperry Pi (or other Mali chipset) console
+P If you have a Raspberry Pi or another Linux system with a Mali graphics chipset, you can run WordGrinder on the console, without needing X at all! Just run the SDL version as above. Everything should, mostly, just work. You will need to add yourself to the input group for the keyboard to work. It’s a bit rough around the edges but should be quite usable.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
