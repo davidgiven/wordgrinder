@@ -147,7 +147,7 @@ void dpy_start(void)
         fatal("could not create window: %s", SDL_GetError());
     SDL_StartTextInput();
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE);
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
@@ -265,6 +265,41 @@ void dpy_sync(void)
     SDL_SetRenderDrawColor(renderer, background_colour.r, background_colour.g, background_colour.b, 0xff);
     SDL_RenderClear(renderer);
 
+    /* Pass one: backgrounds */
+
+    for (int y = 0; y < screenheight; y++)
+    {
+        struct cell_s* cp = &screen[y*screenwidth];
+        for (int x = 0; x < screenwidth; x++)
+        {
+            int attr = cp->attr;
+            if (attr & DPY_REVERSE)
+            {
+                SDL_Rect r =
+                {
+                    .x = x*charwidth,
+                    .y = y*charheight,
+                    .w = charwidth,
+                    .h = charheight
+                };
+
+                SDL_Color fg;
+                if (attr & DPY_BRIGHT)
+                    fg = bright_colour;
+                else if (attr & DPY_DIM)
+                    fg = dim_colour;
+                else
+                    fg = normal_colour;
+
+                SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
+                SDL_RenderFillRect(renderer, &r);
+            }
+            cp++;
+        }
+    }
+
+    /* Pass 2: the actual glyphs. */
+
     for (int y = 0; y < screenheight; y++)
     {
         struct cell_s* cp = &screen[y*screenwidth];
@@ -280,22 +315,14 @@ void dpy_sync(void)
 
             SDL_Color fg;
             int attr = cp->attr;
-            if (attr & DPY_BRIGHT)
+            if (attr & DPY_REVERSE)
+                fg = background_colour;
+            else if (attr & DPY_BRIGHT)
                 fg = bright_colour;
             else if (attr & DPY_DIM)
                 fg = dim_colour;
             else
                 fg = normal_colour;
-
-            if (attr & DPY_REVERSE)
-            {
-                SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
-                fg = background_colour;
-            }
-            else
-                SDL_SetRenderDrawColor(renderer,
-                    background_colour.r, background_colour.g, background_colour.b, 0xff);
-            SDL_RenderFillRect(renderer, &r);
 
             int style = REGULAR;
             if (attr & DPY_BOLD)
@@ -304,6 +331,7 @@ void dpy_sync(void)
                 style |= ITALIC;
 
             draw_char(r.x, r.y, cp->c, fonts[style], &fg);
+
             if (attr & DPY_UNDERLINE)
             {
                 SDL_SetRenderDrawColor(renderer, fg.r, fg.g, fg.b, 0xff);
