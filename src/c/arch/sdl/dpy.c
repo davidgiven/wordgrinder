@@ -122,6 +122,10 @@ static const char* var_or_default(const char* name, const char* fallback)
 
 void dpy_init(const char* argv[])
 {
+}
+
+void dpy_start(void)
+{
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         fatal("could not initialize sdl2: %s", SDL_GetError());
 
@@ -153,10 +157,6 @@ void dpy_init(const char* argv[])
     charascent = FC_GetBaseline(fonts[REGULAR]) + 1;
     
     change_screen_size();
-}
-
-void dpy_start(void)
-{
 }
 
 void dpy_shutdown(void)

@@ -30,13 +30,13 @@ if [ "$*" = "dev" ]; then
         -and release ncurses lua=lua5.3 test \
         -and release ncurses lua=lua5.4 test \
         -and release ncurses lua=luajit test \
-        -and debug sdl \
-        -and release sdl \
-        -and release sdl lua=lua5.1 \
-        -and release sdl lua=lua5.2 \
-        -and release sdl lua=lua5.3 \
-        -and release sdl lua=lua5.4 \
-        -and release sdl lua=luajit
+        -and debug sdl test \
+        -and release sdl test \
+        -and release sdl lua=lua5.1 test \
+        -and release sdl lua=lua5.2 test \
+        -and release sdl lua=lua5.3 test \
+        -and release sdl lua=lua5.4 test \
+        -and release sdl lua=luajit test
 fi
 
 OBJDIR=.obj
