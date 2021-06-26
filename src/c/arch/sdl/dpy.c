@@ -418,7 +418,7 @@ uni_t dpy_getchar(double timeout)
                         case SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_UNKNOWN):
                             continue;
                     }
-                    if ((key >= 0x20) && (key < 0x80))
+                    if ((key >= 0x20) && (key < 0x7f))
                     {
                         if (e.key.keysym.mod & KMOD_CTRL)
                         {
