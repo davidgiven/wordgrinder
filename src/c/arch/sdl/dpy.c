@@ -139,8 +139,7 @@ void dpy_start(void)
         fatal("could not create window: %s", SDL_GetError());
     SDL_StartTextInput();
 
-    renderer = SDL_CreateRenderer(window, -1,
-            SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
