@@ -351,7 +351,7 @@ add_configuration() {
 
     case $FRONTEND in
         ncurses)
-            add SRCS src/c/arch/unix/cursesw/dpy.c
+            add SRCS src/c/arch/ncurses/dpy.c
             ;;
 
         wincon)
