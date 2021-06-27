@@ -45,7 +45,7 @@ extern int emu_wcwidth(uni_t c);
 #define emu_wcwidth(c) wcwidth(c)
 #endif
 
-extern int main(int argc, const char* argv[]);
+extern int main(int argc, char* argv[]);
 
 /* --- Lua --------------------------------------------------------------- */
 
@@ -61,7 +61,7 @@ extern lua_State* L;
 
 typedef struct
 {
-	const char* data;
+	const uint8_t* data;
 	size_t size;
 	const char* name;
 } FileDescriptor;
@@ -77,6 +77,8 @@ extern void script_run(const char* argv[]);
 extern void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup);
 #define lua_pushglobaltable(L) lua_pushvalue(L, LUA_GLOBALSINDEX)
 #endif
+
+extern void bit32_init(lua_State* L);
 
 #define forceinteger(L, offset) (int)lua_tonumber(L, offset)
 #define forcedouble(L, offset) (double)lua_tonumber(L, offset)
@@ -102,6 +104,9 @@ extern void writeu8(char** ptr, uni_t value);
 
 extern void utils_init(void);
 extern void filesystem_init(void);
+
+#define STRINGIFY1(x) #x
+#define STRINGIFY(x) STRINGIFY1(x)
 
 /* --- Display layer ----------------------------------------------------- */
 

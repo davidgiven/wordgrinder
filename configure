@@ -1,0 +1,567 @@
+#!/bin/sh
+set -e
+
+# --- Global settings -------------------------------------------------------
+
+VERSION=0.9
+FILEFORMAT=8
+
+WINCC=${WINCC:-i686-w64-mingw32-gcc}
+WINLINK=${WINLINK:-i686-w64-mingw32-g++}
+WINDRES=${WINDRES:-i686-w64-mingw32-windres}
+MAKENSIS=${MAKENSIS:-makensis}
+DATE=${DATE:-$(date +'%-d %B %Y')}
+PREFIX=${PREFIX:-$HOME}
+
+# Must match the Makefile
+OBJDIR=.obj
+
+# --- Setup boilerplate -----------------------------------------------------
+
+if [ $# = 0 ]; then
+    echo "Autodetecting a sensible configuration..."
+    if [ "$OS" = "Windows_NT" ]; then
+        echo "Autoconfiguring for Windows"
+        set release wincon windows test -and release sdl windows -nsis
+    elif type sdl2-config > /dev/null; then
+        echo "Autoconfiguring a basic Unix build with SDL"
+        set debug ncurses test \
+            -and release ncurses test install=wordgrinder \
+            -and debug sdl \
+            -and release sdl install=xwordgrinder \
+            -install
+    else
+        echo "Autoconfiguring a basic Unix build without SDL"
+        set debug ncurses test -and release ncurses test -install
+    fi
+fi
+if [ "$*" = "dev" ]; then
+    echo "Development build"
+    set debug ncurses test \
+        -and release ncurses test \
+        -and release ncurses lua=lua5.1 test \
+        -and release ncurses lua=lua5.2 test \
+        -and release ncurses lua=lua5.3 test \
+        -and release ncurses lua=luajit test \
+        -and debug sdl test \
+        -and release sdl test \
+        -and release sdl lua=lua5.1 test \
+        -and release sdl lua=lua5.2 test \
+        -and release sdl lua=lua5.3 test \
+        -and release sdl lua=luajit test
+fi
+
+rm -rf $OBJDIR
+mkdir -p $OBJDIR
+
+exec 3> $OBJDIR/build.ninja
+
+cat >&3 <<"EOF"
+rule cc
+    depfile = $out.d
+    command = $cc -MMD -MF $out.d $cflags -c $in -o $out
+
+rule ld
+    command = $cc $in -o $out $ldflags
+
+rule multibin
+    command = sh tools/multibin2c.sh $sym $in > $out
+
+rule wordgrindertest
+    command = $exe --lua $in > $out 2>&1 || (cat $out && rm -f $out && false)
+
+rule rcfile
+    command = $windres $in $out
+
+rule makensis
+    command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
+
+rule strip
+    command = cp $in $out && $strip $out
+
+rule install
+    command = install -m $mode $in $out
+
+rule manpage
+    command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
+EOF
+
+add() {
+    var=$1
+    shift
+    eval "$var=\$$var' $*'"
+}
+
+# --- Building common stuff -------------------------------------------------
+
+build_luascripts() {
+    local srcs
+    srcs=
+
+    add srcs src/lua/_prologue.lua
+    add srcs src/lua/events.lua
+    add srcs src/lua/main.lua
+    add srcs src/lua/xml.lua
+    add srcs src/lua/utils.lua
+    add srcs src/lua/redraw.lua
+    add srcs src/lua/settings.lua
+    add srcs src/lua/document.lua
+    add srcs src/lua/forms.lua
+    add srcs src/lua/ui.lua
+    add srcs src/lua/browser.lua
+    add srcs src/lua/html.lua
+    add srcs src/lua/margin.lua
+    add srcs src/lua/xpattern.lua
+    add srcs src/lua/fileio.lua
+    add srcs src/lua/export.lua
+    add srcs src/lua/export/text.lua
+    add srcs src/lua/export/html.lua
+    add srcs src/lua/export/latex.lua
+    add srcs src/lua/export/troff.lua
+    add srcs src/lua/export/opendocument.lua
+    add srcs src/lua/export/markdown.lua
+    add srcs src/lua/import.lua
+    add srcs src/lua/import/html.lua
+    add srcs src/lua/import/text.lua
+    add srcs src/lua/import/opendocument.lua
+    add srcs src/lua/import/markdown.lua
+    add srcs src/lua/navigate.lua
+    add srcs src/lua/addons/goto.lua
+    add srcs src/lua/addons/autosave.lua
+    add srcs src/lua/addons/docsetman.lua
+    add srcs src/lua/addons/scrapbook.lua
+    add srcs src/lua/addons/statusbar_charstyle.lua
+    add srcs src/lua/addons/statusbar_pagecount.lua
+    add srcs src/lua/addons/statusbar_position.lua
+    add srcs src/lua/addons/statusbar_wordcount.lua
+    add srcs src/lua/addons/debug.lua
+    add srcs src/lua/addons/look-and-feel.lua
+    add srcs src/lua/addons/keymapoverride.lua
+    add srcs src/lua/addons/smartquotes.lua
+    add srcs src/lua/addons/undo.lua
+    add srcs src/lua/addons/spillchocker.lua
+    add srcs src/lua/addons/templates.lua
+    add srcs src/lua/addons/directories.lua
+    add srcs src/lua/addons/recents.lua
+    add srcs src/lua/menu.lua
+    add srcs src/lua/cli.lua
+    add srcs src/lua/lunamark/util.lua
+    add srcs src/lua/lunamark/entities.lua
+    add srcs src/lua/lunamark/markdown.lua
+
+    echo "build $OBJDIR/luascripts.c : multibin $srcs" >&3
+    echo "  sym = script_table" >&3
+}
+build_luascripts
+
+build_fonts() {
+    local src
+    srcs=
+
+    add srcs extras/fonts/FantasqueSansMono-Regular.ttf
+    add srcs extras/fonts/FantasqueSansMono-Italic.ttf
+    add srcs extras/fonts/FantasqueSansMono-Bold.ttf
+    add srcs extras/fonts/FantasqueSansMono-BoldItalic.ttf
+
+    echo "build $OBJDIR/fonts.c : multibin $srcs" >&3
+    echo "  sym = font_table" >&3
+}
+if [ -e extras/fonts/FantasqueSansMono-Regular.ttf ]; then
+    build_fonts
+fi
+
+# --- Building per-configuration stuff --------------------------------------
+
+INSTALLABLES=
+reset_configuration() {
+    CC=cc
+    LINKCC=
+    STRIP=strip
+    CFLAGS=
+    LDFLAGS=
+    PACKAGES=zlib
+    FRONTEND=
+    SRCS=
+    OBJS=
+    ARCH=normal
+    BUILTIN_LUA=y
+    BUILTIN_LUABITOP=y
+    BUILTIN_LPEG=y
+    BUILTIN_MINIZIP=y
+    BUILTIN_SDLFONTCACHE=y
+    DEBUG=
+    LUA=builtin
+    TEST=n
+    WINDOWS=n
+    INSTALL=
+    STRIPPING=y
+    X=
+
+    add CFLAGS -g
+    add CFLAGS -DVERSION=$VERSION
+    add CFLAGS -DARCH=$ARCH
+    add CFLAGS -DFILEFORMAT=$FILEFORMAT
+    add CFLAGS -DNOUNCRYPT
+    add CFLAGS -DNOCRYPT
+    add CFLAGS -Isrc/c
+    add CFLAGS -Wall
+    add CFLAGS -Wno-unused-function
+    add CFLAGS -ffunction-sections
+    add CFLAGS -fdata-sections
+    add CFLAGS -Werror=implicit-function-declaration
+    add CFLAGS --std=gnu99
+
+    add LDFLAGS -g
+    add LDFLAGS -lm
+    add LDFLAGS -lz
+}
+
+set_frontend() {
+    if [ "$FRONTEND" != "" ]; then
+        echo "You can only set one frontend."
+        exit 1
+    fi
+    FRONTEND=$1
+}
+
+install_file() {
+    echo "build $2 : install $1" >&3
+    echo "  mode=$3" >&3
+    add INSTALLABLES $2
+}
+
+add_configuration() {
+    if [ "$FRONTEND" = "" ]; then
+        echo "No frontend specified"
+        exit 1
+    fi
+    if [ "$DEBUG" = "" ]; then
+        echo "You must specify 'debug' or 'release'"
+        exit 1
+    fi
+    PROFILE=$LUA-$FRONTEND-$DEBUG
+    EXE=bin/wordgrinder-$PROFILE
+    O=$OBJDIR/$PROFILE
+    mkdir -p $O
+
+    # Windows special stuff
+
+    if [ "$WINDOWS" = "y" ]; then
+        add CFLAGS -DEMULATED_WCWIDTH
+        add CFLAGS -DWINSHIM
+        add LDFLAGS -static
+        add OBJS $OBJDIR/wordgrinder.rc.o
+        add SRCS src/c/emu/wcwidth.c
+        add SRCS src/c/emu/lua-5.1.5/winshim.c
+
+        CC=i686-w64-mingw32-gcc
+        LINKCC=i686-w64-mingw32-g++
+        STRIP=i686-w64-mingw32-strip
+        X=.exe
+
+        if [ "$done_common_windows" != "y" ]; then
+            done_common_windows=y
+            echo "build $OBJDIR/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml" >&3
+            echo "  windres = i686-w64-mingw32-windres" >&3
+        fi
+    fi
+
+    # External dependencies
+
+    if [ "$BUILTIN_LUA" = "y" ]; then
+        add CFLAGS -Isrc/c/emu/lua-5.1.5 -DLUA_USE_EMU_TMPNAM
+        add SRCS src/c/emu/lua-5.1.5/lapi.c
+        add SRCS src/c/emu/lua-5.1.5/lauxlib.c
+        add SRCS src/c/emu/lua-5.1.5/lbaselib.c
+        add SRCS src/c/emu/lua-5.1.5/lcode.c
+        add SRCS src/c/emu/lua-5.1.5/ldblib.c
+        add SRCS src/c/emu/lua-5.1.5/ldebug.c
+        add SRCS src/c/emu/lua-5.1.5/ldo.c
+        add SRCS src/c/emu/lua-5.1.5/ldump.c
+        add SRCS src/c/emu/lua-5.1.5/lfunc.c
+        add SRCS src/c/emu/lua-5.1.5/lgc.c
+        add SRCS src/c/emu/lua-5.1.5/linit.c
+        add SRCS src/c/emu/lua-5.1.5/liolib.c
+        add SRCS src/c/emu/lua-5.1.5/llex.c
+        add SRCS src/c/emu/lua-5.1.5/lmathlib.c
+        add SRCS src/c/emu/lua-5.1.5/lmem.c
+        add SRCS src/c/emu/lua-5.1.5/loadlib.c
+        add SRCS src/c/emu/lua-5.1.5/lobject.c
+        add SRCS src/c/emu/lua-5.1.5/lopcodes.c
+        add SRCS src/c/emu/lua-5.1.5/loslib.c
+        add SRCS src/c/emu/lua-5.1.5/lparser.c
+        add SRCS src/c/emu/lua-5.1.5/lstate.c
+        add SRCS src/c/emu/lua-5.1.5/lstring.c
+        add SRCS src/c/emu/lua-5.1.5/lstrlib.c
+        add SRCS src/c/emu/lua-5.1.5/ltable.c
+        add SRCS src/c/emu/lua-5.1.5/ltablib.c
+        add SRCS src/c/emu/lua-5.1.5/ltm.c
+        add SRCS src/c/emu/lua-5.1.5/lundump.c
+        add SRCS src/c/emu/lua-5.1.5/lvm.c
+        add SRCS src/c/emu/lua-5.1.5/lzio.c
+        add SRCS src/c/emu/tmpnam.c
+    fi
+
+    if [ "$BUILTIN_LUABITOP" = "y" ]; then
+        add CFLAGS -Isrc/c/emu/luabitop
+        add SRCS src/c/emu/luabitop/lua-bitop.c
+    fi
+
+    if [ "$BUILTIN_LPEG" = "y" ]; then
+        add CFLAGS -Isrc/c/emu/lpeg
+        add SRCS src/c/emu/lpeg/lpvm.c
+        add SRCS src/c/emu/lpeg/lpcap.c
+        add SRCS src/c/emu/lpeg/lptree.c
+        add SRCS src/c/emu/lpeg/lpcode.c
+        add SRCS src/c/emu/lpeg/lpprint.c
+    fi
+
+    if [ "$BUILTIN_SDLFONTCACHE" = "y" ]; then
+        add CFLAGS -Isrc/c/emu/SDL_FontCache
+    fi
+
+    if [ "$BUILTIN_MINIZIP" = "y" ]; then
+        add CFLAGS -Isrc/c/emu/minizip
+        add SRCS src/c/emu/minizip/ioapi.c
+        add SRCS src/c/emu/minizip/zip.c
+        add SRCS src/c/emu/minizip/unzip.c
+    fi
+
+    # This must go *after* any other include or library path configuration,
+    # to make sure any builtin headers get found before the system ones.
+
+    if [ "$PACKAGES" != "" ]; then
+        add CFLAGS $(pkg-config --cflags $PACKAGES)
+        add LDFLAGS $(pkg-config --libs $PACKAGES)
+    fi
+
+    # Main core
+
+    add SRCS src/c/utils.c
+    add SRCS src/c/filesystem.c
+    add SRCS src/c/zip.c
+    add SRCS src/c/main.c
+    add SRCS src/c/lua.c
+    add SRCS src/c/word.c
+    add SRCS src/c/screen.c
+    add SRCS src/c/bit32.c
+    add SRCS $OBJDIR/luascripts.c
+
+    # Frontends
+
+    case $FRONTEND in
+        ncurses)
+            add SRCS src/c/arch/ncurses/dpy.c
+            ;;
+
+        wincon)
+            add SRCS src/c/arch/win32/console/dpy.c
+            add SRCS src/c/arch/win32/console/realmain.c
+            add CFLAGS -Dmain=appMain
+            add CFLAGS -mconsole
+            add LDFLAGS -mconsole
+            ;;
+
+        sdl)
+            add SRCS src/c/arch/sdl/dpy.c
+            add SRCS src/c/arch/sdl/keyqueue.c
+            add SRCS src/c/emu/SDL_FontCache/SDL_FontCache.c
+            add SRCS $OBJDIR/fonts.c
+            add CFLAGS $(sdl2-config --cflags) $(pkg-config --cflags SDL2_ttf)
+            if [ "$WINDOWS" = "y" ]; then
+                add LDFLAGS $(sdl2-config --static-libs) $(pkg-config --libs SDL2_ttf)
+                add LDFLAGS $(pkg-config --libs freetype2 libpng harfbuzz bzip2 graphite2)
+                # Yes, again --- resolve recursive dependencies
+                add LDFLAGS $(pkg-config --libs freetype2)
+                # The pkg-config file for these is wrong
+                add LDFLAGS -lbrotlidec-static -lbrotlicommon-static
+                # sdl2-config is wrong
+                add LDFLAGS -lusp10 -lrpcrt4
+            else
+                add LDFLAGS $(sdl2-config --libs) $(pkg-config --libs SDL2_ttf)
+            fi
+            ;;
+    esac
+
+    local objs
+    for f in $SRCS; do
+        obj=$O/${f%*.c}.o
+        add OBJS $obj
+        echo "build $obj : cc $f" >&3
+        echo "  cflags = $CFLAGS" >&3
+        echo "  cc = $CC" >&3
+    done
+
+    if [ "$LINKCC" = "" ]; then
+        LINKCC=$CC
+    fi
+
+    if [ "$STRIPPING" = "y" ]; then
+        echo "build $EXE-unstripped$X : ld $OBJS" >&3
+        echo "  ldflags = $LDFLAGS" >&3
+        echo "  cc = $LINKCC" >&3
+        echo "build $EXE$X : strip $EXE-unstripped$X" >&3
+        echo "  strip = $STRIP" >&3
+        echo "default $EXE$X" >&3
+    else
+        echo "build $EXE$X : ld $OBJS" >&3
+        echo "  ldflags = $LDFLAGS" >&3
+        echo "  cc = $LINKCC" >&3
+    fi
+
+    if [ "$INSTALL" != "" ]; then
+        install_file $EXE $PREFIX/bin/$INSTALL 755
+    fi
+
+    if [ "$TEST" = "y" ]; then
+        local tests
+        tests=
+
+        add tests tests/apply-markup.lua
+        add tests tests/argument-parser.lua
+        add tests tests/change-paragraph-style.lua
+        add tests tests/clipboard.lua
+        add tests tests/delete-selection.lua
+        add tests tests/escape-strings.lua
+        add tests tests/export-to-html.lua
+        add tests tests/export-to-latex.lua
+        add tests tests/export-to-markdown.lua
+        add tests tests/export-to-opendocument.lua
+        add tests tests/export-to-text.lua
+        add tests tests/export-to-troff.lua
+        add tests tests/filesystem.lua
+        add tests tests/find-and-replace.lua
+        add tests tests/get-style-from-word.lua
+        add tests tests/immutable-paragraphs.lua
+        add tests tests/import-from-html.lua
+        add tests tests/import-from-opendocument.lua
+        add tests tests/import-from-text.lua
+        add tests tests/import-from-markdown.lua
+        add tests tests/insert-space-with-style-hint.lua
+        add tests tests/io-open-enoent.lua
+        add tests tests/line-down-into-style.lua
+        add tests tests/line-up.lua
+        add tests tests/line-wrapping.lua
+        add tests tests/load-0.1.lua
+        add tests tests/load-0.2.lua
+        add tests tests/load-0.3.3.lua
+        add tests tests/load-0.4.1.lua
+        add tests tests/load-0.5.3.lua
+        add tests tests/load-0.6-v6.lua
+        add tests tests/load-0.6.lua
+        add tests tests/load-0.7.2.lua
+        add tests tests/load-failed.lua
+        add tests tests/move-while-selected.lua
+        add tests tests/numbered-lists.lua
+        add tests tests/parse-string-into-words.lua
+        add tests tests/save-format-escaped-strings.lua
+        add tests tests/simple-editing.lua
+        add tests tests/smartquotes-selection.lua
+        add tests tests/smartquotes-typing.lua
+        add tests tests/spellchecker.lua
+        add tests tests/tableio.lua
+        add tests tests/type-while-selected.lua
+        add tests tests/undo.lua
+        add tests tests/utf8.lua
+        add tests tests/utils.lua
+        add tests tests/weirdness-cannot-save-settings.lua
+        add tests tests/weirdness-combining-words.lua
+        add tests tests/weirdness-delete-word.lua
+        add tests tests/weirdness-deletion-with-multiple-spaces.lua
+        add tests tests/weirdness-end-of-lines.lua
+        add tests tests/weirdness-globals-applied-on-startup.lua
+        add tests tests/weirdness-missing-clipboard.lua
+        add tests tests/weirdness-replacing-words.lua
+        add tests tests/weirdness-save-new-document.lua
+        add tests tests/weirdness-splitting-lines-before-space.lua
+        add tests tests/weirdness-stray-control-char-in-export.lua
+        add tests tests/weirdness-styled-clipboard.lua
+        add tests tests/weirdness-styling-unicode.lua
+        add tests tests/weirdness-upgrade-0.6-with-clipboard.lua
+        add tests tests/weirdness-word-left-from-end-of-line.lua
+        add tests tests/weirdness-word-right-to-last-word-in-doc.lua
+        add tests tests/windows-installdir.lua
+        add tests tests/xpattern.lua
+
+        for f in $tests; do
+            stampfile=$O/${f%*.lua}.stamp
+            echo "build $stampfile : wordgrindertest $f | $EXE$X" >&3
+            echo "  exe = $EXE$X" >&3
+            echo "default $stampfile" >&3
+        done
+    fi
+}
+
+add_nsis() {
+    echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-sdl-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+}
+
+add_install() {
+    install_file extras/wordgrinder.desktop $PREFIX/share/applications/wordgrinder.desktop 644
+    install_file extras/wordgrinder.mime    $PREFIX/share/mime-info/wordgrinder.mime 644
+    install_file extras/icon.png            $PREFIX/share/pixmaps/wordgrinder.png 644
+    install_file README.wg                  $PREFIX/doc/wordgrinder/README.wg 644
+    install_file $OBJDIR/wordgrinder.1      $PREFIX/man/man1/wordgrinder.1 644
+    install_file $OBJDIR/xwordgrinder.1     $PREFIX/man/man1/xwordgrinder.1 644
+
+    echo "build $OBJDIR/wordgrinder.1 : manpage wordgrinder.man" >&3
+    echo "  date = $DATE" >&3
+    echo "  version = $VERSION" >&3
+    echo "default $OBJDIR/wordgrinder.1" >&3
+
+    echo "build $OBJDIR/xwordgrinder.1 : manpage xwordgrinder.man" >&3
+    echo "  date = $DATE" >&3
+    echo "  version = $VERSION" >&3
+    echo "default $OBJDIR/xwordgrinder.1" >&3
+}
+
+reset_configuration
+while [ $# != 0 ]; do
+    case $1 in
+        -and)
+            add_configuration
+            reset_configuration
+            ;;
+
+        debug)          add CFLAGS -O0; add LDFLAGS -O0; DEBUG=debug ;;
+        release)        add CFLAGS -Os -DNDEBUG; add LDFLAGS -Os; DEBUG=release ;;
+        profile)        add CFLAGS -pg -Os -DNDEBUG; add LDFLAGS -pg -Os; DEBUG=release ;;
+        lua=*)          BUILTIN_LUA=n;          add PACKAGES ${1#*=}; LUA=${1#*=} ;;
+        luabitop=*)     BUILTIN_LUABITOP=n;     add PACKAGES ${1#*=} ;;
+        lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
+        sdlfontcache=*) BUILTIN_SDLFONTCACHE=n; add PACKAGES ${1#*=} ;;
+        minizip=*)      BUILTIN_MINIZIP=n;      add PACKAGES ${1#*=} ;;
+        wincon)         set_frontend wincon ;;
+        sdl)            set_frontend sdl ;;
+        ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
+        ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
+        test)           TEST=y ;;
+        windows)        WINDOWS=y ;;
+        install=*)      INSTALL=${1#*=} ;;
+        nostrip)        STRIPPING=n ;;
+
+        -nsis)
+            add_nsis
+            ;;
+
+        -install)
+            add_install
+            ;;
+
+        *)
+            echo "Unknown keyword '$1'"
+            exit 1
+            ;;
+
+    esac
+    shift
+done
+add_configuration
+
+if [ "$INSTALLABLES" != "" ]; then
+    echo "build install : phony $INSTALLABLES" >&3
+    echo "Configured for prefix $PREFIX"
+fi
+
+# vim: sw=4 ts=4 et
+

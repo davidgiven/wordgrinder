@@ -611,7 +611,7 @@ function Form.Run(dialogue, redraw, helptext)
 	-- Process keys.
 
 	redraw_dialogue()
-	while true do
+	while not Quitting do
 		local getchar = GetChar
 		if dialogue.focus then
 			getchar = GetCharWithBlinkingCursor
@@ -626,6 +626,9 @@ function Form.Run(dialogue, redraw, helptext)
 		if (key == "KEY_RESIZE") then
 			ResizeScreen()
 			redraw_dialogue()
+		end
+		if (key == "KEY_QUIT") then
+			QuitForcedBySystem()
 		end
 
 		local action = nil
@@ -647,6 +650,7 @@ function Form.Run(dialogue, redraw, helptext)
 			redraw_dialogue()
 		end
 	end
+	return false
 end
 
 -- Test code

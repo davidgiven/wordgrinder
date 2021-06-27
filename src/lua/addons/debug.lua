@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local string_format = string.format
+local floor = math.floor
 
 -----------------------------------------------------------------------------
 -- Build the status bar.
@@ -11,7 +12,7 @@ do
 	local function cb(event, token, terms)
 		local settings = GlobalSettings.debug
 		if settings.memory then
-			local mem = collectgarbage("count")
+			local mem = floor(collectgarbage("count"))
 			terms[#terms+1] = 
 				{
 					priority=50,

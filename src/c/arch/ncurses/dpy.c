@@ -117,7 +117,7 @@ uni_t dpy_getchar(double timeout)
 {
 	struct timeval then;
 	gettimeofday(&then, NULL);
-	u_int64_t thenms = (then.tv_usec/1000) + ((u_int64_t) then.tv_sec*1000);
+	uint64_t thenms = (then.tv_usec/1000) + ((uint64_t) then.tv_sec*1000);
 
 	for (;;)
 	{
@@ -126,9 +126,9 @@ uni_t dpy_getchar(double timeout)
 		{
 			struct timeval now;
 			gettimeofday(&now, NULL);
-			u_int64_t nowms = (now.tv_usec/1000) + ((u_int64_t) now.tv_sec*1000);
+			uint64_t nowms = (now.tv_usec/1000) + ((uint64_t) now.tv_sec*1000);
 
-			int delay = ((u_int64_t) (timeout*1000)) + nowms - thenms;
+			int delay = ((uint64_t) (timeout*1000)) + nowms - thenms;
 			if (delay <= 0)
 				return -KEY_TIMEOUT;
 

@@ -16,20 +16,6 @@ if jit then
 		";/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so"
 end
 
--- Bit library fallbacks. (LuaJIT vs Lua 5.2 incompatibilities.)
-
-if not bit32 then
-	bit32 =
-	{
-		bxor = bit.bxor,
-		band = bit.band,
-		bor = bit.bor,
-		btest = function(a, b)
-			return bit.band(a, b) ~= 0
-		end
-	}
-end
-
 -- Make sure that reads of undefined global variables fail. Note: this will
 -- prevent us from storing nil in a global.
 

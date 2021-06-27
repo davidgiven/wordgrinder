@@ -367,7 +367,7 @@ MenuClass = {
 		while true do
 			local item
 
-			while true do
+			while not Quitting do
 				local visiblelen = min(#menu, ScreenHeight-y-3)
 				if (n < top) then
 					top = n
@@ -383,6 +383,9 @@ MenuClass = {
 					ResizeScreen()
 					RedrawScreen()
 					self:drawmenustack()
+				elseif (c == "KEY_QUIT") then
+					QuitForcedBySystem()
+					return false
 				elseif (c == "KEY_UP") and (n > 1) then
 					n = n - 1
 				elseif (c == "KEY_DOWN") and (n < #menu) then
@@ -419,7 +422,7 @@ MenuClass = {
 
 						local oak = self.accelerators[item.id]
 						local ak = GetChar():upper()
-						if ak:match("^KEY_") then
+						if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
 							ak = ak:gsub("^KEY_", "")
 							if self.accelerators[ak] then
 								NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
@@ -451,6 +454,9 @@ MenuClass = {
 					item = menu.mks[c]
 					break
 				end
+			end
+			if Quitting then
+				return false
 			end
 
 			local f = item.fn

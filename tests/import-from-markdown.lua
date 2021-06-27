@@ -75,7 +75,7 @@ local document = Cmd.ImportMarkdownFileFromStream(tempfile)
 local expected = [[
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="generator" content="WordGrinder 0.8"/>
+<meta name="generator" content="WordGrinder @@@"/>
 <title>imported</title>
 </head><body>
 
@@ -123,6 +123,7 @@ Stuff here.</pre>
 </body>
 </html>
 ]]
+expected = expected:gsub("@@@", VERSION)
 
 DocumentSet:addDocument(document, "imported")
 DocumentSet:setCurrent("imported")

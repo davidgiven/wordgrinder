@@ -127,7 +127,7 @@ local function redrawstatus()
 end
 
 local topmarker = {
-	"     ▲          ▲          ▲          ▲          ▲     ",
+	"     ┃          ┃          ┃          ┃          ┃     ",
 	"───────────────────────────────────────────────────────"
 }
 local topmarkerwidth = GetStringWidth(topmarker[1])
@@ -147,7 +147,7 @@ end
 
 local bottommarker = {
 	"───────────────────────────────────────────────────────",
-	"     ▼          ▼          ▼          ▼          ▼     ",
+	"     ┃          ┃          ┃          ┃          ┃     ",
 }
 local bottommarkerwidth = GetStringWidth(bottommarker[1])
 
