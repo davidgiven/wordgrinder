@@ -53,7 +53,7 @@ wordgrinder-$(VERSION).tar.xz:
 		testdocs \
 		tests \
 		tools \
-		build.lua \
+		configure \
 		Makefile \
 		README \
 		README.wg \
@@ -74,7 +74,7 @@ wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
 		testdocs \
 		tests \
 		tools \
-		build.lua \
+		configure \
 		Makefile \
 		README \
 		README.wg \

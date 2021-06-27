@@ -7,15 +7,23 @@ on:
 
 jobs:
   dev-release:
-    runs-on: ubuntu-20.04
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
+    - uses: msys2/setup-msys2@v2
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: apt
-      run: sudo apt update && sudo apt install ninja-build mingw-w64 libz-mingw-w64-dev nsis
-    - name: make
-      run: make windows debian-distr
+    - name: pacman
+      run: |
+        pacman -S --noconfirm --needed make ninja vim mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf
+    - name: build
+      run: |
+        PATH=/mingw32/bin:/opt/bin:$PATH ./configure
+        PATH=/mingw32/bin:/opt/bin:$PATH make
+        PATH=/mingw32/bin:/opt/bin:$PATH make debian-distr
     - name: tag
       uses: hole19/git-tag-action@master
       env:
