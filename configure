@@ -494,6 +494,7 @@ add_configuration() {
 
 add_nsis() {
     echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-sdl-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+    echo "default bin/WordGrinder-$VERSION-setup.exe" >&3
 }
 
 add_install() {
