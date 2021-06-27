@@ -194,6 +194,7 @@ reset_configuration() {
     TEST=n
     WINDOWS=n
     INSTALL=
+    STRIPPING=y
     X=
 
     add CFLAGS -g
@@ -395,12 +396,18 @@ add_configuration() {
         LINKCC=$CC
     fi
 
-    echo "build $EXE-unstripped$X : ld $OBJS" >&3
-    echo "  ldflags = $LDFLAGS" >&3
-    echo "  cc = $LINKCC" >&3
-    echo "build $EXE$X : strip $EXE-unstripped$X" >&3
-    echo "  strip = $STRIP" >&3
-    echo "default $EXE$X" >&3
+    if [ "$STRIPPING" = "y" ]; then
+        echo "build $EXE-unstripped$X : ld $OBJS" >&3
+        echo "  ldflags = $LDFLAGS" >&3
+        echo "  cc = $LINKCC" >&3
+        echo "build $EXE$X : strip $EXE-unstripped$X" >&3
+        echo "  strip = $STRIP" >&3
+        echo "default $EXE$X" >&3
+    else
+        echo "build $EXE$X : ld $OBJS" >&3
+        echo "  ldflags = $LDFLAGS" >&3
+        echo "  cc = $LINKCC" >&3
+    fi
 
     if [ "$INSTALL" != "" ]; then
         install_file $EXE $PREFIX/bin/$INSTALL 755
@@ -531,6 +538,7 @@ while [ $# != 0 ]; do
         test)           TEST=y ;;
         windows)        WINDOWS=y ;;
         install=*)      INSTALL=${1#*=} ;;
+        nostrip)        STRIPPING=n ;;
 
         -nsis)
             add_nsis
