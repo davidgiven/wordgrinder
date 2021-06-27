@@ -6,19 +6,33 @@ set -e
 VERSION=0.9
 FILEFORMAT=8
 
+WINCC=${WINCC:-i686-w64-mingw32-gcc}
+WINLINK=${WINLINK:-i686-w64-mingw32-g++}
+WINDRES=${WINDRES:-i686-w64-mingw32-windres}
+MAKENSIS=${MAKENSIS:-makensis}
+DATE=${DATE:-$(date +'%-d %B %Y')}
+PREFIX=${PREFIX:-$HOME}
+
+# Must match the Makefile
+OBJDIR=.obj
+
 # --- Setup boilerplate -----------------------------------------------------
 
 if [ $# = 0 ]; then
     echo "Autodetecting a sensible configuration..."
     if [ "$OS" = "Windows_NT" ]; then
-        echo "Building for Windows"
+        echo "Autoconfiguring for Windows"
         set release wincon windows test -and release sdl windows -nsis
     elif type sdl2-config > /dev/null; then
-        echo "Building a basic Unix build with SDL"
-        set debug ncurses test -and release ncurses test -and debug sdl -and release sdl
+        echo "Autoconfiguring a basic Unix build with SDL"
+        set debug ncurses test \
+            -and release ncurses test install=wordgrinder \
+            -and debug sdl \
+            -and release sdl install=xwordgrinder \
+            -install
     else
-        echo "Building a basic Unix build without SDL"
-        set debug ncurses test -and release ncurses test
+        echo "Autoconfiguring a basic Unix build without SDL"
+        set debug ncurses test -and release ncurses test -install
     fi
 fi
 if [ "$*" = "dev" ]; then
@@ -37,15 +51,12 @@ if [ "$*" = "dev" ]; then
         -and release sdl lua=luajit test
 fi
 
-OBJDIR=.obj
 rm -rf $OBJDIR
 mkdir -p $OBJDIR
 
 exec 3> $OBJDIR/build.ninja
 
 cat >&3 <<"EOF"
-LUA_INTERPRETER = lua
-
 rule cc
     depfile = $out.d
     command = $cc -MMD -MF $out.d $cflags -c $in -o $out
@@ -161,6 +172,7 @@ fi
 
 # --- Building per-configuration stuff --------------------------------------
 
+INSTALLABLES=
 reset_configuration() {
     CC=cc
     LINKCC=
@@ -181,6 +193,7 @@ reset_configuration() {
     LUA=builtin
     TEST=n
     WINDOWS=n
+    INSTALL=
     X=
 
     add CFLAGS -g
@@ -208,6 +221,12 @@ set_frontend() {
         exit 1
     fi
     FRONTEND=$1
+}
+
+install_file() {
+    echo "build $2 : install $1" >&3
+    echo "  mode=$3" >&3
+    add INSTALLABLES $2
 }
 
 add_configuration() {
@@ -381,6 +400,11 @@ add_configuration() {
     echo "  cc = $LINKCC" >&3
     echo "build $EXE$X : strip $EXE-unstripped$X" >&3
     echo "  strip = $STRIP" >&3
+    echo "default $EXE$X" >&3
+
+    if [ "$INSTALL" != "" ]; then
+        install_file $EXE $PREFIX/bin/$INSTALL 755
+    fi
 
     if [ "$TEST" = "y" ]; then
         local tests
@@ -456,12 +480,32 @@ add_configuration() {
             stampfile=$O/${f%*.lua}.stamp
             echo "build $stampfile : wordgrindertest $f | $EXE$X" >&3
             echo "  exe = $EXE$X" >&3
+            echo "default $stampfile" >&3
         done
     fi
 }
 
 add_nsis() {
     echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-sdl-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+}
+
+add_install() {
+    install_file extras/wordgrinder.desktop $PREFIX/share/applications/wordgrinder.desktop 644
+    install_file extras/wordgrinder.mime    $PREFIX/share/mime-info/wordgrinder.mime 644
+    install_file extras/icon.png            $PREFIX/share/pixmaps/wordgrinder.png 644
+    install_file README.wg                  $PREFIX/doc/wordgrinder/README.wg 644
+    install_file $OBJDIR/wordgrinder.1      $PREFIX/man/man1/wordgrinder.1 644
+    install_file $OBJDIR/xwordgrinder.1     $PREFIX/man/man1/xwordgrinder.1 644
+
+    echo "build $OBJDIR/wordgrinder.1 : manpage wordgrinder.man" >&3
+    echo "  date = $DATE" >&3
+    echo "  version = $VERSION" >&3
+    echo "default $OBJDIR/wordgrinder.1" >&3
+
+    echo "build $OBJDIR/xwordgrinder.1 : manpage xwordgrinder.man" >&3
+    echo "  date = $DATE" >&3
+    echo "  version = $VERSION" >&3
+    echo "default $OBJDIR/xwordgrinder.1" >&3
 }
 
 reset_configuration
@@ -486,9 +530,14 @@ while [ $# != 0 ]; do
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
         test)           TEST=y ;;
         windows)        WINDOWS=y ;;
+        install=*)      INSTALL=${1#*=} ;;
 
         -nsis)
             add_nsis
+            ;;
+
+        -install)
+            add_install
             ;;
 
         *)
@@ -500,6 +549,11 @@ while [ $# != 0 ]; do
     shift
 done
 add_configuration
+
+if [ "$INSTALLABLES" != "" ]; then
+    echo "build install : phony $INSTALLABLES" >&3
+    echo "Configured for prefix $PREFIX"
+fi
 
 # vim: sw=4 ts=4 et
 

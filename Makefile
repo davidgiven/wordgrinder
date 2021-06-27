@@ -1,21 +1,6 @@
-# ===========================================================================
-#                          CONFIGURATION OPTIONS
-# ===========================================================================
-
-# It should be mostly safe to leave these options at the default.
-
-PREFIX ?= $(HOME)
-BINDIR ?= $(PREFIX)/bin
-SHAREDIR ?= $(PREFIX)/share
-DOCDIR ?= $(SHAREDIR)/doc
-MANDIR ?= $(SHAREDIR)/man
-DESTDIR ?=
-
-# Where do the temporary files go?
-OBJDIR = .obj
-
-# The compiler used for the native build (curses, X11)
-CC ?= cc
+# Note: there are no configuration options here (other than the NINJA
+# variable). To configure properly, you need to pass parameters and/or
+# environment variables into the configure script.
 
 # Which ninja do you want to use?
 ifeq ($(strip $(shell type ninja >/dev/null; echo $$?)),0)
@@ -28,52 +13,22 @@ else
     endif
 endif
 
-# Global CFLAGS and LDFLAGS.
-CFLAGS ?=
-LDFLAGS ?=
-
-# Used for the Windows build (either cross or native)
-WINCC ?= i686-w64-mingw32-gcc
-WINLINK ?= i686-w64-mingw32-g++
-WINDRES ?= i686-w64-mingw32-windres
-MAKENSIS ?= makensis
-
-# Application version and file format.
-VERSION := 0.8
-FILEFORMAT := 8
-
-ifdef SOURCE_DATE_EPOCH
-       DATE := $(shell LC_ALL date --utc --date="@$(SOURCE_DATE_EPOCH)" +'%-d %B %Y')
-else
-       DATE := $(shell date +'%-d %B %Y')
-endif
-
-# Do you want your binaries stripped on installation?
-
-WANT_STRIPPED_BINARIES ?= yes
-
-# ===========================================================================
-#                       END OF CONFIGURATION OPTIONS
-# ===========================================================================
-#
-# If you need to edit anything below here, please let me know so I can add
-# a proper configuration option.
-
 hide = @
-
-LUA_INTERPRETER = $(OBJDIR)/lua
+OBJDIR = .obj
 
 NINJABUILD = \
 	$(hide) $(NINJA) -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
 
-# Builds and tests the Unix release versions only.
 .PHONY: all
 all: $(OBJDIR)/build.ninja
 	$(NINJABUILD)
 
-$(OBJDIR)/build.ninja:
-	$(hide) echo "You must run 'configure' first."
-	$(hide) false
+.PHONY: install
+install: $(OBJDIR)/build.ninja
+	$(NINJABUILD) install
+
+$(OBJDIR)/build.ninja: configure
+	$(hide) sh ./configure
 
 .DELETE_ON_ERROR:
 
