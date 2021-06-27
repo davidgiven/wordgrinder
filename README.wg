@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3909
+.documents.1.wordcount: 3888
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -161,7 +161,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/crouton/chroots/buster/home/dg/nonshared/wordgrinder/README.wg"
+.name: "/.big/@big/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -175,7 +175,7 @@ H1 Welcome to WordGrinder
 H2 Important note for Windows users
 P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
 LB the mouse is ignored. WordGrinder is keyboard driven.
-LB the close button at the top right hand corner of the window won’t work. Instead, to quit, type CTRL+Q (or press ESC to open the menu and pick File→Quit with the cursor keys and RETURN).
+LB to open the menu, press the ESCAPE key. (All functions can be found there.)
 P There’s more information on using WordGrinder with Windows further down in this file.
 H2 Introduction
 P WordGrinder is a word processor for processing words.

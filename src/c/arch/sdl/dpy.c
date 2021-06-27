@@ -14,6 +14,7 @@
 #define VKM_CTRLASCII   0x40000
 #define VK_RESIZE     0x80000
 #define VK_TIMEOUT    0x80001
+#define VK_QUIT       0x80002
 
 static SDL_Window* window;
 static SDL_Renderer* renderer;
@@ -420,6 +421,7 @@ uni_t dpy_getchar(double timeout)
             switch (e.type)
             {
                 case SDL_QUIT:
+                    put_queued_key(-VK_QUIT);
                     break;
 
                 case SDL_WINDOWEVENT:
@@ -509,6 +511,7 @@ const char* dpy_getkeyname(uni_t k)
     {
         case VK_RESIZE:      return "KEY_RESIZE";
         case VK_TIMEOUT:     return "KEY_TIMEOUT";
+        case VK_QUIT:        return "KEY_QUIT";
     }
 
     int mods = -k;

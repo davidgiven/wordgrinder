@@ -29,6 +29,14 @@ if (ARCH == "windows") then
     WINDOWS_INSTALL_DIR = dir
 end
 
+Quitting = false
+function QuitForcedBySystem()
+    Quitting = true
+end
+function CancelQuit()
+    Quitting = false
+end
+
 local oldcp, oldcw, oldco
 function QueueRedraw()
     redrawpending = true
@@ -164,6 +172,7 @@ function WordProcessor(filename)
         ["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentParagraph },
         ["KEY_ESCAPE"] = Cmd.ActivateMenu,
+        ["KEY_QUIT"] = Cmd.TerminateProgram,
     }
 
     local function eventloop()
@@ -216,6 +225,13 @@ function WordProcessor(filename)
                         NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
                     end
                 end
+            end
+
+            -- Process system quit messages.
+
+            if Quitting then
+                CancelQuit()
+                Cmd.TerminateProgram()
             end
         end
     end
