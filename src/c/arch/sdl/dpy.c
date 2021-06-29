@@ -141,7 +141,7 @@ void dpy_start(void)
     window = SDL_CreateWindow(
             "WordGrinder",
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            640, 480,
+            ivar_or_default("WINDOW_WIDTH", 800), ivar_or_default("WINDOW_HEIGHT", 600),
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
     );
     if (!window)

@@ -22,13 +22,13 @@ end
 if DEBUG then
 	local allowed = 
 	{
-		X11_BLACK_COLOUR = true,
-		X11_BOLD_MODIFIER = true,
-		X11_BRIGHT_COLOUR = true,
-		X11_DIM_COLOUR = true,
-		X11_FONT = true,
-		X11_ITALIC_MODIFIER = true,
-		X11_NORMAL_COLOUR = true,
+		FONT_REGULAR = true,
+		FONT_BOLD = true,
+		FONT_ITALIC = true,
+		FONT_BOLDITALIC = true,
+		FONT_SIZE = true,
+		WINDOW_WIDTH = true,
+		WINDOW_HEIGHT = true,
 	}
 
 	setmetatable(_G,
