@@ -13,21 +13,34 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: msys2/setup-msys2@v2
-    - uses: actions/checkout@v1
+      with:
+        update: false
+        msystem: MINGW32
+        install: >-
+          make
+          mingw-w64-cross-gcc
+          mingw-w64-i686-SDL
+          mingw-w64-i686-SDL2_ttf
+          mingw-w64-i686-nsis
+          mingw-w64-i686-pkg-config
+          mingw-w64-i686-zlib
+          ninja
+          tar
+          vim
+          zip
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
-    - name: pacman
-      run: |
-        pacman -S --noconfirm --needed make ninja vim mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf
     - name: build
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure
         PATH=/mingw32/bin:/opt/bin:$PATH make
         PATH=/mingw32/bin:/opt/bin:$PATH make debian-distr
     - name: tag
-      uses: hole19/git-tag-action@master
+      uses: EndBug/latest-tag@latest
+      with:
+        tag-name: dev
       env:
-        TAG: dev
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: delete-old-assets
       uses: mknejp/delete-release-assets@v1
@@ -37,10 +50,14 @@ jobs:
         assets: | 
           wordgrinder-*.tar.xz
           WordGrinder-*-setup.exe
+        fail-if-no-assets: false
+    - name: date
+      run: |
+          echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
     - name: release
       uses: softprops/action-gh-release@v1
       with:
-        name: Development build
+        name: Development build ${{ env.RELEASE_DATE }}
         files: |
           wordgrinder-*.tar.xz
           bin/WordGrinder-*-setup.exe
