@@ -3,7 +3,8 @@ local function unmarkdown(s)
 	s = s:gsub("- ", "\\- ")
 	s = s:gsub("<", "\\<")
 	s = s:gsub(">", "\\>")
-	s = s:gsub("`", "\\`")
+	--allows for inline preformatted text in markdown
+	--s = s:gsub("`", "\\`")
 	s = s:gsub("_", "\\_")
 	s = s:gsub("*", "\\*")
 	return s
