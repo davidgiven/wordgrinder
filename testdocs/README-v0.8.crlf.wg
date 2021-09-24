@@ -1,0 +1,555 @@
+WordGrinder dumpfile v3: this is a text file; diff me!
+.addons.autosave.enabled: false
+.addons.autosave.pattern: "%F.autosave.%T.wg"
+.addons.autosave.period: 10
+.addons.htmlexport.bold_off: "</b>"
+.addons.htmlexport.bold_on: "<b>"
+.addons.htmlexport.italic_off: "</i>"
+.addons.htmlexport.italic_on: "<i>"
+.addons.htmlexport.underline_off: "</u>"
+.addons.htmlexport.underline_on: "<u>"
+.addons.pagecount.enabled: true
+.addons.pagecount.wordsperpage: 250
+.addons.scrapbook.document: "Scrapbook"
+.addons.scrapbook.pattern: "Item from '%N' at %T:"
+.addons.scrapbook.timestamp: true
+.addons.smartquotes.doublequotes: false
+.addons.smartquotes.leftdouble: "“"
+.addons.smartquotes.leftsingle: "‘"
+.addons.smartquotes.notinraw: true
+.addons.smartquotes.notinrawquotes: true
+.addons.smartquotes.rightdouble: "”"
+.addons.smartquotes.rightsingle: "’"
+.addons.smartquotes.singlequotes: true
+.addons.spellchecker.enabled: false
+.addons.spellchecker.usesystemdictionary: true
+.addons.spellchecker.useuserdictionary: true
+.addons.widescreen.enabled: false
+.addons.widescreen.maxwidth: 80
+.clipboard.co: 1
+.clipboard.cp: 1
+.clipboard.cw: 1
+.clipboard.margin: 0
+.clipboard.viewmode: 1
+.clipboard.wordcount: 100
+.documents.1.co: 1
+.documents.1.cp: 1
+.documents.1.cw: 1
+.documents.1.margin: 0
+.documents.1.name: "Welcome to WordGrinder"
+.documents.1.sticky_selection: false
+.documents.1.viewmode: 1
+.documents.1.wordcount: 3888
+.documents.2.co: 1
+.documents.2.cp: 52
+.documents.2.cw: 1
+.documents.2.margin: 0
+.documents.2.name: "Unicode test document"
+.documents.2.sticky_selection: false
+.documents.2.viewmode: 1
+.documents.2.wordcount: 501
+.documents.3.co: 5
+.documents.3.cp: 1
+.documents.3.cw: 1
+.documents.3.margin: 4
+.documents.3.name: "User dictionary"
+.documents.3.sticky_selection: false
+.documents.3.viewmode: 2
+.documents.3.wordcount: 161
+.fileformat: 8
+.findtext: "font_regul"
+.idletime: 3
+.menu.accelerators.BACKSPACE: "ZDPC"
+.menu.accelerators.DELETE: "ZDNC"
+.menu.accelerators.DOWN: "ZD"
+.menu.accelerators.EC: "^C"
+.menu.accelerators.ECadd: "^M"
+.menu.accelerators.ECfind: "^L"
+.menu.accelerators.EF: "^F"
+.menu.accelerators.EG: "^G"
+.menu.accelerators.EN: "^K"
+.menu.accelerators.END: "ZE"
+.menu.accelerators.EP: "^V"
+.menu.accelerators.ER: "^R"
+.menu.accelerators.ET: "^X"
+.menu.accelerators.Eredo: "^Y"
+.menu.accelerators.Eundo: "^Z"
+.menu.accelerators.FQ: "^Q"
+.menu.accelerators.FS: "^S"
+.menu.accelerators.HOME: "ZH"
+.menu.accelerators.LEFT: "ZL"
+.menu.accelerators.PGDN: "ZPGDN"
+.menu.accelerators.PGUP: "ZPGUP"
+.menu.accelerators.RIGHT: "ZR"
+.menu.accelerators.SB: "^B"
+.menu.accelerators.SDOWN: "ZSD"
+.menu.accelerators.SEND: "ZSE"
+.menu.accelerators.SHOME: "ZSH"
+.menu.accelerators.SI: "^I"
+.menu.accelerators.SLEFT: "ZSL"
+.menu.accelerators.SO: "^O"
+.menu.accelerators.SP: "^P"
+.menu.accelerators.SPGDN: "ZSPGDN"
+.menu.accelerators.SPGUP: "ZSPGUP"
+.menu.accelerators.SRIGHT: "ZSR"
+.menu.accelerators.SU: "^U"
+.menu.accelerators.SUP: "ZSU"
+.menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
+.menu.accelerators.UP: "ZU"
+.menu.accelerators.ZBD: "^PGUP"
+.menu.accelerators.ZD: "DOWN"
+.menu.accelerators.ZDNC: "DELETE"
+.menu.accelerators.ZDPC: "BACKSPACE"
+.menu.accelerators.ZDW: "^E"
+.menu.accelerators.ZE: "END"
+.menu.accelerators.ZED: "^PGDN"
+.menu.accelerators.ZH: "HOME"
+.menu.accelerators.ZL: "LEFT"
+.menu.accelerators.ZM: "^@"
+.menu.accelerators.ZNP: "^DOWN"
+.menu.accelerators.ZPGDN: "PGDN"
+.menu.accelerators.ZPGUP: "PGUP"
+.menu.accelerators.ZPP: "^UP"
+.menu.accelerators.ZR: "RIGHT"
+.menu.accelerators.ZSBD: "S^PGUP"
+.menu.accelerators.ZSD: "SDOWN"
+.menu.accelerators.ZSE: "SEND"
+.menu.accelerators.ZSED: "S^PGDN"
+.menu.accelerators.ZSH: "SHOME"
+.menu.accelerators.ZSL: "SLEFT"
+.menu.accelerators.ZSNP: "S^DOWN"
+.menu.accelerators.ZSPGDN: "SPGDN"
+.menu.accelerators.ZSPGUP: "SPGUP"
+.menu.accelerators.ZSPP: "S^UP"
+.menu.accelerators.ZSR: "SRIGHT"
+.menu.accelerators.ZSU: "SUP"
+.menu.accelerators.ZSW: "^W"
+.menu.accelerators.ZSWL: "S^LEFT"
+.menu.accelerators.ZSWR: "S^RIGHT"
+.menu.accelerators.ZU: "UP"
+.menu.accelerators.ZWL: "^LEFT"
+.menu.accelerators.ZWR: "^RIGHT"
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
+.menu.accelerators.^C: "EC"
+.menu.accelerators.^DOWN: "ZNP"
+.menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
+.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.replacetext: ""
+.statusbar: true
+.current: 1
+#clipboard
+H3 There is also a port to Windows which will run in a console window. This is useful if you want to do any work from the command line or via a remote login, which I’ll admit is unlikely for Windows. While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
+P Italics, bold and underline are displayed as various colours.
+P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
+.
+#1
+H1 Welcome to WordGrinder
+H2 Important note for Windows users
+P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
+LB the mouse is ignored. WordGrinder is keyboard driven.
+LB to open the menu, press the ESCAPE key. (All functions can be found there.)
+P There’s more information on using WordGrinder with Windows further down in this file.
+H2 Introduction
+P WordGrinder is a word processor for processing words.
+P WordGrinder is not WYSIWYG. It is not point and click. It is not a desktop publisher. It is not a text editor. It does not do fonts and it barely does styles.
+P What it does do is words. It’s designed for writing text. It gets out of your way and lets you type.
+H2 Survival Guide
+P All your favourite navigation keys should work. Just type and it should do the right thing.
+P Important things you need to know:
+LB pressing ESC opens the menu. Press ESC again or CTRL+C to close it. (Pressing CTRL+C will cancel most things in WordGrinder.)
+LB inside a menu, navigate with the cursor keys and RETURN or just press the highlighted letter.
+LB a key combination displayed to the right of a menu item is a shortcut that will invoke that item directly without having to open the menu first. These can all be changed; see the section on menu customisation below.
+LB all navigation controls are defined in the Navigation menu. Forget which key combination goes to the beginning of the line? Just look there.
+LB if no menu is open, pressing ALT+letter will open the specified submenu directly, bypassing the main menu. e.g. to open a file, just type ALT+F, O.
+LB typing CTRL+G will open this document’s table of contents. 
+P You can load and save files using the File menu. A Document Set is a file on disk. Each file can contain multiple Documents. Pay careful attention to whether WordGrinder is talking about Documents or Document Sets. There’s more information below.
+P Some operations (applying character styles, cut and paste) require you to select text. There are two ways to do this:
+LB you can create an ephemeral selection by holding down SHIFT and pressing (most) navigation keys; this is the way most other applications make selections.
+LB you can set a mark by pressing CTRL+SPACE; then move the cursor normally. The selected text is between the mark and the cursor. Note that the mark are always placed on the left side of the cursor. Pressing CTRL+SPACE again will remove the mark.
+P That’s it. Now you can work WordGrinder.
+H2 Styles
+H3 Character styles
+P WordGrinder supports the following character styles:
+LB Italicised text
+LB Underlined text
+LB Bold text
+LB And any combinations of the above
+P That’s all. To apply them, select some text and then use Style→Italic (CTRL+I) or Style→Underline (CTRL+B) to apply. To remove styles, use Style→Plain (CTRL+O). When you type type new text, it will always appear unstyled (even if in the middle of a styled word).
+P Tip: to type a new word in a particular character style, make sure nothing’s selected, press CTRL+I, CTRL+B or CTRL+U to toggle the insertion state (look down at the right hand side of the status bar), and then type.
+H3 Paragraph styles
+P WordGrinder supports a number of paragraph styles. See Style→Paragraph Styles (CTRL+P) for the list. Each style applies to a complete paragraph. If you want to see what style each paragraph has set, use Style→Set Margin Mode→Show Paragraph Styles. The style names will be displayed in the left-hand margin.
+P Some basic options on how paragraph styles are shown can be changed through the look-and-feel dialogue at File→Global Settings→Change look and feel. These only affect how text is shown inside WordGrinder; exported text is unaffected.
+P The RAW paragraph style is interesting as it allows you to embed arbitrary chunks of data into your document which, when exported, are emitted intact into the output file. I use this to insert HTML into documents I’m writing.
+H2 Documents and Document Sets
+P Each WordGrinder file can contain multiple pieces of text. A file is referred to as a Document Set; each piece of text within the Document Set is a Document.
+P You can have as many documents in a document set as you like (within reason). You can manage them using the File→Manage Documents... menu item, and can quickly see and switch between documents using the Documents menu (ESC, D).
+P Documents have their own text, selection, viewing style, cursor position, etc. The clipboard, however, is shared across the entire document set. This allows you to move pieces of text around within the document set using the clipboard.
+P Importing non-WordGrinder files always results in a new document being added to the current document set.
+H2 Templates
+P You may save a WordGrinder file as a template using File→Save as template. These files get set in a special (configurable) template directory. When creating a new document with File→Create from template, the template will be loaded but the current document will not be set. This means that when saving, you’ll be prompted for a filename in the normal way.
+P Templates may contain anything which can be saved into a document set, including content, multiple subdocuments, keyboard bindings, local settings, etc. Use templates if you have a particular set of bindings you like and want them automatically set up for any new document.
+P The directory in which templates are stored is configured via File→Global Settings→Directories.
+H2 Menu customisation
+P You can change any of the keyboard shortcuts assigned to menu items. These are then saved as part of the document set, so each WordGrinder file takes its keyboard configuration with it.
+P To do this, open the menu, navigate to the entry you want to change, and then press CTRL+V followed by the key you want to bind. You can’t bind keys used to type text into your document (e.g. A). You also can’t bind a key that’s already in use elsewhere. You can remove a binding by navigating to the appropriate menu item and pressing CTRL+X. Watch the status bar while a menu’s open for reminders.
+P All WordGrinder keybindings (except ESC, and menu and dialogue navigation) appear on the menus, so they’re all configurable. Things like the cursor keys appear in the Navigation menu.
+P If you get irrecoverably confused, you can reset all the keybindings by opening a menu and doing CTRL+R.
+P Note: WordGrinder’s keyboard support is at the mercy of which keys your platform supports, and this can vary wildly from platform to platform. For example, on some platforms that use ncurses it doesn’t seem possible to bind CTRL+arrow keys, so therefore on these platforms you can’t use them with WordGrinder (I can’t do anything about this. In addition, some platforms have keys that I don’t know about. WordGrinder will support these, but they’ll be labelled as UNKNOWN_1234 or similar. If this happens to you, please get in touch so I can make it display a sensible name.
+H2 Importing
+P If you don’t want to write a document from scratch in WordGrinder, it’s possible to import documents in a small number of other formats using File→Import new document. These all add a new document to the existing document set, rather than replacing the current one. The following formats are available:
+LB Plain text
+L Imports flat encoded plain text with no character or paragraph styles. Paragraphs are delimited by newlines.
+L Files must be UTF-8. Be aware that Windows notepad and friends don’t save in UTF-8 by default. If you import a file which isn’t UTF-8 you’ll probably get gibberish.
+LB OpenDocument
+L Imports basic content from ODT files. OpenDocument is complicated and hard to parse but WordGrinder will do its best to apply appropriate styles. Unsupported features are ignored.
+LB HTML
+L Imports ‘tag soup’ UTF-8 encoded HTML. All unknown tags are ignored. <i> (or <em>), <u> and <b> are mapped to italic, underline and bold, respectively; <h1>..<h4> become paragraph styles H1 to H4; all <li> become LB. Paragraphs are delimited by either <p> or <br>.
+LB Markdown
+L Imports basic Markdown. This supports headers, simple lists, preformatted text, block quotations, inline style, and a few other things; however, it can be easily confused by complex markup like nested lists or list items with continuations, and a lot of things it won’t even try on. It’s intended to read basic text only.
+H2 Exporting
+P Once you’re done with your document, you can export it to a small but growing variety of other formats using the File→Export current document menu option. The following formats are available:
+LB Plain text
+L This produces a simple, flat UTF-8 text file. Character and paragraph styles are lost, but all your text remains. Paragraphs are delimited by newlines, so you end up with one very long line per paragraph.
+LB OpenDocument
+L This produces an ODT file which can be read by LibreOffice and a variety of other major word processors. Character and paragraph styles are exported and are mapped to OpenDocument styles called P, H1, H2 etc.
+L Note that you can’t losslessly convert a WordGrinder document to OpenDocument and back again (or vice versa).
+LB HTML
+L This generates a very basic UTF-8 encoded HTML document, nominally HTML 4. Practically everything will read this. Character and paragraph styles are exported. There are some customisation options in the File→Document Settings→HTML export dialogue; I use these when writing program documentation to cause underlined text appear as <code>.
+LB Markdown
+L This generates simple Markdown, supporting basic text, headers, simple lists, inline style, etc. Complex features like mixed list types aren’t supported.
+L Note that you can’t losslessly convert a WordGrinder document to Markdown and back again (or vice versa).
+LB LaTeX
+L This generates a UTF-8 LaTeX document suitable for running through XeTeX using the ‘xelatex’ command. You can use stock LaTeX if you wish, but you will need to edit the file to remove the xunicode package --- any non-ASCII characters probably won’t work correctly. Character and paragraph styles are supported; H1..H4 are mapped to \section, \subsection, \subsubsection and \paragraph respectively.
+L Note that even when using XeTeX, TeX’s Unicode support is currently rather poor, and that which characters are supported depends strongly on what font you’re using: read the Unicode section below. You’ll probably need to edit the output file to set an appropriate font or set of fonts.
+LB Troff
+L This generates an ASCII Troff file suitable for use with the ms macro package. Character and paragraph styles are supported; exporting to troff and then running the result through nroff is a good way of getting a formatted plain text version of a document.
+L Non-ASCII characters are encoded using the \[char1234] mechanism, which means that if you’re lucky enough to have a version of groff modern enough to handle proper Unicode, it should all work. If you don’t, then characters in the ISO-8859-1 range will probably work, and all others will be ignored. (I don’t use the \[u1234] idiom because this causes groff 1.18.1 to crash horribly when exporting this document. Blame the groff team; they’ve been promising real UTF-8 for years now.)
+L Unfortunately the troff format has some limitations which means that switching from one character style to another sometimes involves inserting a space. Please get in touch if you know how to get around this.
+H2 Manually configuring WordGrinder
+P Nearly all WordGrinder configuration options are automatically saved with your document set. Menu bindings, settings, etc; you can change them through the user interface and they’ll be saved into the file and reloaded later. The rare system-wide configuration options can be found in File→Global Settings.
+P However, there is also a mechanism for allowing these settings to be overridden. I use this to have different keybindings on machines with different keyboards. It is currently very clunky and under development, and so may change without notice.
+P To use, run this command:
+Q wordgrinder --help
+P This will show the command line options, and at the bottom will tell you where your configuration file lives. Open this in a (non-WordGrinder) text editor.
+P Now run:
+Q wordgrinder --exec "ListMenuItems()"
+P WordGrinder will display all the menu items it knows about, plus their menu ID. You can now enter lines like this in your configuration file:
+Q OverrideKey("^Z", "ZM")
+Q OverrideKey("F1", "D1")
+Q OverrideKey("F2", "D2")
+P ...where the first item is the key to override, and the second is the menu ID over the thing you want to happen when the key is pressed.
+P These settings override any document set settings, but they are not saved with the document set --- if you load the document set into an instance of WordGrinder which doesn’t have that configuration file available, the standard keybindings apply. The settings are not shown in the menus and rebinding menu items will not affect them.
+P Some global settings use variables. Change these with:
+Q FONT_REGULAR = "c:\\fonts\\myfont.ttf"
+P This whole area needs some work. We apologise for the inconvenience.
+H2 Platforms
+P WordGrinder can be used on several platforms.
+H3 Unix terminal, OSX console
+P WordGrinder will run in a terminal on practically any Unix platform with a modern curses library; I use Linux with ncurses.
+P Underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also displayed highlighted. Sorry. That’s the best ncurses can do.
+P ncurses’ keyboard support is hugely variant on what terminal you’re using, and some terminals don’t support things like SHIFT+UP/DOWN, CTRL+arrows, SHIFT+function keys, etc. In addition, ncurses enforces a one second delay when responding to the ESCAPE key. This is really annoying, but can be avoided by using ALT+letter instead.
+P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrinder can’t tell them apart; which is why pressing TAB toggles italics. Sorry. Use the X11 port instead.
+P You will also need a decent terminal emulator with Unicode support. On Linux, I use xfce4-terminal with the Terminus font.
+P For OSX it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
+H3 Windows console
+P There’s a version of WordGrinder which will run in a Windows console (a cmd.exe shell window). This mostly works as for the ncurses version above, but uses highlight text for italics, bold and underlining. The keyboard support is pretty good with most key combinations working.
+P However, Unicode is not supported at all well, due to limitations of the Windows console, and this isn’t really recommended for everyday use. Use the GUI version below.
+P While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
+P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
+H3 Unix X11, Windows GUI, OSX GUI
+P There is also a specific version of WordGrinder which uses the SDL library for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
+P ALT+ENTER will toggle full screen mode.
+P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
+P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
+LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
+LB FONT_SIZE: size of the font, in points. The default is (approximately) 20.
+H3 Rasperry Pi (or other Mali chipset) console
+P If you have a Raspberry Pi or another Linux system with a Mali graphics chipset, you can run WordGrinder on the console, without needing X at all! Just run the SDL version as above. Everything should, mostly, just work. You will need to add yourself to the input group for the keyboard to work. It’s a bit rough around the edges but should be quite usable.
+H2 Neat features
+H3 Table of contents
+P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
+H3 Undo
+P WordGrinder will remember every change you make, up to a limit of about 500. Use CTRL+Z to undo, and then CTRL+Y to redo an undone change. You can only use redo if you haven’t made any changes in the mean time, as usual.
+P The undo stack is not saved along with your document --- the undo stack always starts as empty when a document is loaded. (Because otherwise the files get stupidly big, and very slow to load and save.)
+H3 Autosave
+P WordGrinder also has a feature that will save a timestamped snapshot of your document set periodically. This is disabled by default; to enable this, go to File→Document Settings→Autosave. You can specify how long between snapshots and what filename pattern you want WordGrinder to use.
+P Note that autosaving will only happen if you don’t touch the keyboard for a few seconds, to prevent a dialogue box from being popped up just as you’re about to press a key. Autosaving will also only happen if your document set contains unsaved changes. (In this situation, autosaving does not count as saving your changes, and your document set will remain dirty.)
+P By default, autosaves will be placed next to the original document, but if you specify a custom directory in File→Global Settings→Directories, they’ll be put there instead.
+H3 Unicode
+P WordGrinder supports ＵＮＩＣＯＤＥ!
+P (If you see a bunch of boxes in the above line, it means that your platform doesn’t support displaying exotic Unicode characters. WordGrinder will still let you edit them, you just won’t be able to see what you’re doing.)
+P Mostly, at any rate. Combining characters and right-to-left are unsupported. This means that you can use, say, Français, русский язык, 한국어 and 日本語, but you can’t use Arabic or Hebrew because they end up mangled (العربية and עברית respectively). You can use line art but that’s not what WordGrinder’s for and it’ll probably work badly.
+P Unfortunately, how to actually enter Unicode characters is entirely up to your operating system and your terminal application. WordGrinder can’t help you there.
+P This document set contains a Unicode test document containing a rather more strenuous workout than the above paragraph; see the Documents menu.
+H3 Scrapbook
+P Edit→Scrapbook provides various options to allow you to quickly copy fragments of document to a scrapbook document. Fragments get appended onto the end of the scrapbook with an optional timestamp; this is configurable in File→Document Settings→Scrapbook. (The scrapbook itself is just another document; you can even copy things to the scrapbook while viewing it, but it probably won’t behave the way you want!)
+H3 Page count
+P For some applications it’s important to know --- roughly --- how many pages you’ve written, rather than how many words. WordGrinder doesn’t know what pages are, but there’s a feature to allow you to show you a rough estimate as to how many pages you’ve got based on the number of words. See File→Document Settings→Page Count. The industry standard for publisher submission manuscripts, by the way, is 250.
+H3 Widescreen mode
+P Running WordGrinder full screen on a widescreen monitor is typically pretty uncomfortable, as you end up with very long lines. Widescreen mode allows you to restrict the text to a column in the centre of the screen. (Dialogue boxes are not affected.) See File→Global Settings→Look and Feel. I find that 80 or 100 columns is the most comfortable.
+P This is a global setting and isn’t saved with your document (because I tend to want to set it per machine, rather than per document).
+P There are a few other settings in there you might want to play with.
+H3 Smart quotes
+P WordGrinder supports smart quotation marks, “like this” or ‘like this’. To turn on, see File→Document Settings→Smart quotes. It’ll convert them when you type, or when you paste into your document. To bulk convert text, use Edit→Smartquotify or Edit→Unsmartquotify. You can change the characters used for quotation marks (which is useful if, e.g. «you’re French»). You still get them by typing a single or double quotation mark, though.
+H3 Spellchecker
+P There’s a simple spellchecker. It will highlight misspelt words on the screen, and that’s it. On Windows, WordGrinder ships with a couple of dictionaries for British English and for American/Canadian English. On Linux and OSX, WordGrinder uses the default dictionaries which come with your system.
+P WordGrinder supports standard wordlist dictionaries which are just a big text file full of words. Feel free to use your own. You can set the current dictionary via File→Global Settings→Load new system dictionary. This setting is not saved with your document set.
+P Each document set also carries with it a user dictionary; this is just another document in the document set. It contains a list of words which will be considered correctly spelt. Words can be added to this with Edit→Spellchecker→Add current word to dictionary. Alternatively the user dictionary can be modified at any time.
+P You can jump to the next misspelt word with Edit→Spellchecker→Find next misspelt word.
+H3 Command line
+P There are some WordGrinder features which can be used from the command line, both on Unix and Windows. Firstly, it’s completely scriptable in Lua: write a file in Lua, then run WordGrinder with wordgrinder --lua filename.lua and it’ll run and then exit. Or use wordgrinder --exec "lua command". Nearly all of WordGrinder is written in Lua and it’s all available via this interface. The API is, unfortunately, beyond the scope of this document; if you’re interested, ask the author (or look at the source code).
+P Secondly, the file .wordgrinder/startup.lua in your home directory will be automatically loaded and run whenever WordGrinder starts; see the section above on configuring WordGrinder for information.
+P Thirdly, you can use WordGrinder to automatically convert between any supported document formats. For example:
+Q wordgrinder --convert sourcefile.wg destfile.odt
+P ...will convert the default document in sourcefile.wg to OpenDocument format.
+P See wordgrinder --help for more information.
+H2 When Things Go Wrong
+P Is WordGrinder behaving funny? Did it just crash?
+P If so, please get in touch. Software shouldn’t crash, and if you tell me about it, I will fix it so it won’t. (Probably.)
+P When reporting bugs, it will make my life considerably easier if you can (a) duplicate the bug, and (b) show me the stack trace produced by the debug version of WordGrinder. (Windows users should get in touch and I’ll send you a copy of the debug version, and show you how to get at the stack trace.) Without these, I’m afraid there’s not a lot I can do.
+P 
+Q David Given
+Q dg@cowlark.com
+.
+#2
+H1 I don't know, I only work here!
+P Enclosed are various translations of the phrase 'I don't know, I only work here', in a lot of different languages. These have been shamelessly stolen from http://crism.maden.org/dunno.html. Note that I've removed the right-to-left languages, as WordGrinder doesn't support that.
+P 
+LN Amharic: አኔ አላውቅም። አዚህ መሰራት ብቻ ካልሆነ። 
+LN Bulgarian: Не знам. Аз само работя тук.
+LN Bosnian: Ne znam. Ja samo radim ovdje.
+LN Welsh: Dwn i ddim. Dim ond gweithio fan hyn dw i.
+LN German: Keine Ahnung. Ich arbeite hier nur.
+LN Viennese: Waa? I net. I oarbeit do nur.
+LN Swiss German: I weiss es nid. I schaffe nume hie.
+LN Ruhrdeutsch: Wat weiß ich. Ich tu hier nur malochen.
+LN Danish: Det ved jeg ikke. Jeg arbejder her bare.
+LN Greek: Δεν ξέρω, εγώ απλά δουλεύω εδώ.
+LN English: I don't know. I only work here.
+LN Esperanto: Mi ne scias. Mi nur laboras ĉi tie.
+LN Spanish: Yo no sé. Yo nada mas que trabajo aquí.
+LN Colombian Spanish: No sé, yo sólo trabajo acá.
+LN Finnish: En tiedä. Olen täällä vain töissä.
+LN French: Je ne sais pas. Je ne fais que travailler ici.
+LN Irish Gaelic: Níl a fhios agam. Nílimse ach ag obair anseo.
+LN Gallegan: Non o sei. Eu so traballo aqui.
+LN Gothic: 𐌽𐌹 𐍅𐌰𐌹𐍄 𐌹𐌺 𐌸𐌰𐍄𐌰𐌹𐌽𐌴𐌹 𐍅𐌰𐌿𐍂𐌺𐌾𐌰 𐌷𐌴𐍂
+LN Hindi: मझ नही पता । म तो सिरफ यहा काम करता ह ।
+LN Hungarian: Nem tudom. Én csak itt dolgozom.
+LN Indonesian: Saya tidak tahu. Saya cuma bekerja disini.
+LN Ilocano: Diakammo. Agtrabtrabaho ak la ditoy.
+LN Icelandic: Ég veit það ekki, ég bara vinn hérna.
+LN Italian: Non lo so. Io qui lavoro soltanto.
+LN Japanese: 知りません。私はここで働いているだけです。
+LN Javanese: Kula mboten ngertos. Kula namung nyambut damel wonten mriki.
+LN Korean: 나는 몰라요. 난 여기서 일핀 뿐이에요.
+LN Latin: Nescio. Hic tantum laboro.
+LN Marathi: मला नाही माहित. मी फकत इथ काम करतो.
+LN Malay: Saya tak tahu. Saya cuma kerja sini.
+LN Norwegian (Bokmål): Jeg vet ikke. Jeg bare jobber her.
+LN Saxon: Wöß’sch nüsch. ’Sch tu’ hier bloß arbeidn.
+LN Nepali: मलाई थाहा छन । म यहा काम मातर गरछ ।
+LN Dutch: Geen idee. Ik werk hier alleen maar.
+LN Norwegian (Nynorsk): Eg veit ikkje. Eg berre arbeider her.
+LN Polish: Nie wiem. Ja tu tylko pracuję.
+LN Brazilian Portuguese: Eu não sei. Eu só trabalho aqui.
+LN Romanian: Nu ştiu. Eu doar lucrez aici.
+LN Russian: Не знаю. Я здесь только работаю.
+LN Swedish: Det vet jag inte. Jag arbetar bara här.
+LN Albanian: Nuk e di. Unë jam punëtor këtu.
+LN Serbian: Не знам. Ја само радим овде.
+LN Sudanese: Abdi teu ngartos. Abdi mung didamel di dieu.
+LN Thai: ผมไมร ผมเพยงแตทำงานทน
+LN Modern Filipino: Ewan ko. Empleyado lang ako dito.
+LN Tagalog: Di ko alam. Trabahador lang ako dito.
+LN Ukrainian: Я не знаю. Я лише працюю тут.
+LN Vietnamese: Tôi không biết. Tôi chỉ làm việc đây thôi.
+LN Klingon: jIH ta'Sov'be. jIH neH vum naDev.
+LN Aragonese: No sé pas. Yo aquí nomás i treballo.
+LN Lombard: Sô nò. Ghe laôri dômà chì ch’inscì.
+LN Neapolitan: Nunn’òssaccio. Ije accà ce fatico e bbasta.
+LN Sixilian: Nenti sacciu. Cà ci travagghiu sulamenti.
+LN Swabian: Des woiß doch i net. I schaff dähanna bloß.
+LN Chinese (simplified): 我不知道。我只在这里工作。
+LN Chinese (traditional): 我不知道。我只在這裡工作。
+.
+#3
+P This is your user dictionary --- place words, one at a time, in V paragraphs and they will be considered valid in your document.
+V wordgrinder
+V unix
+V ctrl+q
+V esc
+V file→quit
+V top-left
+V consolas
+V full-screen
+V ctrl+c
+V alt+letter
+V submenu
+V e.g
+V alt+f
+V ctrl+g
+V ctrl+space
+V style→italic
+V ctrl+i
+V style→underline
+V ctrl+b
+V style→plain
+V ctrl+o
+V unstyled
+V ctrl+u
+V style→paragraph
+V ctrl+p
+V style→set
+V mode→show
+V left-hand
+V customisable
+V html
+V i'm
+V file→manage
+V non-wordgrinder
+V ctrl+v
+V ctrl+x
+V ctrl+r
+V wordgrinder's
+V ncurses
+V ctrl+arrow
+V unknown_1234
+V file→import
+V utf-8
+V opendocument
+V odt
+V h1..h4
+V file→export
+V libreoffice
+V losslessly
+V file→settings→html
+V xetex
+V xelatex
+V xunicode
+V non-ascii
+V \section
+V \subsection
+V \subsubsection
+V \paragraph
+V tex's
+V unicode
+V troff
+V ascii
+V nroff
+V \[char1234
+V groff
+V iso-8859-1
+V \[u1234
+V system-wide
+V file→global
+V --help
+V --lua
+V listmenuitems(
+V overridekey(z
+V overridekey(f1
+V overridekey(f2
+V x11_font
+V linux
+V shift+up/down
+V ctrl+arrows
+V shift+function
+V xfce4-terminal
+V x11
+V natively
+V antialiased
+V shift+ctrl+cursor
+V unifont
+V xft
+V monospace
+V x11_black_colour
+V x11_dim_colour
+V x11_normal_colour
+V x11_bright_colour
+V ffffff
+V preferences-keyboard
+V homebrew
+V fullscreen
+V titlebar
+V alt+enter
+V rebindable
+V truetype
+V monospaced
+V dejavu
+V http://dejavu.sourceforge.net/wiki/index.php/download
+V edit→goto
+V ctrl+z
+V ctrl+y
+V autosave
+V timestamped
+V file→settings→autosave
+V filename
+V autosaving
+V right-to-left
+V français
+V arabic
+V hebrew
+V edit→scrapbook
+V timestamp
+V file→settings→scrapbook
+V file→settings→page
+V file→settings→widescreen
+V file→settings→smart
+V «you're
+V french»
+V scriptable
+V lua
+V filename.lua
+V api
+V wordgrinder.lua
+V --convert
+V sourcefile.wg
+V destfile.odt
+V i'll
+V david
+V dg@cowlark.com
+V osx
+V american/canadian
+V british
+V wordlist
+V edit→spellchecker→find
+V edit→spellchecker→add
+V settings→load
+V edit→unsmartquotify
+V edit→smartquotify
+V settings→widescreen
+V file→document
+V settings→html
+V settings→autosave
+V settings→scrapbook
+V settings→page
+V settings→smart
+.

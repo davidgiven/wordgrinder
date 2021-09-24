@@ -417,6 +417,9 @@ add_configuration() {
         local tests
         tests=
 
+        local testdeps
+        testdeps=
+
         add tests tests/apply-markup.lua
         add tests tests/argument-parser.lua
         add tests tests/change-paragraph-style.lua
@@ -450,6 +453,8 @@ add_configuration() {
         add tests tests/load-0.6-v6.lua
         add tests tests/load-0.6.lua
         add tests tests/load-0.7.2.lua
+        add tests tests/load-0.8.lua
+        add tests tests/load-0.8.crlf.lua
         add tests tests/load-failed.lua
         add tests tests/move-while-selected.lua
         add tests tests/numbered-lists.lua
@@ -483,9 +488,14 @@ add_configuration() {
         add tests tests/windows-installdir.lua
         add tests tests/xpattern.lua
 
+        add testdeps tests/testsuite.lua
+        for f in testdocs/*; do
+            add testdeps $f
+        done
+
         for f in $tests; do
             stampfile=$O/${f%*.lua}.stamp
-            echo "build $stampfile : wordgrindertest $f | $EXE$X" >&3
+            echo "build $stampfile : wordgrindertest $f | $EXE$X $testdeps" >&3
             echo "  exe = $EXE$X" >&3
             echo "default $stampfile" >&3
         done

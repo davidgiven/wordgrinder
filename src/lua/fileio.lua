@@ -474,8 +474,16 @@ function loadfromstreamt(fp)
 	data.menu = CreateMenuBindings()
 	data.documents = {}
 
+	local function readl()
+		local s = fp:read("*l")
+		if s then
+			return s:gsub("\r", "")
+		end
+		return nil
+	end
+
 	while true do
-		local line = fp:read("*l")
+		local line = readl()
 		if not line then
 			break
 		end
@@ -533,7 +541,7 @@ function loadfromstreamt(fp)
 
 			local index = 1
 			while true do
-				line = fp:read("*l")
+				line = readl()
 				if not line or (line == ".") then
 					break
 				end
@@ -569,7 +577,7 @@ function LoadFromStream(filename)
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
 	local loader = nil
-	local magic = fp:read("*l")
+	local magic = fp:read("*l"):gsub("\r", "")
 	if (magic == MAGIC) then
 		loader = loadfromstream
 	elseif (magic == ZMAGIC) then
