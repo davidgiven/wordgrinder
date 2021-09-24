@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include <string.h>
+#include <endian.h>
 #include <SDL2/SDL.h>
 #include "SDL_FontCache.h"
 #include "keyqueue.h"
@@ -147,6 +148,20 @@ void dpy_start(void)
     if (!window)
         fatal("could not create window: %s", SDL_GetError());
     SDL_StartTextInput();
+
+    extern const uint8_t icon_data[];
+    SDL_Surface* icon = SDL_CreateRGBSurfaceFrom((uint8_t*) icon_data,
+        128, 128,
+        32,
+        128*4,
+        #if __BYTE_ORDER == __LITTLE_ENDIAN
+            0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+        #else
+            0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+        #endif
+    );
+    SDL_SetWindowIcon(window, icon);
+    SDL_FreeSurface(icon);
 
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_TARGETTEXTURE);
     if (!renderer)

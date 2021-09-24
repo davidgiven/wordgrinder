@@ -76,6 +76,9 @@ rule rcfile
 rule makensis
     command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
+rule makeicon
+    command = sh tools/makeicon.sh $in > $out
+
 rule strip
     command = cp $in $out && $strip $out
 
@@ -169,6 +172,11 @@ build_fonts() {
 if [ -e extras/fonts/FantasqueSansMono-Regular.ttf ]; then
     build_fonts
 fi
+
+build_icon() {
+    echo "build $OBJDIR/icon.c : makeicon extras/icon.png | tools/makeicon.sh" >&3
+}
+build_icon
 
 # --- Building per-configuration stuff --------------------------------------
 
@@ -367,6 +375,7 @@ add_configuration() {
             add SRCS src/c/arch/sdl/keyqueue.c
             add SRCS src/c/emu/SDL_FontCache/SDL_FontCache.c
             add SRCS $OBJDIR/fonts.c
+            add SRCS $OBJDIR/icon.c
             add CFLAGS $(sdl2-config --cflags) $(pkg-config --cflags SDL2_ttf)
             if [ "$WINDOWS" = "y" ]; then
                 add LDFLAGS $(sdl2-config --static-libs) $(pkg-config --libs SDL2_ttf)
