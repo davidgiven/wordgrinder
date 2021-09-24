@@ -98,7 +98,6 @@ end
 -- loop.
 
 function WordProcessor(filename)
-    LoadGlobalSettings()
     ResetDocumentSet()
 
     -- Move legacy config files.
@@ -254,9 +253,12 @@ end
 
 function Main(...)
     -- Set up the initial document so that the command line options have
-    -- access. The global settings aren't loaded yet, so things like paragraph
-    -- styles may not be set up correctly, but we don't care.
+    -- access. We can't save the settings until the document set is set up, but
+    -- we can't set up the document set properly until the settings are loaded,
+    -- so we have to do it twice to get it right.
 
+    ResetDocumentSet()
+    LoadGlobalSettings()
     ResetDocumentSet()
 
     local arg = {...}
