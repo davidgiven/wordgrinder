@@ -5,10 +5,10 @@
 
 #include "globals.h"
 #include <string.h>
-#include <endian.h>
 #include <SDL2/SDL.h>
 #include "SDL_FontCache.h"
 #include "keyqueue.h"
+#include "endianness.h"
 
 #define VKM_SHIFT       0x10000
 #define VKM_CTRL        0x20000
@@ -154,10 +154,12 @@ void dpy_start(void)
         128, 128,
         32,
         128*4,
-        #if __BYTE_ORDER == __LITTLE_ENDIAN
+        #if defined(IS_LITTLE_ENDIAN)
             0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-        #else
+        #elif defined(IS_BIG_ENDIAN)
             0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+        #else
+            #error Unknown endianness!
         #endif
     );
     SDL_SetWindowIcon(window, icon);
