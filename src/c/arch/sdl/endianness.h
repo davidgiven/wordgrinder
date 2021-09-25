@@ -1,7 +1,7 @@
 #ifndef ENDIANNESS_H
 #define ENDIANNESS_H
 
-#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
+#if defined(WIN32)
 	#define IS_LITTLE_ENDIAN
 #endif
 
