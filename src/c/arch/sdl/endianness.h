@@ -1,6 +1,10 @@
 #ifndef ENDIANNESS_H
 #define ENDIANNESS_H
 
+#if (defined(_WIN16) || defined(_WIN32) || defined(_WIN64)) && !defined(__WINDOWS__)
+	#define IS_LITTLE_ENDIAN
+#endif
+
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonflyBSD__)
 	#include <sys/endian.h>
 
