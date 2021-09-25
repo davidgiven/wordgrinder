@@ -21,6 +21,7 @@ jobs:
           mingw-w64-cross-gcc
           mingw-w64-i686-SDL
           mingw-w64-i686-SDL2_ttf
+          mingw-w64-i686-imagemagick
           mingw-w64-i686-nsis
           mingw-w64-i686-pkg-config
           mingw-w64-i686-zlib
