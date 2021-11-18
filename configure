@@ -217,6 +217,7 @@ reset_configuration() {
     add CFLAGS -Isrc/c
     add CFLAGS -Wall
     add CFLAGS -Wno-unused-function
+    add CFLAGS -Wno-misleading-indentation
     add CFLAGS -ffunction-sections
     add CFLAGS -fdata-sections
     add CFLAGS -Werror=implicit-function-declaration
