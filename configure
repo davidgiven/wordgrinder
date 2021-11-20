@@ -12,6 +12,9 @@ WINDRES=${WINDRES:-i686-w64-mingw32-windres}
 MAKENSIS=${MAKENSIS:-makensis}
 DATE=${DATE:-$(date +'%-d %B %Y')}
 PREFIX=${PREFIX:-$HOME}
+PKG_CONFIG=${PKG_CONFIG:-pkg-config}
+DEFCC=${CC:-cc}
+DEFSTRIP=${STRIP:-strip}
 
 # Must match the Makefile
 OBJDIR=.obj
@@ -182,9 +185,9 @@ build_icon
 
 INSTALLABLES=
 reset_configuration() {
-    CC=cc
+    CC=$DEFCC
     LINKCC=
-    STRIP=strip
+    STRIP=$DEFSTRIP
     CFLAGS=
     LDFLAGS=
     PACKAGES=zlib
@@ -340,8 +343,8 @@ add_configuration() {
     # to make sure any builtin headers get found before the system ones.
 
     if [ "$PACKAGES" != "" ]; then
-        add CFLAGS $(pkg-config --cflags $PACKAGES)
-        add LDFLAGS $(pkg-config --libs $PACKAGES)
+        add CFLAGS $($PKG_CONFIG --cflags $PACKAGES)
+        add LDFLAGS $($PKG_CONFIG --libs $PACKAGES)
     fi
 
     # Main core
@@ -377,18 +380,18 @@ add_configuration() {
             add SRCS src/c/emu/SDL_FontCache/SDL_FontCache.c
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
-            add CFLAGS $(sdl2-config --cflags) $(pkg-config --cflags SDL2_ttf)
+            add CFLAGS $(sdl2-config --cflags) $($PKG_CONFIG --cflags SDL2_ttf)
             if [ "$WINDOWS" = "y" ]; then
-                add LDFLAGS $(sdl2-config --static-libs) $(pkg-config --libs SDL2_ttf)
-                add LDFLAGS $(pkg-config --libs freetype2 libpng harfbuzz bzip2 graphite2)
+                add LDFLAGS $(sdl2-config --static-libs) $($PKG_CONFIG --libs SDL2_ttf)
+                add LDFLAGS $($PKG_CONFIG --libs freetype2 libpng harfbuzz bzip2 graphite2)
                 # Yes, again --- resolve recursive dependencies
-                add LDFLAGS $(pkg-config --libs freetype2)
+                add LDFLAGS $($PKG_CONFIG --libs freetype2)
                 # The pkg-config file for these is wrong
                 add LDFLAGS -lbrotlidec-static -lbrotlicommon-static
                 # sdl2-config is wrong
                 add LDFLAGS -lusp10 -lrpcrt4
             else
-                add LDFLAGS $(sdl2-config --libs) $(pkg-config --libs SDL2_ttf)
+                add LDFLAGS $(sdl2-config --libs) $($PKG_CONFIG --libs SDL2_ttf)
             fi
             ;;
     esac
