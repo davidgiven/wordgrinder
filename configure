@@ -135,6 +135,7 @@ build_luascripts() {
     add srcs src/lua/addons/goto.lua
     add srcs src/lua/addons/autosave.lua
     add srcs src/lua/addons/docsetman.lua
+    add srcs src/lua/addons/gui.lua
     add srcs src/lua/addons/scrapbook.lua
     add srcs src/lua/addons/statusbar_charstyle.lua
     add srcs src/lua/addons/statusbar_pagecount.lua
