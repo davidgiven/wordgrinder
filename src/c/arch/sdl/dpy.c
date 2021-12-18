@@ -105,11 +105,11 @@ static const char* get_svar(const char* name)
 
 static FC_Font* load_font(const char* filename)
 {
+    extern const FileDescriptor font_table[];
     SDL_RWops* rwops = SDL_RWFromFile(filename, "rb");
 
     if (!rwops)
     {
-        extern const FileDescriptor font_table[];
         const FileDescriptor* table = font_table;
         while (table->data)
         {
@@ -125,8 +125,13 @@ static FC_Font* load_font(const char* filename)
 
     FC_Font* font = FC_CreateFont();  
     int font_size = get_ivar("font_size");
-    if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
-        fatal("could not load font %s: %s", filename, SDL_GetError());
+    if (!rwops || !FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
+    {
+        fprintf(stderr, "The font '%s' could not be loaded, so falling back to a built-in one\n", filename);
+        rwops = SDL_RWFromConstMem(font_table[0].data, font_table[0].size);
+        if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
+            fatal("could not load built-in font %s: %s", filename, SDL_GetError());
+    }
     return font;
 }
 

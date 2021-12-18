@@ -172,19 +172,36 @@ function Cmd.ConfigureGui()
 		},
 	}
 
-	local result = Form.Run(dialogue, RedrawScreen,
-		"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
-	if not result then
-		return false
+	while true do
+		local result = Form.Run(dialogue, RedrawScreen,
+			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
+		if not result then
+			return false
+		end
+
+		local window_width = tonumber(windowwidth_textfield.value)
+		local window_height = tonumber(windowheight_textfield.value)
+		local font_size = tonumber(fontsize_textfield.value)
+		if not window_width or (window_width < 50) then
+			ModalMessage("Invalid parameter", "Invalid window width")
+		elseif not window_height or (window_height < 50) then
+			ModalMessage("Invalid parameter", "Invalid window height")
+		elseif not font_size or (font_size < 1) then
+			ModalMessage("Invalid parameter", "Invalid font size")
+		else
+			settings.window_width = window_width
+			settings.window_height = window_height
+			settings.font_size = font_size
+			settings.font_regular = fontregular_textfield.value
+			settings.font_italic = fontitalic_textfield.value
+			settings.font_bold = fontbold_textfield.value
+			settings.font_bolditalic = fontbolditalic_textfield.value
+			break
+		end
 	end
 
-	settings.window_width = tonumber(windowwidth_textfield.value)
-	settings.window_height = tonumber(windowheight_textfield.value)
-	settings.font_size = tonumber(fontsize_textfield.value)
-	settings.font_regular = fontregular_textfield.value
-	settings.font_italic = fontitalic_textfield.value
-	settings.font_bold = fontbold_textfield.value
-	settings.font_bolditalic = fontbolditalic_textfield.value
+	wg.deinitscreen()
+	wg.initscreen()
 	SaveGlobalSettings()
 
 	return true
