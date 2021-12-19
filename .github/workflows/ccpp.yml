@@ -41,7 +41,7 @@ jobs:
         fetch-depth: 1
     - name: pacman
       run: |
-        pacman -S --noconfirm --needed make ninja vim mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf mingw-w64-i686-imagemagick
+        pacman -S --noconfirm --needed make ninja vim mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf mingw-w64-i686-imagemagick mingw-w64-i686-brotli
     - name: build
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure

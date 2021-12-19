@@ -29,6 +29,12 @@ static int initscreen_cb(lua_State* L)
 	return 0;
 }
 
+static int deinitscreen_cb(lua_State* L)
+{
+	screen_deinit();
+	return 0;
+}
+
 static int clearscreen_cb(lua_State* L)
 {
 	dpy_clearscreen();
@@ -240,6 +246,7 @@ void screen_init(const char* argv[])
 	const static luaL_Reg funcs[] =
 	{
 		{ "initscreen",                initscreen_cb },
+		{ "deinitscreen",              deinitscreen_cb },
 		{ "clearscreen",               clearscreen_cb },
 		{ "sync",                      sync_cb },
 		{ "setbold",                   setbold_cb },

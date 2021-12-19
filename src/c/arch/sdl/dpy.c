@@ -87,28 +87,29 @@ static void change_screen_size(void)
     screen = calloc(screenwidth * screenheight, sizeof(struct cell_s));
 }
 
-static int ivar_or_default(const char* name, int fallback)
+static int get_ivar(const char* name)
 {
-	lua_getglobal(L, name);
-    if (lua_isnil(L, -1))
-        return fallback;
+    lua_getglobal(L, "GlobalSettings");
+    lua_getfield(L, -1, "gui");
+	lua_getfield(L, -1, name);
     return luaL_checkinteger(L, -1);
 }
 
-static const char* svar_or_default(const char* name, const char* fallback)
+static const char* get_svar(const char* name)
 {
-	lua_getglobal(L, name);
-	const char* value = lua_tostring(L, -1);
-    return value ? value : fallback;
+    lua_getglobal(L, "GlobalSettings");
+    lua_getfield(L, -1, "gui");
+	lua_getfield(L, -1, name);
+	return lua_tostring(L, -1);
 }
 
 static FC_Font* load_font(const char* filename)
 {
+    extern const FileDescriptor font_table[];
     SDL_RWops* rwops = SDL_RWFromFile(filename, "rb");
 
     if (!rwops)
     {
-        extern const FileDescriptor font_table[];
         const FileDescriptor* table = font_table;
         while (table->data)
         {
@@ -122,11 +123,15 @@ static FC_Font* load_font(const char* filename)
         }
     }
 
-    int font_size = ivar_or_default("FONT_SIZE", 20);
-
     FC_Font* font = FC_CreateFont();  
-    if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
-        fatal("could not load font %s: %s", filename, SDL_GetError());
+    int font_size = get_ivar("font_size");
+    if (!rwops || !FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
+    {
+        fprintf(stderr, "The font '%s' could not be loaded, so falling back to a built-in one\n", filename);
+        rwops = SDL_RWFromConstMem(font_table[0].data, font_table[0].size);
+        if (!FC_LoadFont_RW(font, renderer, rwops, true, font_size, normal_colour, TTF_STYLE_NORMAL))
+            fatal("could not load built-in font %s: %s", filename, SDL_GetError());
+    }
     return font;
 }
 
@@ -142,7 +147,7 @@ void dpy_start(void)
     window = SDL_CreateWindow(
             "WordGrinder",
             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-            ivar_or_default("WINDOW_WIDTH", 800), ivar_or_default("WINDOW_HEIGHT", 600),
+            get_ivar("window_width"), get_ivar("window_height"),
             SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE
     );
     if (!window)
@@ -169,14 +174,10 @@ void dpy_start(void)
     if (!renderer)
         fatal("could not create renderer: %s", SDL_GetError());
     
-    fonts[REGULAR] = load_font(
-            svar_or_default("FONT_REGULAR", "extras/fonts/FantasqueSansMono-Regular.ttf"));
-    fonts[ITALIC] = load_font(
-            svar_or_default("FONT_ITALIC", "extras/fonts/FantasqueSansMono-Italic.ttf"));
-    fonts[BOLD] = load_font(
-            svar_or_default("FONT_BOLD", "extras/fonts/FantasqueSansMono-Bold.ttf"));
-    fonts[BOLD|ITALIC] = load_font(
-            svar_or_default("FONT_BOLDITALIC", "extras/fonts/FantasqueSansMono-BoldItalic.ttf"));
+    fonts[REGULAR] = load_font(get_svar("font_regular"));
+    fonts[ITALIC] = load_font(get_svar("font_italic"));
+    fonts[BOLD] = load_font(get_svar("font_bold"));
+    fonts[BOLD|ITALIC] = load_font(get_svar("font_bolditalic"));
     charwidth = FC_GetWidth(fonts[REGULAR], "m");
     charheight = FC_GetLineHeight(fonts[REGULAR]);
     charascent = FC_GetBaseline(fonts[REGULAR]) + 1;

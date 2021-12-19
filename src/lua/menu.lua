@@ -113,6 +113,7 @@ local DocumentSettingsMenu = CreateMenu("Document settings",
 
 local GlobalSettingsMenu = CreateMenu("Global settings",
 {
+	{"FSgui",         "G", "Configure GUI...",              nil,   Cmd.ConfigureGui},
 	{"FSlookandfeel", "L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
 	{"FSDictionary",  "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
 	{"FSdirectories", "R", "Change directories...",         nil,   Cmd.ConfigureDirectories},
