@@ -16,33 +16,19 @@ if jit then
 		";/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so"
 end
 
--- Bit library fallbacks. (LuaJIT vs Lua 5.2 incompatibilities.)
-
-if not bit32 then
-	bit32 =
-	{
-		bxor = bit.bxor,
-		band = bit.band,
-		bor = bit.bor,
-		btest = function(a, b)
-			return bit.band(a, b) ~= 0
-		end
-	}
-end
-
 -- Make sure that reads of undefined global variables fail. Note: this will
 -- prevent us from storing nil in a global.
 
 if DEBUG then
 	local allowed = 
 	{
-		X11_BLACK_COLOUR = true,
-		X11_BOLD_MODIFIER = true,
-		X11_BRIGHT_COLOUR = true,
-		X11_DIM_COLOUR = true,
-		X11_FONT = true,
-		X11_ITALIC_MODIFIER = true,
-		X11_NORMAL_COLOUR = true,
+		FONT_REGULAR = true,
+		FONT_BOLD = true,
+		FONT_ITALIC = true,
+		FONT_BOLDITALIC = true,
+		FONT_SIZE = true,
+		WINDOW_WIDTH = true,
+		WINDOW_HEIGHT = true,
 	}
 
 	setmetatable(_G,

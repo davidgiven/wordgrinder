@@ -42,7 +42,7 @@ Cmd.ChangeParagraphStyle("P")
 local expected = [[
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="generator" content="WordGrinder 0.8"/>
+<meta name="generator" content="WordGrinder @@@"/>
 <title>main</title>
 </head><body>
 
@@ -58,6 +58,7 @@ local expected = [[
 </body>
 </html>
 ]]
+expected = expected:gsub("@@@", VERSION)
 
 local output = Cmd.ExportToHTMLString()
 AssertEquals(expected, output)

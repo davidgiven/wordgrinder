@@ -74,22 +74,19 @@ void script_init(void)
 {
 	L = luaL_newstate();
 	luaL_openlibs(L);
-
-#if LUA_VERSION_NUM == 501
-	luaopen_bit(L);
-#endif
+	bit32_init(L);
 
 	atexit(script_deinit);
 
 	/* Set some global variables. */
 
-	lua_pushstring(L, VERSION);
+	lua_pushstring(L, STRINGIFY(VERSION));
 	lua_setglobal(L, "VERSION");
 
 	lua_pushnumber(L, FILEFORMAT);
 	lua_setglobal(L, "FILEFORMAT");
 
-	lua_pushstring(L, ARCH);
+	lua_pushstring(L, STRINGIFY(ARCH));
 	lua_setglobal(L, "ARCH");
 
 	lua_newtable(L);
@@ -116,8 +113,8 @@ void script_load_from_table(const FileDescriptor* table)
 {
 	while (table->data)
 	{
-		int status = luaL_loadbuffer(L, table->data, table->size,
-				table->name);
+		int status = luaL_loadbuffer(L, (const char*) table->data,
+				table->size, table->name);
 		status = status || docall(L, 0, 1);
 		if (status)
 		{

@@ -34,8 +34,8 @@ WordGrinder needs the following packages installed:
  - ncursesw, the wide-character version of curses. This is supplied with
    most systems.
 
- - an X development kit including Xft (if you want the X frontend). This
-   is supplied with most systems.
+ - an SDL development kit including SDL_ttf (if you want the SDL frontend).
+   This is supplied with most systems.
 
  - zlib. You will already have this, but just on the offchance, it's here:
      http://www.zlib.net/
@@ -44,6 +44,7 @@ WordGrinder needs the following packages installed:
    in copy, but if you want to use the system Lua, install it and edit the
    Makefile. Lua is available from:
      http://www.lua.org/
+   WordGrinder will work with Lua versions 5.1, 5.2, 5.3, 5.4 or LuaJIT.
 
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
@@ -54,33 +55,37 @@ Chances are you already have these in your distribution. Merely install these
 packages:
 
   If you have Debian/Ubuntu:
-    ninja-build libncursesw5-dev liblua5.2-dev zlib1g-dev libxft-dev
+    ninja-build libncursesw5-dev liblua5.3-dev zlib1g-dev libsdl2-dev libsdl2-ttf-dev
 
   If you have Fedora:
-    lua lua-devel lua-libs lua-filesystem zlib-devel libXft-devel ncurses ncurses-devel ninja-build
+    lua lua-devel lua-libs lua-filesystem zlib-devel libSDL2-devel libSDL2-ttf-devel ncurses ncurses-devel ninja-build
 
-  If you have OSX with Homebrew (ncurses only, sorry):
-    ninja pkg-config
+  If you have OSX with Homebrew:
+    ninja pkg-config SDL2_ttf SDL2
 
-To build, simply do:
+To detect a sensible configuration and build, simply do:
 
     make
 
-To install, do:
+To install into your home directory, do:
 
-    sudo make install PREFIX=/usr
+    sudo make install
+
+If you want to install somewhere else, do:
+
+	PREFIX=/usr/local ./configure
+	make install
 
 (Change PREFIX to whatever you like; naturally, if you're not installing in a
 global location, you don't need sudo.)
 
-(There are various other configuration options in the Makefile.)
+(There are various other configuration options in the configure script.)
 
 It is now ready to use.
 
-Special note for compilation on Windows: do 'make windows' with the Mingw64
-toolchain and nsis installed. You can either cross-compile from Linux, or
-use Cygwin. You'll end up with the installer package in bin/. Yes, if you
-prefer the ncurses version will compile natively for Cygwin.
+Special note for compilation on Windows: do 'make' from MSYS2 with the Mingw64
+toolchain and nsis installed.  use Cygwin. You'll end up with the installer
+package in bin/.
 
 
 
@@ -112,7 +117,7 @@ LICENSE
 
 WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
-look in the licenses directory for the full license text.
+look in the `licenses` directory for the full license text.
 
 WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
@@ -133,9 +138,6 @@ The distribution contains a copy of the SCOWL wordlist for British and
 American-Canadian English. This is © Kevin Atkinson and J. Ross Beresford.
 Please see the licenses/COPYING.Scowl file for the full license text.
 
-The distribution contains a copy of the uthash and utlist libraries. This is ©
-2003-2009 Troy D Hanson, and is available under a simplified BSD license.
-
 The distribution contains a copy of the xpattern module. This is also MIT
 licensed and is © 2008-2009 David Manura. See
 http://lua-users.org/wiki/ExPattern for more information.
@@ -144,10 +146,25 @@ The distribution contains a (thoroughly hacked up) copy of the Lunamark
 Markdown parser. This is also MIT licensed and is © 2009-2016 John MacFarlane.
 See https://github.com/jgm/lunamark for more information.
 
+The distribution contains a copy of the SDL_FontCache library. This is also MIT
+licensed and is © 2015 Jonathon Dearborn. See
+https://github.com/grimfang4/SDL_FontCache for more information.
+
+The distribution contains a copy of the LargeLineHeight-NoLoopK version of the
+Fantasque Sans Mono font family. This is distributable under the terms of the
+Open Font License 1.1 © 2013-2017 Jany Belluz. See
+https://github.com/belluzj/fantasque-sans for more information.
+
 
 
 REVISION HISTORY
 ================
+
+WordGrinder 0.9: 2021-06-27: threw away the X11 and Windows GDI frontends and
+replaced them with SDL --- there's now a GUI version for OSX! Also threw away
+and replaced the build.lua file. Added the ability to quit WordGrinder by
+closing the window. Fixed a bug where the global settings would be reset during
+CLI use. WordGrinder files with CRLF line endings can now be read.
 
 WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more

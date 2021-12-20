@@ -30,11 +30,26 @@ static void findlocale(void)
 	}
 }
 
-int main(int argc, const char* argv[])
+#if defined WIN32
+#include <windows.h>
+static void find_exe(void)
 {
+	char path[MAX_PATH] = "WINDOWS_EXE=";
+	const int len = strlen(path);
+	GetModuleFileName(NULL, path+len, sizeof(path)-len);
+	putenv(path);
+}
+#endif
+
+int main(int argc, char* argv[])
+{
+	#if defined WIN32
+		find_exe();
+	#endif
+
 	findlocale();
 	script_init();
-	screen_init(argv);
+	screen_init((const char**) argv);
 	word_init();
 	utils_init();
 	filesystem_init();
@@ -47,7 +62,7 @@ int main(int argc, const char* argv[])
 	#endif
 
 	script_load_from_table(script_table);
-	script_run(argv);
+	script_run((const char**) argv);
 
 	return 0;
 }

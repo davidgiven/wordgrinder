@@ -9,7 +9,7 @@
 #include <windows.h>
 
 #undef main
-extern int appMain(int argc, const char* argv[]);
+extern int appMain(int argc, char* argv[]);
 
 static void find_exe(void)
 {
@@ -19,7 +19,7 @@ static void find_exe(void)
 	putenv(path);
 }
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
 {
 	find_exe();
 	return appMain(argc, argv);

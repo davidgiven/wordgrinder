@@ -327,7 +327,7 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		sprintf(buffer, "KEY_%s%s%s",
 				(mods & VKM_SHIFT) ? "S" : "",
-				(mods & VKM_CTRL) ? "C" : "",
+				(mods & VKM_CTRL) ? "^" : "",
 				template);
 		return buffer;
 	}
@@ -336,7 +336,7 @@ const char* dpy_getkeyname(uni_t k)
 	{
 		sprintf(buffer, "KEY_%s%sF%d",
 				(mods & VKM_SHIFT) ? "S" : "",
-				(mods & VKM_CTRL) ? "C" : "",
+				(mods & VKM_CTRL) ? "^" : "",
 				key - VK_F1 + 1);
 		return buffer;
 	}
