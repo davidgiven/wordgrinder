@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3910
+.documents.1.wordcount: 3888
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -269,9 +269,6 @@ Q OverrideKey("F1", "D1")
 Q OverrideKey("F2", "D2")
 P ...where the first item is the key to override, and the second is the menu ID over the thing you want to happen when the key is pressed.
 P These settings override any document set settings, but they are not saved with the document set --- if you load the document set into an instance of WordGrinder which doesn’t have that configuration file available, the standard keybindings apply. The settings are not shown in the menus and rebinding menu items will not affect them.
-P Some global settings use variables. Change these with:
-Q FONT_REGULAR = "c:\\fonts\\myfont.ttf"
-P This whole area needs some work. We apologise for the inconvenience.
 H2 Platforms
 P WordGrinder can be used on several platforms.
 H3 Unix terminal, OSX console
@@ -290,9 +287,7 @@ H3 Unix X11, Windows GUI, OSX GUI
 P There is also a specific version of WordGrinder which uses the SDL library for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
 P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
-P Configuration is done by setting values in your configuration file (which is not very user friendly; sorry). See the section above on manually configuring WordGrinder. Set the following variables:
-LB FONT_REGULAR, FONT_ITALIC, FONT_BOLD, FONT_BOLDITALIC: filenames of the font to use. Note: not font names; you need the pathname of the TTF or OFT font itself. If unset you get the built-in Fantasque font.
-LB FONT_SIZE: size of the font, in points. The default is (approximately) 20.
+P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
 H3 Rasperry Pi (or other Mali chipset) console
 P If you have a Raspberry Pi or another Linux system with a Mali graphics chipset, you can run WordGrinder on the console, without needing X at all! Just run the SDL version as above. Everything should, mostly, just work. You will need to add yourself to the input group for the keyboard to work. It’s a bit rough around the edges but should be quite usable.
 H2 Neat features

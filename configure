@@ -136,6 +136,7 @@ build_luascripts() {
     add srcs src/lua/addons/goto.lua
     add srcs src/lua/addons/autosave.lua
     add srcs src/lua/addons/docsetman.lua
+    add srcs src/lua/addons/gui.lua
     add srcs src/lua/addons/scrapbook.lua
     add srcs src/lua/addons/statusbar_charstyle.lua
     add srcs src/lua/addons/statusbar_pagecount.lua
@@ -386,9 +387,7 @@ add_configuration() {
                 add LDFLAGS $(sdl2-config --static-libs) $($PKG_CONFIG --libs SDL2_ttf)
                 add LDFLAGS $($PKG_CONFIG --libs freetype2 libpng harfbuzz bzip2 graphite2)
                 # Yes, again --- resolve recursive dependencies
-                add LDFLAGS $($PKG_CONFIG --libs freetype2)
-                # The pkg-config file for these is wrong
-                add LDFLAGS -lbrotlidec-static -lbrotlicommon-static
+                add LDFLAGS $($PKG_CONFIG --libs freetype2 libbrotlidec libbrotlicommon)
                 # sdl2-config is wrong
                 add LDFLAGS -lusp10 -lrpcrt4
             else
