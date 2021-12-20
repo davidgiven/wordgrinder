@@ -125,6 +125,7 @@ build_luascripts() {
     add srcs src/lua/export/latex.lua
     add srcs src/lua/export/troff.lua
     add srcs src/lua/export/opendocument.lua
+    add srcs src/lua/export/or
     add srcs src/lua/export/markdown.lua
     add srcs src/lua/import.lua
     add srcs src/lua/import/html.lua

@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3888
+.documents.1.wordcount: 3910
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -161,7 +161,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.^X: "ET"
 .menu.accelerators.^Y: "Eredo"
 .menu.accelerators.^Z: "Eundo"
-.name: "/.big/@big/nonshared/wordgrinder/README.wg"
+.name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -246,6 +246,8 @@ L This generates a very basic UTF-8 encoded HTML document, nominally HTML 4. Pra
 LB Markdown
 L This generates simple Markdown, supporting basic text, headers, simple lists, inline style, etc. Complex features like mixed list types aren’t supported.
 L Note that you can’t losslessly convert a WordGrinder document to Markdown and back again (or vice versa).
+LB Emacs org mode
+L This generates files suitable for use with org mode in Emacs. It’s a variant of the Markdown exporter above.
 LB LaTeX
 L This generates a UTF-8 LaTeX document suitable for running through XeTeX using the ‘xelatex’ command. You can use stock LaTeX if you wish, but you will need to edit the file to remove the xunicode package --- any non-ASCII characters probably won’t work correctly. Character and paragraph styles are supported; H1..H4 are mapped to \section, \subsection, \subsubsection and \paragraph respectively.
 L Note that even when using XeTeX, TeX’s Unicode support is currently rather poor, and that which characters are supported depends strongly on what font you’re using: read the Unicode section below. You’ll probably need to edit the output file to set an appropriate font or set of fonts.
