@@ -177,6 +177,10 @@ DocumentSetClass =
 
 DocumentClass =
 {
+	cursor = function(self)
+		return { self.cp, self.cw, self.co }
+	end,
+
 	appendParagraph = function(self, p)
 		self[#self+1] = p
 	end,

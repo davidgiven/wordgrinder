@@ -487,6 +487,7 @@ add_configuration() {
         add tests tests/weirdness-delete-word.lua
         add tests tests/weirdness-deletion-with-multiple-spaces.lua
         add tests tests/weirdness-end-of-lines.lua
+        add tests tests/weirdness-forward-delete.lua
         add tests tests/weirdness-globals-applied-on-startup.lua
         add tests tests/weirdness-missing-clipboard.lua
         add tests tests/weirdness-replacing-words.lua
@@ -498,6 +499,7 @@ add_configuration() {
         add tests tests/weirdness-upgrade-0.6-with-clipboard.lua
         add tests tests/weirdness-word-left-from-end-of-line.lua
         add tests tests/weirdness-word-right-to-last-word-in-doc.lua
+        add tests tests/word.lua
         add tests tests/windows-installdir.lua
         add tests tests/xpattern.lua
 
