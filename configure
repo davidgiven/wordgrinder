@@ -389,7 +389,7 @@ add_configuration() {
                 # Yes, again --- resolve recursive dependencies
                 add LDFLAGS $($PKG_CONFIG --libs freetype2 libbrotlidec libbrotlicommon)
                 # sdl2-config is wrong
-                add LDFLAGS -lusp10 -lrpcrt4
+                add LDFLAGS -lusp10 -lrpcrt4 -ldwrite
             else
                 add LDFLAGS $(sdl2-config --libs) $($PKG_CONFIG --libs SDL2_ttf)
             fi
