@@ -10,26 +10,6 @@
 
 extern int luaopen_lpeg (lua_State *L);
 
-static void findlocale(void)
-{
-	static const char* locales[] =
-		{
-			"C.UTF-8",
-			"en_US.UTF-8",
-			"en_GB.UTF-8",
-			"",
-			NULL
-		};
-	const char** p = locales;
-
-	while (*p)
-	{
-		if (setlocale(LC_ALL, *p))
-			return;
-		p++;
-	}
-}
-
 #if defined WIN32
 #include <windows.h>
 static void find_exe(void)
@@ -47,7 +27,7 @@ int main(int argc, char* argv[])
 		find_exe();
 	#endif
 
-	findlocale();
+	setlocale(LC_ALL, "");
 	script_init();
 	screen_init((const char**) argv);
 	word_init();
