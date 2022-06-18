@@ -5,7 +5,10 @@
 
 #include "globals.h"
 #include <string.h>
+
+#if !defined WIN32
 #include <langinfo.h>
+#endif
 
 static bool running = false;
 static int cursorx = 0;
@@ -242,7 +245,11 @@ static int getchar_cb(lua_State* L)
 
 static int useunicode_cb(lua_State* L)
 {
-	bool utf8_mode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+	#if defined WIN32
+		bool utf8_mode = true;
+	#else
+		bool utf8_mode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+	#endif
 	lua_pushboolean(L, utf8_mode);
 	return 1;
 }
