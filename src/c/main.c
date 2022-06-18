@@ -5,10 +5,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <locale.h>
 #include "globals.h"
 
 extern int luaopen_lpeg (lua_State *L);
+
+#if !defined WIN32
+#include <langinfo.h>
+#endif
+
+bool enable_unicode;
 
 #if defined WIN32
 #include <windows.h>
@@ -28,6 +35,12 @@ int main(int argc, char* argv[])
 	#endif
 
 	setlocale(LC_ALL, "");
+	#if defined WIN32
+		enable_unicode = true;
+	#else
+		enable_unicode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+	#endif
+
 	script_init();
 	screen_init((const char**) argv);
 	word_init();

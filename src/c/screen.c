@@ -6,10 +6,6 @@
 #include "globals.h"
 #include <string.h>
 
-#if !defined WIN32
-#include <langinfo.h>
-#endif
-
 static bool running = false;
 static int cursorx = 0;
 static int cursory = 0;
@@ -94,6 +90,13 @@ static int setnormal_cb(lua_State* L)
 	return 0;
 }
 
+void dpy_writeunichar(int x, int y, uni_t c)
+{
+	if (!enable_unicode && (c > 0xff))
+		c = '?';
+	dpy_writechar(x, y, c);
+}
+
 static int write_cb(lua_State* L)
 {
 	int x = forceinteger(L, 1);
@@ -105,8 +108,8 @@ static int write_cb(lua_State* L)
 	while (s < send)
 	{
 		uni_t c = readu8(&s);
+		dpy_writeunichar(x, y, c);
 
-		dpy_writechar(x, y, c);
 		if (!iswcntrl(c))
 			x += emu_wcwidth(c);
 	}
@@ -245,13 +248,14 @@ static int getchar_cb(lua_State* L)
 
 static int useunicode_cb(lua_State* L)
 {
-	#if defined WIN32
-		bool utf8_mode = true;
-	#else
-		bool utf8_mode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
-	#endif
-	lua_pushboolean(L, utf8_mode);
+	lua_pushboolean(L, enable_unicode);
 	return 1;
+}
+
+static int setunicode_cb(lua_State* L)
+{
+	enable_unicode = lua_toboolean(L, 1);
+	return 0;
 }
 
 void screen_init(const char* argv[])
@@ -282,6 +286,7 @@ void screen_init(const char* argv[])
 		{ "getbytesofcharacter",       getbytesofcharacter_cb },
 		{ "getchar",                   getchar_cb },
 		{ "useunicode",                useunicode_cb },
+		{ "setunicode",                setunicode_cb },
 		{ NULL,                        NULL }
 	};
 

@@ -16,7 +16,7 @@ local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetBoundedString = wg.getboundedstring
 
-local UNICODE = wg.useunicode()
+local UseUnicode = wg.useunicode
 
 function DrawStatusLine(s)
 	SetReverse()
@@ -26,19 +26,19 @@ function DrawStatusLine(s)
 end
 
 function DrawBox(x, y, w, h)
-	local border = string.rep(UNICODE and "─" or "-", w)
+	local border = string.rep(UseUnicode() and "─" or "-", w)
 	local space = string.rep(" ", w)
-	Write(x-1,   y,     UNICODE and " ┌" or " +")
-	Write(x+w+1, y,     UNICODE and "┐ " or "+ ")
-	Write(x-1,   y+h+1, UNICODE and " └" or " +")
-	Write(x+w+1, y+h+1, UNICODE and "┘ " or "+ ")
+	Write(x-1,   y,     UseUnicode() and " ┌" or " +")
+	Write(x+w+1, y,     UseUnicode() and "┐ " or "+ ")
+	Write(x-1,   y+h+1, UseUnicode() and " └" or " +")
+	Write(x+w+1, y+h+1, UseUnicode() and "┘ " or "+ ")
 
 	Write(x+1,   y,     border)
 	Write(x+1,   y+h+1, border)
 
 	for i = y+1, y+h do
-		Write(x-1, i, UNICODE and " │" or " |")
-		Write(x+w+1, i, UNICODE and "│ " or "| ")
+		Write(x-1, i, UseUnicode() and " │" or " |")
+		Write(x+w+1, i, UseUnicode() and "│ " or "| ")
 		Write(x+1, i, space)
 	end
 end
@@ -255,7 +255,7 @@ function AboutDialogue()
 		},
 
 		Form.Label {
-			value = (UNICODE and "©" or "(c)").." 2007-2022 David Given",
+			value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
 			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
 			align = Form.Centre,
 		},

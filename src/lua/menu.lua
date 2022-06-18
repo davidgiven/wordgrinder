@@ -17,7 +17,7 @@ local menu_tab = {}
 local key_tab = {}
 local menu_stack = {}
 
-local UNICODE = wg.useunicode()
+local UseUnicode = wg.useunicode
 
 function CreateMenu(n, m, menu)
 	local w = n:len()
@@ -304,7 +304,7 @@ MenuClass = {
 			local y2 = f2 * visiblelen + y + 1
 			SetBright()
 			for yy = y1, y2 do
-				Write(x+w+1, yy, UNICODE and "║" or "#")
+				Write(x+w+1, yy, UseUnicode() and "║" or "#")
 			end
 		end
 
@@ -318,7 +318,7 @@ MenuClass = {
 					SetReverse()
 				end
 				SetBright()
-				Write(x+1, yy, string.rep(UNICODE and "─" or "-", w))
+				Write(x+1, yy, string.rep(UseUnicode() and "─" or "-", w))
 			else
 				SetNormal()
 				if (i == n) then

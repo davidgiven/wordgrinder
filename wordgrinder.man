@@ -69,6 +69,11 @@ for use when importing or exporting WordGrinder files.
 .BI \--config\  file.lua
 Sets the name of the user config file.
 
+.TP
+.B \-8\
+Forces 8-bit ISO-8859-1 mode. No Unicode drawing characters are used and
+non-ISO-8859-1 characters are drawn as question marks.
+
 
 .SH CONFIGURATION
 
