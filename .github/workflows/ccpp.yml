@@ -48,7 +48,7 @@ jobs:
         PATH=/mingw32/bin:/opt/bin:$PATH make
     - name: zip
       run: |
-        zip -9 wordgrinder-windows.zip WordGrinder-*-setup.exe
+        zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
     - name: upload
       uses: actions/upload-artifact@v2
       with:
