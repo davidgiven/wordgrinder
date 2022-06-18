@@ -5,6 +5,7 @@
 
 #include "globals.h"
 #include <string.h>
+#include <langinfo.h>
 
 static bool running = false;
 static int cursorx = 0;
@@ -239,6 +240,13 @@ static int getchar_cb(lua_State* L)
 	return 1;
 }
 
+static int useunicode_cb(lua_State* L)
+{
+	bool utf8_mode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+	lua_pushboolean(L, utf8_mode);
+	return 1;
+}
+
 void screen_init(const char* argv[])
 {
 	dpy_init(argv);
@@ -266,6 +274,7 @@ void screen_init(const char* argv[])
 		{ "getboundedstring",          getboundedstring_cb },
 		{ "getbytesofcharacter",       getbytesofcharacter_cb },
 		{ "getchar",                   getchar_cb },
+		{ "useunicode",                useunicode_cb },
 		{ NULL,                        NULL }
 	};
 

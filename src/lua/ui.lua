@@ -16,6 +16,8 @@ local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetBoundedString = wg.getboundedstring
 
+local UNICODE = wg.useunicode()
+
 function DrawStatusLine(s)
 	SetReverse()
 	ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
@@ -24,19 +26,19 @@ function DrawStatusLine(s)
 end
 
 function DrawBox(x, y, w, h)
-	local border = string.rep("─", w)
+	local border = string.rep(UNICODE and "─" or "-", w)
 	local space = string.rep(" ", w)
-	Write(x-1,   y,     " ┌")
-	Write(x+w+1, y,     "┐ ")
-	Write(x-1,   y+h+1, " └")
-	Write(x+w+1, y+h+1, "┘ ")
+	Write(x-1,   y,     UNICODE and " ┌" or " +")
+	Write(x+w+1, y,     UNICODE and "┐ " or "+ ")
+	Write(x-1,   y+h+1, UNICODE and " └" or " +")
+	Write(x+w+1, y+h+1, UNICODE and "┘ " or "+ ")
 
 	Write(x+1,   y,     border)
 	Write(x+1,   y+h+1, border)
 
 	for i = y+1, y+h do
-		Write(x-1, i, " │")
-		Write(x+w+1, i, "│ ")
+		Write(x-1, i, UNICODE and " │" or " |")
+		Write(x+w+1, i, UNICODE and "│ " or "| ")
 		Write(x+1, i, space)
 	end
 end
@@ -253,7 +255,7 @@ function AboutDialogue()
 		},
 
 		Form.Label {
-			value = "© 2007-2020 David Given",
+			value = (UNICODE and "©" or "(c)").." 2007-2022 David Given",
 			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
 			align = Form.Centre,
 		},

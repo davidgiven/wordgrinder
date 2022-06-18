@@ -17,6 +17,8 @@ local GetChar = wg.getchar
 local HideCursor = wg.hidecursor
 local string_rep = string.rep
 
+local UNICODE = wg.useunicode()
+
 Form = {}
 
 -- Atoms.
@@ -157,7 +159,8 @@ Form.TextField = makewidgetclass {
 
 	draw = function(self)
 		SetBright()
-		Write(self.realx1, self.realy1 + 1, string_rep("▔", self.realwidth))
+		Write(self.realx1, self.realy1 + 1, string_rep(
+			UNICODE and "▔" or " ", self.realwidth))
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		SetNormal()
 
@@ -332,18 +335,18 @@ Form.Browser = makewidgetclass {
 		-- Draw the box.
 
 		do
-			local border = string_rep("─", w - 2)
+			local border = string_rep(UNICODE and "─" or "-", w - 2)
 			SetBright()
-			Write(x, y, "┌")
+			Write(x, y, UNICODE and "┌" or "+")
 			Write(x+1, y, border)
-			Write(x+w-1, y, "┐")
+			Write(x+w-1, y, UNICODE and "┐" or "+")
 			for i = 1, h-1 do
-				Write(x, y+i, "│")
-				Write(x+w-1, y+i, "│")
+				Write(x, y+i, UNICODE and "│" or "|")
+				Write(x+w-1, y+i, UNICODE and "│" or "|")
 			end
-			Write(x, y+h, "└")
+			Write(x, y+h, UNICODE and "└" or "+")
 			Write(x+1, y+h, border)
-			Write(x+w-1, y+h, "┘")
+			Write(x+w-1, y+h, UNICODE and "┘" or "+")
 			SetNormal()
 		end
 
