@@ -15,7 +15,6 @@ local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetBoundedString = wg.getboundedstring
-
 local UseUnicode = wg.useunicode
 
 function DrawStatusLine(s)

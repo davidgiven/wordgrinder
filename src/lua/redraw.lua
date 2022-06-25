@@ -129,7 +129,7 @@ end
 
 local function drawtopmarker(y)
 	local topmarker = UseUnicode() and {
-		"     ┃          ┃          ┃          ┃          ┃     ",
+		"     |          |          |          |          |     ",
 		"───────────────────────────────────────────────────────"
 	} or {
 		"     |          |          |          |          |     ",
@@ -151,7 +151,7 @@ end
 local function drawbottommarker(y)
 	local bottommarker = UseUnicode() and {
 		"───────────────────────────────────────────────────────",
-		"     ┃          ┃          ┃          ┃          ┃     ",
+		"     |          |          |          |          |     ",
 	} or {
 		"-------------------------------------------------------",
 		"     |          |          |          |          |     ",
