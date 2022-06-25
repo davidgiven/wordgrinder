@@ -18,6 +18,7 @@ local ShowCursor = wg.showcursor
 local HideCursor = wg.hidecursor
 local Sync = wg.sync
 
+local UseUnicode = wg.useunicode
 local BLINK_TIME = 0.8
 
 local messages = {}
@@ -126,13 +127,15 @@ local function redrawstatus()
 	end
 end
 
-local topmarker = {
-	"     ┃          ┃          ┃          ┃          ┃     ",
-	"───────────────────────────────────────────────────────"
-}
-local topmarkerwidth = GetStringWidth(topmarker[1])
-
 local function drawtopmarker(y)
+	local topmarker = UseUnicode() and {
+		"     |          |          |          |          |     ",
+		"───────────────────────────────────────────────────────"
+	} or {
+		"     |          |          |          |          |     ",
+		"-------------------------------------------------------"
+	}
+	local topmarkerwidth = GetStringWidth(topmarker[1])
 	local x = int((ScreenWidth - topmarkerwidth)/2)
 
 	SetBright()
@@ -145,13 +148,15 @@ local function drawtopmarker(y)
 	SetNormal()
 end
 
-local bottommarker = {
-	"───────────────────────────────────────────────────────",
-	"     ┃          ┃          ┃          ┃          ┃     ",
-}
-local bottommarkerwidth = GetStringWidth(bottommarker[1])
-
 local function drawbottommarker(y)
+	local bottommarker = UseUnicode() and {
+		"───────────────────────────────────────────────────────",
+		"     |          |          |          |          |     ",
+	} or {
+		"-------------------------------------------------------",
+		"     |          |          |          |          |     ",
+	}
+	local bottommarkerwidth = GetStringWidth(bottommarker[1])
 	local x = int((ScreenWidth - bottommarkerwidth)/2)
 
 	SetBright()

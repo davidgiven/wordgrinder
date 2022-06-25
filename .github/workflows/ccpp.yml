@@ -46,4 +46,12 @@ jobs:
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure
         PATH=/mingw32/bin:/opt/bin:$PATH make
+    - name: zip
+      run: |
+        zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
+    - name: upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ github.event.repository.name }}.${{ github.sha }}
+        path: wordgrinder-windows.zip
 

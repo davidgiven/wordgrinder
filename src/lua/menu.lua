@@ -17,6 +17,8 @@ local menu_tab = {}
 local key_tab = {}
 local menu_stack = {}
 
+local UseUnicode = wg.useunicode
+
 function CreateMenu(n, m, menu)
 	local w = n:len()
 	menu = menu or {}
@@ -128,18 +130,18 @@ local FileMenu = CreateMenu("File",
 	{"FO",         "O", "Load document set...",      nil,         Cmd.LoadDocumentSet},
 	{"FS",         "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument},
 	{"FA",         "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs},
-	{"FR",         "R", "Load recent document ▷",    nil,         Cmd.LoadRecentDocument},
+	{"FR",         "R", "Load recent document >",    nil,         Cmd.LoadRecentDocument},
 	"-",
 	{"FCtemplate", "C", "Create from template...",   nil,         Cmd.CreateDocumentSetFromTemplate},
 	{"FMtemplate", "M", "Save as template...",       nil,         Cmd.SaveCurrentDocumentAsTemplate},
 	"-",
 	{"FB",         "B", "Add new blank document",    nil,         Cmd.AddBlankDocument},
-	{"FI",         "I", "Import new document ▷",     nil,         ImportMenu},
-	{"FE",         "E", "Export current document ▷", nil,         ExportMenu},
+	{"FI",         "I", "Import new document >",     nil,         ImportMenu},
+	{"FE",         "E", "Export current document >", nil,         ExportMenu},
 	{"Fdocman",    "D", "Manage documents...",       nil,         Cmd.ManageDocumentsUI},
 	"-",
-	{"Fsettings",  "T", "Document settings ▷",       nil,         DocumentSettingsMenu},
-	{"Fglobals",   "G", "Global settings ▷",         nil,         GlobalSettingsMenu},
+	{"Fsettings",  "T", "Document settings >",       nil,         DocumentSettingsMenu},
+	{"Fglobals",   "G", "Global settings >",         nil,         GlobalSettingsMenu},
 	"-",
 	{"Fabout",     "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
 	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
@@ -175,8 +177,8 @@ local EditMenu = CreateMenu("Edit",
 	{"Eusq",       "W", "Unsmartquotify selection",  nil,         Cmd.Unsmartquotify},
 	"-",
 	{"EG",         "G", "Go to...",                  "^G",        Cmd.Goto},
-	{"Escrapbook", "S", "Scrapbook ▷",               nil,         ScrapbookMenu},
-	{"Espell",     "K", "Spellchecker ▷",            nil,         SpellcheckMenu},
+	{"Escrapbook", "S", "Scrapbook >",               nil,         ScrapbookMenu},
+	{"Espell",     "K", "Spellchecker >",            nil,         SpellcheckMenu},
 })
 
 local MarginMenu = CreateMenu("Margin",
@@ -194,8 +196,8 @@ local StyleMenu = CreateMenu("Style",
 	{"SB",     "B", "Set bold",                   "^B",        { cp, function() Cmd.SetStyle("b") end }},
 	{"SO",     "O", "Set plain",                  "^O",        { cp, function() Cmd.SetStyle("o") end }},
 	"-",
-	{"SP",     "P", "Change paragraph style ▷",   "^P",        ParagraphStylesMenu},
-	{"SM",     "M", "Set margin mode ▷",          nil,         MarginMenu},
+	{"SP",     "P", "Change paragraph style >",   "^P",        ParagraphStylesMenu},
+	{"SM",     "M", "Set margin mode >",          nil,         MarginMenu},
 	{"SS",     "S", "Toggle status bar",          nil,         Cmd.ToggleStatusBar},
 })
 
@@ -238,11 +240,11 @@ local NavigationMenu = CreateMenu("Navigation",
 
 local MainMenu = CreateMenu("Main Menu",
 {
-	{"F",  "F", "File ▷",           nil,  FileMenu},
-	{"E",  "E", "Edit ▷",           nil,  EditMenu},
-	{"S",  "S", "Style ▷",          nil,  StyleMenu},
-	{"D",  "D", "Documents ▷",      nil,  DocumentsMenu},
-	{"Z",  "Z", "Navigation ▷",     nil,  NavigationMenu}
+	{"F",  "F", "File >",           nil,  FileMenu},
+	{"E",  "E", "Edit >",           nil,  EditMenu},
+	{"S",  "S", "Style >",          nil,  StyleMenu},
+	{"D",  "D", "Documents >",      nil,  DocumentsMenu},
+	{"Z",  "Z", "Navigation >",     nil,  NavigationMenu}
 })
 
 function IsMenu(m)
@@ -302,7 +304,7 @@ MenuClass = {
 			local y2 = f2 * visiblelen + y + 1
 			SetBright()
 			for yy = y1, y2 do
-				Write(x+w+1, yy, "║")
+				Write(x+w+1, yy, UseUnicode() and "║" or "#")
 			end
 		end
 
@@ -316,7 +318,7 @@ MenuClass = {
 					SetReverse()
 				end
 				SetBright()
-				Write(x+1, yy, string.rep("─", w))
+				Write(x+1, yy, string.rep(UseUnicode() and "─" or "-", w))
 			else
 				SetNormal()
 				if (i == n) then

@@ -87,6 +87,7 @@ extern void bit32_init(lua_State* L);
 
 extern void screen_init(const char* argv[]);
 extern void screen_deinit(void);
+extern void dpy_writeunichar(int x, int y, uni_t c);
 
 /* --- Word management --------------------------------------------------- */
 
@@ -136,5 +137,7 @@ extern void dpy_cleararea(int x1, int y1, int x2, int y2);
 extern void dpy_getscreensize(int* x, int* y);
 extern uni_t dpy_getchar(double timeout);
 extern const char* dpy_getkeyname(uni_t key);
+
+extern bool enable_unicode;
 
 #endif

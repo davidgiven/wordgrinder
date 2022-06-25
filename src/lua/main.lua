@@ -12,6 +12,7 @@ local SetReverse = wg.setreverse
 local GetStringWidth = wg.getstringwidth
 local GetCwd = wg.getcwd
 local Stat = wg.stat
+local SetUnicode = wg.setunicode
 
 local redrawpending = true
 
@@ -362,6 +363,11 @@ the program starts up (but after any --lua files). It defaults to:
             return 1
         end
 
+        local function do_8bit(opt)
+            SetUnicode(false)
+            return 0
+        end
+
         local function unrecognisedarg(arg)
             CLIError("unrecognised option '", arg, "' --- try --help for help")
         end
@@ -374,6 +380,7 @@ the program starts up (but after any --lua files). It defaults to:
             ["c"]          = do_convert,
             ["convert"]    = do_convert,
             ["config"]     = do_config,
+            ["8"]          = do_8bit,
             [FILENAME_ARG] = do_filename,
             [UNKNOWN_ARG]  = unrecognisedarg,
         }

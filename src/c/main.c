@@ -5,30 +5,17 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <locale.h>
 #include "globals.h"
 
 extern int luaopen_lpeg (lua_State *L);
 
-static void findlocale(void)
-{
-	static const char* locales[] =
-		{
-			"C.UTF-8",
-			"en_US.UTF-8",
-			"en_GB.UTF-8",
-			"",
-			NULL
-		};
-	const char** p = locales;
+#if !defined WIN32
+#include <langinfo.h>
+#endif
 
-	while (*p)
-	{
-		if (setlocale(LC_ALL, *p))
-			return;
-		p++;
-	}
-}
+bool enable_unicode;
 
 #if defined WIN32
 #include <windows.h>
@@ -47,7 +34,13 @@ int main(int argc, char* argv[])
 		find_exe();
 	#endif
 
-	findlocale();
+	setlocale(LC_ALL, "");
+	#if defined WIN32
+		enable_unicode = true;
+	#else
+		enable_unicode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+	#endif
+
 	script_init();
 	screen_init((const char**) argv);
 	word_init();

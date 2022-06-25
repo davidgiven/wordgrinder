@@ -2,20 +2,22 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local int = math.floor
-local Write = wg.write
-local GotoXY = wg.gotoxy
-local GetStringWidth = wg.getstringwidth
 local GetBoundedString = wg.getboundedstring
 local GetBytesOfCharacter = wg.getbytesofcharacter
-local SetNormal = wg.setnormal
+local GetChar = wg.getchar
+local GetStringWidth = wg.getstringwidth
+local GotoXY = wg.gotoxy
+local HideCursor = wg.hidecursor
 local SetBold = wg.setbold
 local SetBright = wg.setbright
-local SetUnderline = wg.setunderline
+local SetNormal = wg.setnormal
 local SetReverse = wg.setreverse
-local GetChar = wg.getchar
-local HideCursor = wg.hidecursor
+local SetUnderline = wg.setunderline
+local UseUnicode = wg.useunicode
+local Write = wg.write
+local int = math.floor
 local string_rep = string.rep
+
 
 Form = {}
 
@@ -157,7 +159,8 @@ Form.TextField = makewidgetclass {
 
 	draw = function(self)
 		SetBright()
-		Write(self.realx1, self.realy1 + 1, string_rep("▔", self.realwidth))
+		Write(self.realx1, self.realy1 + 1, string_rep(
+			UseUnicode() and "▔" or " ", self.realwidth))
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		SetNormal()
 
@@ -332,18 +335,18 @@ Form.Browser = makewidgetclass {
 		-- Draw the box.
 
 		do
-			local border = string_rep("─", w - 2)
+			local border = string_rep(UseUnicode() and "─" or "-", w - 2)
 			SetBright()
-			Write(x, y, "┌")
+			Write(x, y, UseUnicode() and "┌" or "+")
 			Write(x+1, y, border)
-			Write(x+w-1, y, "┐")
+			Write(x+w-1, y, UseUnicode() and "┐" or "+")
 			for i = 1, h-1 do
-				Write(x, y+i, "│")
-				Write(x+w-1, y+i, "│")
+				Write(x, y+i, UseUnicode() and "│" or "|")
+				Write(x+w-1, y+i, UseUnicode() and "│" or "|")
 			end
-			Write(x, y+h, "└")
+			Write(x, y+h, UseUnicode() and "└" or "+")
 			Write(x+1, y+h, border)
-			Write(x+w-1, y+h, "┘")
+			Write(x+w-1, y+h, UseUnicode() and "┘" or "+")
 			SetNormal()
 		end
 

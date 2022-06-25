@@ -90,6 +90,13 @@ static int setnormal_cb(lua_State* L)
 	return 0;
 }
 
+void dpy_writeunichar(int x, int y, uni_t c)
+{
+	if (!enable_unicode && (c > 0xff))
+		c = '?';
+	dpy_writechar(x, y, c);
+}
+
 static int write_cb(lua_State* L)
 {
 	int x = forceinteger(L, 1);
@@ -101,8 +108,8 @@ static int write_cb(lua_State* L)
 	while (s < send)
 	{
 		uni_t c = readu8(&s);
+		dpy_writeunichar(x, y, c);
 
-		dpy_writechar(x, y, c);
 		if (!iswcntrl(c))
 			x += emu_wcwidth(c);
 	}
@@ -239,6 +246,18 @@ static int getchar_cb(lua_State* L)
 	return 1;
 }
 
+static int useunicode_cb(lua_State* L)
+{
+	lua_pushboolean(L, enable_unicode);
+	return 1;
+}
+
+static int setunicode_cb(lua_State* L)
+{
+	enable_unicode = lua_toboolean(L, 1);
+	return 0;
+}
+
 void screen_init(const char* argv[])
 {
 	dpy_init(argv);
@@ -266,6 +285,8 @@ void screen_init(const char* argv[])
 		{ "getboundedstring",          getboundedstring_cb },
 		{ "getbytesofcharacter",       getbytesofcharacter_cb },
 		{ "getchar",                   getchar_cb },
+		{ "useunicode",                useunicode_cb },
+		{ "setunicode",                setunicode_cb },
 		{ NULL,                        NULL }
 	};
 

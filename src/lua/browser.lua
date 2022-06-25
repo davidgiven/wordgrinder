@@ -20,6 +20,7 @@ local GetCwd = wg.getcwd
 local ChDir = wg.chdir
 local ReadDir = wg.readdir
 local Stat = wg.stat
+local UseUnicode = wg.useunicode
 
 local function compare_filenames(f1, f2)
 	if (ARCH == "windows") then
@@ -54,7 +55,7 @@ function FileBrowser(title, message, saving)
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
-			dmarker = "◇ "
+			dmarker = UseUnicode() and "◇ " or "* "
 		end
 		labels[#labels+1] = {
 			data = attr.name,
@@ -70,7 +71,7 @@ function FileBrowser(title, message, saving)
 	if (#labels == 0) then
 		labels[#labels+1] = {
 			data = "..",
-			label = "◇ .."
+			label = UseUnicode() and "◇ .." or "* .."
 		}
 	end
 
