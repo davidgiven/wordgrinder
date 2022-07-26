@@ -22,7 +22,6 @@ local function gotobrowser(data, index)
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
@@ -36,7 +35,7 @@ local function gotobrowser(data, index)
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
-		"RETURN to select item, CTRL+C to cancel")
+		"RETURN to select item, "..ESCAPE_KEY.." to cancel")
 	QueueRedraw()
 	if result then
 		return browser.cursor

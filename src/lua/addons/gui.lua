@@ -91,7 +91,6 @@ function Cmd.ConfigureGui()
 		height = 16,
 		stretchy = false,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 	
@@ -174,7 +173,7 @@ function Cmd.ConfigureGui()
 
 	while true do
 		local result = Form.Run(dialogue, RedrawScreen,
-			"SPACE to toggle, RETURN to confirm, CTRL+C to cancel")
+			"SPACE to toggle, RETURN to confirm, "..ESCAPE_KEY.." to cancel")
 		if not result then
 			return false
 		end

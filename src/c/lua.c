@@ -89,6 +89,9 @@ void script_init(void)
 	lua_pushstring(L, STRINGIFY(ARCH));
 	lua_setglobal(L, "ARCH");
 
+	lua_pushstring(L, STRINGIFY(FRONTEND));
+	lua_setglobal(L, "FRONTEND");
+
 	lua_newtable(L);
 	lua_setglobal(L, "wg");
 
