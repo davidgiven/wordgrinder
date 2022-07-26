@@ -18,6 +18,7 @@ local Write = wg.write
 local int = math.floor
 local string_rep = string.rep
 
+ESCAPE_KEY = (FRONTEND == "ncurses") and "CTRL+C" or "ESCAPE"
 
 Form = {}
 
@@ -641,8 +642,14 @@ function Form.Run(dialogue, redraw, helptext)
 		end
 
 		if not action then
-			action = findaction(dialogue, dialogue, key) or
-				findaction(standard_actions, dialogue, key)
+			if key == "KEY_^C" then
+				action = "cancel"
+			elseif key == "KEY_ESCAPE" then
+				action = "cancel"
+			else
+				action = findaction(dialogue, dialogue, key) or
+					findaction(standard_actions, dialogue, key)
+			end
 		end
 
 		if (action == "cancel") then

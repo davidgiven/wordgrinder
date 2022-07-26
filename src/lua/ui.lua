@@ -88,7 +88,6 @@ function ModalMessage(title, message)
 		height = 2,
 		stretchy = true,
 
-		["KEY_^C"] = "cancel",
 		[" "] = "confirm",
 
 		Form.WrappedLabel {
@@ -122,7 +121,6 @@ function PromptForYesNo(title, message)
 		height = 2,
 		stretchy = true,
 
-		["KEY_^C"] = "cancel",
 		["n"] = rfalse,
 		["N"] = rfalse,
 		["y"] = rtrue,
@@ -135,7 +133,7 @@ function PromptForYesNo(title, message)
 	}
 
 	Form.Run(dialogue, RedrawScreen,
-		"Y for yes, N for no, or CTRL+C to cancel")
+		"Y for yes, N for no, or "..ESCAPE_KEY.." to cancel")
 	QueueRedraw()
 	return result
 end
@@ -159,7 +157,6 @@ function PromptForString(title, message, default)
 		height = 4,
 		stretchy = true,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
@@ -172,7 +169,7 @@ function PromptForString(title, message, default)
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
-		"RETURN to confirm, CTRL+C to cancel")
+		"RETURN to confirm, "..ESCAPE_KEY.." to cancel")
 
 	QueueRedraw()
 	if result then
@@ -204,7 +201,6 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 		width = Form.Large,
 		height = 5,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
@@ -225,7 +221,7 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
-		"RETURN to confirm, CTRL+C to cancel")
+		"RETURN to confirm, "..ESCAPE_KEY.." to cancel")
 
 	QueueRedraw()
 	if result then
@@ -242,7 +238,6 @@ function AboutDialogue()
 		width = Form.Large,
 		height = 12,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		[" "] = "confirm",

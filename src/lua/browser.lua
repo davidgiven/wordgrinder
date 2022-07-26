@@ -248,7 +248,6 @@ function Browser(title, topmessage, bottommessage, data)
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_^C"] = "cancel",
 		["KEY_^P"] = go_to_parent,
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
@@ -283,7 +282,7 @@ function Browser(title, topmessage, bottommessage, data)
 	}
 	
 	local result = Form.Run(dialogue, RedrawScreen,
-		"RETURN to confirm, CTRL+C to cancel, CTRL+P to go to parent dir")
+		"RETURN to confirm, "..ESCAPE_KEY.." to cancel, CTRL+P to go to parent dir")
 	QueueRedraw()
 	if result then
 		return textfield.value

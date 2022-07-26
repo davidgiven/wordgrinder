@@ -98,7 +98,6 @@ function Cmd.ManageDocumentsUI()
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_^C"] = "cancel",
 		["KEY_RETURN"] = "cancel",
 		["KEY_ENTER"] = "cancel",
 		
