@@ -38,7 +38,7 @@ jobs:
     - uses: msys2/setup-msys2@v2
       with:
         update: true
-        install >-
+        install: >-
           make
           mingw-w64-cross-gcc
           mingw-w64-i686-SDL
