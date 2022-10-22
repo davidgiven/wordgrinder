@@ -6,28 +6,107 @@ extern "C"
 #include <stdio.h>
 #include <stdlib.h>
 #include <wx/wx.h>
+#include <wx/glcanvas.h>
+#include <memory>
+
+#ifdef __WXMAC__
+#include "OpenGL/glu.h"
+#include "OpenGL/gl.h"
+#else
+#include <GL/glu.h>
+#include <GL/gl.h>
+#endif
 
 #define VK_RESIZE 0x80000
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
 
-class CustomView : public wxWindow
+static const int openGLArgs[] = {
+    WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 16, 0};
+
+class CustomView : public wxGLCanvas
 {
+private:
 public:
     CustomView(wxWindow* parent):
-        wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0)
+        wxGLCanvas(parent,
+            wxID_ANY,
+            openGLArgs,
+            wxDefaultPosition,
+            wxDefaultSize,
+            wxFULL_REPAINT_ON_RESIZE)
     {
+        _ctx = std::make_unique<wxGLContext>(this);
+        SetBackgroundStyle(wxBG_STYLE_CUSTOM);
     }
 
 private:
+    int getWidth()
+    {
+        return GetSize().x;
+    }
+
+    int getHeight()
+    {
+        return GetSize().y;
+    }
+
+    void prepare2DViewport(
+        int topleft_x, int topleft_y, int bottomright_x, int bottomright_y)
+    {
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
+        glEnable(GL_TEXTURE_2D);              // textures
+        glEnable(GL_COLOR_MATERIAL);
+        glEnable(GL_BLEND);
+        glDisable(GL_DEPTH_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        glViewport(topleft_x,
+            topleft_y,
+            bottomright_x - topleft_x,
+            bottomright_y - topleft_y);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+
+        gluOrtho2D(topleft_x, bottomright_x, bottomright_y, topleft_y);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+    }
+
     void OnPaint(wxPaintEvent&)
     {
-        wxPaintDC dc(this);
-        dc.SetBackground(*wxBLACK);
-        dc.Clear();
+        SetCurrent(*_ctx);
+        wxPaintDC(this);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
+
+        prepare2DViewport(0, 0, getWidth() / 2, getHeight());
+        glLoadIdentity();
+
+        // white background
+        glColor4f(1, 1, 1, 1);
+        glBegin(GL_QUADS);
+        glVertex3f(0, 0, 0);
+        glVertex3f(getWidth(), 0, 0);
+        glVertex3f(getWidth(), getHeight(), 0);
+        glVertex3f(0, getHeight(), 0);
+        glEnd();
+
+        // red square
+        glColor4f(1, 0, 0, 1);
+        glBegin(GL_QUADS);
+        glVertex3f(getWidth() / 8, getHeight() / 3, 0);
+        glVertex3f(getWidth() * 3 / 8, getHeight() / 3, 0);
+        glVertex3f(getWidth() * 3 / 8, getHeight() * 2 / 3, 0);
+        glVertex3f(getWidth() / 8, getHeight() * 2 / 3, 0);
+        glEnd();
+
+        glFlush();
+        SwapBuffers();
     }
 
 private:
+    std::unique_ptr<wxGLContext> _ctx;
     wxDECLARE_EVENT_TABLE();
 };
 
@@ -44,12 +123,12 @@ public:
         wxFrame(
             nullptr, wxID_ANY, "WordGrinder", wxPoint(50, 50), wxSize(450, 340))
     {
-        auto* sizer = new wxGridSizer(0, 1, 0, 0);
+        auto* sizer = new wxBoxSizer(wxHORIZONTAL);
         auto* view = new CustomView(this);
-        sizer->Add(view, 0, wxALL | wxEXPAND, 0);
+        sizer->Add(view, 1, wxEXPAND);
 
         SetSizer(sizer);
-        Layout();
+        SetAutoLayout(true);
     }
 
 private:
@@ -61,10 +140,13 @@ wxBEGIN_EVENT_TABLE(MainWindow, wxFrame)
 wxEND_EVENT_TABLE();
 // clang-format on
 
-class WordGrinderApp : public wxApp
+class WordGrinderApp : public wxApp, public wxThreadHelper
 {
 public:
     WordGrinderApp() {}
+
+protected:
+    wxThread::ExitCode Entry() {}
 
 public:
     bool OnInit() override

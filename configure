@@ -413,8 +413,8 @@ add_configuration() {
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
             add BOTHFLAGS -DFRONTEND=wxwidgets -Dmain=appMain
-            add CXXFLAGS $(wx-config --cxxflags core base)
-            add LDFLAGS $(wx-config --libs core base)
+            add CXXFLAGS $(wx-config --cxxflags core base gl)
+            add LDFLAGS $(wx-config --libs core base gl) -lGL -lGLU
             ;;
     esac
 
