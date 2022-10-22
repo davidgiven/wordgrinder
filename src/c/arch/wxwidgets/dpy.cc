@@ -11,13 +11,45 @@ extern "C"
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
 
+class CustomView : public wxWindow
+{
+public:
+    CustomView(wxWindow* parent):
+        wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0)
+    {
+    }
+
+private:
+    void OnPaint(wxPaintEvent&)
+    {
+        wxPaintDC dc(this);
+        dc.SetBackground(*wxBLACK);
+        dc.Clear();
+    }
+
+private:
+    wxDECLARE_EVENT_TABLE();
+};
+
+// clang-format off
+wxBEGIN_EVENT_TABLE(CustomView, wxWindow)
+    EVT_PAINT(CustomView::OnPaint)
+wxEND_EVENT_TABLE();
+// clang-format on
+
 class MainWindow : public wxFrame
 {
 public:
     MainWindow():
         wxFrame(
-            nullptr, wxID_ANY, "MainWindow", wxPoint(50, 50), wxSize(450, 340))
+            nullptr, wxID_ANY, "WordGrinder", wxPoint(50, 50), wxSize(450, 340))
     {
+        auto* sizer = new wxGridSizer(0, 1, 0, 0);
+        auto* view = new CustomView(this);
+        sizer->Add(view, 0, wxALL | wxEXPAND, 0);
+
+        SetSizer(sizer);
+        Layout();
     }
 
 private:
@@ -26,9 +58,6 @@ private:
 
 // clang-format off
 wxBEGIN_EVENT_TABLE(MainWindow, wxFrame)
-    // EVT_MENU(ID_Hello,   MyFrame::OnHello)
-    // EVT_MENU(wxID_EXIT,  MyFrame::OnExit)
-    // EVT_MENU(wxID_ABOUT, MyFrame::OnAbout)
 wxEND_EVENT_TABLE();
 // clang-format on
 
