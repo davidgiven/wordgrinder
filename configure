@@ -27,7 +27,8 @@ if [ $# = 0 ]; then
     echo "Autodetecting a sensible configuration..."
     if [ "$OS" = "Windows_NT" ]; then
         echo "Autoconfiguring for Windows"
-        set release wincon windows test -and release sdl windows -nsis
+        set release wincon windows test \
+            -and release wxwidgets windows -nsis
     elif type sdl2-config > /dev/null; then
         echo "Autoconfiguring a basic Unix build with SDL and wxwidgets"
         set debug ncurses test \
