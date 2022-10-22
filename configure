@@ -7,6 +7,7 @@ VERSION=0.9
 FILEFORMAT=8
 
 WINCC=${WINCC:-i686-w64-mingw32-gcc}
+WINCXX=${WINCC:-i686-w64-mingw32-g++}
 WINLINK=${WINLINK:-i686-w64-mingw32-g++}
 WINDRES=${WINDRES:-i686-w64-mingw32-windres}
 MAKENSIS=${MAKENSIS:-makensis}
@@ -14,6 +15,7 @@ DATE=${DATE:-$(date +'%-d %B %Y')}
 PREFIX=${PREFIX:-$HOME}
 PKG_CONFIG=${PKG_CONFIG:-pkg-config}
 DEFCC=${CC:-cc}
+DEFCXX=${CC:-c++}
 DEFSTRIP=${STRIP:-strip}
 
 # Must match the Makefile
@@ -27,11 +29,12 @@ if [ $# = 0 ]; then
         echo "Autoconfiguring for Windows"
         set release wincon windows test -and release sdl windows -nsis
     elif type sdl2-config > /dev/null; then
-        echo "Autoconfiguring a basic Unix build with SDL"
+        echo "Autoconfiguring a basic Unix build with SDL and wxwidgets"
         set debug ncurses test \
             -and release ncurses test install=wordgrinder \
             -and debug sdl \
             -and release sdl install=xwordgrinder \
+            -and debug wxwidgets \
             -install
     else
         echo "Autoconfiguring a basic Unix build without SDL"
@@ -51,7 +54,9 @@ if [ "$*" = "dev" ]; then
         -and release sdl lua=lua5.1 test \
         -and release sdl lua=lua5.2 test \
         -and release sdl lua=lua5.3 test \
-        -and release sdl lua=luajit test
+        -and release sdl lua=luajit test \
+        -and debug wxwidgets test \
+        -and release wxwidgets test
 fi
 
 rm -rf $OBJDIR
@@ -188,9 +193,12 @@ build_icon
 INSTALLABLES=
 reset_configuration() {
     CC=$DEFCC
+    CXX=$DEFCXX
     LINKCC=
     STRIP=$DEFSTRIP
+    BOTHFLAGS=
     CFLAGS=
+    CXXFLAGS=
     LDFLAGS=
     PACKAGES=zlib
     FRONTEND=
@@ -209,17 +217,18 @@ reset_configuration() {
     STRIPPING=y
     X=
 
-    add CFLAGS -g
-    add CFLAGS -DVERSION=$VERSION
-    add CFLAGS -DFILEFORMAT=$FILEFORMAT
-    add CFLAGS -DNOUNCRYPT
-    add CFLAGS -DNOCRYPT
-    add CFLAGS -Isrc/c
-    add CFLAGS -Wall
-    add CFLAGS -Wno-unused-function
-    add CFLAGS -Wno-misleading-indentation
-    add CFLAGS -ffunction-sections
-    add CFLAGS -fdata-sections
+    add BOTHFLAGS -g
+    add BOTHFLAGS -DVERSION=$VERSION
+    add BOTHFLAGS -DFILEFORMAT=$FILEFORMAT
+    add BOTHFLAGS -DNOUNCRYPT
+    add BOTHFLAGS -DNOCRYPT
+    add BOTHFLAGS -Isrc/c
+    add BOTHFLAGS -Wall
+    add BOTHFLAGS -Wno-unused-function
+    add BOTHFLAGS -Wno-misleading-indentation
+    add BOTHFLAGS -ffunction-sections
+    add BOTHFLAGS -fdata-sections
+
     add CFLAGS -Werror=implicit-function-declaration
     add CFLAGS --std=gnu99
 
@@ -259,9 +268,9 @@ add_configuration() {
     # Windows special stuff
 
     if [ "$WINDOWS" = "y" ]; then
-        add CFLAGS -DEMULATED_WCWIDTH
-        add CFLAGS -DWINSHIM
-        add CFLAGS -DARCH=windows
+        add BOTHFLAGS -DEMULATED_WCWIDTH
+        add BOTHFLAGS -DWINSHIM
+        add BOTHFLAGS -DARCH=windows
         add LDFLAGS -static
         add OBJS $OBJDIR/wordgrinder.rc.o
         add SRCS src/c/emu/wcwidth.c
@@ -278,13 +287,13 @@ add_configuration() {
             echo "  windres = i686-w64-mingw32-windres" >&3
         fi
     else
-        add CFLAGS -DARCH=normal
+        add BOTHFLAGS -DARCH=normal
     fi
 
     # External dependencies
 
     if [ "$BUILTIN_LUA" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/lua-5.1.5 -DLUA_USE_EMU_TMPNAM
+        add BOTHFLAGS -Isrc/c/emu/lua-5.1.5 -DLUA_USE_EMU_TMPNAM
         add SRCS src/c/emu/lua-5.1.5/lapi.c
         add SRCS src/c/emu/lua-5.1.5/lauxlib.c
         add SRCS src/c/emu/lua-5.1.5/lbaselib.c
@@ -318,12 +327,12 @@ add_configuration() {
     fi
 
     if [ "$BUILTIN_LUABITOP" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/luabitop
+        add BOTHFLAGS -Isrc/c/emu/luabitop
         add SRCS src/c/emu/luabitop/lua-bitop.c
     fi
 
     if [ "$BUILTIN_LPEG" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/lpeg
+        add BOTHFLAGS -Isrc/c/emu/lpeg
         add SRCS src/c/emu/lpeg/lpvm.c
         add SRCS src/c/emu/lpeg/lpcap.c
         add SRCS src/c/emu/lpeg/lptree.c
@@ -332,11 +341,11 @@ add_configuration() {
     fi
 
     if [ "$BUILTIN_SDLFONTCACHE" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/SDL_FontCache
+        add BOTHFLAGS -Isrc/c/emu/SDL_FontCache
     fi
 
     if [ "$BUILTIN_MINIZIP" = "y" ]; then
-        add CFLAGS -Isrc/c/emu/minizip
+        add BOTHFLAGS -Isrc/c/emu/minizip
         add SRCS src/c/emu/minizip/ioapi.c
         add SRCS src/c/emu/minizip/zip.c
         add SRCS src/c/emu/minizip/unzip.c
@@ -346,7 +355,7 @@ add_configuration() {
     # to make sure any builtin headers get found before the system ones.
 
     if [ "$PACKAGES" != "" ]; then
-        add CFLAGS $($PKG_CONFIG --cflags $PACKAGES)
+        add BOTHFLAGS $($PKG_CONFIG --cflags $PACKAGES)
         add LDFLAGS $($PKG_CONFIG --libs $PACKAGES)
     fi
 
@@ -367,15 +376,15 @@ add_configuration() {
     case $FRONTEND in
         ncurses)
             add SRCS src/c/arch/ncurses/dpy.c
-            add CFLAGS -DFRONTEND=ncurses
+            add BOTHFLAGS -DFRONTEND=ncurses
             ;;
 
         wincon)
             add SRCS src/c/arch/win32/console/dpy.c
             add SRCS src/c/arch/win32/console/realmain.c
-            add CFLAGS -Dmain=appMain
-            add CFLAGS -mconsole
-            add CFLAGS -DFRONTEND=wincon
+            add BOTHFLAGS -Dmain=appMain
+            add BOTHFLAGS -mconsole
+            add BOTHFLAGS -DFRONTEND=wincon
             add LDFLAGS -mconsole
             ;;
 
@@ -385,8 +394,8 @@ add_configuration() {
             add SRCS src/c/emu/SDL_FontCache/SDL_FontCache.c
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
-            add CFLAGS -DFRONTEND=sdl
-            add CFLAGS $(sdl2-config --cflags) $($PKG_CONFIG --cflags SDL2_ttf)
+            add BOTHFLAGS -DFRONTEND=sdl
+            add BOTHFLAGS $(sdl2-config --cflags) $($PKG_CONFIG --cflags SDL2_ttf)
             if [ "$WINDOWS" = "y" ]; then
                 add LDFLAGS $(sdl2-config --static-libs) $($PKG_CONFIG --libs SDL2_ttf)
                 add LDFLAGS $($PKG_CONFIG --libs freetype2 libpng harfbuzz bzip2 graphite2)
@@ -398,19 +407,38 @@ add_configuration() {
                 add LDFLAGS $(sdl2-config --libs) $($PKG_CONFIG --libs SDL2_ttf)
             fi
             ;;
+
+        wxwidgets)
+            add SRCS src/c/arch/wxwidgets/dpy.cc
+            add SRCS $OBJDIR/fonts.c
+            add SRCS $OBJDIR/icon.c
+            add BOTHFLAGS -DFRONTEND=wxwidgets -Dmain=appMain
+            add CXXFLAGS $(wx-config --cxxflags core base)
+            add LDFLAGS $(wx-config --libs core base)
+            ;;
     esac
 
     local objs
     for f in $SRCS; do
-        obj=$O/${f%*.c}.o
+        obj=$O/${f%*.c?}.o
         add OBJS $obj
-        echo "build $obj : cc $f" >&3
-        echo "  cflags = $CFLAGS" >&3
-        echo "  cc = $CC" >&3
+        case $f in
+            *.c)
+                echo "build $obj : cc $f" >&3
+                echo "  cflags = $BOTHFLAGS $CFLAGS" >&3
+                echo "  cc = $CC" >&3
+                ;;
+
+            *.cc)
+                echo "build $obj : cc $f" >&3
+                echo "  cflags = $BOTHFLAGS $CXXFLAGS" >&3
+                echo "  cc = $CXX" >&3
+                ;;
+        esac
     done
 
     if [ "$LINKCC" = "" ]; then
-        LINKCC=$CC
+        LINKCC=$CXX
     fi
 
     if [ "$STRIPPING" = "y" ]; then
@@ -553,9 +581,9 @@ while [ $# != 0 ]; do
             reset_configuration
             ;;
 
-        debug)          add CFLAGS -O0; add LDFLAGS -O0; DEBUG=debug ;;
-        release)        add CFLAGS -Os -DNDEBUG; add LDFLAGS -Os; DEBUG=release ;;
-        profile)        add CFLAGS -pg -Os -DNDEBUG; add LDFLAGS -pg -Os; DEBUG=release ;;
+        debug)          add BOTHFLAGS -O0; add LDFLAGS -O0; DEBUG=debug ;;
+        release)        add BOTHFLAGS -Os -DNDEBUG; add LDFLAGS -Os; DEBUG=release ;;
+        profile)        add BOTHFLAGS -pg -Os -DNDEBUG; add LDFLAGS -pg -Os; DEBUG=release ;;
         lua=*)          BUILTIN_LUA=n;          add PACKAGES ${1#*=}; LUA=${1#*=} ;;
         luabitop=*)     BUILTIN_LUABITOP=n;     add PACKAGES ${1#*=} ;;
         lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
@@ -563,6 +591,7 @@ while [ $# != 0 ]; do
         minizip=*)      BUILTIN_MINIZIP=n;      add PACKAGES ${1#*=} ;;
         wincon)         set_frontend wincon ;;
         sdl)            set_frontend sdl ;;
+        wxwidgets)      set_frontend wxwidgets ;;
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
         test)           TEST=y ;;
