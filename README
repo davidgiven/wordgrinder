@@ -155,6 +155,11 @@ Fantasque Sans Mono font family. This is distributable under the terms of the
 Open Font License 1.1 © 2013-2017 Jany Belluz. See
 https://github.com/belluzj/fantasque-sans for more information.
 
+The distribution contains parts of the libstb utility library, written by
+Sean T Barrett et al. This is public domain where possible and MIT licensed
+otherwise. Please see https://github.com/nothings/stb/blob/master/LICENSE
+for more information.
+
 
 
 REVISION HISTORY

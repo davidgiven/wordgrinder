@@ -210,6 +210,7 @@ reset_configuration() {
     BUILTIN_LPEG=y
     BUILTIN_MINIZIP=y
     BUILTIN_SDLFONTCACHE=y
+    BUILTIN_LIBSTB=y
     DEBUG=
     LUA=builtin
     TEST=n
@@ -350,6 +351,11 @@ add_configuration() {
         add SRCS src/c/emu/minizip/ioapi.c
         add SRCS src/c/emu/minizip/zip.c
         add SRCS src/c/emu/minizip/unzip.c
+    fi
+
+    if [ "$BUILTIN_LIBSTB" = "y" ]; then
+        add BOTHFLAGS -Isrc/c/emu/libstb
+        add SRCS src/c/emu/libstb/stb.c
     fi
 
     # This must go *after* any other include or library path configuration,
@@ -590,6 +596,7 @@ while [ $# != 0 ]; do
         lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
         sdlfontcache=*) BUILTIN_SDLFONTCACHE=n; add PACKAGES ${1#*=} ;;
         minizip=*)      BUILTIN_MINIZIP=n;      add PACKAGES ${1#*=} ;;
+        libstb=*)       BUILTIN_LIBSTB=n;       add PACKAGES ${1#*=} ;;
         wincon)         set_frontend wincon ;;
         sdl)            set_frontend sdl ;;
         wxwidgets)      set_frontend wxwidgets ;;
