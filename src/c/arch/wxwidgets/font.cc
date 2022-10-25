@@ -16,6 +16,7 @@ static constexpr int PAGE_HEIGHT = 512;
 static int fontSize;
 static int fontWidth;
 static int fontHeight;
+static int fontAscent;
 static float fontScale;
 
 struct TTFData
@@ -134,6 +135,7 @@ void loadFonts()
     fontScale = stbtt_ScaleForPixelHeight(&font->font, fontSize);
     int ascent, descent, lineGap;
     stbtt_GetFontVMetrics(&font->font, &ascent, &descent, &lineGap);
+	fontAscent = ascent * fontScale;
     fontHeight = (ascent - descent + lineGap) * fontScale;
 
     int advance;
@@ -202,8 +204,10 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
     }
 
     stbtt_aligned_quad q;
+	y += fontAscent;
     stbtt_GetPackedQuad(
         &it->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
+	y -= fontAscent;
 
     /* Draw background. */
 
@@ -219,7 +223,7 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
         glColor3fv(colour);
 
         glDisable(GL_BLEND);
-        glRectf(x, y, x+fontWidth, y+fontHeight);
+        glRectf(x, y, x-fontWidth, y+fontHeight);
     }
 
     /* Draw foreground. */

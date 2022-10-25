@@ -1,5 +1,8 @@
 #include "gui.h"
 
+#define VKM_SHIFT       0x10000
+#define VKM_CTRL        0x20000
+#define VKM_CTRLASCII   0x40000
 #define VK_RESIZE 0x80000
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
@@ -44,7 +47,8 @@ public:
     }
 
 public:
-    void Sync() {
+    void Sync()
+    {
         int fontWidth, fontHeight;
         getFontSize(fontWidth, fontHeight);
 
@@ -52,7 +56,8 @@ public:
         int newScreenWidth = size.x / fontWidth;
         int newScreenHeight = size.y / fontHeight;
 
-        if ((screenWidth != newScreenWidth) || (screenHeight != newScreenHeight))
+        if ((screenWidth != newScreenWidth) ||
+            (screenHeight != newScreenHeight))
         {
             screenWidth = newScreenWidth;
             screenHeight = newScreenHeight;
@@ -95,7 +100,6 @@ private:
 
         if (!_ctx)
         {
-            printf("create context\n");
             _ctx = std::make_unique<wxGLContext>(this);
             SetCurrent(*_ctx);
         }
@@ -109,11 +113,11 @@ private:
         int fontWidth, fontHeight;
         getFontSize(fontWidth, fontHeight);
 
-        for (int y=0; y<screenHeight; y++)
+        for (int y = 0; y < screenHeight; y++)
         {
-            for (int x=0; x<screenWidth; x++)
+            for (int x = 0; x < screenWidth; x++)
             {
-                auto& cell = frontBuffer.at(x + y*screenWidth);
+                auto& cell = frontBuffer.at(x + y * screenWidth);
                 double sx = x * fontWidth;
                 double sy = y * fontHeight;
                 printChar(cell.c, cell.attr, sx, sy);
@@ -124,6 +128,30 @@ private:
         SwapBuffers();
     }
 
+    void OnChar(wxKeyEvent& event) {
+        uni_t uni = event.GetUnicodeKey();
+        if ((uni != 0) && (uni != 27) && (uni != 8))
+        {
+            if (event.ControlDown())
+            {
+                uni |= VKM_CTRLASCII;
+                keyQueue.push_front(-uni);
+            }
+            else if (event.AltDown())
+                keyQueue.push_front(-27);
+            keyQueue.push_front(uni);
+        }
+        else
+        {
+            uni = event.GetKeyCode();
+            if (event.ControlDown())
+                uni |= VKM_CTRL;
+            if (event.ShiftDown())
+                uni |= VKM_SHIFT;
+            keyQueue.push_front(-uni);
+        }
+    }
+
 private:
     wxDECLARE_EVENT_TABLE();
     std::unique_ptr<wxGLContext> _ctx;
@@ -132,6 +160,7 @@ private:
 // clang-format off
 wxBEGIN_EVENT_TABLE(CustomView, wxWindow)
     EVT_PAINT(CustomView::OnPaint)
+    EVT_CHAR(CustomView::OnChar)
 wxEND_EVENT_TABLE();
 // clang-format on
 
@@ -224,12 +253,16 @@ void dpy_setcursor(int x, int y, bool shown)
 
 uni_t dpy_getchar(double timeout)
 {
-    if (keyQueue.empty())
-        return -VK_TIMEOUT;
+    return runOnUiThread<uni_t>(
+        [&]() -> uni_t
+        {
+            if (keyQueue.empty())
+                return -VK_TIMEOUT;
 
-    uni_t key = keyQueue.back();
-    keyQueue.pop_back();
-    return key;
+            uni_t key = keyQueue.back();
+            keyQueue.pop_back();
+            return key;
+        });
 }
 
 const char* dpy_getkeyname(uni_t k)
@@ -237,12 +270,14 @@ const char* dpy_getkeyname(uni_t k)
     static char buffer[32];
     switch (-k)
     {
-        case VK_RESIZE:      return "KEY_RESIZE";
-        case VK_TIMEOUT:     return "KEY_TIMEOUT";
-        case VK_QUIT:        return "KEY_QUIT";
+        case VK_RESIZE:
+            return "KEY_RESIZE";
+        case VK_TIMEOUT:
+            return "KEY_TIMEOUT";
+        case VK_QUIT:
+            return "KEY_QUIT";
     }
 
-#if 0
     int mods = -k;
     int key = (-k & 0xfff0ffff);
 
@@ -254,44 +289,45 @@ const char* dpy_getkeyname(uni_t k)
         return buffer;
     }
 
-    const char* template = NULL;
+    const char* t = NULL;
     switch (key)
     {
-        case SDLK_DOWN:        template = "DOWN"; break;
-        case SDLK_UP:          template = "UP"; break;
-        case SDLK_LEFT:        template = "LEFT"; break;
-        case SDLK_RIGHT:       template = "RIGHT"; break;
-        case SDLK_HOME:        template = "HOME"; break;
-        case SDLK_END:         template = "END"; break;
-        case SDLK_BACKSPACE:   template = "BACKSPACE"; break;
-        case SDLK_DELETE:      template = "DELETE"; break;
-        case SDLK_INSERT:      template = "INSERT"; break;
-        case SDLK_PAGEUP:      template = "PGUP"; break;
-        case SDLK_PAGEDOWN:    template = "PGDN"; break;
-        case SDLK_TAB:         template = "TAB"; break;
-        case SDLK_RETURN:      template = "RETURN"; break;
-        case SDLK_ESCAPE:      template = "ESCAPE"; break;
-        case SDLK_MENU:        template = "MENU"; break;
+    // clang-format off
+        case WXK_DOWN:        t = "DOWN"; break;
+        case WXK_UP:          t = "UP"; break;
+        case WXK_LEFT:        t = "LEFT"; break;
+        case WXK_RIGHT:       t = "RIGHT"; break;
+        case WXK_HOME:        t = "HOME"; break;
+        case WXK_END:         t = "END"; break;
+        case WXK_BACK:        t = "BACKSPACE"; break;
+        case WXK_DELETE:      t = "DELETE"; break;
+        case WXK_INSERT:      t = "INSERT"; break;
+        case WXK_PAGEUP:      t = "PGUP"; break;
+        case WXK_PAGEDOWN:    t = "PGDN"; break;
+        case WXK_TAB:         t = "TAB"; break;
+        case WXK_RETURN:      t = "RETURN"; break;
+        case WXK_ESCAPE:      t = "ESCAPE"; break;
+        case WXK_MENU:        t = "MENU"; break;
+    // clang-format on
     }
 
-    if (template)
+    if (t)
     {
         sprintf(buffer, "KEY_%s%s%s",
                 (mods & VKM_SHIFT) ? "S" : "",
                 (mods & VKM_CTRL) ? "^" : "",
-                template);
+                t);
         return buffer;
     }
 
-    if ((key >= SDLK_F1) && (key <= (SDLK_F24)))
+    if ((key >= WXK_F1) && (key <= (WXK_F24)))
     {
         sprintf(buffer, "KEY_%s%sF%d",
                 (mods & VKM_SHIFT) ? "S" : "",
                 (mods & VKM_CTRL) ? "^" : "",
-                key - SDLK_F1 + 1);
+                key - WXK_F1 + 1);
         return buffer;
     }
-#endif
 
     sprintf(buffer, "KEY_UNKNOWN_%d", -k);
     return buffer;
