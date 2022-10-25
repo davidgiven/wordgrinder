@@ -36,6 +36,7 @@ if [ $# = 0 ]; then
             -and debug sdl \
             -and release sdl install=xwordgrinder \
             -and debug wxwidgets \
+            -and release wxwidgets \
             -install
     else
         echo "Autoconfiguring a basic Unix build without SDL"
