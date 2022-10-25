@@ -416,7 +416,10 @@ add_configuration() {
             ;;
 
         wxwidgets)
+            add SRCS src/c/arch/wxwidgets/app.cc
             add SRCS src/c/arch/wxwidgets/dpy.cc
+            add SRCS src/c/arch/wxwidgets/font.cc
+            add SRCS src/c/arch/wxwidgets/utils.cc
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
             add BOTHFLAGS -DFRONTEND=wxwidgets -Dmain=appMain

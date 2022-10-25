@@ -1,25 +1,28 @@
-extern "C"
-{
-#include "globals.h"
-}
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <wx/wx.h>
-#include <wx/glcanvas.h>
-#include <memory>
-
-#ifdef __WXMAC__
-#include "OpenGL/glu.h"
-#include "OpenGL/gl.h"
-#else
-#include <GL/glu.h>
-#include <GL/gl.h>
-#endif
+#include "gui.h"
 
 #define VK_RESIZE 0x80000
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
+
+struct Cell
+{
+    uni_t c;
+    uint8_t attr;
+};
+
+class CustomView;
+
+static wxFrame* mainWindow;
+static CustomView* customView;
+static int screenWidth = -1;
+static int screenHeight = -1;
+static int cursorx;
+static int cursory;
+static bool cursorShown;
+static uint8_t currentAttr = 0;
+static std::vector<Cell> screen;
+static std::vector<Cell> frontBuffer;
+static std::deque<uni_t> keyQueue;
 
 static const int openGLArgs[] = {
     WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 16, 0};
@@ -36,78 +39,94 @@ public:
             wxDefaultSize,
             wxFULL_REPAINT_ON_RESIZE)
     {
-        _ctx = std::make_unique<wxGLContext>(this);
         SetBackgroundStyle(wxBG_STYLE_CUSTOM);
+        loadFonts();
+    }
+
+public:
+    void Sync() {
+        int fontWidth, fontHeight;
+        getFontSize(fontWidth, fontHeight);
+
+        auto size = GetSize();
+        int newScreenWidth = size.x / fontWidth;
+        int newScreenHeight = size.y / fontHeight;
+
+        if ((screenWidth != newScreenWidth) || (screenHeight != newScreenHeight))
+        {
+            screenWidth = newScreenWidth;
+            screenHeight = newScreenHeight;
+            screen.resize(screenWidth * screenHeight);
+            keyQueue.push_front(-VK_RESIZE);
+        }
+
+        frontBuffer = screen;
+        Refresh();
     }
 
 private:
-    int getWidth()
+    void prepare2DViewport()
     {
-        return GetSize().x;
-    }
-
-    int getHeight()
-    {
-        return GetSize().y;
-    }
-
-    void prepare2DViewport(
-        int topleft_x, int topleft_y, int bottomright_x, int bottomright_y)
-    {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black Background
-        glEnable(GL_TEXTURE_2D);              // textures
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_BLEND);
         glDisable(GL_DEPTH_TEST);
+        glDisable(GL_LIGHTING);
+        glDisable(GL_CULL_FACE);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glViewport(topleft_x,
-            topleft_y,
-            bottomright_x - topleft_x,
-            bottomright_y - topleft_y);
+        auto size = GetSize();
+        glViewport(0, 0, size.x, size.y);
+
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
+        gluOrtho2D(0, size.x, size.y, 0);
 
-        gluOrtho2D(topleft_x, bottomright_x, bottomright_y, topleft_y);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
     }
 
     void OnPaint(wxPaintEvent&)
     {
-        SetCurrent(*_ctx);
         wxPaintDC(this);
+
+        /* Lazily create and bind the context. */
+
+        if (!_ctx)
+        {
+            printf("create context\n");
+            _ctx = std::make_unique<wxGLContext>(this);
+            SetCurrent(*_ctx);
+        }
+
+        prepare2DViewport();
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.5f);
 
-        prepare2DViewport(0, 0, getWidth() / 2, getHeight());
         glLoadIdentity();
+        glColor3f(1.0f, 1.0f, 1.0f);
 
-        // white background
-        glColor4f(1, 1, 1, 1);
-        glBegin(GL_QUADS);
-        glVertex3f(0, 0, 0);
-        glVertex3f(getWidth(), 0, 0);
-        glVertex3f(getWidth(), getHeight(), 0);
-        glVertex3f(0, getHeight(), 0);
-        glEnd();
+        int fontWidth, fontHeight;
+        getFontSize(fontWidth, fontHeight);
 
-        // red square
-        glColor4f(1, 0, 0, 1);
-        glBegin(GL_QUADS);
-        glVertex3f(getWidth() / 8, getHeight() / 3, 0);
-        glVertex3f(getWidth() * 3 / 8, getHeight() / 3, 0);
-        glVertex3f(getWidth() * 3 / 8, getHeight() * 2 / 3, 0);
-        glVertex3f(getWidth() / 8, getHeight() * 2 / 3, 0);
-        glEnd();
+        for (int y=0; y<screenHeight; y++)
+        {
+            for (int x=0; x<screenWidth; x++)
+            {
+                auto& cell = frontBuffer.at(x + y*screenWidth);
+                double sx = x * fontWidth;
+                double sy = y * fontHeight;
+                printChar(cell.c, cell.attr, sx, sy);
+            }
+        }
 
         glFlush();
         SwapBuffers();
     }
 
 private:
-    std::unique_ptr<wxGLContext> _ctx;
     wxDECLARE_EVENT_TABLE();
+    std::unique_ptr<wxGLContext> _ctx;
 };
 
 // clang-format off
@@ -116,80 +135,106 @@ wxBEGIN_EVENT_TABLE(CustomView, wxWindow)
 wxEND_EVENT_TABLE();
 // clang-format on
 
-class MainWindow : public wxFrame
-{
-public:
-    MainWindow():
-        wxFrame(
-            nullptr, wxID_ANY, "WordGrinder", wxPoint(50, 50), wxSize(450, 340))
-    {
-        auto* sizer = new wxBoxSizer(wxHORIZONTAL);
-        auto* view = new CustomView(this);
-        sizer->Add(view, 1, wxEXPAND);
-
-        SetSizer(sizer);
-        SetAutoLayout(true);
-    }
-
-private:
-    wxDECLARE_EVENT_TABLE();
-};
-
-// clang-format off
-wxBEGIN_EVENT_TABLE(MainWindow, wxFrame)
-wxEND_EVENT_TABLE();
-// clang-format on
-
-class WordGrinderApp : public wxApp, public wxThreadHelper
-{
-public:
-    WordGrinderApp() {}
-
-protected:
-    wxThread::ExitCode Entry() {}
-
-public:
-    bool OnInit() override
-    {
-        _mainWindow = new MainWindow();
-        _mainWindow->Show(true);
-        return true;
-    }
-
-private:
-    MainWindow* _mainWindow;
-};
-wxDECLARE_APP(WordGrinderApp);
-
 void dpy_init(const char* argv[]) {}
 
-void dpy_start(void) {}
+void dpy_start(void)
+{
+    runOnUiThread(
+        []
+        {
+            mainWindow = new wxFrame(nullptr, wxID_ANY, "WordGrinder");
 
-void dpy_shutdown(void) {}
+            auto* sizer = new wxBoxSizer(wxHORIZONTAL);
+            customView = new CustomView(mainWindow);
+            sizer->Add(customView, 1, wxEXPAND);
 
-void dpy_clearscreen(void) {}
+            mainWindow->SetSizer(sizer);
+            mainWindow->SetAutoLayout(true);
 
-void dpy_getscreensize(int* x, int* y) {}
+            mainWindow->Show(true);
+        });
+}
 
-void dpy_sync(void) {}
+void dpy_shutdown(void)
+{
+    mainWindow->Close();
+}
 
-void dpy_setcursor(int x, int y, bool shown) {}
+void dpy_clearscreen(void)
+{
+    dpy_cleararea(0, 0, screenWidth - 1, screenHeight - 1);
+}
 
-void dpy_setattr(int andmask, int ormask) {}
+void dpy_getscreensize(int* x, int* y)
+{
+    *x = screenWidth;
+    *y = screenHeight;
+}
 
-void dpy_writechar(int x, int y, uni_t c) {}
+void dpy_sync(void)
+{
+    runOnUiThread(
+        []()
+        {
+            customView->Sync();
+        });
+}
 
-void dpy_cleararea(int x1, int y1, int x2, int y2) {}
+void dpy_setattr(int andmask, int ormask)
+{
+    currentAttr &= andmask;
+    currentAttr |= ormask;
+}
+
+void dpy_writechar(int x, int y, uni_t c)
+{
+    if ((x < 0) || (x >= screenWidth))
+        return;
+    if ((y < 0) || (y >= screenHeight))
+        return;
+
+    auto& cell = screen.at(x + y * screenWidth);
+    cell.c = c;
+    cell.attr = currentAttr;
+}
+
+void dpy_cleararea(int x1, int y1, int x2, int y2)
+{
+    if (screen.empty())
+        return;
+
+    for (int y = y1; y <= y2; y++)
+    {
+        auto* p = &screen.at(y * screenWidth + x1);
+        for (int x = x1; x <= x2; x++)
+        {
+            p->c = ' ';
+            p->attr = currentAttr;
+            p++;
+        }
+    }
+}
+
+void dpy_setcursor(int x, int y, bool shown)
+{
+    cursorx = x;
+    cursory = y;
+    cursorShown = shown;
+}
 
 uni_t dpy_getchar(double timeout)
 {
-    return -VK_TIMEOUT;
+    if (keyQueue.empty())
+        return -VK_TIMEOUT;
+
+    uni_t key = keyQueue.back();
+    keyQueue.pop_back();
+    return key;
 }
 
 const char* dpy_getkeyname(uni_t k)
 {
     static char buffer[32];
-#if 0
     switch (-k)
     {
         case VK_RESIZE:      return "KEY_RESIZE";
@@ -197,6 +242,7 @@ const char* dpy_getkeyname(uni_t k)
         case VK_QUIT:        return "KEY_QUIT";
     }
 
+#if 0
     int mods = -k;
     int key = (-k & 0xfff0ffff);
 
@@ -250,8 +296,5 @@ const char* dpy_getkeyname(uni_t k)
     sprintf(buffer, "KEY_UNKNOWN_%d", -k);
     return buffer;
 }
-
-#undef main
-wxIMPLEMENT_APP(WordGrinderApp);
 
 // vim: sw=4 ts=4 et
