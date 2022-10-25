@@ -176,40 +176,41 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
         if (!font)
             return;
 
-		auto render = [&]() -> int {
-        stbtt_pack_range range;
-        range.first_unicode_codepoint_in_range = c;
-        range.array_of_unicode_codepoints = nullptr;
-        range.num_chars = 1;
-        range.font_size = STBTT_POINT_SIZE(fontSize);
-        range.chardata_for_range = &charData->packData;
-        range.chardata_for_range->x0 = range.chardata_for_range->y0 =
-            range.chardata_for_range->x1 = range.chardata_for_range->y1 = 0;
+        auto render = [&]() -> int
+        {
+            stbtt_pack_range range;
+            range.first_unicode_codepoint_in_range = c;
+            range.array_of_unicode_codepoints = nullptr;
+            range.num_chars = 1;
+            range.font_size = STBTT_POINT_SIZE(fontSize);
+            range.chardata_for_range = &charData->packData;
+            range.chardata_for_range->x0 = range.chardata_for_range->y0 =
+                range.chardata_for_range->x1 = range.chardata_for_range->y1 = 0;
 
-        stbrp_rect rect;
+            stbrp_rect rect;
 
-        int n = stbtt_PackFontRangesGatherRects(
-            &page->ctx, &font->font, &range, 1, &rect);
-        stbtt_PackFontRangesPackRects(&page->ctx, &rect, n);
+            int n = stbtt_PackFontRangesGatherRects(
+                &page->ctx, &font->font, &range, 1, &rect);
+            stbtt_PackFontRangesPackRects(&page->ctx, &rect, n);
 
-        return stbtt_PackFontRangesRenderIntoRects(
-            &page->ctx, &font->font, &range, 1, &rect);
-			};
+            return stbtt_PackFontRangesRenderIntoRects(
+                &page->ctx, &font->font, &range, 1, &rect);
+        };
 
-		// First try rendering into the current page. If that fails, the page is full and
-		// we need a new one.
-		
-		if (!render())
-		{
-			fontPages.push_back(std::make_unique<FontPage>());
-			page = fontPages.back().get();
-			if (!render())
-			{
-				printf("Unrenderable codepoint %d\n", c);
-				fontPages.pop_back();
-				return;
-			}
-		}
+        // First try rendering into the current page. If that fails, the page is
+        // full and we need a new one.
+
+        if (!render())
+        {
+            fontPages.push_back(std::make_unique<FontPage>());
+            page = fontPages.back().get();
+            if (!render())
+            {
+                printf("Unrenderable codepoint %d\n", c);
+                fontPages.pop_back();
+                return;
+            }
+        }
 
         charData->page = page;
         page->dirty = true;

@@ -1,8 +1,8 @@
 #include "gui.h"
 
-#define VKM_SHIFT       0x10000
-#define VKM_CTRL        0x20000
-#define VKM_CTRLASCII   0x40000
+#define VKM_SHIFT 0x10000
+#define VKM_CTRL 0x20000
+#define VKM_CTRLASCII 0x40000
 #define VK_RESIZE 0x80000
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
@@ -70,8 +70,20 @@ public:
     }
 
 private:
-    void prepare2DViewport()
+    void OnPaint(wxPaintEvent&)
     {
+        wxPaintDC(this);
+
+        /* Lazily create and bind the context. */
+
+        if (!_ctx)
+        {
+            _ctx = std::make_unique<wxGLContext>(this);
+            SetCurrent(*_ctx);
+        }
+
+        /* Configure viewport. */
+
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_COLOR_MATERIAL);
@@ -90,25 +102,10 @@ private:
 
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-    }
 
-    void OnPaint(wxPaintEvent&)
-    {
-        wxPaintDC(this);
-
-        /* Lazily create and bind the context. */
-
-        if (!_ctx)
-        {
-            _ctx = std::make_unique<wxGLContext>(this);
-            SetCurrent(*_ctx);
-        }
-
-        prepare2DViewport();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glLoadIdentity();
-        glColor3f(1.0f, 1.0f, 1.0f);
+        /* Draw the text. */
 
         int fontWidth, fontHeight;
         getFontSize(fontWidth, fontHeight);
@@ -128,7 +125,8 @@ private:
         SwapBuffers();
     }
 
-    void OnChar(wxKeyEvent& event) {
+    void OnChar(wxKeyEvent& event)
+    {
         uni_t uni = event.GetUnicodeKey();
         if ((uni != 0) && (uni != 27) && (uni != 8) && (uni != 13))
         {
@@ -180,13 +178,25 @@ void dpy_start(void)
             mainWindow->SetSizer(sizer);
             mainWindow->SetAutoLayout(true);
 
+            mainWindow->Bind(wxEVT_CLOSE_WINDOW,
+                [](auto& event)
+                {
+                    event.Veto();
+                    keyQueue.push_front(-VK_QUIT);
+                });
+
             mainWindow->Show(true);
         });
 }
 
 void dpy_shutdown(void)
 {
-    mainWindow->Close();
+    runOnUiThread(
+        []()
+        {
+            mainWindow->Close();
+            flushFontCache();
+        });
 }
 
 void dpy_clearscreen(void)
@@ -283,16 +293,14 @@ const char* dpy_getkeyname(uni_t k)
 
     if (mods & VKM_CTRLASCII)
     {
-        sprintf(buffer, "KEY_%s^%c",
-                (mods & VKM_SHIFT) ? "S" : "",
-                key + 64);
+        sprintf(buffer, "KEY_%s^%c", (mods & VKM_SHIFT) ? "S" : "", key + 64);
         return buffer;
     }
 
     const char* t = NULL;
     switch (key)
     {
-    // clang-format off
+            // clang-format off
         case WXK_DOWN:        t = "DOWN"; break;
         case WXK_UP:          t = "UP"; break;
         case WXK_LEFT:        t = "LEFT"; break;
@@ -308,24 +316,26 @@ const char* dpy_getkeyname(uni_t k)
         case WXK_RETURN:      t = "RETURN"; break;
         case WXK_ESCAPE:      t = "ESCAPE"; break;
         case WXK_MENU:        t = "MENU"; break;
-    // clang-format on
+            // clang-format on
     }
 
     if (t)
     {
-        sprintf(buffer, "KEY_%s%s%s",
-                (mods & VKM_SHIFT) ? "S" : "",
-                (mods & VKM_CTRL) ? "^" : "",
-                t);
+        sprintf(buffer,
+            "KEY_%s%s%s",
+            (mods & VKM_SHIFT) ? "S" : "",
+            (mods & VKM_CTRL) ? "^" : "",
+            t);
         return buffer;
     }
 
     if ((key >= WXK_F1) && (key <= (WXK_F24)))
     {
-        sprintf(buffer, "KEY_%s%sF%d",
-                (mods & VKM_SHIFT) ? "S" : "",
-                (mods & VKM_CTRL) ? "^" : "",
-                key - WXK_F1 + 1);
+        sprintf(buffer,
+            "KEY_%s%sF%d",
+            (mods & VKM_SHIFT) ? "S" : "",
+            (mods & VKM_CTRL) ? "^" : "",
+            key - WXK_F1 + 1);
         return buffer;
     }
 
