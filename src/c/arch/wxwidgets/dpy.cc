@@ -130,7 +130,7 @@ private:
 
     void OnChar(wxKeyEvent& event) {
         uni_t uni = event.GetUnicodeKey();
-        if ((uni != 0) && (uni != 27) && (uni != 8))
+        if ((uni != 0) && (uni != 27) && (uni != 8) && (uni != 13))
         {
             if (event.ControlDown())
             {
