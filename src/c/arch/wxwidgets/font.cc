@@ -3,6 +3,7 @@
 #include <vector>
 #include <iterator>
 #include <map>
+#include "stb_rect_pack.h"
 
 extern const FileDescriptor font_table[];
 
@@ -135,7 +136,7 @@ void loadFonts()
     fontScale = stbtt_ScaleForPixelHeight(&font->font, fontSize);
     int ascent, descent, lineGap;
     stbtt_GetFontVMetrics(&font->font, &ascent, &descent, &lineGap);
-	fontAscent = ascent * fontScale;
+    fontAscent = ascent * fontScale;
     fontHeight = (ascent - descent + lineGap) * fontScale;
 
     int advance;
@@ -174,13 +175,25 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
         auto& font = fonts[style];
         if (!font)
             return;
-        stbtt_PackFontRange(&page->ctx,
-            font->getData(),
-            0,
-            STBTT_POINT_SIZE(fontSize),
-            c,
-            1,
-            &charData->packData);
+
+        stbtt_pack_range range;
+        range.first_unicode_codepoint_in_range = c;
+        range.array_of_unicode_codepoints = nullptr;
+        range.num_chars = 1;
+        range.font_size = STBTT_POINT_SIZE(fontSize);
+        range.chardata_for_range = &charData->packData;
+        range.chardata_for_range->x0 = range.chardata_for_range->y0 =
+            range.chardata_for_range->x1 = range.chardata_for_range->y1 = 0;
+
+        stbrp_rect rect;
+
+        int n = stbtt_PackFontRangesGatherRects(
+            &page->ctx, &font->font, &range, 1, &rect);
+        stbtt_PackFontRangesPackRects(&page->ctx, &rect, n);
+
+        n = stbtt_PackFontRangesRenderIntoRects(
+            &page->ctx, &font->font, &range, 1, &rect);
+
         charData->page = page.get();
         page->dirty = true;
 
@@ -204,10 +217,10 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
     }
 
     stbtt_aligned_quad q;
-	y += fontAscent;
+    y += fontAscent;
     stbtt_GetPackedQuad(
         &it->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
-	y -= fontAscent;
+    y -= fontAscent;
 
     /* Draw background. */
 
@@ -223,7 +236,7 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
         glColor3fv(colour);
 
         glDisable(GL_BLEND);
-        glRectf(x, y, x-fontWidth, y+fontHeight);
+        glRectf(x, y, x - fontWidth, y + fontHeight);
     }
 
     /* Draw foreground. */
