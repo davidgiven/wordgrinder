@@ -12,8 +12,8 @@ static const float dim_colour[] = {0.33f, 0.33f, 0.33f};
 static const float normal_colour[] = {0.66f, 0.66f, 0.66f};
 static const float bright_colour[] = {1.0f, 1.0f, 1.0f};
 
-static constexpr int PAGE_WIDTH = 512;
-static constexpr int PAGE_HEIGHT = 512;
+static constexpr int PAGE_WIDTH = 256;
+static constexpr int PAGE_HEIGHT = 256;
 static int fontSize;
 static int fontWidth;
 static int fontHeight;
@@ -171,11 +171,12 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
             fontPages.push_back(std::make_unique<FontPage>());
 
         auto charData = std::make_unique<CharData>();
-        auto& page = fontPages.back();
+        auto* page = fontPages.back().get();
         auto& font = fonts[style];
         if (!font)
             return;
 
+		auto render = [&]() -> int {
         stbtt_pack_range range;
         range.first_unicode_codepoint_in_range = c;
         range.array_of_unicode_codepoints = nullptr;
@@ -191,10 +192,26 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
             &page->ctx, &font->font, &range, 1, &rect);
         stbtt_PackFontRangesPackRects(&page->ctx, &rect, n);
 
-        n = stbtt_PackFontRangesRenderIntoRects(
+        return stbtt_PackFontRangesRenderIntoRects(
             &page->ctx, &font->font, &range, 1, &rect);
+			};
 
-        charData->page = page.get();
+		// First try rendering into the current page. If that fails, the page is full and
+		// we need a new one.
+		
+		if (!render())
+		{
+			fontPages.push_back(std::make_unique<FontPage>());
+			page = fontPages.back().get();
+			if (!render())
+			{
+				printf("Unrenderable codepoint %d\n", c);
+				fontPages.pop_back();
+				return;
+			}
+		}
+
+        charData->page = page;
         page->dirty = true;
 
         it = std::move(charData);
