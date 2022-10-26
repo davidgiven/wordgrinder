@@ -91,7 +91,9 @@ private:
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_LIGHTING);
         glDisable(GL_CULL_FACE);
+        glDisable(GL_LINE_SMOOTH);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glLineWidth(1);
 
         auto size = GetSize();
         glViewport(0, 0, size.x, size.y);
@@ -110,14 +112,15 @@ private:
         int fontWidth, fontHeight;
         getFontSize(fontWidth, fontHeight);
 
+        auto* cell = &frontBuffer[0];
         for (int y = 0; y < screenHeight; y++)
         {
+            double sy = y * fontHeight;
             for (int x = 0; x < screenWidth; x++)
             {
-                auto& cell = frontBuffer.at(x + y * screenWidth);
                 double sx = x * fontWidth;
-                double sy = y * fontHeight;
-                printChar(cell.c, cell.attr, sx, sy);
+                printChar(cell->c, cell->attr, sx, sy);
+                cell++;
             }
         }
 

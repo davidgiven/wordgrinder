@@ -10,14 +10,17 @@ extern const FileDescriptor font_table[];
 static const float background_colour[] = {0.0f, 0.0f, 0.0f};
 static const float dim_colour[] = {0.33f, 0.33f, 0.33f};
 static const float normal_colour[] = {0.66f, 0.66f, 0.66f};
-static const float bright_colour[] = {1.0f, 1.0f, 1.0f};
+static const float bright_colour[] = {1.0f, 1.0f, 0.0f};
 
+static constexpr int FONT_XPADDING = 1;
+static constexpr int FONT_YPADDING = 1;
 static constexpr int PAGE_WIDTH = 256;
 static constexpr int PAGE_HEIGHT = 256;
 static int fontSize;
 static int fontWidth;
 static int fontHeight;
 static int fontAscent;
+static int fontXOffset;
 static float fontScale;
 
 struct TTFData
@@ -137,11 +140,12 @@ void loadFonts()
     int ascent, descent, lineGap;
     stbtt_GetFontVMetrics(&font->font, &ascent, &descent, &lineGap);
     fontAscent = ascent * fontScale;
-    fontHeight = (ascent - descent + lineGap) * fontScale;
+    fontHeight = (ascent - descent + lineGap) * fontScale + FONT_XPADDING;
 
-    int advance;
-    stbtt_GetCodepointHMetrics(&font->font, 'M', &advance, nullptr);
-    fontWidth = advance * fontScale;
+    int advance, bearing;
+    stbtt_GetCodepointHMetrics(&font->font, 'M', &advance, &bearing);
+    fontWidth = advance * fontScale + FONT_YPADDING;
+    fontXOffset = bearing * fontScale;
 }
 
 void flushFontCache()
@@ -156,7 +160,7 @@ void getFontSize(int& width, int& height)
     height = fontHeight;
 }
 
-void printChar(uni_t c, uint8_t attrs, float x, float y)
+static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
 {
     int style = REGULAR;
     if (attrs & DPY_BOLD)
@@ -197,8 +201,8 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
                 &page->ctx, &font->font, &range, 1, &rect);
         };
 
-        // First try rendering into the current page. If that fails, the page is
-        // full and we need a new one.
+        // First try rendering into the current page. If that fails, the
+        // page is full and we need a new one.
 
         if (!render())
         {
@@ -235,13 +239,26 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
     }
 
     stbtt_aligned_quad q;
-    y += fontAscent;
     stbtt_GetPackedQuad(
         &it->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
-    y -= fontAscent;
 
+    glBegin(GL_QUADS);
+    glTexCoord2f(q.s0, q.t0);
+    glVertex2f(q.x0, q.y0);
+    glTexCoord2f(q.s1, q.t0);
+    glVertex2f(q.x1, q.y0);
+    glTexCoord2f(q.s1, q.t1);
+    glVertex2f(q.x1, q.y1);
+    glTexCoord2f(q.s0, q.t1);
+    glVertex2f(q.x0, q.y1);
+    glEnd();
+}
+
+void printChar(uni_t c, uint8_t attrs, float x, float y)
+{
     /* Draw background. */
 
+    glDisable(GL_BLEND);
     const float* colour;
     if (attrs & DPY_REVERSE)
     {
@@ -253,8 +270,7 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
             colour = normal_colour;
         glColor3fv(colour);
 
-        glDisable(GL_BLEND);
-        glRectf(x, y, x - fontWidth, y + fontHeight);
+        glRectf(x, y, x + fontWidth, y + fontHeight);
     }
 
     /* Draw foreground. */
@@ -269,15 +285,103 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
         colour = normal_colour;
     glColor3fv(colour);
 
-    glEnable(GL_BLEND);
-    glBegin(GL_QUADS);
-    glTexCoord2f(q.s0, q.t0);
-    glVertex2f(q.x0, q.y0);
-    glTexCoord2f(q.s1, q.t0);
-    glVertex2f(q.x1, q.y0);
-    glTexCoord2f(q.s1, q.t1);
-    glVertex2f(q.x1, q.y1);
-    glTexCoord2f(q.s0, q.t1);
-    glVertex2f(q.x0, q.y1);
-    glEnd();
+    int w = fontWidth;
+    int h = fontHeight;
+    int w2 = fontWidth / 2;
+    int h2 = fontHeight / 2;
+    switch (c)
+    {
+        case 32:
+        case 160: /* non-breaking space */
+            break;
+
+        case 0x2500: /* ─ */
+        case 0x2501: /* ━ */
+            glBegin(GL_LINES);
+            glVertex2i(x + 0, y + h2);
+            glVertex2i(x + w, y + h2);
+            glEnd();
+            break;
+
+        case 0x2502: /* │ */
+        case 0x2503: /* ┃ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2, y + 0);
+            glVertex2i(x + w2, y + h);
+            glEnd();
+            break;
+
+        case 0x250c: /* ┌ */
+        case 0x250d: /* ┍ */
+        case 0x250e: /* ┎ */
+        case 0x250f: /* ┏ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2, y + h2);
+            glVertex2i(x + w2, y + h);
+
+            glVertex2i(x + w2, y + h2);
+            glVertex2i(x + w, y + h2);
+            glEnd();
+            break;
+
+        case 0x2510: /* ┐ */
+        case 0x2511: /* ┑ */
+        case 0x2512: /* ┒ */
+        case 0x2513: /* ┓ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2, y + h2);
+            glVertex2i(x + w2, y + h);
+
+            glVertex2i(x + 0, y + h2);
+            glVertex2i(x + w2, y + h2);
+            glEnd();
+            break;
+
+        case 0x2514: /* └ */
+        case 0x2515: /* ┕ */
+        case 0x2516: /* ┖ */
+        case 0x2517: /* ┗ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2, y + 0);
+            glVertex2i(x + w2, y + h2);
+
+            glVertex2i(x + w2, y + h2);
+            glVertex2i(x + w, y + h2);
+            glEnd();
+            break;
+
+        case 0x2518: /* ┘ */
+        case 0x2519: /* ┙ */
+        case 0x251a: /* ┚ */
+        case 0x251b: /* ┛ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2, y + 0);
+            glVertex2i(x + w2, y + h2);
+
+            glVertex2i(x + 0, y + h2);
+            glVertex2i(x + w2, y + h2);
+            glEnd();
+            break;
+
+        case 0x2551: /* ║ */
+            glBegin(GL_LINES);
+            glVertex2i(x + w2 - 1, y);
+            glVertex2i(x + w2 - 1, y + h);
+
+            glVertex2i(x + w2 + 1, y);
+            glVertex2i(x + w2 + 1, y + h);
+            glEnd();
+            break;
+
+        case 0x2594: /* ▔ */
+            glBegin(GL_LINES);
+            glVertex2i(x, y + 2);
+            glVertex2i(x + w, y + 2);
+            glEnd();
+            break;
+
+        default:
+            glEnable(GL_BLEND);
+            renderTtfChar(c, attrs, x + fontXOffset, y + fontAscent);
+    }
 }
