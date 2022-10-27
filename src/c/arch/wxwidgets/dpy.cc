@@ -1,4 +1,5 @@
 #include "gui.h"
+#include <wx/rawbmp.h>
 
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
@@ -183,6 +184,28 @@ wxEND_EVENT_TABLE();
 
 void dpy_init(const char* argv[]) {}
 
+static wxIcon createIcon()
+{
+    wxImage image(128, 128);
+    image.SetAlpha();
+    wxImagePixelData data(image);
+    wxImagePixelData::Iterator pp(data);
+    extern const uint8_t icon_data[];
+    const uint8_t* dp = icon_data;
+    for (int i = 0; i < 128 * 128; i++)
+    {
+        pp.Red() = *dp++;
+        pp.Green() = *dp++;
+        pp.Blue() = *dp++;
+        pp.Alpha() = *dp++;
+        pp++;
+    }
+
+    wxIcon icon;
+    icon.CopyFromBitmap(image);
+    return icon;
+}
+
 void dpy_start(void)
 {
     runOnUiThread(
@@ -193,6 +216,8 @@ void dpy_start(void)
                 "WordGrinder",
                 wxDefaultPosition,
                 {getIvar("window_width"), getIvar("window_height")});
+
+            mainWindow->SetIcon(createIcon());
 
             auto* sizer = new wxBoxSizer(wxHORIZONTAL);
             customView = new CustomView(mainWindow);
