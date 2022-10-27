@@ -1,5 +1,7 @@
 #include "globals.h"
+#include "gui.h"
 #include <GLFW/glfw3.h>
+#include "stb_ds.h"
 
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
@@ -22,22 +24,7 @@ static struct cell* screen;
 static int cursorx;
 static int cursory;
 static bool cursorShown;
-
-static int get_ivar(const char* name)
-{
-    lua_getglobal(L, "GlobalSettings");
-    lua_getfield(L, -1, "gui");
-    lua_getfield(L, -1, name);
-    return luaL_checkinteger(L, -1);
-}
-
-static const char* get_svar(const char* name)
-{
-    lua_getglobal(L, "GlobalSettings");
-    lua_getfield(L, -1, "gui");
-    lua_getfield(L, -1, name);
-    return lua_tostring(L, -1);
-}
+static uni_t* keyboardQueue;
 
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -48,6 +35,17 @@ static void key_cb(
 static void character_cb(GLFWwindow* window, unsigned int c)
 {
     printf("char %d\n", c);
+    arrins(keyboardQueue, 0, c);
+}
+
+static void resize_cb(GLFWwindow* window, int width, int height)
+{
+    arrins(keyboardQueue, 0, -VK_RESIZE);
+}
+
+static void refresh_cb(GLFWwindow* window)
+{
+    arrins(keyboardQueue, 0, -VK_RESIZE);
 }
 
 void dpy_init(const char* argv[]) {}
@@ -70,49 +68,16 @@ void dpy_start(void)
 
     glfwSetKeyCallback(window, key_cb);
     glfwSetCharCallback(window, character_cb);
-#if 0
-    runOnUiThread(
-        []
-        {
-            mainWindow = new wxFrame(nullptr,
-                wxID_ANY,
-                "WordGrinder",
-                wxDefaultPosition,
-                {getIvar("window_width"), getIvar("window_height")});
+    glfwSetWindowSizeCallback(window, resize_cb);
+    glfwSetWindowRefreshCallback(window, refresh_cb);
 
-            mainWindow->SetIcon(createIcon());
-
-            auto* sizer = new wxBoxSizer(wxHORIZONTAL);
-            customView = new CustomView(mainWindow);
-            sizer->Add(customView, 1, wxEXPAND);
-
-            mainWindow->SetSizer(sizer);
-            mainWindow->SetAutoLayout(true);
-
-            mainWindow->Bind(wxEVT_CLOSE_WINDOW,
-                [](auto& event)
-                {
-                    event.Veto();
-                    pushKey(-VK_QUIT);
-                });
-
-            mainWindow->Show(true);
-        });
-#endif
+    loadFonts();
 }
 
 void dpy_shutdown(void)
 {
     glfwDestroyWindow(window);
     glfwTerminate();
-#if 0
-    runOnUiThread(
-        []()
-        {
-            mainWindow->Close();
-            flushFontCache();
-        });
-#endif
 }
 
 void dpy_clearscreen(void)
@@ -128,14 +93,57 @@ void dpy_getscreensize(int* x, int* y)
 
 void dpy_sync(void)
 {
-    glfwSwapBuffers(window);
-#if 0
-    runOnUiThread(
-        []()
+    /* Configure viewport for 2D graphics. */
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_LINE_SMOOTH);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glLineWidth(1);
+
+    int w, h;
+    glfwGetWindowSize(window, &w, &h);
+    glViewport(0, 0, w, h);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, w, h, 0, 0, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    int sw = w / fontWidth;
+    int sh = h / fontHeight;
+    if (!screen || (screenWidth != sw) || (screenHeight != sh))
+    {
+        free(screen);
+        screenWidth = sw;
+        screenHeight = sh;
+        screen = calloc(screenWidth * screenHeight, sizeof(struct cell));
+    }
+    else
+    {
+        struct cell* p = &screen[0];
+        for (int y = 0; y < screenHeight; y++)
         {
-            customView->Sync();
-        });
-#endif
+            float sy = y * fontHeight;
+            for (int x = 0; x < screenWidth; x++)
+            {
+                float sx = x * fontWidth;
+                printChar(p->c, p->attr, sx, sy);
+                p++;
+            }
+        }
+    }
+
+    glfwSwapBuffers(window);
 }
 
 void dpy_setattr(int andmask, int ormask)
@@ -192,10 +200,15 @@ uni_t dpy_getchar(double timeout)
         else
         {
             double waitTime = endTime - glfwGetTime();
+            printf("%f\n", waitTime);
             if (waitTime < 0)
                 return -VK_TIMEOUT;
             glfwWaitEventsTimeout(endTime);
+            printf("wake\n");
         }
+
+        if (arrlen(keyboardQueue) > 0)
+            return arrpop(keyboardQueue);
     }
 #if 0
     auto endTime = wxGetLocalTimeMillis() + (timeout * 1000.0);
@@ -230,8 +243,6 @@ uni_t dpy_getchar(double timeout)
 
 const char* dpy_getkeyname(uni_t k)
 {
-    return "KEY_TIMEOUT";
-#if 0
     static char buffer[32];
     switch (-k)
     {
@@ -252,6 +263,7 @@ const char* dpy_getkeyname(uni_t k)
         return buffer;
     }
 
+#if 0
     const char* t = NULL;
     switch (key)
     {
@@ -293,10 +305,10 @@ const char* dpy_getkeyname(uni_t k)
             key - WXK_F1 + 1);
         return buffer;
     }
+#endif
 
     sprintf(buffer, "KEY_UNKNOWN_%d", -k);
     return buffer;
-#endif
 }
 
 // vim: sw=4 ts=4 et

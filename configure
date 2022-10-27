@@ -432,11 +432,13 @@ add_configuration() {
 
         glfw)
             add SRCS src/c/arch/glfw/main.c
+            add SRCS src/c/arch/glfw/font.c
+            add SRCS src/c/arch/glfw/utils.c
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
             add BOTHFLAGS -DFRONTEND=glfw
-            add CFLAGS $($PKG_CONFIG --cflags glfw3)
-            add LDFLAGS $($PKG_CONFIG --libs glfw3)
+            add CFLAGS $($PKG_CONFIG --cflags glfw3 opengl)
+            add LDFLAGS $($PKG_CONFIG --libs glfw3 opengl)
             ;;
 
     esac
