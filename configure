@@ -35,8 +35,8 @@ if [ $# = 0 ]; then
             -and release ncurses test install=wordgrinder \
             -and debug sdl \
             -and release sdl install=xwordgrinder \
-            -and debug wxwidgets \
-            -and release wxwidgets \
+            -and debug glfw \
+            -and release glfw \
             -install
     else
         echo "Autoconfiguring a basic Unix build without SDL"
@@ -58,7 +58,9 @@ if [ "$*" = "dev" ]; then
         -and release sdl lua=lua5.3 test \
         -and release sdl lua=luajit test \
         -and debug wxwidgets test \
-        -and release wxwidgets test
+        -and release wxwidgets test \
+        -and debug glfw test \
+        -and release glfw test
 fi
 
 rm -rf $OBJDIR
@@ -427,6 +429,16 @@ add_configuration() {
             add CXXFLAGS $(wx-config --cxxflags core base gl)
             add LDFLAGS $(wx-config --libs core base gl) -lGL -lGLU
             ;;
+
+        glfw)
+            add SRCS src/c/arch/glfw/main.c
+            add SRCS $OBJDIR/fonts.c
+            add SRCS $OBJDIR/icon.c
+            add BOTHFLAGS -DFRONTEND=glfw
+            add CFLAGS $($PKG_CONFIG --cflags glfw3)
+            add LDFLAGS $($PKG_CONFIG --libs glfw3)
+            ;;
+
     esac
 
     local objs
@@ -604,6 +616,7 @@ while [ $# != 0 ]; do
         wincon)         set_frontend wincon ;;
         sdl)            set_frontend sdl ;;
         wxwidgets)      set_frontend wxwidgets ;;
+        glfw)           set_frontend glfw ;;
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
         test)           TEST=y ;;
