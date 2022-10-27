@@ -25,10 +25,19 @@ static bool cursorShown;
 static uint8_t currentAttr = 0;
 static std::vector<Cell> screen;
 static std::vector<Cell> frontBuffer;
-static std::deque<uni_t> keyQueue;
+static std::deque<uni_t> keyboardQueue;
+static wxMutex keyboardMutex;
+static wxSemaphore keyboardSemaphore(0);
 
 static const int openGLArgs[] = {
     WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 16, 0};
+
+static void pushKey(uni_t key)
+{
+    wxMutexLocker m(keyboardMutex);
+    keyboardQueue.push_front(key);
+    keyboardSemaphore.Post();
+}
 
 class CustomView : public wxGLCanvas
 {
@@ -62,11 +71,12 @@ public:
             screenWidth = newScreenWidth;
             screenHeight = newScreenHeight;
             screen.resize(screenWidth * screenHeight);
-            keyQueue.push_front(-VK_RESIZE);
+            pushKey(-VK_RESIZE);
         }
 
         frontBuffer = screen;
         Refresh();
+        Update();
     }
 
 private:
@@ -136,11 +146,11 @@ private:
             if (event.ControlDown())
             {
                 uni |= VKM_CTRLASCII;
-                keyQueue.push_front(-uni);
+                pushKey(-uni);
             }
             else if (event.AltDown())
-                keyQueue.push_front(-27);
-            keyQueue.push_front(uni);
+                pushKey(-27);
+            pushKey(uni);
         }
         else
         {
@@ -149,8 +159,13 @@ private:
                 uni |= VKM_CTRL;
             if (event.ShiftDown())
                 uni |= VKM_SHIFT;
-            keyQueue.push_front(-uni);
+            pushKey(-uni);
         }
+    }
+
+    void OnResize(wxSizeEvent&)
+    {
+        pushKey(-VK_RESIZE);
     }
 
 private:
@@ -162,6 +177,7 @@ private:
 wxBEGIN_EVENT_TABLE(CustomView, wxWindow)
     EVT_PAINT(CustomView::OnPaint)
     EVT_CHAR(CustomView::OnChar)
+    EVT_SIZE(CustomView::OnResize)
 wxEND_EVENT_TABLE();
 // clang-format on
 
@@ -172,7 +188,11 @@ void dpy_start(void)
     runOnUiThread(
         []
         {
-            mainWindow = new wxFrame(nullptr, wxID_ANY, "WordGrinder");
+            mainWindow = new wxFrame(nullptr,
+                wxID_ANY,
+                "WordGrinder",
+                wxDefaultPosition,
+                {getIvar("window_width"), getIvar("window_height")});
 
             auto* sizer = new wxBoxSizer(wxHORIZONTAL);
             customView = new CustomView(mainWindow);
@@ -185,7 +205,7 @@ void dpy_start(void)
                 [](auto& event)
                 {
                     event.Veto();
-                    keyQueue.push_front(-VK_QUIT);
+                    pushKey(-VK_QUIT);
                 });
 
             mainWindow->Show(true);
@@ -266,16 +286,33 @@ void dpy_setcursor(int x, int y, bool shown)
 
 uni_t dpy_getchar(double timeout)
 {
-    return runOnUiThread<uni_t>(
-        [&]() -> uni_t
-        {
-            if (keyQueue.empty())
-                return -VK_TIMEOUT;
+    auto endTime = wxGetLocalTimeMillis() + (timeout * 1000.0);
+    for (;;)
+    {
+        /* Wait until the queue is non-empty. */
 
-            uni_t key = keyQueue.back();
-            keyQueue.pop_back();
-            return key;
-        });
+        if (timeout == -1)
+            keyboardSemaphore.Wait();
+        else
+        {
+            long delta = (endTime - wxGetLocalTimeMillis()).ToLong();
+            if (delta <= 0)
+                return -VK_TIMEOUT;
+            keyboardSemaphore.WaitTimeout(delta);
+        }
+
+        /* If there's a key in the queue, pop it. */
+
+        {
+            wxMutexLocker m(keyboardMutex);
+            if (!keyboardQueue.empty())
+            {
+                uni_t key = keyboardQueue.back();
+                keyboardQueue.pop_back();
+                return key;
+            }
+        }
+    }
 }
 
 const char* dpy_getkeyname(uni_t k)
@@ -303,7 +340,7 @@ const char* dpy_getkeyname(uni_t k)
     const char* t = NULL;
     switch (key)
     {
-            // clang-format off
+        // clang-format off
         case WXK_DOWN:        t = "DOWN"; break;
         case WXK_UP:          t = "UP"; break;
         case WXK_LEFT:        t = "LEFT"; break;
