@@ -29,12 +29,56 @@ static uni_t* keyboardQueue;
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    printf("key %d %d %d %d\n", key, scancode, action, mods);
+    if (action == GLFW_RELEASE)
+        return;
+
+    if (mods & GLFW_MOD_CONTROL)
+    {
+        if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
+        {
+            arrins(keyboardQueue, 0, -((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
+            return;
+        }
+        if (key == GLFW_KEY_SPACE)
+        {
+            arrins(keyboardQueue, 0, -VKM_CTRLASCII);
+            return;
+        }
+    }
+
+    switch (key)
+    {
+        default:
+            if ((key < GLFW_KEY_F1) || (key > GLFW_KEY_F25))
+                return;
+
+            /* fall through */
+        case GLFW_KEY_ESCAPE:
+        case GLFW_KEY_ENTER:
+        case GLFW_KEY_TAB:
+        case GLFW_KEY_BACKSPACE:
+        case GLFW_KEY_INSERT:
+        case GLFW_KEY_DELETE:
+        case GLFW_KEY_RIGHT:
+        case GLFW_KEY_LEFT:
+        case GLFW_KEY_DOWN:
+        case GLFW_KEY_UP:
+        case GLFW_KEY_PAGE_UP:
+        case GLFW_KEY_PAGE_DOWN:
+        case GLFW_KEY_HOME:
+        case GLFW_KEY_END:
+            int imods = 0;
+            if (mods & GLFW_MOD_SHIFT)
+                imods |= VKM_SHIFT;
+            if (mods & GLFW_MOD_CONTROL)
+                imods |= VKM_CTRL;
+            arrins(keyboardQueue, 0, -(key | imods));
+            break;
+    }
 }
 
 static void character_cb(GLFWwindow* window, unsigned int c)
 {
-    printf("char %d\n", c);
     arrins(keyboardQueue, 0, c);
 }
 
@@ -210,35 +254,6 @@ uni_t dpy_getchar(double timeout)
         if (arrlen(keyboardQueue) > 0)
             return arrpop(keyboardQueue);
     }
-#if 0
-    auto endTime = wxGetLocalTimeMillis() + (timeout * 1000.0);
-    for (;;)
-    {
-        /* Wait until the queue is non-empty. */
-
-        if (timeout == -1)
-            keyboardSemaphore.Wait();
-        else
-        {
-            long delta = (endTime - wxGetLocalTimeMillis()).ToLong();
-            if (delta <= 0)
-                return -VK_TIMEOUT;
-            keyboardSemaphore.WaitTimeout(delta);
-        }
-
-        /* If there's a key in the queue, pop it. */
-
-        {
-            wxMutexLocker m(keyboardMutex);
-            if (!keyboardQueue.empty())
-            {
-                uni_t key = keyboardQueue.back();
-                keyboardQueue.pop_back();
-                return key;
-            }
-        }
-    }
-#endif
 }
 
 const char* dpy_getkeyname(uni_t k)
@@ -263,26 +278,24 @@ const char* dpy_getkeyname(uni_t k)
         return buffer;
     }
 
-#if 0
     const char* t = NULL;
     switch (key)
     {
         // clang-format off
-        case WXK_DOWN:        t = "DOWN"; break;
-        case WXK_UP:          t = "UP"; break;
-        case WXK_LEFT:        t = "LEFT"; break;
-        case WXK_RIGHT:       t = "RIGHT"; break;
-        case WXK_HOME:        t = "HOME"; break;
-        case WXK_END:         t = "END"; break;
-        case WXK_BACK:        t = "BACKSPACE"; break;
-        case WXK_DELETE:      t = "DELETE"; break;
-        case WXK_INSERT:      t = "INSERT"; break;
-        case WXK_PAGEUP:      t = "PGUP"; break;
-        case WXK_PAGEDOWN:    t = "PGDN"; break;
-        case WXK_TAB:         t = "TAB"; break;
-        case WXK_RETURN:      t = "RETURN"; break;
-        case WXK_ESCAPE:      t = "ESCAPE"; break;
-        case WXK_MENU:        t = "MENU"; break;
+        case GLFW_KEY_ESCAPE:    t = "ESCAPE"; break;
+        case GLFW_KEY_ENTER:     t = "RETURN"; break;
+        case GLFW_KEY_TAB:       t = "TAB"; break;
+        case GLFW_KEY_BACKSPACE: t = "BACKSPACE"; break;
+        case GLFW_KEY_INSERT:    t = "INSERT"; break;
+        case GLFW_KEY_DELETE:    t = "DELETE"; break;
+        case GLFW_KEY_RIGHT:     t = "RIGHT"; break;
+        case GLFW_KEY_LEFT:      t = "LEFT"; break;
+        case GLFW_KEY_DOWN:      t = "DOWN"; break;
+        case GLFW_KEY_UP:        t = "UP"; break;
+        case GLFW_KEY_PAGE_UP:   t = "PGUP"; break;
+        case GLFW_KEY_PAGE_DOWN: t = "PGDN"; break;
+        case GLFW_KEY_HOME:      t = "HOME"; break;
+        case GLFW_KEY_END:       t = "END"; break;
             // clang-format on
     }
 
@@ -296,16 +309,15 @@ const char* dpy_getkeyname(uni_t k)
         return buffer;
     }
 
-    if ((key >= WXK_F1) && (key <= (WXK_F24)))
+    if ((key >= GLFW_KEY_F1) && (key <= (GLFW_KEY_F25)))
     {
         sprintf(buffer,
             "KEY_%s%sF%d",
             (mods & VKM_SHIFT) ? "S" : "",
             (mods & VKM_CTRL) ? "^" : "",
-            key - WXK_F1 + 1);
+            key - GLFW_KEY_F1 + 1);
         return buffer;
     }
-#endif
 
     sprintf(buffer, "KEY_UNKNOWN_%d", -k);
     return buffer;
