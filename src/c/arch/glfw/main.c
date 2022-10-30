@@ -266,11 +266,9 @@ uni_t dpy_getchar(double timeout)
         else
         {
             double waitTime = endTime - glfwGetTime();
-            printf("%f\n", waitTime);
             if (waitTime < 0)
                 return -VK_TIMEOUT;
-            glfwWaitEventsTimeout(endTime);
-            printf("wake\n");
+            glfwWaitEventsTimeout(waitTime);
         }
 
         if (arrlen(keyboardQueue) > 0)
