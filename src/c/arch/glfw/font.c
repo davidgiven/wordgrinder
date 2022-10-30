@@ -234,7 +234,6 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
 
     glBindTexture(GL_TEXTURE_2D, cd->page->texture);
     glBegin(GL_QUADS);
-#if 1
     glTexCoord2f(q.s0, q.t0);
     glVertex2f(q.x0, q.y0);
     glTexCoord2f(q.s1, q.t0);
@@ -243,16 +242,6 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     glVertex2f(q.x1, q.y1);
     glTexCoord2f(q.s0, q.t1);
     glVertex2f(q.x0, q.y1);
-#else
-    glTexCoord2f(0, 0);
-    glVertex2f(0, 0);
-    glTexCoord2f(1, 0);
-    glVertex2f(256, 0);
-    glTexCoord2f(1, 1);
-    glVertex2f(256, 256);
-    glTexCoord2f(0, 1);
-    glVertex2f(0, 256);
-#endif
     glEnd();
 }
 

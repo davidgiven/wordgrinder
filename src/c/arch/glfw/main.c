@@ -185,6 +185,28 @@ void dpy_sync(void)
                 p++;
             }
         }
+
+        if (cursorShown)
+        {
+            int x = cursorx * fontWidth - 1;
+            if (x < 0)
+                x = 0;
+            int y = cursory * fontHeight;
+            int h = fontHeight;
+
+            glColor3f(1.0f, 1.0f, 1.0f);
+            glDisable(GL_BLEND);
+            glBegin(GL_LINES);
+            glVertex2i(x, y);
+            glVertex2i(x, y + h);
+
+            glVertex2i(x - 2, y);
+            glVertex2i(x + 1, y);
+
+            glVertex2i(x - 2, y + h);
+            glVertex2i(x + 1, y + h);
+            glEnd();
+        }
     }
 
     glfwSwapBuffers(window);
