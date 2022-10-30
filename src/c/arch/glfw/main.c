@@ -95,7 +95,7 @@ void dpy_sync(void)
 {
     /* Configure viewport for 2D graphics. */
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_BLEND);

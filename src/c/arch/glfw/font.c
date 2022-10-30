@@ -158,7 +158,7 @@ static int rawRender(
     range.array_of_unicode_codepoints = NULL;
     range.num_chars = 1;
     range.font_size = STBTT_POINT_SIZE(fontSize);
-    range.chardata_for_range = &chardata->packData;
+    range.chardata_for_range = &cd->packData;
     range.chardata_for_range->x0 = range.chardata_for_range->y0 =
         range.chardata_for_range->x1 = range.chardata_for_range->y1 = 0;
 
@@ -180,7 +180,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     if (attrs & DPY_ITALIC)
         style |= ITALIC;
 
-    uint32_t key = c | (attrs << 24);
+    uint32_t key = c | (style << 24);
     struct chardata* cd = hmgetp_null(chardata, key);
     if (!cd)
     {
