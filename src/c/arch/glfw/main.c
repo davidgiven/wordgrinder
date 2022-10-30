@@ -261,6 +261,9 @@ uni_t dpy_getchar(double timeout)
     double endTime = glfwGetTime() + timeout;
     for (;;)
     {
+        if (arrlen(keyboardQueue) > 0)
+            return arrpop(keyboardQueue);
+
         if (timeout == -1)
             glfwWaitEvents();
         else
@@ -270,9 +273,6 @@ uni_t dpy_getchar(double timeout)
                 return -VK_TIMEOUT;
             glfwWaitEventsTimeout(waitTime);
         }
-
-        if (arrlen(keyboardQueue) > 0)
-            return arrpop(keyboardQueue);
     }
 }
 
