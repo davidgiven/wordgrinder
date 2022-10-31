@@ -50,35 +50,44 @@ static void key_cb(
             return;
         }
     }
-    if ((mods & GLFW_MOD_ALT) && (key == GLFW_KEY_ENTER))
+    if (mods & GLFW_MOD_ALT)
     {
-        /* Toggle full screen. */
+        if (key == GLFW_KEY_ENTER)
+        {
+            /* Toggle full screen. */
 
-        if (fullScreen)
-        {
-            glfwSetWindowMonitor(window,
-                NULL,
-                oldWindowX,
-                oldWindowY,
-                oldWindowW,
-                oldWindowH,
-                0);
-            fullScreen = false;
+            if (fullScreen)
+            {
+                glfwSetWindowMonitor(window,
+                    NULL,
+                    oldWindowX,
+                    oldWindowY,
+                    oldWindowW,
+                    oldWindowH,
+                    0);
+                fullScreen = false;
+            }
+            else
+            {
+                glfwGetWindowPos(window, &oldWindowX, &oldWindowY);
+                glfwGetWindowSize(window, &oldWindowW, &oldWindowH);
+                GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+                const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+                glfwSetWindowMonitor(window,
+                    monitor,
+                    0,
+                    0,
+                    mode->width,
+                    mode->height,
+                    mode->refreshRate);
+                fullScreen = true;
+            }
         }
-        else
+        if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
-            glfwGetWindowPos(window, &oldWindowX, &oldWindowY);
-            glfwGetWindowSize(window, &oldWindowW, &oldWindowH);
-            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-            glfwSetWindowMonitor(window,
-                monitor,
-                0,
-                0,
-                mode->width,
-                mode->height,
-                mode->refreshRate);
-            fullScreen = true;
+            arrins(keyboardQueue, 0, -GLFW_KEY_ESCAPE);
+            arrins(keyboardQueue, 0, 'A' + (key - GLFW_KEY_A));
+            return;
         }
     }
 
