@@ -12,7 +12,7 @@ static const float normal_colour[] = {0.66f, 0.66f, 0.66f};
 static const float bright_colour[] = {1.0f, 1.0f, 0.0f};
 
 #define FONT_XPADDING 1
-#define FONT_YPADDING 1
+#define FONT_YPADDING 2
 #define PAGE_WIDTH 256
 #define PAGE_HEIGHT 256
 
