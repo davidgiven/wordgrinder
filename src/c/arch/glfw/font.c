@@ -232,6 +232,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     stbtt_GetPackedQuad(
         &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
 
+    glEnable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, cd->page->texture);
     glBegin(GL_QUADS);
     glTexCoord2f(q.s0, q.t0);
@@ -372,7 +373,15 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
             break;
 
         default:
-            glEnable(GL_BLEND);
             renderTtfChar(c, attrs, x + fontXOffset, y + fontAscent);
+    }
+
+    if (attrs & DPY_UNDERLINE)
+    {
+        glDisable(GL_BLEND);
+        glBegin(GL_LINES);
+        glVertex2i(x + fontXOffset, y + fontAscent + 1);
+        glVertex2i(x + fontXOffset + fontWidth, y + fontAscent + 1);
+        glEnd();
     }
 }
