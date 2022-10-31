@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3888
+.documents.1.wordcount: 3778
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -59,9 +59,14 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .fileformat: 8
 .findtext: "font_regul"
 .idletime: 3
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
 .menu.accelerators.BACKSPACE: "ZDPC"
+.menu.accelerators.^C: "EC"
 .menu.accelerators.DELETE: "ZDNC"
+.menu.accelerators.^DOWN: "ZNP"
 .menu.accelerators.DOWN: "ZD"
+.menu.accelerators.^E: "ZDW"
 .menu.accelerators.EC: "^C"
 .menu.accelerators.ECadd: "^M"
 .menu.accelerators.ECfind: "^L"
@@ -71,36 +76,58 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.ET: "^X"
 .menu.accelerators.Eredo: "^Y"
+.menu.accelerators.ET: "^X"
 .menu.accelerators.Eundo: "^Z"
+.menu.accelerators.^F: "EF"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
+.menu.accelerators.^G: "EG"
 .menu.accelerators.HOME: "ZH"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
 .menu.accelerators.LEFT: "ZL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
 .menu.accelerators.PGDN: "ZPGDN"
+.menu.accelerators.^PGUP: "ZBD"
 .menu.accelerators.PGUP: "ZPGUP"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
 .menu.accelerators.RIGHT: "ZR"
+.menu.accelerators.^S: "FS"
 .menu.accelerators.SB: "^B"
+.menu.accelerators.S^DOWN: "ZSNP"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
 .menu.accelerators.SHOME: "ZSH"
 .menu.accelerators.SI: "^I"
+.menu.accelerators.S^LEFT: "ZSWL"
 .menu.accelerators.SLEFT: "ZSL"
 .menu.accelerators.SO: "^O"
 .menu.accelerators.SP: "^P"
+.menu.accelerators.S^PGDN: "ZSED"
 .menu.accelerators.SPGDN: "ZSPGDN"
+.menu.accelerators.S^PGUP: "ZSBD"
 .menu.accelerators.SPGUP: "ZSPGUP"
+.menu.accelerators.S^RIGHT: "ZSWR"
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
-.menu.accelerators.SUP: "ZSU"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
 .menu.accelerators.S^UP: "ZSPP"
+.menu.accelerators.SUP: "ZSU"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
 .menu.accelerators.UP: "ZU"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
 .menu.accelerators.ZDNC: "DELETE"
@@ -134,33 +161,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
@@ -284,12 +284,10 @@ P However, Unicode is not supported at all well, due to limitations of the Windo
 P While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
 P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
 H3 Unix X11, Windows GUI, OSX GUI
-P There is also a specific version of WordGrinder which uses the SDL library for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
+P There is also a specific version of WordGrinder which uses OpenGL for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
 P ALT+ENTER will toggle full screen mode.
-P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document).
+P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document). It’s included in the binary so nothing needs installing.
 P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
-H3 Rasperry Pi (or other Mali chipset) console
-P If you have a Raspberry Pi or another Linux system with a Mali graphics chipset, you can run WordGrinder on the console, without needing X at all! Just run the SDL version as above. Everything should, mostly, just work. You will need to add yourself to the input group for the keyboard to work. It’s a bit rough around the edges but should be quite usable.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
@@ -302,7 +300,7 @@ P Note that autosaving will only happen if you don’t touch the keyboard for a 
 P By default, autosaves will be placed next to the original document, but if you specify a custom directory in File→Global Settings→Directories, they’ll be put there instead.
 H3 Unicode
 P WordGrinder supports ＵＮＩＣＯＤＥ!
-P (If you see a bunch of boxes in the above line, it means that your platform doesn’t support displaying exotic Unicode characters. WordGrinder will still let you edit them, you just won’t be able to see what you’re doing.)
+P (If you see a bunch of boxes in the above line, it means that your platform or font doesn’t support displaying exotic Unicode characters. WordGrinder will still let you edit them, you just won’t be able to see what you’re doing.)
 P Mostly, at any rate. Combining characters and right-to-left are unsupported. This means that you can use, say, Français, русский язык, 한국어 and 日本語, but you can’t use Arabic or Hebrew because they end up mangled (العربية and עברית respectively). You can use line art but that’s not what WordGrinder’s for and it’ll probably work badly.
 P Unfortunately, how to actually enter Unicode characters is entirely up to your operating system and your terminal application. WordGrinder can’t help you there.
 P This document set contains a Unicode test document containing a rather more strenuous workout than the above paragraph; see the Documents menu.
