@@ -28,15 +28,13 @@ if [ $# = 0 ]; then
     if [ "$OS" = "Windows_NT" ]; then
         echo "Autoconfiguring for Windows"
         set release wincon windows test \
-            -and release wxwidgets windows -nsis
+            -and release glfw windows -nsis
     elif type sdl2-config > /dev/null; then
-        echo "Autoconfiguring a basic Unix build with SDL and wxwidgets"
+        echo "Autoconfiguring a basic Unix build with glfw"
         set debug ncurses test \
             -and release ncurses test install=wordgrinder \
-            -and debug sdl \
-            -and release sdl install=xwordgrinder \
             -and debug glfw \
-            -and release glfw \
+            -and release glfw install=xwordgrinder \
             -install
     else
         echo "Autoconfiguring a basic Unix build without SDL"
@@ -57,8 +55,6 @@ if [ "$*" = "dev" ]; then
         -and release sdl lua=lua5.2 test \
         -and release sdl lua=lua5.3 test \
         -and release sdl lua=luajit test \
-        -and debug wxwidgets test \
-        -and release wxwidgets test \
         -and debug glfw test \
         -and release glfw test
 fi
@@ -418,18 +414,6 @@ add_configuration() {
             fi
             ;;
 
-        wxwidgets)
-            add SRCS src/c/arch/wxwidgets/app.cc
-            add SRCS src/c/arch/wxwidgets/dpy.cc
-            add SRCS src/c/arch/wxwidgets/font.cc
-            add SRCS src/c/arch/wxwidgets/utils.cc
-            add SRCS $OBJDIR/fonts.c
-            add SRCS $OBJDIR/icon.c
-            add BOTHFLAGS -DFRONTEND=wxwidgets -Dmain=appMain
-            add CXXFLAGS $(wx-config --cxxflags core base gl)
-            add LDFLAGS $(wx-config --libs core base gl) -lGL -lGLU
-            ;;
-
         glfw)
             add SRCS src/c/arch/glfw/main.c
             add SRCS src/c/arch/glfw/font.c
@@ -617,7 +601,6 @@ while [ $# != 0 ]; do
         libstb=*)       BUILTIN_LIBSTB=n;       add PACKAGES ${1#*=} ;;
         wincon)         set_frontend wincon ;;
         sdl)            set_frontend sdl ;;
-        wxwidgets)      set_frontend wxwidgets ;;
         glfw)           set_frontend glfw ;;
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
         ncurses=*)      set_frontend ncurses;   add PACKAGES ${1#*=} ;;
