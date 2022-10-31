@@ -25,6 +25,11 @@ static int cursorx;
 static int cursory;
 static bool cursorShown;
 static uni_t* keyboardQueue;
+static bool fullScreen;
+static int oldWindowX;
+static int oldWindowY;
+static int oldWindowW;
+static int oldWindowH;
 
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -43,6 +48,37 @@ static void key_cb(
         {
             arrins(keyboardQueue, 0, -VKM_CTRLASCII);
             return;
+        }
+    }
+    if ((mods & GLFW_MOD_ALT) && (key == GLFW_KEY_ENTER))
+    {
+        /* Toggle full screen. */
+
+        if (fullScreen)
+        {
+            glfwSetWindowMonitor(window,
+                NULL,
+                oldWindowX,
+                oldWindowY,
+                oldWindowW,
+                oldWindowH,
+                0);
+            fullScreen = false;
+        }
+        else
+        {
+            glfwGetWindowPos(window, &oldWindowX, &oldWindowY);
+            glfwGetWindowSize(window, &oldWindowW, &oldWindowH);
+            GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+            const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+            glfwSetWindowMonitor(window,
+                monitor,
+                0,
+                0,
+                mode->width,
+                mode->height,
+                mode->refreshRate);
+            fullScreen = true;
         }
     }
 
