@@ -402,7 +402,7 @@ add_configuration() {
             elif [ "$(uname)" = "Darwin" ]; then
                 add LDFLAGS -framework OpenGL
             elif [ "$OS" = "Windows_NT" ]; then
-                add LDFLAGS -lopengl32
+                add LDFLAGS -lopengl32 -lgdi32
             else
                 echo "No OpenGL found"
                 exit 1
