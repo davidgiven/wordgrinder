@@ -92,6 +92,8 @@ static void key_cb(
                     mode->refreshRate);
                 fullScreen = true;
             }
+
+	    return;
         }
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
