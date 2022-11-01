@@ -3,7 +3,7 @@
 
 #include "globals.h"
 
-#ifdef __WXMAC__
+#ifdef __APPLE__
 #include "OpenGL/gl.h"
 #else
 #include <GL/gl.h>
