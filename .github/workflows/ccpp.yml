@@ -45,7 +45,6 @@ jobs:
           mingw-w64-i686-imagemagick
           mingw-w64-i686-nsis
           mingw-w64-i686-pkg-config
-          mingw-w64-i686-wxWidgets
           mingw-w64-i686-zlib
           ninja
           vim
