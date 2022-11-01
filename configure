@@ -394,8 +394,19 @@ add_configuration() {
             add SRCS $OBJDIR/fonts.c
             add SRCS $OBJDIR/icon.c
             add BOTHFLAGS -DFRONTEND=glfw
-            add CFLAGS $($PKG_CONFIG --cflags glfw3 opengl)
-            add LDFLAGS $($PKG_CONFIG --libs glfw3 opengl)
+            add CFLAGS $($PKG_CONFIG --cflags glfw3)
+            add LDFLAGS $($PKG_CONFIG --libs glfw3)
+            if $($PKG_CONFIG --exists opengl); then
+                add CFLAGS $($PKG_CONFIG --cflags opengl)
+                add LDFLAGS $($PKG_CONFIG --libs opengl)
+            elif [ "$(uname)" = "Darwin" ]; then
+                add LDFLAGS -framework OpenGL
+            elif [ "$OS" = "Windows_NT" ]; then
+                add LDFLAGS -lopengl32
+            else
+                echo "No OpenGL found"
+                exit 1
+            fi
             ;;
 
     esac
