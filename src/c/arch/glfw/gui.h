@@ -20,6 +20,7 @@ extern int fontWidth;
 extern int fontHeight;
 
 extern void loadFonts();
+extern void unloadFonts();
 extern void flushFontCache();
 extern void printChar(uni_t c, uint8_t attrs, float x, float y);
 

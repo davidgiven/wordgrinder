@@ -117,6 +117,18 @@ void loadFonts()
     fontXOffset = bearing * fontScale;
 }
 
+void unloadFonts()
+{
+    for (int i=0; i<sizeof(fonts)/sizeof(*fonts); i++)
+    {
+        if (fonts[i])
+        {
+            freeFont(fonts[i]);
+            fonts[i] = NULL;
+        }
+    }
+}
+
 static struct page* newPage()
 {
     struct page* page = calloc(1, sizeof(struct page));
@@ -148,6 +160,13 @@ static struct page* addPage()
     struct page* page = newPage();
     arrput(pages, page);
     return page;
+}
+
+void flushFontCache()
+{
+    while (arrlen(pages) > 0)
+        freePage(arrpop(pages));
+    hmfree(chardata);
 }
 
 static int rawRender(

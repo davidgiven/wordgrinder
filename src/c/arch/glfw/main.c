@@ -190,6 +190,8 @@ void dpy_start(void)
 
 void dpy_shutdown(void)
 {
+    unloadFonts();
+    flushFontCache();
     glfwDestroyWindow(window);
     glfwTerminate();
 }
