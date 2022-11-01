@@ -198,7 +198,6 @@ void dpy_sync(void)
 
     /* Configure viewport for 2D graphics. */
 
-    printf("draw\n");
     glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
@@ -294,10 +293,25 @@ void dpy_writechar(int x, int y, uni_t c)
     p->attr = currentAttr;
 }
 
+static void clipBounds(int* x, int* y)
+{
+    if (*x < 0)
+        *x = 0;
+    if (*x >= screenWidth)
+        *x = screenWidth-1;
+    if (*y < 0)
+        *y = 0;
+    if (*y >= screenHeight)
+        *y = screenHeight-1;
+}
+
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
     if (!screen)
         return;
+
+    clipBounds(&x1, &y1);
+    clipBounds(&x2, &y2);
 
     for (int y = y1; y <= y2; y++)
     {
