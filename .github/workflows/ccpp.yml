@@ -41,8 +41,7 @@ jobs:
         install: >-
           make
           mingw-w64-cross-gcc
-          mingw-w64-i686-glfw3
-          mingw-w64-i686-brotli
+          mingw-w64-i686-glfw
           mingw-w64-i686-imagemagick
           mingw-w64-i686-nsis
           mingw-w64-i686-pkg-config
