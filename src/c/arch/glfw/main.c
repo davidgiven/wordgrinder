@@ -112,6 +112,7 @@ static void key_cb(
         case GLFW_KEY_PAGE_DOWN:
         case GLFW_KEY_HOME:
         case GLFW_KEY_END:
+        {
             int imods = 0;
             if (mods & GLFW_MOD_SHIFT)
                 imods |= VKM_SHIFT;
@@ -119,6 +120,7 @@ static void key_cb(
                 imods |= VKM_CTRL;
             arrins(keyboardQueue, 0, -(key | imods));
             break;
+        }
     }
 }
 
