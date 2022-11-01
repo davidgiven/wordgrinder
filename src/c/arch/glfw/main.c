@@ -149,6 +149,11 @@ static void refresh_cb(GLFWwindow* window)
     queueRedraw();
 }
 
+static void close_cb(GLFWwindow* window)
+{
+    arrins(keyboardQueue, 0, -VK_QUIT);
+}
+
 void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
@@ -171,6 +176,7 @@ void dpy_start(void)
     glfwSetCharCallback(window, character_cb);
     glfwSetWindowSizeCallback(window, resize_cb);
     glfwSetWindowRefreshCallback(window, refresh_cb);
+    glfwSetWindowCloseCallback(window, close_cb);
 
     loadFonts();
 }
