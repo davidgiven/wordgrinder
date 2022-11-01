@@ -25,12 +25,22 @@ static int cursorx;
 static int cursory;
 static bool cursorShown;
 static uni_t* keyboardQueue;
+static bool pendingRedraw;
 static bool fullScreen;
 static int oldWindowX;
 static int oldWindowY;
 static int oldWindowW;
 static int oldWindowH;
 
+static void queueRedraw()
+{
+    if (!pendingRedraw)
+    {
+        arrins(keyboardQueue, 0, -VK_RESIZE);
+        pendingRedraw = true;
+    }
+}
+        
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -131,12 +141,12 @@ static void character_cb(GLFWwindow* window, unsigned int c)
 
 static void resize_cb(GLFWwindow* window, int width, int height)
 {
-    arrins(keyboardQueue, 0, -VK_RESIZE);
+    queueRedraw();
 }
 
 static void refresh_cb(GLFWwindow* window)
 {
-    arrins(keyboardQueue, 0, -VK_RESIZE);
+    queueRedraw();
 }
 
 void dpy_init(const char* argv[]) {}
@@ -184,8 +194,11 @@ void dpy_getscreensize(int* x, int* y)
 
 void dpy_sync(void)
 {
+    pendingRedraw = false;
+
     /* Configure viewport for 2D graphics. */
 
+    printf("draw\n");
     glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
@@ -219,6 +232,7 @@ void dpy_sync(void)
         screenWidth = sw;
         screenHeight = sh;
         screen = calloc(screenWidth * screenHeight, sizeof(struct cell));
+        arrins(keyboardQueue, 0, -VK_RESIZE);
     }
     else
     {
