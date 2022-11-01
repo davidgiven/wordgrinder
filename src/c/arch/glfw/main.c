@@ -178,6 +178,13 @@ void dpy_start(void)
     glfwSetWindowRefreshCallback(window, refresh_cb);
     glfwSetWindowCloseCallback(window, close_cb);
 
+    extern uint8_t icon_data[];
+    GLFWimage image; 
+    image.width = 128;
+    image.height = 128;
+    image.pixels = icon_data;
+    glfwSetWindowIcon(window, 1, &image); 
+
     loadFonts();
 }
 
