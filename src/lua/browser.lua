@@ -258,6 +258,7 @@ function Browser(title, topmessage, bottommessage, data)
 		["KEY_PGUP"] = navigate,
 			
 		["KEY_TAB"] = autocomplete,
+		["KEY_^I"] = autocomplete,
 
 		Form.Label {
 			x1 = 1, y1 = 1,
