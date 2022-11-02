@@ -227,7 +227,7 @@ void dpy_sync(void)
     glLineWidth(1);
 
     int w, h;
-    glfwGetWindowSize(window, &w, &h);
+    glfwGetFramebufferSize(window, &w, &h);
     glViewport(0, 0, w, h);
 
     glMatrixMode(GL_PROJECTION);
