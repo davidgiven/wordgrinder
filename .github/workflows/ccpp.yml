@@ -9,8 +9,8 @@ jobs:
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: ap
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libsdl2-dev libsdl2-ttf-dev imagemagick
+    - name: apt
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev imagemagick
     - name: make
       run: |
         ./configure dev
@@ -23,7 +23,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: brew
-      run: brew install pkg-config ninja SDL2_ttf SDL2 imagemagick
+      run: brew install pkg-config ninja glfw imagemagick wxwidgets
     - name: make
       run: |
         ./configure
@@ -36,12 +36,22 @@ jobs:
         shell: msys2 {0}
     steps:
     - uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: >-
+          make
+          mingw-w64-cross-gcc
+          mingw-w64-i686-glfw
+          mingw-w64-i686-imagemagick
+          mingw-w64-i686-nsis
+          mingw-w64-i686-pkg-config
+          mingw-w64-i686-zlib
+          ninja
+          vim
+          zip
     - uses: actions/checkout@v1
       with:
         fetch-depth: 1
-    - name: pacman
-      run: |
-        pacman -S --noconfirm --needed make ninja vim mingw-w64-i686-nsis mingw-w64-cross-gcc mingw-w64-i686-zlib mingw-w64-i686-pkg-config zip mingw-w64-i686-SDL mingw-w64-i686-SDL2_ttf mingw-w64-i686-imagemagick mingw-w64-i686-brotli
     - name: build
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure
