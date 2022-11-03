@@ -14,10 +14,16 @@ struct cell
 {
     uni_t c;
     uint8_t attr;
+    uint8_t fg;
+    uint8_t bg;
 };
+
+colour_t colours[];
 
 static GLFWwindow* window;
 static int currentAttr;
+static int currentFg;
+static int currentBg;
 static int screenWidth;
 static int screenHeight;
 static struct cell* screen;
@@ -215,7 +221,7 @@ void dpy_sync(void)
 
     /* Configure viewport for 2D graphics. */
 
-    glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_BLEND);
@@ -259,7 +265,7 @@ void dpy_sync(void)
             for (int x = 0; x < screenWidth; x++)
             {
                 float sx = x * fontWidth + padding;
-                printChar(p->c, p->attr, sx, sy);
+                printChar(p->c, p->attr, p->fg, p->bg, sx, sy);
                 p++;
             }
         }
@@ -296,6 +302,23 @@ void dpy_setattr(int andmask, int ormask)
     currentAttr |= ormask;
 }
 
+void dpy_setcolour(int fg, int bg)
+{
+    currentFg = fg;
+    currentBg = bg;
+}
+
+void dpy_definecolour(int id, float r, float g, float b)
+{
+    if ((id < 0) || (id >= sizeof(colours)/sizeof(*colours)))
+        return;
+
+    colour_t* s = &colours[id];
+    s->f[0] = r;
+    s->f[1] = g;
+    s->f[2] = b;
+}
+
 void dpy_writechar(int x, int y, uni_t c)
 {
     if (!screen)
@@ -308,6 +331,8 @@ void dpy_writechar(int x, int y, uni_t c)
     struct cell* p = &screen[x + y * screenWidth];
     p->c = c;
     p->attr = currentAttr;
+    p->fg = currentFg;
+    p->bg = currentBg;
 }
 
 static void clipBounds(int* x, int* y)
@@ -337,6 +362,8 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
         {
             p->c = ' ';
             p->attr = currentAttr;
+            p->fg = currentFg;
+            p->bg = currentBg;
             p++;
         }
     }

@@ -94,6 +94,14 @@ void dpy_setattr(int andmask, int ormask)
 	attrset(cattr);
 }
 
+void dpy_setcolour(int fg, int bg)
+{
+}
+
+void dpy_definecolour(int id, float r, float g, float b)
+{
+}
+
 void dpy_writechar(int x, int y, uni_t c)
 {
 	char buffer[8];

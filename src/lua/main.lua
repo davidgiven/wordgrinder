@@ -146,6 +146,7 @@ function WordProcessor(filename)
     end
 
     wg.initscreen()
+	FireEvent(Event.ScreenInitialised)
     ResizeScreen()
     RedrawScreen()
 

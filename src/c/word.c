@@ -481,24 +481,17 @@ void word_init(void)
 		{ NULL,                        NULL }
 	};
 
+	const static luaL_Constant consts[] =
+	{
+		{ "ITALIC",						DPY_ITALIC },
+		{ "UNDERLINE",					DPY_UNDERLINE },
+		{ "REVERSE",					DPY_REVERSE },
+		{ "BOLD",						DPY_BOLD },
+		{ "BRIGHT",						DPY_BRIGHT },
+		{ "DIM",						DPY_DIM },
+	};
+
 	lua_getglobal(L, "wg");
 	luaL_setfuncs(L, funcs, 0);
-
-	lua_pushnumber(L, DPY_ITALIC);
-	lua_setfield(L, -2, "ITALIC");
-
-	lua_pushnumber(L, DPY_UNDERLINE);
-	lua_setfield(L, -2, "UNDERLINE");
-
-	lua_pushnumber(L, DPY_REVERSE);
-	lua_setfield(L, -2, "REVERSE");
-
-	lua_pushnumber(L, DPY_BOLD);
-	lua_setfield(L, -2, "BOLD");
-
-	lua_pushnumber(L, DPY_BRIGHT);
-	lua_setfield(L, -2, "BRIGHT");
-
-	lua_pushnumber(L, DPY_DIM);
-	lua_setfield(L, -2, "DIM");
+	luaL_setconstants(L, consts, sizeof(consts)/sizeof(*consts));
 }

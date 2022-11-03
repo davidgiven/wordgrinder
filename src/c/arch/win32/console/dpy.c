@@ -152,6 +152,14 @@ void dpy_setattr(int andmask, int ormask)
 	defaultChar.Attributes = (bg<<4) | fg;;
 }
 
+void dpy_setcolour(int fg, int bg)
+{
+}
+
+void dpy_definecolour(int id, float r, float g, float b)
+{
+}
+
 void dpy_writechar(int x, int y, uni_t c)
 {
 	if ((x < 0) || (y < 0) || (x >= screenwidth) || (y >= screenheight))

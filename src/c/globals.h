@@ -61,6 +61,14 @@ extern lua_State* L;
 
 typedef struct
 {
+	const char* name;
+	int value;
+} luaL_Constant;
+
+extern void luaL_setconstants(lua_State* L, const luaL_Constant* array, int len);
+
+typedef struct
+{
 	const uint8_t* data;
 	size_t size;
 	const char* name;
@@ -129,6 +137,8 @@ extern void dpy_start(void);
 extern void dpy_shutdown(void);
 
 extern void dpy_setattr(int andmask, int ormask);
+extern void dpy_setcolour(int fg, int bg);
+extern void dpy_definecolour( int id, float r, float g, float b);
 extern void dpy_writechar(int x, int y, uni_t c);
 extern void dpy_setcursor(int x, int y, bool shown);
 extern void dpy_clearscreen(void);

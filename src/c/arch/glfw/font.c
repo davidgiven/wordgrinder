@@ -6,11 +6,6 @@
 
 extern const FileDescriptor font_table[];
 
-static const float background_colour[] = {0.0f, 0.0f, 0.0f};
-static const float dim_colour[] = {0.33f, 0.33f, 0.33f};
-static const float normal_colour[] = {0.66f, 0.66f, 0.66f};
-static const float bright_colour[] = {1.0f, 1.0f, 0.0f};
-
 #define FONT_XPADDING 1
 #define FONT_YPADDING 2
 #define PAGE_WIDTH 256
@@ -265,36 +260,20 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     glEnd();
 }
 
-void printChar(uni_t c, uint8_t attrs, float x, float y)
+void printChar(uni_t c, uint8_t attrs, int fg, int bg, float x, float y)
 {
+	GLfloat* fgc = colours[fg].f;
+	GLfloat* bgc = colours[bg].f;
+
     /* Draw background. */
 
     glDisable(GL_BLEND);
-    const float* colour;
-    if (attrs & DPY_REVERSE)
-    {
-        if (attrs & DPY_BRIGHT)
-            colour = bright_colour;
-        else if (attrs & DPY_DIM)
-            colour = dim_colour;
-        else
-            colour = normal_colour;
-        glColor3fv(colour);
-
-        glRectf(x, y, x + fontWidth, y + fontHeight);
-    }
+	glColor3fv((attrs & DPY_REVERSE) ? fgc : bgc);
+	glRectf(x, y, x + fontWidth, y + fontHeight);
 
     /* Draw foreground. */
 
-    if (attrs & DPY_REVERSE)
-        colour = background_colour;
-    else if (attrs & DPY_BRIGHT)
-        colour = bright_colour;
-    else if (attrs & DPY_DIM)
-        colour = dim_colour;
-    else
-        colour = normal_colour;
-    glColor3fv(colour);
+	glColor3fv((attrs & DPY_REVERSE) ? bgc : fgc);
 
     int w = fontWidth;
     int h = fontHeight;

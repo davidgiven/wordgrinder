@@ -6,6 +6,7 @@ local int = math.floor
 local min = math.min
 local Write = wg.write
 local GotoXY = wg.gotoxy
+local ClearScreen = wg.clearscreen
 local ClearArea = wg.cleararea
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
@@ -91,6 +92,7 @@ local function redrawstatus()
 			changed_tab[DocumentSet.changed] or "",
 		}
 
+		SetStyle("statusbar")
 		SetReverse()
 		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
@@ -110,11 +112,13 @@ local function redrawstatus()
 
 		RAlignInField(0, ScreenHeight-1, ScreenWidth, s)
 		SetNormal()
+		SetStyle("normal");
 
 		y = y - 1
 	end
 
 	if (#messages > 0) then
+		SetStyle("message")
 		SetReverse()
 
 		for i = #messages, 1, -1 do
@@ -124,6 +128,7 @@ local function redrawstatus()
 		end
 
 		SetNormal()
+		SetStyle("normal");
 	end
 end
 
@@ -137,8 +142,12 @@ local function drawtopmarker(y)
 	}
 	local topmarkerwidth = GetStringWidth(topmarker[1])
 	local x = int((ScreenWidth - topmarkerwidth)/2)
+	local lm = leftpadding - 1
+	local rm = ScreenWidth - lm
 
+	SetStyle("body")
 	SetBright()
+	ClearArea(lm, y-#topmarker+1, rm, y)
 	for i = #topmarker, 1, -1 do
 		if (y >= 0) then
 			Write(x, y, topmarker[i])
@@ -158,8 +167,12 @@ local function drawbottommarker(y)
 	}
 	local bottommarkerwidth = GetStringWidth(bottommarker[1])
 	local x = int((ScreenWidth - bottommarkerwidth)/2)
+	local lm = leftpadding - 1
+	local rm = ScreenWidth - lm
 
+	SetStyle("body")
 	SetBright()
+	ClearArea(lm, y, rm, y+#bottommarker-1)
 	for i = 1, #bottommarker do
 		if (y <= ScreenHeight) then
 			Write(x, y, bottommarker[i])
@@ -170,7 +183,8 @@ local function drawbottommarker(y)
 end
 
 function RedrawScreen()
-	wg.clearscreen()
+	SetStyle("desktop")
+	ClearScreen()
 	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local cy = int(ScreenHeight / 2)
 	local margin = Document.margin
@@ -201,10 +215,16 @@ function RedrawScreen()
 	local mw = Document.mw
 	local mo = Document.mo
 
+	local lm = leftpadding - 1
+	local rm = ScreenWidth - lm
+	SetStyle("body")
+
 	-- Draw backwards.
 
 	local pn = cp - 1
-	local y = cy - cl - 1 - Document:spaceAbove(cp)
+	local sa = Document:spaceAbove(cp)
+	local y = cy - cl - 1 - sa
+	ClearArea(lm, y+1, rm, y+sa)
 
 	Document.topp = nil
 	Document.topw = nil
@@ -219,6 +239,7 @@ function RedrawScreen()
 			local x = paragraph:getIndentOfLine(ln)
 			local l = lines[ln]
 
+			ClearArea(lm, y, rm, y)
 			if not mp then
 				paragraph:renderLine(l,
 					leftpadding + margin + x, y)
@@ -240,7 +261,9 @@ function RedrawScreen()
 			end
 		end
 
-		y = y - Document:spaceAbove(pn)
+		local sa = Document:spaceAbove(pn)
+		y = y - sa
+		ClearArea(lm, y+1, rm, y+sa)
 		pn = pn - 1
 	end
 
@@ -262,6 +285,7 @@ function RedrawScreen()
 
 		for ln, l in ipairs(paragraph:wrap()) do
 			local x = paragraph:getIndentOfLine(ln)
+			ClearArea(lm, y, rm, y)
 			if not mp then
 				paragraph:renderLine(l,
 					leftpadding + margin + x, y)
@@ -286,7 +310,9 @@ function RedrawScreen()
 				break
 			end
 		end
-		y = y + Document:spaceBelow(pn)
+		local sb = Document:spaceBelow(pn)
+		y = y + sb
+		ClearArea(lm, y-sb, rm, y-1)
 		pn = pn + 1
 	end
 

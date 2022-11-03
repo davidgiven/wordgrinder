@@ -201,6 +201,7 @@ function Cmd.ConfigureGui()
 
 	wg.deinitscreen()
 	wg.initscreen()
+	FireEvent(Event.ScreenInitialised)
 	SaveGlobalSettings()
 
 	return true
