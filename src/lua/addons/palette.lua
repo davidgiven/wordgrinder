@@ -58,20 +58,6 @@ function SetStyle(name)
 	if not sp then
 		sp = styles.normal
 	end
-	SetColour(sp[1].id, sp[2].id)
+	SetColour(sp[1], sp[2])
 end
-
------------------------------------------------------------------------------
--- Programs the colours into the backend.
-
-function UpdateColours()
-	local id = 0
-	for name, c in pairs(colours) do
-		c.id = id
-		id = id + 1
-		DefineColour(c.id, c[1], c[2], c[3])
-	end
-end
-
-AddEventListener(Event.ScreenInitialised, UpdateColours)
 

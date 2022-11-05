@@ -132,13 +132,18 @@ enum
 	DPY_DIM = (1<<5),
 };
 
+typedef struct
+{
+	float r, g, b;
+}
+colour_t;
+
 extern void dpy_init(const char* argv[]);
 extern void dpy_start(void);
 extern void dpy_shutdown(void);
 
 extern void dpy_setattr(int andmask, int ormask);
-extern void dpy_setcolour(int fg, int bg);
-extern void dpy_definecolour( int id, float r, float g, float b);
+extern void dpy_setcolour(const colour_t* fg, const colour_t* bg);
 extern void dpy_writechar(int x, int y, uni_t c);
 extern void dpy_setcursor(int x, int y, bool shown);
 extern void dpy_clearscreen(void);

@@ -114,7 +114,7 @@ void loadFonts()
 
 void unloadFonts()
 {
-    for (int i=0; i<sizeof(fonts)/sizeof(*fonts); i++)
+    for (int i = 0; i < sizeof(fonts) / sizeof(*fonts); i++)
     {
         if (fonts[i])
         {
@@ -260,26 +260,26 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     glEnd();
 }
 
-void printChar(uni_t c, uint8_t attrs, int fg, int bg, float x, float y)
+void printChar(const cell_t* cell, float x, float y)
 {
-	GLfloat* fgc = colours[fg].f;
-	GLfloat* bgc = colours[bg].f;
+    GLfloat* fg = (GLfloat*)&cell->fg;
+    GLfloat* bg = (GLfloat*)&cell->bg;
 
     /* Draw background. */
 
     glDisable(GL_BLEND);
-	glColor3fv((attrs & DPY_REVERSE) ? fgc : bgc);
-	glRectf(x, y, x + fontWidth, y + fontHeight);
+    glColor3fv((cell->attr & DPY_REVERSE) ? fg : bg);
+    glRectf(x, y, x + fontWidth, y + fontHeight);
 
     /* Draw foreground. */
 
-	glColor3fv((attrs & DPY_REVERSE) ? bgc : fgc);
+    glColor3fv((cell->attr & DPY_REVERSE) ? bg : fg);
 
     int w = fontWidth;
     int h = fontHeight;
     int w2 = fontWidth / 2;
     int h2 = fontHeight / 2;
-    switch (c)
+    switch (cell->c)
     {
         case 32:
         case 160: /* non-breaking space */
@@ -371,10 +371,10 @@ void printChar(uni_t c, uint8_t attrs, int fg, int bg, float x, float y)
             break;
 
         default:
-            renderTtfChar(c, attrs, x + fontXOffset, y + fontAscent);
+            renderTtfChar(cell->c, cell->attr, x + fontXOffset, y + fontAscent);
     }
 
-    if (attrs & DPY_UNDERLINE)
+    if (cell->attr & DPY_UNDERLINE)
     {
         glDisable(GL_BLEND);
         glBegin(GL_LINES);

@@ -12,8 +12,8 @@
 #include "stb_ds.h"
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
-#define COLOUR_ID_BIAS 1
-#define PAIR_ID_BIAS 1
+#define FIRST_COLOUR_ID 1
+#define FIRST_PAIR_ID 1
 
 #if defined WA_ITALIC
 static bool use_italics = false;
@@ -24,292 +24,346 @@ static short currentPair = 0;
 
 typedef struct
 {
-	uint8_t fg;
-	uint8_t bg;
-}
-pair_t;
+    uint8_t fg;
+    uint8_t bg;
+} pair_t;
 
+static colour_t* colours = NULL;
 static pair_t* colourPairs = NULL;
 
-void dpy_init(const char* argv[])
-{
-}
+void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
 {
-	arrfree(colourPairs);
+    arrfree(colours);
+    arrfree(colourPairs);
 
-	initscr();
+    initscr();
 
-	use_colours = has_colors() && can_change_color();
-	if (use_colours)
-		start_color();
+    use_colours = has_colors() && can_change_color();
+    if (use_colours)
+        start_color();
 
-	raw();
-	noecho();
-	meta(NULL, TRUE);
-	nonl();
-	idlok(stdscr, TRUE);
-	idcok(stdscr, TRUE);
-	scrollok(stdscr, FALSE);
-	intrflush(stdscr, FALSE);
-	//notimeout(stdscr, TRUE);
-	keypad(stdscr, TRUE);
+    raw();
+    noecho();
+    meta(NULL, TRUE);
+    nonl();
+    idlok(stdscr, TRUE);
+    idcok(stdscr, TRUE);
+    scrollok(stdscr, FALSE);
+    intrflush(stdscr, FALSE);
+    // notimeout(stdscr, TRUE);
+    keypad(stdscr, TRUE);
 
-	#if defined A_ITALIC
-		use_italics = !!tigetstr("sitm");
-	#endif
+#if defined A_ITALIC
+    use_italics = !!tigetstr("sitm");
+#endif
 }
 
 void dpy_shutdown(void)
 {
-	endwin();
+    endwin();
 }
 
 void dpy_clearscreen(void)
 {
-	erase();
+    erase();
 }
 
 void dpy_getscreensize(int* x, int* y)
 {
-	getmaxyx(stdscr, *y, *x);
+    getmaxyx(stdscr, *y, *x);
 }
 
 void dpy_sync(void)
 {
-	refresh();
+    refresh();
 }
 
 void dpy_setcursor(int x, int y, bool shown)
 {
-	move(y, x);
+    move(y, x);
 }
 
 void dpy_setattr(int andmask, int ormask)
 {
-	static int attr = 0;
-	attr &= andmask;
-	attr |= ormask;
+    static int attr = 0;
+    attr &= andmask;
+    attr |= ormask;
 
-	attr_t cattr = 0;
-	if (attr & DPY_ITALIC)
-	{
-		#if defined WA_ITALIC
-			if (use_italics)
-				cattr |= WA_ITALIC;
-			else
-				cattr |= WA_BOLD;
-		#else
-			cattr |= WA_BOLD;
-		#endif
-	}
-	if (attr & DPY_BOLD)
-		cattr |= WA_BOLD;
-	if (!use_colours && (attr & DPY_BRIGHT))
-		cattr |= WA_BOLD;
-	if (attr & DPY_DIM)
-		cattr |= WA_DIM;
-	if (attr & DPY_UNDERLINE)
-		cattr |= WA_UNDERLINE;
-	if (attr & DPY_REVERSE)
-		cattr |= WA_REVERSE;
+    attr_t cattr = 0;
+    if (attr & DPY_ITALIC)
+    {
+#if defined WA_ITALIC
+        if (use_italics)
+            cattr |= WA_ITALIC;
+        else
+            cattr |= WA_BOLD;
+#else
+        cattr |= WA_BOLD;
+#endif
+    }
+    if (attr & DPY_BOLD)
+        cattr |= WA_BOLD;
+    if (!use_colours && (attr & DPY_BRIGHT))
+        cattr |= WA_BOLD;
+    if (attr & DPY_DIM)
+        cattr |= WA_DIM;
+    if (attr & DPY_UNDERLINE)
+        cattr |= WA_UNDERLINE;
+    if (attr & DPY_REVERSE)
+        cattr |= WA_REVERSE;
 
-	if (use_colours)
-		attr_set(cattr, currentPair, NULL);
-	else
-		attr_set(cattr, 0, NULL);
+    if (use_colours)
+        attr_set(cattr, currentPair, NULL);
+    else
+        attr_set(cattr, 0, NULL);
 }
 
-void dpy_setcolour(int fg, int bg)
+static int lookup_colour(const colour_t* colour)
 {
-	if (!use_colours)
-		return;
+    for (int i = 0; i < arrlen(colours); i++)
+    {
+        if ((colours[i].r == colour->r) && (colours[i].g == colour->g) &&
+            (colours[i].b == colour->b))
+            return i + FIRST_COLOUR_ID;
+    }
 
-	for (int i=0; i<arrlen(colourPairs); i++)
-	{
-		pair_t* p = &colourPairs[i];
-		if ((p->fg == fg) && (p->bg == bg))
-		{
-			currentPair = PAIR_ID_BIAS + i;
-			return;
-		}
-	}
-
-	currentPair = arrlen(colourPairs) + PAIR_ID_BIAS;
-	pair_t pair = { fg, bg };
-	arrpush(colourPairs, pair);
-
-	init_pair(currentPair, COLOUR_ID_BIAS + fg, COLOUR_ID_BIAS + bg);
+    int id = arrlen(colours) + FIRST_COLOUR_ID;
+    arrpush(colours, *colour);
+    init_color(id, colour->r * 1000.0, colour->g * 1000.0, colour->b * 1000.0);
+    return id;
 }
 
-void dpy_definecolour(int id, float r, float g, float b)
+void dpy_setcolour(const colour_t* fg, const colour_t* bg)
 {
-	if (use_colours)
-		init_color(COLOUR_ID_BIAS + id, r * 1000.0, g * 1000.0, b * 1000.0);
+    if (!use_colours)
+        return;
+
+    int fgc = lookup_colour(fg);
+    int bgc = lookup_colour(bg);
+
+    for (int i = 0; i < arrlen(colourPairs); i++)
+    {
+        pair_t* p = &colourPairs[i];
+        if ((p->fg == fgc) && (p->bg == bgc))
+        {
+            currentPair = FIRST_PAIR_ID + i;
+            return;
+        }
+    }
+
+    currentPair = arrlen(colourPairs) + FIRST_PAIR_ID;
+    pair_t pair = {fgc, bgc};
+    arrpush(colourPairs, pair);
+
+    init_pair(currentPair, fgc, bgc);
 }
 
 void dpy_writechar(int x, int y, uni_t c)
 {
-	char buffer[8];
-	char* p = buffer;
-	writeu8(&p, c);
-	*p = '\0';
+    char buffer[8];
+    char* p = buffer;
+    writeu8(&p, c);
+    *p = '\0';
 
-	mvaddstr(y, x, buffer);
+    mvaddstr(y, x, buffer);
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
-	char cc = ' ';
+    char cc = ' ';
 
-	for (int y = y1; y <= y2; y++)
-		for (int x = x1; x <= x2; x++)
-			mvaddnstr(y, x, &cc, 1);
+    for (int y = y1; y <= y2; y++)
+        for (int x = x1; x <= x2; x++)
+            mvaddnstr(y, x, &cc, 1);
 }
 
 uni_t dpy_getchar(double timeout)
 {
-	struct timeval then;
-	gettimeofday(&then, NULL);
-	uint64_t thenms = (then.tv_usec/1000) + ((uint64_t) then.tv_sec*1000);
+    struct timeval then;
+    gettimeofday(&then, NULL);
+    uint64_t thenms = (then.tv_usec / 1000) + ((uint64_t)then.tv_sec * 1000);
 
-	for (;;)
-	{
+    for (;;)
+    {
 
-		if (timeout != -1)
-		{
-			struct timeval now;
-			gettimeofday(&now, NULL);
-			uint64_t nowms = (now.tv_usec/1000) + ((uint64_t) now.tv_sec*1000);
+        if (timeout != -1)
+        {
+            struct timeval now;
+            gettimeofday(&now, NULL);
+            uint64_t nowms =
+                (now.tv_usec / 1000) + ((uint64_t)now.tv_sec * 1000);
 
-			int delay = ((uint64_t) (timeout*1000)) + nowms - thenms;
-			if (delay <= 0)
-				return -KEY_TIMEOUT;
+            int delay = ((uint64_t)(timeout * 1000)) + nowms - thenms;
+            if (delay <= 0)
+                return -KEY_TIMEOUT;
 
-			timeout(delay);
-		}
-		else
-			timeout(-1);
+            timeout(delay);
+        }
+        else
+            timeout(-1);
 
-		wint_t c;
-		int r = get_wch(&c);
+        wint_t c;
+        int r = get_wch(&c);
 
-		if (r == ERR) /* timeout */
-			return -KEY_TIMEOUT;
+        if (r == ERR) /* timeout */
+            return -KEY_TIMEOUT;
 
-		if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
-			return -c;
+        if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
+            return -c;
 
-		if (emu_wcwidth(c) > 0)
-			return c;
-	}
+        if (emu_wcwidth(c) > 0)
+            return c;
+    }
 }
 
 static const char* ncurses_prefix_to_name(const char* s)
 {
-	if (strcmp(s, "KDC") == 0)  return "DELETE";
-	if (strcmp(s, "kDN") == 0)  return "DOWN";
-	if (strcmp(s, "kEND") == 0) return "END";
-	if (strcmp(s, "kHOM") == 0) return "HOME";
-	if (strcmp(s, "kIC") == 0)  return "INSERT";
-	if (strcmp(s, "kLFT") == 0) return "LEFT";
-	if (strcmp(s, "kNXT") == 0) return "PGDN";
-	if (strcmp(s, "kPRV") == 0) return "PGUP";
-	if (strcmp(s, "kRIT") == 0) return "RIGHT";
-	if (strcmp(s, "kUP") == 0)  return "UP";
+    if (strcmp(s, "KDC") == 0)
+        return "DELETE";
+    if (strcmp(s, "kDN") == 0)
+        return "DOWN";
+    if (strcmp(s, "kEND") == 0)
+        return "END";
+    if (strcmp(s, "kHOM") == 0)
+        return "HOME";
+    if (strcmp(s, "kIC") == 0)
+        return "INSERT";
+    if (strcmp(s, "kLFT") == 0)
+        return "LEFT";
+    if (strcmp(s, "kNXT") == 0)
+        return "PGDN";
+    if (strcmp(s, "kPRV") == 0)
+        return "PGUP";
+    if (strcmp(s, "kRIT") == 0)
+        return "RIGHT";
+    if (strcmp(s, "kUP") == 0)
+        return "UP";
 
-	return s;
+    return s;
 }
 
 static const char* ncurses_suffix_to_name(int suffix)
 {
-	switch (suffix)
-	{
-		case 3: return "A";
-		case 4: return "SA";
-		case 5: return "^";
-		case 6: return "S^";
-		case 7: return "A^";
-	}
+    switch (suffix)
+    {
+        case 3:
+            return "A";
+        case 4:
+            return "SA";
+        case 5:
+            return "^";
+        case 6:
+            return "S^";
+        case 7:
+            return "A^";
+    }
 
-	return NULL;
+    return NULL;
 }
 
 const char* dpy_getkeyname(uni_t k)
 {
-	k = -k;
+    k = -k;
 
-	switch (k)
-	{
-		case 127: /* Some misconfigured terminals produce this */
-		case KEY_BACKSPACE:
-			return "KEY_BACKSPACE";
+    switch (k)
+    {
+        case 127: /* Some misconfigured terminals produce this */
+        case KEY_BACKSPACE:
+            return "KEY_BACKSPACE";
 
-		case KEY_TIMEOUT: return "KEY_TIMEOUT";
-		case KEY_DOWN: return "KEY_DOWN";
-		case KEY_UP: return "KEY_UP";
-		case KEY_LEFT: return "KEY_LEFT";
-		case KEY_RIGHT: return "KEY_RIGHT";
-		case KEY_HOME: return "KEY_HOME";
-		case KEY_END: return "KEY_END";
-		case KEY_DC: return "KEY_DELETE";
-		case KEY_IC: return "KEY_INSERT";
-		case KEY_NPAGE: return "KEY_PGDN";
-		case KEY_PPAGE: return "KEY_PGUP";
-		case KEY_STAB: return "KEY_STAB";
-		case KEY_CTAB: return "KEY_^TAB";
-		case KEY_CATAB: return "KEY_^ATAB";
-		case KEY_ENTER: return "KEY_RETURN";
-		case KEY_SIC: return "KEY_SINSERT";
-		case KEY_SDC: return "KEY_SDELETE";
-		case KEY_SHOME: return "KEY_SHOME";
-		case KEY_SEND: return "KEY_SEND";
-		case KEY_SR: return "KEY_SUP";
-		case KEY_SF: return "KEY_SDOWN";
-		case KEY_SLEFT: return "KEY_SLEFT";
-		case KEY_SRIGHT: return "KEY_SRIGHT";
-		case KEY_MOUSE: return "KEY_MOUSE";
-		case KEY_RESIZE: return "KEY_RESIZE";
-		case 13: return "KEY_RETURN";
-		case 27: return "KEY_ESCAPE";
-	}
+        case KEY_TIMEOUT:
+            return "KEY_TIMEOUT";
+        case KEY_DOWN:
+            return "KEY_DOWN";
+        case KEY_UP:
+            return "KEY_UP";
+        case KEY_LEFT:
+            return "KEY_LEFT";
+        case KEY_RIGHT:
+            return "KEY_RIGHT";
+        case KEY_HOME:
+            return "KEY_HOME";
+        case KEY_END:
+            return "KEY_END";
+        case KEY_DC:
+            return "KEY_DELETE";
+        case KEY_IC:
+            return "KEY_INSERT";
+        case KEY_NPAGE:
+            return "KEY_PGDN";
+        case KEY_PPAGE:
+            return "KEY_PGUP";
+        case KEY_STAB:
+            return "KEY_STAB";
+        case KEY_CTAB:
+            return "KEY_^TAB";
+        case KEY_CATAB:
+            return "KEY_^ATAB";
+        case KEY_ENTER:
+            return "KEY_RETURN";
+        case KEY_SIC:
+            return "KEY_SINSERT";
+        case KEY_SDC:
+            return "KEY_SDELETE";
+        case KEY_SHOME:
+            return "KEY_SHOME";
+        case KEY_SEND:
+            return "KEY_SEND";
+        case KEY_SR:
+            return "KEY_SUP";
+        case KEY_SF:
+            return "KEY_SDOWN";
+        case KEY_SLEFT:
+            return "KEY_SLEFT";
+        case KEY_SRIGHT:
+            return "KEY_SRIGHT";
+        case KEY_MOUSE:
+            return "KEY_MOUSE";
+        case KEY_RESIZE:
+            return "KEY_RESIZE";
+        case 13:
+            return "KEY_RETURN";
+        case 27:
+            return "KEY_ESCAPE";
+    }
 
-	static char buffer[32];
-	if (k < 32)
-	{
-		sprintf(buffer, "KEY_^%c", k+'A'-1);
-		return buffer;
-	}
+    static char buffer[32];
+    if (k < 32)
+    {
+        sprintf(buffer, "KEY_^%c", k + 'A' - 1);
+        return buffer;
+    }
 
-	if ((k >= KEY_F0) && (k < (KEY_F0+64)))
-	{
-		sprintf(buffer, "KEY_F%d", k - KEY_F0);
-		return buffer;
-	}
+    if ((k >= KEY_F0) && (k < (KEY_F0 + 64)))
+    {
+        sprintf(buffer, "KEY_F%d", k - KEY_F0);
+        return buffer;
+    }
 
-	const char* name = keyname(k);
-	if (name)
-	{
-		char buf[strlen(name)+1];
-		strcpy(buf, name);
+    const char* name = keyname(k);
+    if (name)
+    {
+        char buf[strlen(name) + 1];
+        strcpy(buf, name);
 
-		int prefix = strcspn(buf, "0123456789");
-		int suffix = buf[prefix] - '0';
-		buf[prefix] = '\0';
+        int prefix = strcspn(buf, "0123456789");
+        int suffix = buf[prefix] - '0';
+        buf[prefix] = '\0';
 
-		if ((suffix >= 0) && (suffix <= 9))
-		{
-			const char* ps = ncurses_prefix_to_name(buf);
-			const char* ss = ncurses_suffix_to_name(suffix);
-			if (ss)
-			{
-				sprintf(buffer, "KEY_%s%s", ss, ps);
-				return buffer;
-			}
-		}
-	}
+        if ((suffix >= 0) && (suffix <= 9))
+        {
+            const char* ps = ncurses_prefix_to_name(buf);
+            const char* ss = ncurses_suffix_to_name(suffix);
+            if (ss)
+            {
+                sprintf(buffer, "KEY_%s%s", ss, ps);
+                return buffer;
+            }
+        }
+    }
 
-	sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");
-	return buffer;
+    sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");
+    return buffer;
 }

@@ -84,19 +84,29 @@ static int setitalic_cb(lua_State* L)
 	return 0;
 }
 
-static int setcolour_cb(lua_State* L)
+static float getnumber(lua_State* L, int table, int index)
 {
-	dpy_setcolour(forceinteger(L, 1), forceinteger(L, 2));
-	return 0;
+	lua_rawgeti(L, table, index);
+	float value = luaL_checknumber(L, -1);
+	lua_pop(L, 1);
+	return value;
 }
 
-static int definecolour_cb(lua_State* L)
+static int setcolour_cb(lua_State* L)
 {
-	dpy_definecolour(
-		forceinteger(L, 1),
-		luaL_checknumber(L, 2),
-		luaL_checknumber(L, 3),
-		luaL_checknumber(L, 4));
+	colour_t fg = {
+		getnumber(L, 1, 1),
+		getnumber(L, 1, 2),
+		getnumber(L, 1, 3),
+	};
+
+	colour_t bg = {
+		getnumber(L, 2, 1),
+		getnumber(L, 2, 2),
+		getnumber(L, 2, 3),
+	};
+
+	dpy_setcolour(&fg, &bg);
 	return 0;
 }
 
@@ -292,7 +302,6 @@ void screen_init(const char* argv[])
 		{ "setitalic",                 setitalic_cb },
 		{ "setnormal",                 setnormal_cb },
 		{ "setcolour",                 setcolour_cb },
-		{ "definecolour",              definecolour_cb },
 		{ "write",                     write_cb },
 		{ "cleararea",                 cleararea_cb },
 		{ "gotoxy",                    gotoxy_cb },

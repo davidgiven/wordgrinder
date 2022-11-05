@@ -10,23 +10,13 @@
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
 
-struct cell
-{
-    uni_t c;
-    uint8_t attr;
-    uint8_t fg;
-    uint8_t bg;
-};
-
-colour_t colours[];
-
 static GLFWwindow* window;
 static int currentAttr;
-static int currentFg;
-static int currentBg;
+static colour_t currentFg;
+static colour_t currentBg;
 static int screenWidth;
 static int screenHeight;
-static struct cell* screen;
+static cell_t* screen;
 static int cursorx;
 static int cursory;
 static bool cursorShown;
@@ -46,7 +36,7 @@ static void queueRedraw()
         pendingRedraw = true;
     }
 }
-        
+
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -99,7 +89,7 @@ static void key_cb(
                 fullScreen = true;
             }
 
-	    return;
+            return;
         }
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
@@ -187,11 +177,11 @@ void dpy_start(void)
     glfwSetWindowCloseCallback(window, close_cb);
 
     extern uint8_t icon_data[];
-    GLFWimage image; 
+    GLFWimage image;
     image.width = 128;
     image.height = 128;
     image.pixels = icon_data;
-    glfwSetWindowIcon(window, 1, &image); 
+    glfwSetWindowIcon(window, 1, &image);
 
     loadFonts();
 }
@@ -253,19 +243,19 @@ void dpy_sync(void)
         free(screen);
         screenWidth = sw;
         screenHeight = sh;
-        screen = calloc(screenWidth * screenHeight, sizeof(struct cell));
+        screen = calloc(screenWidth * screenHeight, sizeof(cell_t));
         arrins(keyboardQueue, 0, -VK_RESIZE);
     }
     else
     {
-        struct cell* p = &screen[0];
+        const cell_t* p = &screen[0];
         for (int y = 0; y < screenHeight; y++)
         {
             float sy = y * fontHeight + padding;
             for (int x = 0; x < screenWidth; x++)
             {
                 float sx = x * fontWidth + padding;
-                printChar(p->c, p->attr, p->fg, p->bg, sx, sy);
+                printChar(p, sx, sy);
                 p++;
             }
         }
@@ -302,21 +292,10 @@ void dpy_setattr(int andmask, int ormask)
     currentAttr |= ormask;
 }
 
-void dpy_setcolour(int fg, int bg)
+void dpy_setcolour(const colour_t* fg, const colour_t* bg)
 {
-    currentFg = fg;
-    currentBg = bg;
-}
-
-void dpy_definecolour(int id, float r, float g, float b)
-{
-    if ((id < 0) || (id >= sizeof(colours)/sizeof(*colours)))
-        return;
-
-    colour_t* s = &colours[id];
-    s->f[0] = r;
-    s->f[1] = g;
-    s->f[2] = b;
+    currentFg = *fg;
+    currentBg = *bg;
 }
 
 void dpy_writechar(int x, int y, uni_t c)
@@ -328,7 +307,7 @@ void dpy_writechar(int x, int y, uni_t c)
     if ((y < 0) || (y >= screenHeight))
         return;
 
-    struct cell* p = &screen[x + y * screenWidth];
+    cell_t* p = &screen[x + y * screenWidth];
     p->c = c;
     p->attr = currentAttr;
     p->fg = currentFg;
@@ -340,11 +319,11 @@ static void clipBounds(int* x, int* y)
     if (*x < 0)
         *x = 0;
     if (*x >= screenWidth)
-        *x = screenWidth-1;
+        *x = screenWidth - 1;
     if (*y < 0)
         *y = 0;
     if (*y >= screenHeight)
-        *y = screenHeight-1;
+        *y = screenHeight - 1;
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
@@ -357,7 +336,7 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
 
     for (int y = y1; y <= y2; y++)
     {
-        struct cell* p = &screen[y * screenWidth + x1];
+        cell_t* p = &screen[y * screenWidth + x1];
         for (int x = x1; x <= x2; x++)
         {
             p->c = ' ';
