@@ -9,12 +9,27 @@
 #include <wctype.h>
 #include <sys/time.h>
 #include <time.h>
+#include "stb_ds.h"
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
+#define COLOUR_ID_BIAS 1
+#define PAIR_ID_BIAS 1
 
-#if defined A_ITALIC
-static bool has_italics = false;
+#if defined WA_ITALIC
+static bool use_italics = false;
 #endif
+
+static bool use_colours = false;
+static short currentPair = 0;
+
+typedef struct
+{
+	uint8_t fg;
+	uint8_t bg;
+}
+pair_t;
+
+static pair_t* colourPairs = NULL;
 
 void dpy_init(const char* argv[])
 {
@@ -22,7 +37,14 @@ void dpy_init(const char* argv[])
 
 void dpy_start(void)
 {
+	arrfree(colourPairs);
+
 	initscr();
+
+	use_colours = has_colors() && can_change_color();
+	if (use_colours)
+		start_color();
+
 	raw();
 	noecho();
 	meta(NULL, TRUE);
@@ -35,7 +57,7 @@ void dpy_start(void)
 	keypad(stdscr, TRUE);
 
 	#if defined A_ITALIC
-		has_italics = !!tigetstr("sitm");
+		use_italics = !!tigetstr("sitm");
 	#endif
 }
 
@@ -70,36 +92,61 @@ void dpy_setattr(int andmask, int ormask)
 	attr &= andmask;
 	attr |= ormask;
 
-	int cattr = 0;
+	attr_t cattr = 0;
 	if (attr & DPY_ITALIC)
 	{
-		#if defined A_ITALIC
-			if (has_italics)
-				cattr |= A_ITALIC;
+		#if defined WA_ITALIC
+			if (use_italics)
+				cattr |= WA_ITALIC;
 			else
-				cattr |= A_BOLD;
+				cattr |= WA_BOLD;
 		#else
-			cattr |= A_BOLD;
+			cattr |= WA_BOLD;
 		#endif
 	}
-	if (attr & (DPY_BOLD|DPY_BRIGHT))
-		cattr |= A_BOLD;
+	if (attr & DPY_BOLD)
+		cattr |= WA_BOLD;
+	if (!use_colours && (attr & DPY_BRIGHT))
+		cattr |= WA_BOLD;
 	if (attr & DPY_DIM)
-		cattr |= A_DIM;
+		cattr |= WA_DIM;
 	if (attr & DPY_UNDERLINE)
-		cattr |= A_UNDERLINE;
+		cattr |= WA_UNDERLINE;
 	if (attr & DPY_REVERSE)
-		cattr |= A_REVERSE;
+		cattr |= WA_REVERSE;
 
-	attrset(cattr);
+	if (use_colours)
+		attr_set(cattr, currentPair, NULL);
+	else
+		attr_set(cattr, 0, NULL);
 }
 
 void dpy_setcolour(int fg, int bg)
 {
+	if (!use_colours)
+		return;
+
+	for (int i=0; i<arrlen(colourPairs); i++)
+	{
+		pair_t* p = &colourPairs[i];
+		if ((p->fg == fg) && (p->bg == bg))
+		{
+			currentPair = PAIR_ID_BIAS + i;
+			return;
+		}
+	}
+
+	currentPair = arrlen(colourPairs) + PAIR_ID_BIAS;
+	pair_t pair = { fg, bg };
+	arrpush(colourPairs, pair);
+
+	init_pair(currentPair, COLOUR_ID_BIAS + fg, COLOUR_ID_BIAS + bg);
 }
 
 void dpy_definecolour(int id, float r, float g, float b)
 {
+	if (use_colours)
+		init_color(COLOUR_ID_BIAS + id, r * 1000.0, g * 1000.0, b * 1000.0);
 }
 
 void dpy_writechar(int x, int y, uni_t c)

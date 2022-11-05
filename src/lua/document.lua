@@ -384,6 +384,7 @@ ParagraphClass =
 		local cstyle = stylemarkup[self.style] or 0
 		local ostyle = 0
 		local xs = self.xs
+
 		for _, wn in ipairs(line) do
 			local w = self[wn]
 

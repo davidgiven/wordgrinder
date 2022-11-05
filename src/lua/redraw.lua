@@ -217,14 +217,18 @@ function RedrawScreen()
 
 	local lm = leftpadding - 1
 	local rm = ScreenWidth - lm
-	SetStyle("body")
 
 	-- Draw backwards.
 
 	local pn = cp - 1
 	local sa = Document:spaceAbove(cp)
 	local y = cy - cl - 1 - sa
-	ClearArea(lm, y+1, rm, y+sa)
+	local paragraph = Document[pn]
+	if paragraph then
+		SetStyle(paragraph.style)
+		SetNormal()
+		ClearArea(lm, y+1, rm, y+sa)
+	end
 
 	Document.topp = nil
 	Document.topw = nil
@@ -235,10 +239,12 @@ function RedrawScreen()
 		end
 
 		local lines = paragraph:wrap()
+		SetStyle(paragraph.style)
 		for ln = #lines, 1, -1 do
 			local x = paragraph:getIndentOfLine(ln)
 			local l = lines[ln]
 
+			SetNormal()
 			ClearArea(lm, y, rm, y)
 			if not mp then
 				paragraph:renderLine(l,
@@ -263,7 +269,8 @@ function RedrawScreen()
 
 		local sa = Document:spaceAbove(pn)
 		y = y - sa
-		ClearArea(lm, y+1, rm, y+sa)
+		SetNormal()
+		ClearArea(lm, y, rm, y+sa)
 		pn = pn - 1
 	end
 
@@ -283,8 +290,10 @@ function RedrawScreen()
 
 		drawmargin(y, pn, paragraph)
 
+		SetStyle(paragraph.style)
 		for ln, l in ipairs(paragraph:wrap()) do
 			local x = paragraph:getIndentOfLine(ln)
+			SetNormal()
 			ClearArea(lm, y, rm, y)
 			if not mp then
 				paragraph:renderLine(l,
@@ -312,6 +321,7 @@ function RedrawScreen()
 		end
 		local sb = Document:spaceBelow(pn)
 		y = y + sb
+		SetNormal()
 		ClearArea(lm, y-sb, rm, y-1)
 		pn = pn + 1
 	end

@@ -15,14 +15,28 @@ local colours = {
 	paper_bg     = {0.200, 0.200, 0.200},
 	statusbar_fg = {0.140, 0.220, 0.400},
 	statusbar_bg = {0.800, 0.700, 0.200},
+	black        = {0.000, 0.000, 0.000},
+	red          = {1.000, 0.000, 0.000},
 }
 
 local styles = {
 	normal =    { colours.fg,           colours.bg },
 	desktop =   { colours.fg,           colours.desk_bg },
-	body =      { colours.fg,           colours.paper_bg },
+	P =         { colours.fg,           colours.paper_bg },
+	H1 =        { colours.fg,           colours.paper_bg },
+	H2 =        { colours.fg,           colours.paper_bg },
+	H3 =        { colours.fg,           colours.paper_bg },
+	H4 =        { colours.fg,           colours.paper_bg },
+	Q =         { colours.fg,           colours.paper_bg },
+	LB =        { colours.fg,           colours.paper_bg },
+	LN =        { colours.fg,           colours.paper_bg },
+	L =         { colours.fg,           colours.paper_bg },
+	V =         { colours.fg,           colours.paper_bg },
+	PRE =       { colours.fg,           colours.paper_bg },
+	RAW =       { colours.fg,           colours.paper_bg },
 	statusbar = { colours.statusbar_fg, colours.statusbar_bg }, -- reversed
-	message =   { colours.fg,           colours.bg },
+	message =   { colours.statusbar_bg, colours.statusbar_fg }, -- reversed
+	debug =     { colours.black,        colours.red },
 }
 
 -----------------------------------------------------------------------------
