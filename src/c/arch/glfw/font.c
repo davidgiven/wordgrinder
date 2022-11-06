@@ -365,9 +365,88 @@ void printChar(const cell_t* cell, float x, float y)
 
         case 0x2594: /* ▔ */
             glBegin(GL_LINES);
-            glVertex2i(x, y + 2);
-            glVertex2i(x + w, y + 2);
+            glVertex2i(x, y + 1);
+            glVertex2i(x + w, y + 1);
             glEnd();
+            break;
+
+		case 0x2581: /* ▁ */
+			glBegin(GL_LINES);
+			glVertex2i(x, y + h - 3);
+			glVertex2i(x + w, y + h - 3);
+			glEnd();
+			break;
+
+		case 0x25bc: /* ▼ */
+			glBegin(GL_POLYGON);
+			glVertex2i(x, y+h/2);
+			glVertex2i(x + w/2, y+h-1);
+			glVertex2i(x+w, y+h/2);
+			glEnd();
+			break;
+
+		case 0x25be: /* ▾ */
+			glBegin(GL_POLYGON);
+			glVertex2i(x + w*1/3, y+h*2/3);
+			glVertex2i(x + w/2, y+h-1);
+			glVertex2i(x+w*2/3, y+h*2/3);
+			glEnd();
+			break;
+
+		case 0x25e4: /* ◤ */
+			glBegin(GL_POLYGON);
+			glVertex2i(x, y);
+			glVertex2i(x, y+h-1);
+			glVertex2i(x+w, y);
+			glEnd();
+			break;
+
+		case 0x25e5: /* ◥ */
+			glBegin(GL_POLYGON);
+			glVertex2i(x, y);
+			glVertex2i(x+w, y+h-1);
+			glVertex2i(x+w, y);
+			glEnd();
+			break;
+
+        case 0x25b3: /* △ */
+			glBegin(GL_LINE_LOOP);
+			glVertex2i(x, y+h/2);
+			glVertex2i(x + w/2, y);
+			glVertex2i(x+w, y+h/2);
+			glEnd();
+			break;
+
+		case 0x25ff: /* ◿ */
+			glBegin(GL_LINE_LOOP);
+			glVertex2i(x, y+h-1);
+			glVertex2i(x+w, y);
+			glVertex2i(x+w, y+h-1);
+			glEnd();
+			break;
+
+		case 0x25fa: /* ◺ */
+			glBegin(GL_LINE_LOOP);
+			glVertex2i(x, y);
+			glVertex2i(x, y+h-1);
+			glVertex2i(x+w, y+h-1);
+			glEnd();
+			break;
+
+        case 0x2080: /* ₀ */
+        case 0x2081: /* ₁ */
+        case 0x2082: /* ₂ */
+        case 0x2083: /* ₃ */
+        case 0x2084: /* ₄ */
+        case 0x2085: /* ₅ */
+        case 0x2086: /* ₆ */
+        case 0x2087: /* ₇ */
+        case 0x2088: /* ₈ */
+        case 0x2089: /* ₉ */
+            renderTtfChar(cell->c - 0x2080 + '0',
+                cell->attr,
+                x + fontXOffset,
+                y + fontAscent);
             break;
 
         default:
