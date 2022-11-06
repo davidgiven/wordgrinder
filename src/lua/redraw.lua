@@ -148,7 +148,7 @@ local function redrawstatus()
 
 	if (#messages > 0) then
 		-- Reversed due to SetReverse later.
-		SetColour(Palette.StatusbarFG, Palette.StatusbarBG)
+		SetColour(Palette.MessageFG, Palette.MessageBG)
 		SetReverse()
 
 		for i = #messages, 1, -1 do
