@@ -370,68 +370,80 @@ void printChar(const cell_t* cell, float x, float y)
             glEnd();
             break;
 
-		case 0x2581: /* ▁ */
-			glBegin(GL_LINES);
-			glVertex2i(x, y + h - 3);
-			glVertex2i(x + w, y + h - 3);
-			glEnd();
-			break;
+        case 0x2581: /* ▁ */
+            glBegin(GL_LINES);
+            glVertex2i(x, y + h - 3);
+            glVertex2i(x + w, y + h - 3);
+            glEnd();
+            break;
 
-		case 0x25bc: /* ▼ */
-			glBegin(GL_POLYGON);
-			glVertex2i(x, y+h/2);
-			glVertex2i(x + w/2, y+h-1);
-			glVertex2i(x+w, y+h/2);
-			glEnd();
-			break;
+        case 0x25bc: /* ▼ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w / 2, y + h - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glEnd();
+            break;
 
-		case 0x25be: /* ▾ */
-			glBegin(GL_POLYGON);
-			glVertex2i(x + w*1/3, y+h*2/3);
-			glVertex2i(x + w/2, y+h-1);
-			glVertex2i(x+w*2/3, y+h*2/3);
-			glEnd();
-			break;
+        case 0x25be: /* ▾ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x + w * 1 / 3, y + h * 2 / 3);
+            glVertex2i(x + w / 2, y + h - 1);
+            glVertex2i(x + w * 2 / 3, y + h * 2 / 3);
+            glEnd();
+            break;
 
-		case 0x25e4: /* ◤ */
-			glBegin(GL_POLYGON);
-			glVertex2i(x, y);
-			glVertex2i(x, y+h-1);
-			glVertex2i(x+w, y);
-			glEnd();
-			break;
+        case 0x25e4: /* ◤ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glVertex2i(x, y + h - 1);
+            glEnd();
+            break;
 
-		case 0x25e5: /* ◥ */
-			glBegin(GL_POLYGON);
-			glVertex2i(x, y);
-			glVertex2i(x+w, y+h-1);
-			glVertex2i(x+w, y);
-			glEnd();
-			break;
+        case 0x25e5: /* ◥ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glVertex2i(x + w, y + h - 1);
+            glEnd();
+            break;
 
         case 0x25b3: /* △ */
-			glBegin(GL_LINE_LOOP);
-			glVertex2i(x, y+h/2);
-			glVertex2i(x + w/2, y);
-			glVertex2i(x+w, y+h/2);
-			glEnd();
-			break;
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y + w);
+            glVertex2i(x + w / 2, y);
+            glVertex2i(x + w, y + w);
+            glEnd();
+            break;
 
-		case 0x25ff: /* ◿ */
-			glBegin(GL_LINE_LOOP);
-			glVertex2i(x, y+h-1);
-			glVertex2i(x+w, y);
-			glVertex2i(x+w, y+h-1);
-			glEnd();
-			break;
+        case 0x25ff: /* ◿ */
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x + w, y);
+            glVertex2i(x + w, y + w);
+            glVertex2i(x, y + w);
+            glEnd();
+            break;
 
-		case 0x25fa: /* ◺ */
-			glBegin(GL_LINE_LOOP);
-			glVertex2i(x, y);
-			glVertex2i(x, y+h-1);
-			glVertex2i(x+w, y+h-1);
-			glEnd();
-			break;
+        case 0x25fa: /* ◺ */
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y);
+            glVertex2i(x + w, y + w);
+            glVertex2i(x, y + w);
+            glEnd();
+            break;
+
+        case 0x25c7: /* ◇ */
+        {
+            int d = w / 2;
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y + h / 2);
+            glVertex2i(x + d, y + h / 2 + d);
+            glVertex2i(x + 2 * d, y + h / 2);
+            glVertex2i(x + d, y + h / 2 - d);
+            glEnd();
+            break;
+        }
 
         case 0x2080: /* ₀ */
         case 0x2081: /* ₁ */
