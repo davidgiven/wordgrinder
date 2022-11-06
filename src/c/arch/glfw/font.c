@@ -364,16 +364,20 @@ void printChar(const cell_t* cell, float x, float y)
             break;
 
         case 0x2594: /* ▔ */
-            glBegin(GL_LINES);
-            glVertex2i(x, y + 1);
-            glVertex2i(x + w, y + 1);
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + 0);
+            glVertex2i(x + w, y + 0);
+            glVertex2i(x + w, y + 2);
+            glVertex2i(x, y + 2);
             glEnd();
             break;
 
         case 0x2581: /* ▁ */
-            glBegin(GL_LINES);
-            glVertex2i(x, y + h - 3);
-            glVertex2i(x + w, y + h - 3);
+            glBegin(GL_POLYGON);
+            glVertex2i(x + w, y + h - 2);
+            glVertex2i(x, y + h - 2);
+            glVertex2i(x, y + h);
+            glVertex2i(x + w, y + h);
             glEnd();
             break;
 
