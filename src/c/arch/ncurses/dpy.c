@@ -20,6 +20,7 @@ static bool use_italics = false;
 #endif
 
 static bool use_colours = false;
+static int currentAttr = 0;
 static short currentPair = 0;
 
 typedef struct
@@ -67,7 +68,9 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
-    erase();
+	int w, h;
+    getmaxyx(stdscr, h, w);
+    dpy_cleararea(0, 0, w-1, h-1);
 }
 
 void dpy_getscreensize(int* x, int* y)
@@ -85,14 +88,10 @@ void dpy_setcursor(int x, int y, bool shown)
     move(y, x);
 }
 
-void dpy_setattr(int andmask, int ormask)
+static void update_attrs()
 {
-    static int attr = 0;
-    attr &= andmask;
-    attr |= ormask;
-
     attr_t cattr = 0;
-    if (attr & DPY_ITALIC)
+    if (currentAttr & DPY_ITALIC)
     {
 #if defined WA_ITALIC
         if (use_italics)
@@ -103,21 +102,29 @@ void dpy_setattr(int andmask, int ormask)
         cattr |= WA_BOLD;
 #endif
     }
-    if (attr & DPY_BOLD)
+    if (currentAttr & DPY_BOLD)
         cattr |= WA_BOLD;
-    if (!use_colours && (attr & DPY_BRIGHT))
+    if (!use_colours && (currentAttr & DPY_BRIGHT))
         cattr |= WA_BOLD;
-    if (attr & DPY_DIM)
+    if (!use_colours && (currentAttr & DPY_DIM))
         cattr |= WA_DIM;
-    if (attr & DPY_UNDERLINE)
+    if (currentAttr & DPY_UNDERLINE)
         cattr |= WA_UNDERLINE;
-    if (attr & DPY_REVERSE)
+    if (currentAttr & DPY_REVERSE)
         cattr |= WA_REVERSE;
 
     if (use_colours)
         attr_set(cattr, currentPair, NULL);
     else
         attr_set(cattr, 0, NULL);
+}
+
+void dpy_setattr(int andmask, int ormask)
+{
+    currentAttr &= andmask;
+    currentAttr |= ormask;
+
+	update_attrs();
 }
 
 static int lookup_colour(const colour_t* colour)
@@ -149,6 +156,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
         if ((p->fg == fgc) && (p->bg == bgc))
         {
             currentPair = FIRST_PAIR_ID + i;
+			update_attrs();
             return;
         }
     }
@@ -158,6 +166,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     arrpush(colourPairs, pair);
 
     init_pair(currentPair, fgc, bgc);
+	update_attrs();
 }
 
 void dpy_writechar(int x, int y, uni_t c)

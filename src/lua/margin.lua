@@ -33,7 +33,7 @@ local style_name_controller =
 			end
 		end
 
-		Document.margin = m + 1
+		Document.margin = m
 		NonmodalMessage("Margin now displays paragraph styles.")
 	end,
 
@@ -46,7 +46,11 @@ local paragraph_number_controller =
 {
 	attach = function(self)
 		local cb = function()
-			Document.margin = int(math.log10(#Document)) + 3
+			local nm = int(math.log10(#Document)) + 1
+			if nm ~= Document.margin then
+				Document.margin = nm
+				ResizeScreen()
+			end
 		end
 
 		self.token = AddEventListener(Event.Changed, cb)
@@ -67,7 +71,7 @@ local paragraph_number_controller =
 local word_count_controller =
 {
 	attach = function(self)
-		Document.margin = 5
+		Document.margin = 3
 		NonmodalMessage("Margin now displays word counts.")
 	end,
 

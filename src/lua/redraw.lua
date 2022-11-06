@@ -4,6 +4,7 @@
 
 local int = math.floor
 local min = math.min
+local max = math.max
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local ClearScreen = wg.clearscreen
@@ -23,7 +24,29 @@ local UseUnicode = wg.useunicode
 local BLINK_TIME = 0.8
 
 local messages = {}
-local leftpadding = 0
+local papermargin = 0
+
+local SYMBOLS = {
+	[0] = { "₀", "0" },
+	[1] = { "₁", "1" },
+	[2] = { "₂", "2" },
+	[3] = { "₃", "3" },
+	[4] = { "₄", "4" },
+	[5] = { "₅", "5" },
+	[6] = { "₆", "6" },
+	[7] = { "₇", "7" },
+	[8] = { "₈", "8" },
+	[9] = { "₉", "9" },
+	dl =  { "◥", "\\" },
+	dm =  { "▼", "+" },
+	dms = { "▾", "." },
+	dr =  { "◤", "/" },
+	ul =  { "◿", "/" },
+	um =  { "△", "+" },
+	ur =  { "◺", "\\" },
+	lb =  { "▁", "-" },
+	lt =  { "▔", "-" },
+}
 
 function NonmodalMessage(s)
 	messages[#messages+1] = s
@@ -37,9 +60,13 @@ end
 function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
 	local w = GetMaximumAllowedWidth(ScreenWidth)
-	local rw = w - Document.margin - 1
-	leftpadding = math.floor(ScreenWidth/2 - rw/2)
-	Document:wrap(w - Document.margin - 1)
+	if Document.margin > 0 then
+		papermargin = max(Document.margin + 2, math.floor(ScreenWidth/2 - w/2))
+	else
+		papermargin = math.floor(ScreenWidth/2 - w/2)
+	end
+	w = ScreenWidth - papermargin*2
+	Document:wrap(w)
 end
 
 local function drawmargin(y, pn, p)
@@ -48,9 +75,9 @@ local function drawmargin(y, pn, p)
 		local s = controller:getcontent(pn, p)
 
 		if s then
+			SetColour(Palette.StyleFG, Palette.Desktop)
 			SetDim()
-			RAlignInField(leftpadding, y, Document.margin - 1, s)
-			SetNormal()
+			RAlignInField(0, y, papermargin - 1, s)
 		end
 	end
 
@@ -59,7 +86,9 @@ local function drawmargin(y, pn, p)
 		local w = GetStringWidth(n) + 1
 		local i = style.indent
 		if (i >= w) then
-			Write(leftpadding + Document.margin + i - w, y, n)
+			SetNormal()
+			SetColour(Palette.TextLB, Palette.Paper)
+			Write(papermargin + i - w, y, n)
 		end
 	end
 
@@ -92,7 +121,8 @@ local function redrawstatus()
 			changed_tab[DocumentSet.changed] or "",
 		}
 
-		SetStyle("statusbar")
+		-- Reversed due to SetReverse later.
+		SetColour(Palette.StatusbarBG, Palette.StatusbarFG)
 		SetReverse()
 		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
@@ -112,13 +142,13 @@ local function redrawstatus()
 
 		RAlignInField(0, ScreenHeight-1, ScreenWidth, s)
 		SetNormal()
-		SetStyle("normal");
 
 		y = y - 1
 	end
 
 	if (#messages > 0) then
-		SetStyle("message")
+		-- Reversed due to SetReverse later.
+		SetColour(Palette.StatusbarFG, Palette.StatusbarBG)
 		SetReverse()
 
 		for i = #messages, 1, -1 do
@@ -128,66 +158,74 @@ local function redrawstatus()
 		end
 
 		SetNormal()
-		SetStyle("normal");
 	end
 end
 
 local function drawtopmarker(y)
-	local topmarker = UseUnicode() and {
-		"     |          |          |          |          |     ",
-		"───────────────────────────────────────────────────────"
-	} or {
-		"     |          |          |          |          |     ",
-		"-------------------------------------------------------"
-	}
-	local topmarkerwidth = GetStringWidth(topmarker[1])
-	local x = int((ScreenWidth - topmarkerwidth)/2)
-	local lm = leftpadding - 1
-	local rm = ScreenWidth - lm
+	local lm = papermargin
+	local rm = ScreenWidth - lm - 1
+	local w = rm - lm + 1
+	local u = UseUnicode() and 1 or 2
 
-	SetStyle("body")
-	SetBright()
-	ClearArea(lm, y-#topmarker+1, rm, y)
-	for i = #topmarker, 1, -1 do
-		if (y >= 0) then
-			Write(x, y, topmarker[i])
-		end
-		y = y - 1
-	end
 	SetNormal()
+	SetColour(Palette.MarkerFG, Palette.Desktop)
+	if y > 2 then
+		local n = 0
+		for i = lm, rm, 10 do
+			Write(i, y-2, SYMBOLS[n][u])
+			n = n + 1
+			if n == 10 then
+				n = 0
+			end
+		end
+	end
+	if y > 1 then
+		Write(lm, y-1, SYMBOLS.dl[u])
+		for i = lm+5, rm, 10 do
+			Write(i, y-1, SYMBOLS.dms[u])
+		end
+		for i = lm+10, rm, 10 do
+			Write(i, y-1, SYMBOLS.dm[u])
+		end
+		Write(rm, y-1, SYMBOLS.dr[u])
+	end
+
+	SetColour(Palette.MarkerFG, Palette.Paper)
+	ClearArea(lm, y, rm, y)
+	for i = lm+1, rm-1 do
+		Write(i, y, SYMBOLS.lt[u])
+	end
 end
 
 local function drawbottommarker(y)
-	local bottommarker = UseUnicode() and {
-		"───────────────────────────────────────────────────────",
-		"     |          |          |          |          |     ",
-	} or {
-		"-------------------------------------------------------",
-		"     |          |          |          |          |     ",
-	}
-	local bottommarkerwidth = GetStringWidth(bottommarker[1])
-	local x = int((ScreenWidth - bottommarkerwidth)/2)
-	local lm = leftpadding - 1
-	local rm = ScreenWidth - lm
+	local lm = papermargin
+	local rm = ScreenWidth - lm - 1
+	local w = rm - lm + 1
+	local u = UseUnicode() and 1 or 2
 
-	SetStyle("body")
-	SetBright()
-	ClearArea(lm, y, rm, y+#bottommarker-1)
-	for i = 1, #bottommarker do
-		if (y <= ScreenHeight) then
-			Write(x, y, bottommarker[i])
-		end
-		y = y + 1
-	end
 	SetNormal()
+	SetColour(Palette.MarkerFG, Palette.Paper)
+	ClearArea(lm, y, rm, y)
+	for i = lm+1, rm-1 do
+		Write(i, y, SYMBOLS.lb[u])
+	end
+	y = y + 1
+	if y < ScreenHeight then
+		SetColour(Palette.MarkerFG, Palette.Desktop)
+		Write(lm, y, SYMBOLS.ul[u])
+		for i = lm+10, rm, 10 do
+			Write(i, y, SYMBOLS.um[u])
+		end
+		Write(rm, y, SYMBOLS.ur[u])
+	end
 end
 
 function RedrawScreen()
-	SetStyle("desktop")
+	SetColour(nil, Palette.Desktop)
 	ClearScreen()
 	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local cy = int(ScreenHeight / 2)
-	local margin = Document.margin
+	local tx = papermargin + 1
 
 	-- Find out the offset of the current paragraph.
 
@@ -204,7 +242,7 @@ function RedrawScreen()
 	do
 		local cw = Document.cw
 		local word = paragraph[cw]
-		GotoXY(leftpadding + margin + paragraph.xs[cw] +
+		GotoXY(tx + paragraph.xs[cw] +
 			GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(cl),
 			cy - 1)
 	end
@@ -215,17 +253,21 @@ function RedrawScreen()
 	local mw = Document.mw
 	local mo = Document.mo
 
-	local lm = leftpadding - 1
-	local rm = ScreenWidth - lm
+	local lm = papermargin
+	local rm = ScreenWidth - lm - 1
+
+	local function setparacolour(paragraph)
+		SetColour(Palette["Text"..paragraph.style], Palette.Paper)
+	end
 
 	-- Draw backwards.
 
 	local pn = cp - 1
 	local sa = Document:spaceAbove(cp)
 	local y = cy - cl - 1 - sa
-	local paragraph = Document[pn]
+	local paragraph = Document[cp]
 	if paragraph then
-		SetStyle(paragraph.style)
+		setparacolour(paragraph)
 		SetNormal()
 		ClearArea(lm, y+1, rm, y+sa)
 	end
@@ -239,19 +281,17 @@ function RedrawScreen()
 		end
 
 		local lines = paragraph:wrap()
-		SetStyle(paragraph.style)
 		for ln = #lines, 1, -1 do
 			local x = paragraph:getIndentOfLine(ln)
 			local l = lines[ln]
 
+			setparacolour(paragraph)
 			SetNormal()
 			ClearArea(lm, y, rm, y)
 			if not mp then
-				paragraph:renderLine(l,
-					leftpadding + margin + x, y)
+				paragraph:renderLine(l, tx + x, y)
 			else
-				paragraph:renderMarkedLine(l,
-					leftpadding + margin + x, y, nil, pn)
+				paragraph:renderMarkedLine(l, tx + x, y, nil, pn)
 			end
 
 			if (ln == 1) then
@@ -269,6 +309,7 @@ function RedrawScreen()
 
 		local sa = Document:spaceAbove(pn)
 		y = y - sa
+		setparacolour(paragraph)
 		SetNormal()
 		ClearArea(lm, y, rm, y+sa)
 		pn = pn - 1
@@ -290,17 +331,19 @@ function RedrawScreen()
 
 		drawmargin(y, pn, paragraph)
 
-		SetStyle(paragraph.style)
 		for ln, l in ipairs(paragraph:wrap()) do
 			local x = paragraph:getIndentOfLine(ln)
+			setparacolour(paragraph)
 			SetNormal()
 			ClearArea(lm, y, rm, y)
 			if not mp then
-				paragraph:renderLine(l,
-					leftpadding + margin + x, y)
+				paragraph:renderLine(l, tx + x, y)
 			else
-				paragraph:renderMarkedLine(l,
-					leftpadding + margin + x, y, nil, pn)
+				paragraph:renderMarkedLine(l, tx + x, y, nil, pn)
+			end
+
+			if (ln == 1) then
+				drawmargin(y, pn, paragraph)
 			end
 
 			-- If the top of the page hasn't already been set, then the
@@ -321,6 +364,7 @@ function RedrawScreen()
 		end
 		local sb = Document:spaceBelow(pn)
 		y = y + sb
+		setparacolour(paragraph)
 		SetNormal()
 		ClearArea(lm, y-sb, rm, y-1)
 		pn = pn + 1
