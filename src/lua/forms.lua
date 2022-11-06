@@ -586,6 +586,7 @@ function Form.Run(dialogue, redraw, helptext)
 
 		-- Draw the dialogue itself.
 
+		SetColour(Palette.ControlFG, Palette.ControlBG)
 		do
 			local sizeadjust = 0
 			if helptext then

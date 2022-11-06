@@ -295,6 +295,7 @@ MenuClass = {
 		local w = menu.maxwidth + 4 + akw
 		local visiblelen = min(#menu, ScreenHeight-y-3)
 		top = max(1, min(#menu - visiblelen + 1, top))
+		SetColour(Palette.ControlFG, Palette.ControlBG)
 		DrawTitledBox(x, y, w, visiblelen, menu.label)
 
 		if (visiblelen < #menu) then
