@@ -31,7 +31,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .clipboard.cw: 1
 .clipboard.margin: 0
 .clipboard.viewmode: 1
-.clipboard.wordcount: 100
+.clipboard.wordcount: 4
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
@@ -39,7 +39,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.name: "Welcome to WordGrinder"
 .documents.1.sticky_selection: false
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3778
+.documents.1.wordcount: 3862
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -61,12 +61,34 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .idletime: 3
 .menu.accelerators.^@: "ZM"
 .menu.accelerators.^B: "SB"
-.menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.^C: "EC"
-.menu.accelerators.DELETE: "ZDNC"
 .menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.DOWN: "ZD"
 .menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
+.menu.accelerators.BACKSPACE: "ZDPC"
+.menu.accelerators.DELETE: "ZDNC"
+.menu.accelerators.DOWN: "ZD"
 .menu.accelerators.EC: "^C"
 .menu.accelerators.ECadd: "^M"
 .menu.accelerators.ECfind: "^L"
@@ -79,55 +101,33 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.Eredo: "^Y"
 .menu.accelerators.ET: "^X"
 .menu.accelerators.Eundo: "^Z"
-.menu.accelerators.^F: "EF"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
-.menu.accelerators.^G: "EG"
 .menu.accelerators.HOME: "ZH"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
 .menu.accelerators.LEFT: "ZL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
 .menu.accelerators.PGDN: "ZPGDN"
-.menu.accelerators.^PGUP: "ZBD"
 .menu.accelerators.PGUP: "ZPGUP"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
 .menu.accelerators.RIGHT: "ZR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.SB: "^B"
 .menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
+.menu.accelerators.SB: "^B"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
 .menu.accelerators.SHOME: "ZSH"
 .menu.accelerators.SI: "^I"
-.menu.accelerators.S^LEFT: "ZSWL"
 .menu.accelerators.SLEFT: "ZSL"
 .menu.accelerators.SO: "^O"
 .menu.accelerators.SP: "^P"
-.menu.accelerators.S^PGDN: "ZSED"
 .menu.accelerators.SPGDN: "ZSPGDN"
-.menu.accelerators.S^PGUP: "ZSBD"
 .menu.accelerators.SPGUP: "ZSPGUP"
-.menu.accelerators.S^RIGHT: "ZSWR"
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
-.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.SUP: "ZSU"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
 .menu.accelerators.UP: "ZU"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
 .menu.accelerators.ZDNC: "DELETE"
@@ -161,14 +161,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.name: "/home/dg/nonshared/wordgrinder/README.wg"
+.name: "F:\\msys64\\home\\David Given\\nonshared\\wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
 #clipboard
-H3 There is also a port to Windows which will run in a console window. This is useful if you want to do any work from the command line or via a remote login, which I’ll admit is unlikely for Windows. While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
-P Italics, bold and underline are displayed as various colours.
-P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
+P File→Global Settings→Look and Feel
 .
 #1
 H1 Welcome to WordGrinder
@@ -312,6 +310,12 @@ H3 Widescreen mode
 P Running WordGrinder full screen on a widescreen monitor is typically pretty uncomfortable, as you end up with very long lines. Widescreen mode allows you to restrict the text to a column in the centre of the screen. (Dialogue boxes are not affected.) See File→Global Settings→Look and Feel. I find that 80 or 100 columns is the most comfortable.
 P This is a global setting and isn’t saved with your document (because I tend to want to set it per machine, rather than per document).
 P There are a few other settings in there you might want to play with.
+H3 Colour themes
+P If you don’t like the default colour theme, you can also change this in File→Global Settings→Look and Feel. These work for the ncurses and OpenGL backends. The choices are:
+LB Light: pale background, black text.
+LB Dark: dark background, light text.
+LB Classic: start black-and-white-and-grey monochrome, which emulates the look and feel of previous versions.
+P It’s currently not possible to create your own themes on the fly but it would be doable if there’s interest --- please get in touch. Otherwise, edit src/lua/colours.lua and recompile.
 H3 Smart quotes
 P WordGrinder supports smart quotation marks, “like this” or ‘like this’. To turn on, see File→Document Settings→Smart quotes. It’ll convert them when you type, or when you paste into your document. To bulk convert text, use Edit→Smartquotify or Edit→Unsmartquotify. You can change the characters used for quotation marks (which is useful if, e.g. «you’re French»). You still get them by typing a single or double quotation mark, though.
 H3 Spellchecker
