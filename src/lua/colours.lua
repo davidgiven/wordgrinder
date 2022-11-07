@@ -6,62 +6,101 @@ local table_insert = table.insert
 local table_remove = table.remove
 local string_char = string.char
 
-local white = {1, 1, 1}
-local lightgrey = {0.8, 0.8, 0.8}
-local black = {0, 0, 0}
+local function MakeDark()
+	local ink = {1, 1, 1}
+	local paper = {0.2, 0.2, 0.2}
+	local headerfg = {1, 1, 0}
+	local headerbg = {0.3, 0.3, 0.3}
 
-local Palettes = {
-	Dark = {
+	return {
 		Desktop      = {0.135, 0.135, 0.135},
-		Paper        = {0.200, 0.200, 0.200},
+		Paper        = paper,
 		MarkerFG     = {0.100, 0.500, 0.500},
 		StatusbarBG  = {0.140, 0.220, 0.400},
 		StatusbarFG  = {0.800, 0.700, 0.200},
 		MessageBG    = {0.140, 0.220, 0.400},
 		MessageFG    = {0.800, 0.700, 0.200},
-		TextP        = white,
-		TextH1       = white,
-		TextH2       = white,
-		TextH3       = white,
-		TextH4       = white,
-		TextQ        = white,
-		TextLB       = white,
-		TextLBN      = white,
-		TextL        = white,
-		TextV        = white,
-		TextPRE      = white,
-		TextRAW      = white,
 		StyleFG      = {0.500, 0.500, 0.500},
 		ControlFG    = {1.000, 1.000, 0.000},
 		ControlBG    = {0.140, 0.220, 0.400},
-	},
+		H1_BG        = headerbg,
+		H1_FG        = headerfg,
+		H2_BG        = headerbg,
+		H2_FG        = headerfg,
+		H3_BG        = paper,
+		H3_FG        = headerfg,
+		H4_BG        = paper,
+		H4_FG        = headerfg,
+		LBN_BG       = paper,
+		LBN_FG       = white,
+		LB_BG        = paper,
+		LB_FG        = white,
+		L_BG         = paper,
+		L_FG         = white,
+		PRE_BG       = paper,
+		PRE_FG       = white,
+		P_BG		 = paper,
+		P_FG         = white,
+		Q_BG         = paper,
+		Q_FG         = white,
+		RAW_BG       = paper,
+		RAW_FG       = white,
+		V_BG         = paper,
+		V_FG         = white,
+	}
+end
 
-	Light = {
+local function MakeLight()
+	local ink = {0, 0, 0}
+	local paper = {0.760, 0.760, 0.730}
+	local headerfg = {0.14, 0.22, 0.40}
+	local headerbg = {0.66, 0.66, 0.66}
+
+	return {
 		Desktop      = {0.510, 0.500, 0.470},
-		Paper        = {0.760, 0.760, 0.730},
+		Paper        = paper,
 		MarkerFG     = {0.250, 0.250, 0.250},
 		StatusbarBG  = {0.140, 0.220, 0.400},
 		StatusbarFG  = {0.800, 0.700, 0.200},
 		MessageBG    = {0.140, 0.220, 0.400},
 		MessageFG    = {0.800, 0.700, 0.200},
-		TextP        = black,
-		TextH1       = black,
-		TextH2       = black,
-		TextH3       = black,
-		TextH4       = black,
-		TextQ        = black,
-		TextLB       = black,
-		TextLBN      = black,
-		TextL        = black,
-		TextV        = black,
-		TextPRE      = black,
-		TextRAW      = black,
 		StyleFG      = {0.200, 0.200, 0.200},
 		ControlFG    = {0.200, 0.200, 0.200},
 		ControlBG    = {0.850, 0.850, 0.850},
-	},
+		H1_BG        = headerbg,
+		H1_FG        = headerfg,
+		H2_BG        = headerbg,
+		H2_FG        = headerfg,
+		H3_BG        = paper,
+		H3_FG        = ink,
+		H4_BG        = paper,
+		H4_FG        = ink,
+		LBN_BG       = paper,
+		LBN_FG       = ink,
+		LB_BG        = paper,
+		LB_FG        = ink,
+		L_BG         = paper,
+		L_FG         = ink,
+		PRE_BG       = paper,
+		PRE_FG       = ink,
+		P_BG         = paper,
+		P_FG         = ink,
+		Q_BG         = paper,
+		Q_FG         = ink,
+		RAW_BG       = paper,
+		RAW_FG       = ink,
+		V_BG         = paper,
+		V_FG         = ink,
+	}
+end
 
-	Classic = {
+local function MakeClassic()
+	local ink = {0.8, 0.8, 0.8}
+	local white = {1, 1, 1}
+	local black = {0, 0, 0}
+	local yellow = {1, 1, 0}
+
+	return {
 		Desktop      = black,
 		Paper        = black,
 		MarkerFG     = white,
@@ -69,22 +108,40 @@ local Palettes = {
 		StatusbarBG  = white,
 		MessageFG    = black,
 		MessageBG    = white,
-		TextP        = lightgrey,
-		TextH1       = white,
-		TextH2       = white,
-		TextH3       = white,
-		TextH4       = white,
-		TextQ        = lightgrey,
-		TextLB       = lightgrey,
-		TextLBN      = lightgrey,
-		TextL        = lightgrey,
-		TextV        = lightgrey,
-		TextPRE      = lightgrey,
-		TextRAW      = lightgrey,
 		StyleFG      = {0.500, 0.500, 0.500},
 		ControlFG    = white,
 		ControlBG    = black,
+		H1_BG        = paper,
+		H1_FG        = yellow,
+		H2_BG        = paper,
+		H2_FG        = yellow,
+		H3_BG        = paper,
+		H3_FG        = yellow,
+		H4_BG        = paper,
+		H4_FG        = yellow,
+		LBN_BG       = paper,
+		LBN_FG       = lightgrey,
+		LB_BG        = paper,
+		LB_FG        = lightgrey,
+		L_BG         = paper,
+		L_FG         = lightgrey,
+		PRE_BG       = paper,
+		PRE_FG       = lightgrey,
+		P_BG         = paper,
+		P_FG         = lightgrey,
+		Q_BG         = paper,
+		Q_FG         = lightgrey,
+		RAW_BG       = paper,
+		RAW_FG       = lightgrey,
+		V_BG         = paper,
+		V_FG         = lightgrey,
 	}
+end
+
+local Palettes = {
+	Dark = MakeDark(),
+	Light = MakeLight(),
+	Classic = MakeClassic(),
 }
 
 -----------------------------------------------------------------------------

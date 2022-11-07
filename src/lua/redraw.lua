@@ -87,7 +87,7 @@ local function drawmargin(y, pn, p)
 		local i = style.indent
 		if (i >= w) then
 			SetNormal()
-			SetColour(Palette.TextLB, Palette.Paper)
+			SetColour(Palette.LB_FG, Palette.LB_BG)
 			Write(papermargin + i - w, y, n)
 		end
 	end
@@ -257,7 +257,14 @@ function RedrawScreen()
 	local rm = ScreenWidth - lm - 1
 
 	local function setparacolour(paragraph)
-		SetColour(Palette["Text"..paragraph.style], Palette.Paper)
+		SetColour(
+			Palette[paragraph.style.."_FG"],
+			Palette[paragraph.style.."_BG"])
+	end
+
+	local function clear(y1, y2)
+		SetNormal()
+		ClearArea(lm, y1, rm, y2)
 	end
 
 	-- Draw backwards.
@@ -267,9 +274,8 @@ function RedrawScreen()
 	local y = cy - cl - 1 - sa
 	local paragraph = Document[cp]
 	if paragraph then
-		setparacolour(paragraph)
-		SetNormal()
-		ClearArea(lm, y+1, rm, y+sa)
+		SetColour(Palette.Paper, Palette.Paper)
+		clear(y+1, y+sa)
 	end
 
 	Document.topp = nil
@@ -286,8 +292,7 @@ function RedrawScreen()
 			local l = lines[ln]
 
 			setparacolour(paragraph)
-			SetNormal()
-			ClearArea(lm, y, rm, y)
+			clear(y, y)
 			if not mp then
 				paragraph:renderLine(l, tx + x, y)
 			else
@@ -309,9 +314,8 @@ function RedrawScreen()
 
 		local sa = Document:spaceAbove(pn)
 		y = y - sa
-		setparacolour(paragraph)
-		SetNormal()
-		ClearArea(lm, y, rm, y+sa)
+		SetColour(Palette.Paper, Palette.Paper)
+		clear(y, y+sa)
 		pn = pn - 1
 	end
 
@@ -334,8 +338,7 @@ function RedrawScreen()
 		for ln, l in ipairs(paragraph:wrap()) do
 			local x = paragraph:getIndentOfLine(ln)
 			setparacolour(paragraph)
-			SetNormal()
-			ClearArea(lm, y, rm, y)
+			clear(y, y)
 			if not mp then
 				paragraph:renderLine(l, tx + x, y)
 			else
@@ -364,9 +367,8 @@ function RedrawScreen()
 		end
 		local sb = Document:spaceBelow(pn)
 		y = y + sb
-		setparacolour(paragraph)
-		SetNormal()
-		ClearArea(lm, y-sb, rm, y-1)
+		SetColour(Palette.Paper, Palette.Paper)
+		clear(y-sb, y-1)
 		pn = pn + 1
 	end
 
