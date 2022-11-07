@@ -269,7 +269,9 @@ void dpy_sync(void)
             int h = fontHeight;
 
             glColor3f(1.0f, 1.0f, 1.0f);
+            glLogicOp(GL_XOR);
             glDisable(GL_BLEND);
+            glEnable(GL_COLOR_LOGIC_OP);
             glBegin(GL_LINES);
             glVertex2i(x, y);
             glVertex2i(x, y + h);
@@ -280,6 +282,8 @@ void dpy_sync(void)
             glVertex2i(x - 2, y + h);
             glVertex2i(x + 1, y + h);
             glEnd();
+            glLogicOp(GL_CLEAR);
+            glDisable(GL_COLOR_LOGIC_OP);
         }
     }
 
