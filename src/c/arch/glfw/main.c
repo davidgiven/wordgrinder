@@ -236,9 +236,8 @@ void dpy_sync(void)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int padding = fontWidth / 2;
-    int sw = (w - padding * 2) / fontWidth;
-    int sh = (h - padding * 2) / fontHeight;
+    int sw = w / fontWidth;
+    int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
         free(screen);
@@ -252,10 +251,10 @@ void dpy_sync(void)
         const cell_t* p = &screen[0];
         for (int y = 0; y < screenHeight; y++)
         {
-            float sy = y * fontHeight + padding;
+            float sy = y * fontHeight;
             for (int x = 0; x < screenWidth; x++)
             {
-                float sx = x * fontWidth + padding;
+                float sx = x * fontWidth;
                 printChar(p, sx, sy);
                 p++;
             }
@@ -263,10 +262,10 @@ void dpy_sync(void)
 
         if (cursorShown)
         {
-            int x = cursorx * fontWidth - 1 + padding;
+            int x = cursorx * fontWidth - 1;
             if (x < 0)
                 x = 0;
-            int y = cursory * fontHeight + padding;
+            int y = cursory * fontHeight;
             int h = fontHeight;
 
             glColor3f(1.0f, 1.0f, 1.0f);
