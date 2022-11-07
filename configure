@@ -154,7 +154,7 @@ build_luascripts() {
     add srcs src/lua/addons/templates.lua
     add srcs src/lua/addons/directories.lua
     add srcs src/lua/addons/recents.lua
-    add srcs src/lua/addons/palette.lua
+    add srcs src/lua/colours.lua
     add srcs src/lua/menu.lua
     add srcs src/lua/cli.lua
     add srcs src/lua/lunamark/util.lua

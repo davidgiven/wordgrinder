@@ -88,15 +88,21 @@ local Palettes = {
 }
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default global settings.
+-- Gets the list of themes.
 
-do
-	local function cb()
-		GlobalSettings.palette = GlobalSettings.palette or "Light"
-		Palette = Palettes[GlobalSettings.palette] or {}
+function GetThemes()
+	local t = {}
+	for n, _ in pairs(Palettes) do
+		t[#t+1] = n
 	end
+	return t
+end
 
-	AddEventListener(Event.RegisterAddons, cb)
+-----------------------------------------------------------------------------
+-- Configures the current theme.
+
+function SetTheme(theme)
+	Palette = Palettes[theme] or {}
 end
 
 -----------------------------------------------------------------------------
