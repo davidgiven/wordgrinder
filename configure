@@ -80,7 +80,7 @@ rule rcfile
     command = $windres $in $out
 
 rule makensis
-    command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
+    command = $makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule makeicon
     command = sh tools/makeicon.sh $in > $out
@@ -545,6 +545,7 @@ add_configuration() {
 
 add_nsis() {
     echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-glfw-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+    echo "  makensis = $MAKENSIS" >&3
     echo "default bin/WordGrinder-$VERSION-setup.exe" >&3
 }
 
