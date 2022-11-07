@@ -20,8 +20,8 @@ static HANDLE cout = INVALID_HANDLE_VALUE;
 static CONSOLE_SCREEN_BUFFER_INFO csbi;
 static CHAR_INFO* buffer = NULL;
 static CHAR_INFO defaultChar;
-static int screenwidth;
-static int screenheight;
+static int screenWidth;
+static int screenHeight;
 
 static uni_t queued[4];
 static int numqueued = 0;
@@ -53,16 +53,16 @@ static bool update_buffer_info(void)
 {
 	GetConsoleScreenBufferInfo(cout, &csbi);
 
-	int newscreenwidth = 1 + csbi.srWindow.Right - csbi.srWindow.Left;
-	int newscreenheight = 1 + csbi.srWindow.Bottom - csbi.srWindow.Top;
-	if ((newscreenwidth != screenwidth) ||
-		(newscreenheight != screenheight))
+	int newscreenWidth = 1 + csbi.srWindow.Right - csbi.srWindow.Left;
+	int newscreenHeight = 1 + csbi.srWindow.Bottom - csbi.srWindow.Top;
+	if ((newscreenWidth != screenWidth) ||
+		(newscreenHeight != screenHeight))
 	{
-		screenwidth = newscreenwidth;
-		screenheight = newscreenheight;
+		screenWidth = newscreenWidth;
+		screenHeight = newscreenHeight;
 
 		free(buffer);
-		buffer = calloc(sizeof(*buffer), screenwidth * screenheight);
+		buffer = calloc(sizeof(*buffer), screenWidth * screenHeight);
 
 		return true;
 	}
@@ -100,18 +100,18 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
-	dpy_cleararea(0, 0, screenwidth-1, screenheight-1);
+	dpy_cleararea(0, 0, screenWidth-1, screenHeight-1);
 }
 
 void dpy_getscreensize(int* x, int* y)
 {
-	*x = screenwidth;
-	*y = screenheight;
+	*x = screenWidth;
+	*y = screenHeight;
 }
 
 void dpy_sync(void)
 {
-	COORD buffersize = { screenwidth, screenheight };
+	COORD buffersize = { screenWidth, screenHeight };
 	COORD buffercoord = {0, 0};
 	SMALL_RECT destregion = csbi.srWindow;
 
@@ -152,24 +152,35 @@ void dpy_setattr(int andmask, int ormask)
 	defaultChar.Attributes = (bg<<4) | fg;;
 }
 
-void dpy_setcolour(const colour_t* fg, const colour_t* bg)
-{
-}
-
 void dpy_writechar(int x, int y, uni_t c)
 {
-	if ((x < 0) || (y < 0) || (x >= screenwidth) || (y >= screenheight))
+	if ((x < 0) || (y < 0) || (x >= screenWidth) || (y >= screenHeight))
 		return;
 
-	buffer[y*screenwidth + x] = defaultChar;
-	buffer[y*screenwidth + x].Char.UnicodeChar = c;
+	buffer[y*screenWidth + x] = defaultChar;
+	buffer[y*screenWidth + x].Char.UnicodeChar = c;
+}
+
+static void clipBounds(int* x, int* y)
+{
+    if (*x < 0)
+        *x = 0;
+    if (*x >= screenWidth)
+        *x = screenWidth-1;
+    if (*y < 0)
+        *y = 0;
+    if (*y >= screenHeight)
+        *y = screenHeight-1;
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
 {
+	clipBounds(&x1, &y1);
+	clipBounds(&x2, &y2);
+
 	for (int y = y1; y <= y2; y++)
 		for (int x = x1; x <= x2; x++)
-			buffer[y*screenwidth + x] = defaultChar;
+			buffer[y*screenWidth + x] = defaultChar;
 }
 
 static bool get_key_code(KEY_EVENT_RECORD* event, uni_t* r1, uni_t* r2)
