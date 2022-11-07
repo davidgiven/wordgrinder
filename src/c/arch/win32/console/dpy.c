@@ -85,7 +85,7 @@ void dpy_start(void)
 	defaultChar.Char.UnicodeChar = ' ';
 	defaultChar.Attributes = 0x07;
 
-	SetConsoleTitleA("CWordGrinder");
+	SetConsoleTitleA("WordGrinder");
 
 	update_buffer_info();
 }
@@ -152,11 +152,7 @@ void dpy_setattr(int andmask, int ormask)
 	defaultChar.Attributes = (bg<<4) | fg;;
 }
 
-void dpy_setcolour(int fg, int bg)
-{
-}
-
-void dpy_definecolour(int id, float r, float g, float b)
+void dpy_setcolour(const colour_t* fg, const colour_t* bg)
 {
 }
 
