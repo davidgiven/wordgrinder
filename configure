@@ -522,6 +522,7 @@ add_configuration() {
         add tests tests/weirdness-save-new-document.lua
         add tests tests/weirdness-splitting-lines-before-space.lua
         add tests tests/weirdness-stray-control-char-in-export.lua
+        add tests tests/weirdness-style-bleeding-on-deletion.lua
         add tests tests/weirdness-styled-clipboard.lua
         add tests tests/weirdness-styling-unicode.lua
         add tests tests/weirdness-upgrade-0.6-with-clipboard.lua

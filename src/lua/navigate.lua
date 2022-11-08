@@ -317,13 +317,9 @@ function Cmd.DeleteNextChar()
 		return Cmd.JoinWithNextWord()
 	end
 
-	local left = DeleteFromWord(word, co, #word+1)
-	local right = DeleteFromWord(word, 1, nextco)
-	Document.co = #left + 1
-
 	Document[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
-		left..right,
+		DeleteFromWord(word, co, nextco),
 		paragraph:sub(cw+1))
 
 	DocumentSet:touch()
