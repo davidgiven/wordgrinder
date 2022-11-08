@@ -19,6 +19,7 @@ Event.Moved = {}             --- the cursor has moved
 Event.Redraw = {}            --- the screen has just been redrawn
 Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
 Event.WaitingForUser = {}    --- we're about to wait for a keypress
+Event.ScreenInitialised = {} --- the screen has just been set up
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.

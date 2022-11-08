@@ -10,6 +10,9 @@
 INTRODUCTION
 ============
 
+**Important note:** During development I don't keep this file up-to-date. Go
+Eook at README instead.
+
 WordGrinder is a simple, Unicode-aware word processor. It's designed to get
 the hell out of your way and let you write; it does very little, but what it
 does it does well.

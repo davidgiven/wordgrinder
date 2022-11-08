@@ -171,3 +171,14 @@ void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
 	lua_pop(L, nup);  /* remove upvalues */
 }
 #endif
+
+extern void luaL_setconstants(lua_State* L, const luaL_Constant* array, int len)
+{
+	while (len--)
+	{
+		lua_pushnumber(L, array->value);
+		lua_setfield(L, -2, array->name);
+		array++;
+	}
+}
+

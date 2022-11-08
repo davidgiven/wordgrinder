@@ -6,11 +6,6 @@
 
 extern const FileDescriptor font_table[];
 
-static const float background_colour[] = {0.0f, 0.0f, 0.0f};
-static const float dim_colour[] = {0.33f, 0.33f, 0.33f};
-static const float normal_colour[] = {0.66f, 0.66f, 0.66f};
-static const float bright_colour[] = {1.0f, 1.0f, 0.0f};
-
 #define FONT_XPADDING 1
 #define FONT_YPADDING 2
 #define PAGE_WIDTH 256
@@ -119,7 +114,7 @@ void loadFonts()
 
 void unloadFonts()
 {
-    for (int i=0; i<sizeof(fonts)/sizeof(*fonts); i++)
+    for (int i = 0; i < sizeof(fonts) / sizeof(*fonts); i++)
     {
         if (fonts[i])
         {
@@ -265,42 +260,26 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     glEnd();
 }
 
-void printChar(uni_t c, uint8_t attrs, float x, float y)
+void printChar(const cell_t* cell, float x, float y)
 {
+    GLfloat* fg = (GLfloat*)&cell->fg;
+    GLfloat* bg = (GLfloat*)&cell->bg;
+
     /* Draw background. */
 
     glDisable(GL_BLEND);
-    const float* colour;
-    if (attrs & DPY_REVERSE)
-    {
-        if (attrs & DPY_BRIGHT)
-            colour = bright_colour;
-        else if (attrs & DPY_DIM)
-            colour = dim_colour;
-        else
-            colour = normal_colour;
-        glColor3fv(colour);
-
-        glRectf(x, y, x + fontWidth, y + fontHeight);
-    }
+    glColor3fv((cell->attr & DPY_REVERSE) ? fg : bg);
+    glRectf(x, y, x + fontWidth, y + fontHeight);
 
     /* Draw foreground. */
 
-    if (attrs & DPY_REVERSE)
-        colour = background_colour;
-    else if (attrs & DPY_BRIGHT)
-        colour = bright_colour;
-    else if (attrs & DPY_DIM)
-        colour = dim_colour;
-    else
-        colour = normal_colour;
-    glColor3fv(colour);
+    glColor3fv((cell->attr & DPY_REVERSE) ? bg : fg);
 
     int w = fontWidth;
     int h = fontHeight;
     int w2 = fontWidth / 2;
     int h2 = fontHeight / 2;
-    switch (c)
+    switch (cell->c)
     {
         case 32:
         case 160: /* non-breaking space */
@@ -385,17 +364,112 @@ void printChar(uni_t c, uint8_t attrs, float x, float y)
             break;
 
         case 0x2594: /* ▔ */
-            glBegin(GL_LINES);
-            glVertex2i(x, y + 2);
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + 0);
+            glVertex2i(x + w, y + 0);
             glVertex2i(x + w, y + 2);
+            glVertex2i(x, y + 2);
             glEnd();
             break;
 
+        case 0x2581: /* ▁ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x + w, y + h - 2);
+            glVertex2i(x, y + h - 2);
+            glVertex2i(x, y + h);
+            glVertex2i(x + w, y + h);
+            glEnd();
+            break;
+
+        case 0x25bc: /* ▼ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w / 2, y + h - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glEnd();
+            break;
+
+        case 0x25be: /* ▾ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x + w * 1 / 3, y + h * 2 / 3);
+            glVertex2i(x + w / 2, y + h - 1);
+            glVertex2i(x + w * 2 / 3, y + h * 2 / 3);
+            glEnd();
+            break;
+
+        case 0x25e4: /* ◤ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glVertex2i(x, y + h - 1);
+            glEnd();
+            break;
+
+        case 0x25e5: /* ◥ */
+            glBegin(GL_POLYGON);
+            glVertex2i(x, y + h - w - 1);
+            glVertex2i(x + w, y + h - w - 1);
+            glVertex2i(x + w, y + h - 1);
+            glEnd();
+            break;
+
+        case 0x25b3: /* △ */
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y + w);
+            glVertex2i(x + w / 2, y);
+            glVertex2i(x + w, y + w);
+            glEnd();
+            break;
+
+        case 0x25ff: /* ◿ */
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x + w, y);
+            glVertex2i(x + w, y + w);
+            glVertex2i(x, y + w);
+            glEnd();
+            break;
+
+        case 0x25fa: /* ◺ */
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y);
+            glVertex2i(x + w, y + w);
+            glVertex2i(x, y + w);
+            glEnd();
+            break;
+
+        case 0x25c7: /* ◇ */
+        {
+            int d = w / 2;
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y + h / 2);
+            glVertex2i(x + d, y + h / 2 + d);
+            glVertex2i(x + 2 * d, y + h / 2);
+            glVertex2i(x + d, y + h / 2 - d);
+            glEnd();
+            break;
+        }
+
+        case 0x2080: /* ₀ */
+        case 0x2081: /* ₁ */
+        case 0x2082: /* ₂ */
+        case 0x2083: /* ₃ */
+        case 0x2084: /* ₄ */
+        case 0x2085: /* ₅ */
+        case 0x2086: /* ₆ */
+        case 0x2087: /* ₇ */
+        case 0x2088: /* ₈ */
+        case 0x2089: /* ₉ */
+            renderTtfChar(cell->c - 0x2080 + '0',
+                cell->attr,
+                x + fontXOffset,
+                y + fontAscent);
+            break;
+
         default:
-            renderTtfChar(c, attrs, x + fontXOffset, y + fontAscent);
+            renderTtfChar(cell->c, cell->attr, x + fontXOffset, y + fontAscent);
     }
 
-    if (attrs & DPY_UNDERLINE)
+    if (cell->attr & DPY_UNDERLINE)
     {
         glDisable(GL_BLEND);
         glBegin(GL_LINES);

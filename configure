@@ -9,6 +9,7 @@ FILEFORMAT=8
 WINCC=${WINCC:-i686-w64-mingw32-gcc}
 WINCXX=${WINCC:-i686-w64-mingw32-g++}
 WINLINK=${WINLINK:-i686-w64-mingw32-g++}
+WINSTRIP=${WINSTRIP:-i686-w64-mingw32-strip}
 WINDRES=${WINDRES:-i686-w64-mingw32-windres}
 MAKENSIS=${MAKENSIS:-makensis}
 DATE=${DATE:-$(date +'%-d %B %Y')}
@@ -80,7 +81,7 @@ rule rcfile
     command = $windres $in $out
 
 rule makensis
-    command = makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
+    command = $makensis -v2 -nocd -dVERSION=$version -dOUTFILE=$out $in
 
 rule makeicon
     command = sh tools/makeicon.sh $in > $out
@@ -154,6 +155,7 @@ build_luascripts() {
     add srcs src/lua/addons/templates.lua
     add srcs src/lua/addons/directories.lua
     add srcs src/lua/addons/recents.lua
+    add srcs src/lua/colours.lua
     add srcs src/lua/menu.lua
     add srcs src/lua/cli.lua
     add srcs src/lua/lunamark/util.lua
@@ -274,9 +276,10 @@ add_configuration() {
         add SRCS src/c/emu/wcwidth.c
         add SRCS src/c/emu/lua-5.1.5/winshim.c
 
-        CC=i686-w64-mingw32-gcc
-        LINKCC=i686-w64-mingw32-g++
-        STRIP=i686-w64-mingw32-strip
+        CC=$WINCC
+        CXX=$WINCXX
+        LINKCC=$WINLINK
+        STRIP=$WINSTRIP
         X=.exe
 
         if [ "$done_common_windows" != "y" ]; then
@@ -544,6 +547,7 @@ add_configuration() {
 
 add_nsis() {
     echo "build bin/WordGrinder-$VERSION-setup.exe : makensis extras/windows-installer.nsi | bin/wordgrinder-builtin-glfw-release.exe bin/wordgrinder-builtin-wincon-release.exe" >&3
+    echo "  makensis = $MAKENSIS" >&3
     echo "default bin/WordGrinder-$VERSION-setup.exe" >&3
 }
 

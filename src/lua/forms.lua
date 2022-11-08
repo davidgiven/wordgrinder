@@ -137,6 +137,65 @@ Form.Checkbox = makewidgetclass {
 	[" "] = checkbox_toggle
 }
 
+Form.Toggle = makewidgetclass {
+	values = {"Default"},
+	value = 1,
+	label = "Toggle",
+	focusable = true,
+
+	draw = function(self)
+		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
+		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
+
+		local s = self.values[self.value]
+		if self.value == 1 then
+			s = "  "..s
+		else
+			s = "< "..s
+		end
+		if self.value == #self.values then
+			s = s.."  "
+		else
+			s = s.." >"
+		end
+
+		SetBright()
+		Write(self.realx2 - 12, self.realy1, s)
+		SetNormal()
+
+		if self.focus then
+			GotoXY(self.realx2 - 10, self.realy1)
+		end
+	end,
+
+	changed = function(self) end,
+
+	["KEY_LEFT"] = function(self, key)
+		if self.value ~= 1 then
+			self.value = self.value - 1
+			self:draw()
+		end
+		return "nop"
+	end,
+
+	["KEY_RIGHT"] = function(self, key)
+		if self.value ~= #self.values then
+			self.value = self.value + 1
+			self:draw()
+		end
+		return "nop"
+	end,
+
+	[" "] = function(self, key)
+		self.value = self.value + 1
+		if self.value > #self.values then
+			self.value = 1
+		end
+		self:draw()
+		return "nop"
+	end
+}
+
 local function keep_transient_textfield(self)
 	self.transient = false
 end
@@ -586,6 +645,7 @@ function Form.Run(dialogue, redraw, helptext)
 
 		-- Draw the dialogue itself.
 
+		SetColour(Palette.ControlFG, Palette.ControlBG)
 		do
 			local sizeadjust = 0
 			if helptext then

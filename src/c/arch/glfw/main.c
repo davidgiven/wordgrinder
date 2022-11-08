@@ -10,17 +10,13 @@
 #define VK_TIMEOUT 0x80001
 #define VK_QUIT 0x80002
 
-struct cell
-{
-    uni_t c;
-    uint8_t attr;
-};
-
 static GLFWwindow* window;
 static int currentAttr;
+static colour_t currentFg;
+static colour_t currentBg;
 static int screenWidth;
 static int screenHeight;
-static struct cell* screen;
+static cell_t* screen;
 static int cursorx;
 static int cursory;
 static bool cursorShown;
@@ -40,7 +36,7 @@ static void queueRedraw()
         pendingRedraw = true;
     }
 }
-        
+
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -93,7 +89,7 @@ static void key_cb(
                 fullScreen = true;
             }
 
-	    return;
+            return;
         }
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
@@ -181,11 +177,11 @@ void dpy_start(void)
     glfwSetWindowCloseCallback(window, close_cb);
 
     extern uint8_t icon_data[];
-    GLFWimage image; 
+    GLFWimage image;
     image.width = 128;
     image.height = 128;
     image.pixels = icon_data;
-    glfwSetWindowIcon(window, 1, &image); 
+    glfwSetWindowIcon(window, 1, &image);
 
     loadFonts();
 }
@@ -215,7 +211,7 @@ void dpy_sync(void)
 
     /* Configure viewport for 2D graphics. */
 
-    glClearColor(0.16f, 0.16f, 0.20f, 1.0f);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_BLEND);
@@ -223,6 +219,7 @@ void dpy_sync(void)
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
     glDisable(GL_LINE_SMOOTH);
+    glEnable(GL_POLYGON_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glLineWidth(1);
 
@@ -239,41 +236,42 @@ void dpy_sync(void)
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    int padding = fontWidth / 2;
-    int sw = (w - padding * 2) / fontWidth;
-    int sh = (h - padding * 2) / fontHeight;
+    int sw = w / fontWidth;
+    int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
         free(screen);
         screenWidth = sw;
         screenHeight = sh;
-        screen = calloc(screenWidth * screenHeight, sizeof(struct cell));
+        screen = calloc(screenWidth * screenHeight, sizeof(cell_t));
         arrins(keyboardQueue, 0, -VK_RESIZE);
     }
     else
     {
-        struct cell* p = &screen[0];
+        const cell_t* p = &screen[0];
         for (int y = 0; y < screenHeight; y++)
         {
-            float sy = y * fontHeight + padding;
+            float sy = y * fontHeight;
             for (int x = 0; x < screenWidth; x++)
             {
-                float sx = x * fontWidth + padding;
-                printChar(p->c, p->attr, sx, sy);
+                float sx = x * fontWidth;
+                printChar(p, sx, sy);
                 p++;
             }
         }
 
         if (cursorShown)
         {
-            int x = cursorx * fontWidth - 1 + padding;
+            int x = cursorx * fontWidth - 1;
             if (x < 0)
                 x = 0;
-            int y = cursory * fontHeight + padding;
+            int y = cursory * fontHeight;
             int h = fontHeight;
 
             glColor3f(1.0f, 1.0f, 1.0f);
+            glLogicOp(GL_XOR);
             glDisable(GL_BLEND);
+            glEnable(GL_COLOR_LOGIC_OP);
             glBegin(GL_LINES);
             glVertex2i(x, y);
             glVertex2i(x, y + h);
@@ -284,6 +282,8 @@ void dpy_sync(void)
             glVertex2i(x - 2, y + h);
             glVertex2i(x + 1, y + h);
             glEnd();
+            glLogicOp(GL_CLEAR);
+            glDisable(GL_COLOR_LOGIC_OP);
         }
     }
 
@@ -296,6 +296,12 @@ void dpy_setattr(int andmask, int ormask)
     currentAttr |= ormask;
 }
 
+void dpy_setcolour(const colour_t* fg, const colour_t* bg)
+{
+    currentFg = *fg;
+    currentBg = *bg;
+}
+
 void dpy_writechar(int x, int y, uni_t c)
 {
     if (!screen)
@@ -305,9 +311,11 @@ void dpy_writechar(int x, int y, uni_t c)
     if ((y < 0) || (y >= screenHeight))
         return;
 
-    struct cell* p = &screen[x + y * screenWidth];
+    cell_t* p = &screen[x + y * screenWidth];
     p->c = c;
     p->attr = currentAttr;
+    p->fg = currentFg;
+    p->bg = currentBg;
 }
 
 static void clipBounds(int* x, int* y)
@@ -315,11 +323,11 @@ static void clipBounds(int* x, int* y)
     if (*x < 0)
         *x = 0;
     if (*x >= screenWidth)
-        *x = screenWidth-1;
+        *x = screenWidth - 1;
     if (*y < 0)
         *y = 0;
     if (*y >= screenHeight)
-        *y = screenHeight-1;
+        *y = screenHeight - 1;
 }
 
 void dpy_cleararea(int x1, int y1, int x2, int y2)
@@ -332,11 +340,13 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
 
     for (int y = y1; y <= y2; y++)
     {
-        struct cell* p = &screen[y * screenWidth + x1];
+        cell_t* p = &screen[y * screenWidth + x1];
         for (int x = x1; x <= x2; x++)
         {
             p->c = ' ';
             p->attr = currentAttr;
+            p->fg = currentFg;
+            p->bg = currentBg;
             p++;
         }
     }

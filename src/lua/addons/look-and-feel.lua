@@ -56,9 +56,11 @@ do
 				enabled = false,
 				maxwidth = 80,
 				terminators = true,
-				denseparagraphs = false
+				denseparagraphs = false,
+				palette = "Light",
 			}
 		)
+		SetTheme(GlobalSettings.lookandfeel.palette)
 	end
 
 	AddEventListener(Event.RegisterAddons, cb)
@@ -69,6 +71,14 @@ end
 
 function Cmd.ConfigureLookAndFeel()
 	local settings = GlobalSettings.lookandfeel
+	local themes = GetThemes()
+	local theme = 1
+	for i, k in ipairs(themes) do
+		if settings.palette == k then
+			theme = i
+			break
+		end
+	end
 
 	local enabled_checkbox =
 		Form.Checkbox {
@@ -109,11 +119,20 @@ function Cmd.ConfigureLookAndFeel()
 			value = settings.fullstopspaces
 		}
 
+	local palette_toggle =
+		Form.Toggle {
+			x1 = 1, y1 = 11,
+			x2 = 60, y2 = 11,
+			label = "Colour theme",
+			values = themes,
+			value = theme
+		}
+
 	local dialogue =
 	{
 		title = "Configure Look and Feel",
 		width = Form.Large,
-		height = 11,
+		height = 13,
 		stretchy = false,
 
 		["KEY_RETURN"] = "confirm",
@@ -132,6 +151,7 @@ function Cmd.ConfigureLookAndFeel()
 		terminators_checkbox,
 		denseparagraphs_checkbox,
 		fullstopspaces_checkbox,
+		palette_toggle,
 	}
 
 	while true do
@@ -150,6 +170,8 @@ function Cmd.ConfigureLookAndFeel()
 			settings.terminators = terminators_checkbox.value
 			settings.denseparagraphs = denseparagraphs_checkbox.value
 			settings.fullstopspaces = fullstopspaces_checkbox.value
+			settings.palette = themes[palette_toggle.value]
+			SetTheme(settings.palette)
 			SaveGlobalSettings()
 			UpdateDocumentStyles()
 
