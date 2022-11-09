@@ -266,22 +266,13 @@ void dpy_sync(void)
             if (x < 0)
                 x = 0;
             int y = cursory * fontHeight;
-            int h = fontHeight;
 
             glColor3f(1.0f, 1.0f, 1.0f);
             glLogicOp(GL_XOR);
             glDisable(GL_BLEND);
+            glDisable(GL_POLYGON_SMOOTH);
             glEnable(GL_COLOR_LOGIC_OP);
-            glBegin(GL_LINES);
-            glVertex2i(x, y);
-            glVertex2i(x, y + h);
-
-            glVertex2i(x - 2, y);
-            glVertex2i(x + 1, y);
-
-            glVertex2i(x - 2, y + h);
-            glVertex2i(x + 1, y + h);
-            glEnd();
+            glRecti(x, y, x+fontWidth, y+fontHeight);
             glLogicOp(GL_CLEAR);
             glDisable(GL_COLOR_LOGIC_OP);
         }
