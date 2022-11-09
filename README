@@ -171,7 +171,8 @@ quit WordGrinder by closing the window. Fixed a bug where the global settings
 would be reset during CLI use.  WordGrinder files with CRLF line endings can
 now be read. Emacs orgmode export (contributed by VitorGoatman@github). ESCAPE
 can be used to cancel things. Both TAB and ^I can be used for autocompletion in
-file dialogues. Miscellaneous editor state machine bugfixes.
+file dialogues. Miscellaneous editor state machine bugfixes. Multiple scroll
+modes.
 
 WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more
