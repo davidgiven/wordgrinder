@@ -221,30 +221,71 @@ local function drawbottommarker(y)
 end
 
 function RedrawScreen()
+	-- We can't actual draw until the first resize event has been processed.
+	if ScreenHeight == 0 then
+		return
+	end
+
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
+	if not Document.sp then
+		Document.sp = Document.cp
+		Document.sw = Document.cw
+	end
+	local sp, sw = Document.sp, Document.sw
 	local cp, cw, co = Document.cp, Document.cw, Document.co
-	local cy = int(ScreenHeight / 2)
 	local tx = papermargin + 1
 
-	-- Find out the offset of the current paragraph.
+	-- Find out the offset of the paragraph at the middle of the screen.
 
-	local paragraph = Document[cp]
-	local ocw = cw
-	local cl
-	cl, cw = paragraph:getLineOfWord(cw)
-	if not cl then
-		error("word "..ocw.." not in para "..cp.." of len "..#paragraph)
+	local paragraph = Document[sp]
+	local osw = sw
+	local sl
+	sl, sw = paragraph:getLineOfWord(sw)
+	if not sl then
+		error("word "..osw.." not in para "..sp.." of len "..#paragraph)
+	end
+
+	-- So, line sl on sp is supposed to be in the middle. We now work up
+	-- and down to find the real cursor position.
+
+	local cy = int(ScreenHeight / 2) - sl
+	if cp >= sp then
+		local p = sp
+		
+		while p < cp do
+			cy = cy + #Document[p]:wrap() + Document:spaceBelow(p)
+			p = p + 1
+		end
+		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		if cy >= (ScreenHeight-5) then
+			Document.sp = cp
+			Document.sw = cw
+			return RedrawScreen()
+		end
+	else
+		local p = sp
+
+		while p > cp do
+			p = p - 1
+			cy = cy - #Document[p]:wrap() - Document:spaceBelow(p)
+		end
+		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		if cy < 4 then
+			Document.sp = cp
+			Document.sw = cw
+			return RedrawScreen()
+		end
 	end
 
 	-- Position the cursor.
 
 	do
-		local cw = Document.cw
+		local paragraph = Document[cp]
 		local word = paragraph[cw]
 		GotoXY(tx + paragraph.xs[cw] +
 			GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(cl),
-			cy - 1)
+			cy)
 	end
 
 	-- Cache values for mark drawing.
@@ -269,10 +310,10 @@ function RedrawScreen()
 
 	-- Draw backwards.
 
-	local pn = cp - 1
-	local sa = Document:spaceAbove(cp)
-	local y = cy - cl - 1 - sa
-	local paragraph = Document[cp]
+	local pn = sp - 1
+	local sa = Document:spaceAbove(sp)
+	local y = (ScreenHeight/2) - sl - 1 - sa
+	local paragraph = Document[sp]
 	if paragraph then
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y+1, y+sa)
@@ -325,8 +366,8 @@ function RedrawScreen()
 
 	-- Draw forwards.
 
-	y = cy - cl
-	pn = cp
+	y = (ScreenHeight/2) - sl
+	pn = sp
 	while (y < ScreenHeight) do
 		local paragraph = Document[pn]
 		if not paragraph then
