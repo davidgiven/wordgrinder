@@ -236,6 +236,11 @@ function RedrawScreen()
 	local cp, cw, co = Document.cp, Document.cw, Document.co
 	local tx = papermargin + 1
 
+	if GetScrollMode() == "Fixed" then
+		sp = Document.cp
+		sw = Document.cw
+	end
+
 	-- Find out the offset of the paragraph at the middle of the screen.
 
 	local paragraph = Document[sp]
