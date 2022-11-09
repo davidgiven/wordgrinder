@@ -2,6 +2,8 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local SCROLLMODES = { "Fixed", "Jump" }
+
 -----------------------------------------------------------------------------
 -- Fetch the maximum allowed width.
 
@@ -47,6 +49,17 @@ function WantFullStopSpaces()
 end
 
 -----------------------------------------------------------------------------
+-- Get the scroll mode.
+
+function GetScrollMode()
+	local settings = GlobalSettings.lookandfeel
+	if settings then
+		return settings.scrollmode
+	end
+	return "Fixed"
+end
+
+-----------------------------------------------------------------------------
 -- Addon registration. Create the default global settings.
 
 do
@@ -58,6 +71,7 @@ do
 				terminators = true,
 				denseparagraphs = false,
 				palette = "Light",
+				scrollmode = "Fixed",
 			}
 		)
 		SetTheme(GlobalSettings.lookandfeel.palette)
@@ -69,16 +83,17 @@ end
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
+local function find(list, value)
+	for i, k in ipairs(list) do
+		if value == k then
+			return i
+		end
+	end
+end
+
 function Cmd.ConfigureLookAndFeel()
 	local settings = GlobalSettings.lookandfeel
 	local themes = GetThemes()
-	local theme = 1
-	for i, k in ipairs(themes) do
-		if settings.palette == k then
-			theme = i
-			break
-		end
-	end
 
 	local enabled_checkbox =
 		Form.Checkbox {
@@ -125,14 +140,23 @@ function Cmd.ConfigureLookAndFeel()
 			x2 = 60, y2 = 11,
 			label = "Colour theme",
 			values = themes,
-			value = theme
+			value = find(themes, settings.palette)
+		}
+
+	local scrollmode_toggle =
+		Form.Toggle {
+			x1 = 1, y1 = 13,
+			x2 = 60, y2 = 13,
+			label = "Scroll mode",
+			values = SCROLLMODES,
+			value = find(SCROLLMODES, settings.scrollmode)
 		}
 
 	local dialogue =
 	{
 		title = "Configure Look and Feel",
 		width = Form.Large,
-		height = 13,
+		height = 15,
 		stretchy = false,
 
 		["KEY_RETURN"] = "confirm",
@@ -152,6 +176,7 @@ function Cmd.ConfigureLookAndFeel()
 		denseparagraphs_checkbox,
 		fullstopspaces_checkbox,
 		palette_toggle,
+		scrollmode_toggle,
 	}
 
 	while true do
@@ -171,6 +196,7 @@ function Cmd.ConfigureLookAndFeel()
 			settings.denseparagraphs = denseparagraphs_checkbox.value
 			settings.fullstopspaces = fullstopspaces_checkbox.value
 			settings.palette = themes[palette_toggle.value]
+			settings.scrollmode = SCROLLMODES[scrollmode_toggle.value]
 			SetTheme(settings.palette)
 			SaveGlobalSettings()
 			UpdateDocumentStyles()
