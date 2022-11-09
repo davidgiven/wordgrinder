@@ -248,7 +248,7 @@ function RedrawScreen()
 	local sl
 	sl, sw = paragraph:getLineOfWord(sw)
 	if not sl then
-		error("word "..osw.." not in para "..sp.." of len "..#paragraph)
+		sl = #paragraph:wrap()
 	end
 
 	-- So, line sl on sp is supposed to be in the middle. We now work up
