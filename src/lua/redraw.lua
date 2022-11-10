@@ -225,7 +225,6 @@ function RedrawScreen()
 		return
 	end
 
-local before = wg.time()
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
 	if not Document.sp then
@@ -434,8 +433,6 @@ local before = wg.time()
 	redrawstatus()
 
 	FireEvent(Event.Redraw)
-local after = wg.time()
-print("redraw", after-before)
 end
 
 function GetCharWithBlinkingCursor(timeout)

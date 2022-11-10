@@ -244,7 +244,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
 
     stbtt_aligned_quad q;
     stbtt_GetPackedQuad(
-        &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
+        &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, false);
 
     glEnable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, cd->page->texture);
