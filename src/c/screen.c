@@ -241,7 +241,10 @@ static int getchar_cb(lua_State* L)
 		t = forcedouble(L, 1);
 
 	dpy_setcursor(cursorx, cursory, cursorshown);
+	double before = gettime();
 	dpy_sync();
+	double after = gettime();
+	printf("sync = %f\n", after - before);
 
 	for (;;)
 	{

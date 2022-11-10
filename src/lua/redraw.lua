@@ -18,7 +18,6 @@ local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local ShowCursor = wg.showcursor
 local HideCursor = wg.hidecursor
-local Sync = wg.sync
 
 local UseUnicode = wg.useunicode
 local BLINK_TIME = 0.8
@@ -226,6 +225,7 @@ function RedrawScreen()
 		return
 	end
 
+local before = wg.time()
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
 	if not Document.sp then
@@ -434,6 +434,8 @@ function RedrawScreen()
 	redrawstatus()
 
 	FireEvent(Event.Redraw)
+local after = wg.time()
+print("redraw", after-before)
 end
 
 function GetCharWithBlinkingCursor(timeout)
