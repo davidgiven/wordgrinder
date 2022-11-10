@@ -272,7 +272,7 @@ void dpy_sync(void)
             glDisable(GL_BLEND);
             glDisable(GL_POLYGON_SMOOTH);
             glEnable(GL_COLOR_LOGIC_OP);
-            glRecti(x, y, x+fontWidth, y+fontHeight);
+            glRecti(x, y, x + fontWidth, y + fontHeight);
             glLogicOp(GL_CLEAR);
             glDisable(GL_COLOR_LOGIC_OP);
         }

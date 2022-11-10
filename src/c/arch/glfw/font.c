@@ -40,6 +40,7 @@ static int fontXOffset;
 static float fontScale;
 static struct font* fonts[8];
 static struct page** pages = NULL;
+static struct chardata lowchardata[128 * 4];
 static struct chardata* chardata = NULL;
 
 static void freeFont(struct font* font)
@@ -194,9 +195,26 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     if (attrs & DPY_ITALIC)
         style |= ITALIC;
 
-    uint32_t key = c | (style << 24);
-    struct chardata* cd = hmgetp_null(chardata, key);
-    if (!cd)
+    uint32_t key = (c << 2) | style;
+    uint32_t akey = key - 32;
+    struct chardata* cd;
+    if (akey < sizeof(lowchardata) / sizeof(*lowchardata))
+    {
+        cd = &lowchardata[akey];
+        cd->key = key;
+    }
+    else
+    {
+        cd = hmgetp_null(chardata, key);
+        if (!cd)
+        {
+            struct chardata cds = {.key = key};
+            hmputs(chardata, cds);
+            cd = hmgetp_null(chardata, key);
+        }
+    }
+
+    if (!cd->page)
     {
         struct page* page;
         if (arrlen(pages) == 0)
@@ -207,10 +225,6 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         struct font* font = fonts[style];
         if (!font)
             return;
-
-        struct chardata cds = {.key = key};
-        hmputs(chardata, cds);
-        cd = hmgetp_null(chardata, key);
 
         /* First try rendering into the current page. If that fails, the
          * page is full and we need a new one. */
