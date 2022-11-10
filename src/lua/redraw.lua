@@ -288,6 +288,7 @@ function RedrawScreen()
 	do
 		local paragraph = Document[cp]
 		local word = paragraph[cw]
+		local cl = paragraph:getLineOfWord(cw)
 		GotoXY(tx + paragraph.xs[cw] +
 			GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(cl),
 			cy)
