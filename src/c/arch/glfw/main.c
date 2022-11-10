@@ -209,6 +209,8 @@ void dpy_sync(void)
 {
     pendingRedraw = false;
 
+double t1 = gettime();
+
     /* Configure viewport for 2D graphics. */
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -278,7 +280,10 @@ void dpy_sync(void)
         }
     }
 
+double t2 = gettime();
     glfwSwapBuffers(window);
+double t3 = gettime();
+printf("%f %f\n", t2-t1, t3-t2);
 }
 
 void dpy_setattr(int andmask, int ormask)
