@@ -76,7 +76,7 @@ function ExportFileUsingCallbacks(document, cb)
 		oldbold = bold
 	end
 
-	for _, paragraph in ipairs(Document) do
+	for _, paragraph in ipairs(document) do
 		local name = paragraph.style
 		local style = DocumentStyles[name]
 

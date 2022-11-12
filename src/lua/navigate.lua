@@ -762,7 +762,6 @@ function Cmd.Copy(keepselection)
 
 	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
 	local buffer = CreateDocument()
-	DocumentSet:setClipboard(buffer)
 
 	-- Copy all the paragraphs from the selected area into the clipboard.
 
@@ -818,6 +817,8 @@ function Cmd.Copy(keepselection)
 	end
 
 	buffer:renumber()
+	SetClipboard(buffer)
+
 	NonmodalMessage(buffer.wordcount.." words copied to clipboard.")
 	if not keepselection then
 		return Cmd.UnsetMark()
@@ -827,7 +828,7 @@ function Cmd.Copy(keepselection)
 end
 
 function Cmd.Paste()
-	local buffer = DocumentSet:getClipboard()
+	local buffer = GetClipboard()
 	if not buffer then
 		return false
 	end

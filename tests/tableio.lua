@@ -12,10 +12,10 @@ local t = {
 	array = { "one", "two", "three" }
 }
 
-local r, e = SaveToStream(tmpfile, {data = t})
+local r, e = SaveToFile(tmpfile, {data = t})
 AssertEquals(nil, e)
 
-local tt, e = LoadFromStream(tmpfile)
+local tt, e = LoadFromFile(tmpfile)
 AssertEquals(nil, e)
 AssertTableEquals(t, tt.data)
 

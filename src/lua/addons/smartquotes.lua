@@ -81,7 +81,7 @@ end
 
 local function convert_clipboard()
 	local settings = DocumentSet.addons.smartquotes or {}
-	local clipboard = DocumentSet:getClipboard()
+	local doc = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
 	local rd = escape(settings.rightdouble)
@@ -98,8 +98,8 @@ local function convert_clipboard()
 		 P("$")
 		):compile()
 
-	for pn = 1, #clipboard do
-		local para = clipboard[pn]
+	for pn = 1, #doc do
+		local para = doc[pn]
 		if settings.notinraw and (para.style ~= "RAW") then
 			local newwords = {}
 			for _, w in ipairs(para) do
@@ -125,17 +125,18 @@ local function convert_clipboard()
 				newwords[#newwords+1] = w
 			end
 
-			clipboard[pn] = CreateParagraph(para.style, newwords)
+			doc[pn] = CreateParagraph(para.style, newwords)
 		end
 	end
 
+	SetClipboard(doc)
 	NonmodalMessage("Clipboard smartquotified.")
 	return true
 end
 
 local function unconvert_clipboard()
 	local settings = DocumentSet.addons.smartquotes or {}
-	local clipboard = DocumentSet:getClipboard()
+	local clipboard = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
 	local rd = escape(settings.rightdouble)
@@ -158,6 +159,7 @@ local function unconvert_clipboard()
 		end
 	end
 
+	SetClipboard(clipboard)
 	NonmodalMessage("Clipboard unsmartquotified.")
 	return true
 end

@@ -60,6 +60,7 @@ function Cmd.ExportTextFile(filename)
 		callback)
 end
 
-function Cmd.ExportToTextString()
-	return ExportToString(Document, callback)
+function Cmd.ExportToTextString(document)
+	document = document or Document
+	return ExportToString(document, callback)
 end
