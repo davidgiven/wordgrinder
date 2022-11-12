@@ -240,24 +240,13 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
             GL_ALPHA,
             GL_UNSIGNED_BYTE,
             &page->textureData[0]);
-
-//			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_BLEND);
-
-glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-//glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_SRC_COLOR);
-glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-
-glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-//glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
     }
 
     stbtt_aligned_quad q;
     stbtt_GetPackedQuad(
         &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
 
-	glEnable(GL_BLEND);
+    glEnable(GL_BLEND);
     glBindTexture(GL_TEXTURE_2D, cd->page->texture);
     glBegin(GL_QUADS);
     glTexCoord2f(q.s0, q.t0);
