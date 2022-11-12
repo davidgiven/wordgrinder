@@ -378,6 +378,7 @@ add_configuration() {
     add SRCS src/c/word.c
     add SRCS src/c/screen.c
     add SRCS src/c/bit32.c
+    add SRCS src/c/clipboard.cc
     add SRCS $OBJDIR/luascripts.c
 
     # Frontends
@@ -485,9 +486,9 @@ add_configuration() {
         add tests tests/get-style-from-word.lua
         add tests tests/immutable-paragraphs.lua
         add tests tests/import-from-html.lua
+        add tests tests/import-from-markdown.lua
         add tests tests/import-from-opendocument.lua
         add tests tests/import-from-text.lua
-        add tests tests/import-from-markdown.lua
         add tests tests/insert-space-with-style-hint.lua
         add tests tests/io-open-enoent.lua
         add tests tests/line-down-into-style.lua
@@ -501,9 +502,10 @@ add_configuration() {
         add tests tests/load-0.6-v6.lua
         add tests tests/load-0.6.lua
         add tests tests/load-0.7.2.lua
-        add tests tests/load-0.8.lua
         add tests tests/load-0.8.crlf.lua
+        add tests tests/load-0.8.lua
         add tests tests/load-failed.lua
+        add tests tests/lowlevelclipboard.lua
         add tests tests/move-while-selected.lua
         add tests tests/numbered-lists.lua
         add tests tests/parse-string-into-words.lua
@@ -535,8 +537,8 @@ add_configuration() {
         add tests tests/weirdness-upgrade-0.6-with-clipboard.lua
         add tests tests/weirdness-word-left-from-end-of-line.lua
         add tests tests/weirdness-word-right-to-last-word-in-doc.lua
-        add tests tests/word.lua
         add tests tests/windows-installdir.lua
+        add tests tests/word.lua
         add tests tests/xpattern.lua
 
         add testdeps tests/testsuite.lua

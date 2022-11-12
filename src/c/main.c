@@ -47,6 +47,7 @@ int main(int argc, char* argv[])
 	utils_init();
 	filesystem_init();
 	zip_init();
+	clipboard_init();
 	#if (LUA_VERSION_NUM < 502)
 		luaopen_lpeg(L);
 	#else
