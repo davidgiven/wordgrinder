@@ -237,6 +237,7 @@ reset_configuration() {
     add LDFLAGS -g
     add LDFLAGS -lm
     add LDFLAGS -lz
+    add LDFLAGS -lpthread
 }
 
 set_frontend() {
