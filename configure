@@ -357,7 +357,18 @@ add_configuration() {
     if [ "$BUILTIN_LIBCLIP" = "y" ]; then
         add BOTHFLAGS -Isrc/c/emu/clip
         add SRCS src/c/emu/clip/clip.cpp
-        add SRCS src/c/emu/clip/clip_none.cpp
+        add SRCS src/c/emu/clip/image.cpp
+
+        if [ "$(uname)" = "Darwin" ]; then
+            add SRCS src/c/emu/clip/clip_osx.mm
+        elif [ "$OS" = "Windows_NT" ]; then
+            add SRCS src/c/emu/clip/clip_win.cpp
+        elif [ "$FRONTEND" = "ncurses" ]; then
+            add SRCS src/c/emu/clip/clip_none.cpp
+        else
+            add SRCS src/c/emu/clip/clip_x11.cpp
+            add LDFLAGS -lxcb
+        fi
     fi
 
     # This must go *after* any other include or library path configuration,
@@ -392,6 +403,7 @@ add_configuration() {
         wincon)
             add SRCS src/c/arch/win32/console/dpy.c
             add SRCS src/c/arch/win32/console/realmain.c
+            add SRCS src/c/emu/clip/clip_win.cpp
             add BOTHFLAGS -Dmain=appMain
             add BOTHFLAGS -mconsole
             add BOTHFLAGS -DFRONTEND=wincon
@@ -424,7 +436,7 @@ add_configuration() {
 
     local objs
     for f in $SRCS; do
-        obj=$O/${f%*.c?}.o
+        obj=$O/${f%*.[cm]?}.o
         add OBJS $obj
         case $f in
             *.c)
