@@ -403,11 +403,10 @@ add_configuration() {
         wincon)
             add SRCS src/c/arch/win32/console/dpy.c
             add SRCS src/c/arch/win32/console/realmain.c
-            add SRCS src/c/emu/clip/clip_win.cpp
             add BOTHFLAGS -Dmain=appMain
             add BOTHFLAGS -mconsole
             add BOTHFLAGS -DFRONTEND=wincon
-            add LDFLAGS -mconsole
+            add LDFLAGS -mconsole -lole32 -lshlwapi -lwindowscodecs
             ;;
 
         glfw)
@@ -425,7 +424,7 @@ add_configuration() {
             elif [ "$(uname)" = "Darwin" ]; then
                 add LDFLAGS -framework OpenGL
             elif [ "$OS" = "Windows_NT" ]; then
-                add LDFLAGS -lopengl32 -lgdi32
+                add LDFLAGS -lopengl32 -lgdi32 -lole32 -lshlwapi -lwindowscodecs
             else
                 echo "No OpenGL found"
                 exit 1
