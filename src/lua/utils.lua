@@ -532,13 +532,11 @@ function CreateIStream(data)
 		{
 			read = function(self, a)
 				if a == "*l" then
-					local _, e, s = string_find(data, "([^\n]*\n?)", ptr)
-					ptr = e + 1
-					if s == "" then
-						s = nil
-					else
-						s = string_sub(s, 1, #s-1)
+					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
+					if (s == "") and (n == "") then
+						return nil
 					end
+					ptr = e + 1
 					return s
 				else
 					error("unsupport read parameter")

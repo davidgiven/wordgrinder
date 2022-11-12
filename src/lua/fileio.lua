@@ -550,6 +550,8 @@ local function loadfromstreamt(fp)
 				doc[index] = para
 				index = index + 1
 			end
+		elseif line == "" then
+			-- Just ignore these.
 		else
 			error(
 				string.format("malformed line when reading file: %s", line))
