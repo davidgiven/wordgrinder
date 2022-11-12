@@ -361,6 +361,7 @@ add_configuration() {
 
         if [ "$(uname)" = "Darwin" ]; then
             add SRCS src/c/emu/clip/clip_osx.mm
+            add LDFLAGS -framework Cocoa
         elif [ "$OS" = "Windows_NT" ]; then
             add SRCS src/c/emu/clip/clip_win.cpp
         elif [ "$FRONTEND" = "ncurses" ]; then
@@ -444,7 +445,7 @@ add_configuration() {
                 echo "  cc = $CC" >&3
                 ;;
 
-            *.cc|*.cpp)
+            *.cc|*.cpp|*.mm)
                 echo "build $obj : cc $f" >&3
                 echo "  cflags = $BOTHFLAGS $CXXFLAGS" >&3
                 echo "  cc = $CXX" >&3
