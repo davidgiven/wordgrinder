@@ -209,6 +209,7 @@ reset_configuration() {
     BUILTIN_LPEG=y
     BUILTIN_MINIZIP=y
     BUILTIN_LIBSTB=y
+    BUILTIN_LIBCLIP=y
     DEBUG=
     LUA=builtin
     TEST=n
@@ -353,6 +354,12 @@ add_configuration() {
         add SRCS src/c/emu/libstb/stb.c
     fi
 
+    if [ "$BUILTIN_LIBCLIP" = "y" ]; then
+        add BOTHFLAGS -Isrc/c/emu/clip
+        add SRCS src/c/emu/clip/clip.cpp
+        add SRCS src/c/emu/clip/clip_none.cpp
+    fi
+
     # This must go *after* any other include or library path configuration,
     # to make sure any builtin headers get found before the system ones.
 
@@ -425,7 +432,7 @@ add_configuration() {
                 echo "  cc = $CC" >&3
                 ;;
 
-            *.cc)
+            *.cc|*.cpp)
                 echo "build $obj : cc $f" >&3
                 echo "  cflags = $BOTHFLAGS $CXXFLAGS" >&3
                 echo "  cc = $CXX" >&3
@@ -587,6 +594,7 @@ while [ $# != 0 ]; do
         lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
         minizip=*)      BUILTIN_MINIZIP=n;      add PACKAGES ${1#*=} ;;
         libstb=*)       BUILTIN_LIBSTB=n;       add PACKAGES ${1#*=} ;;
+        libclip=*)      BUILTIN_LIBCLIP=n;      add PACKAGES ${1#*=} ;;
         wincon)         set_frontend wincon ;;
         glfw)           set_frontend glfw ;;
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;
