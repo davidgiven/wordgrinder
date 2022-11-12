@@ -158,6 +158,10 @@ Sean T Barrett et al. This is public domain where possible and MIT licensed
 otherwise. Please see https://github.com/nothings/stb/blob/master/LICENSE
 for more information.
 
+The distribution contains most of the clip clipboard library, written by David
+Capello. This is MIT licensed and is © 2015-2022 David Capello. Please see
+https://github.com/dacap/clip for more information.
+
 
 
 REVISION HISTORY
