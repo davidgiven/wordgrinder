@@ -232,6 +232,7 @@ reset_configuration() {
 
     add CFLAGS -Werror=implicit-function-declaration
     add CFLAGS --std=gnu99
+    add CFLAGS -pthread
 
     add LDFLAGS -g
     add LDFLAGS -lm
