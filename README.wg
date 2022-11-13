@@ -31,11 +31,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
-.documents.1.sp: 1
+.documents.1.sp: 4
 .documents.1.sticky_selection: false
-.documents.1.sw: 1
+.documents.1.sw: 3
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3905
+.documents.1.wordcount: 3952
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -73,41 +73,14 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.Welcome to WordGrinder.cw: 1
 .documents.Welcome to WordGrinder.margin: 0
 .documents.Welcome to WordGrinder.name: "Welcome to WordGrinder"
-.documents.Welcome to WordGrinder.sp: 1
+.documents.Welcome to WordGrinder.sp: 4
 .documents.Welcome to WordGrinder.sticky_selection: false
-.documents.Welcome to WordGrinder.sw: 1
+.documents.Welcome to WordGrinder.sw: 3
 .documents.Welcome to WordGrinder.viewmode: 1
-.documents.Welcome to WordGrinder.wordcount: 3905
+.documents.Welcome to WordGrinder.wordcount: 3952
 .fileformat: 8
 .findtext: "clip"
 .idletime: 3
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
 .menu.accelerators.DOWN: "ZD"
@@ -120,8 +93,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.ET: "^X"
+.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.Eundo: "^Z"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
@@ -130,12 +103,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.PGDN: "ZPGDN"
 .menu.accelerators.PGUP: "ZPGUP"
 .menu.accelerators.RIGHT: "ZR"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
-.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.SB: "^B"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
@@ -149,6 +116,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
 .menu.accelerators.SUP: "ZSU"
+.menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.UP: "ZU"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
@@ -183,7 +156,34 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.name: "F:\\msys64\\home\\David Given\\nonshared\\wordgrinder\\bin/..\\README.wg"
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
+.menu.accelerators.^C: "EC"
+.menu.accelerators.^DOWN: "ZNP"
+.menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
+.name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
@@ -308,6 +308,7 @@ P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document). It’s included in the binary so nothing needs installing.
 P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
 P The standard system clipboard is used.
+P Important note: if you find that styles are getting lost when doing cut-and-paste, it’s because you have a clipboard manager running which is dropping the style information from the clipboard content. xclipboard does this. Sorry, there’s nothing I can do about that --- try to avoid these.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.
