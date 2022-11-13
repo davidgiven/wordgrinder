@@ -20,7 +20,7 @@ jobs:
           -and release ncurses lua=lua5.2 test \
           -and release ncurses lua=lua5.3 test \
           -and release ncurses lua=luajit test \
-          -and debug glfw test \
+          -and debug glfw \
           -and release glfw \
           -and release glfw lua=lua5.1 \
           -and release glfw lua=lua5.2 \
