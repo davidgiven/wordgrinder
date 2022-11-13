@@ -96,6 +96,8 @@ extern void bit32_init(lua_State* L);
 extern void screen_init(const char* argv[]);
 extern void screen_deinit(void);
 extern void dpy_writeunichar(int x, int y, uni_t c);
+extern void decode_mouse_event(uni_t key, int* x, int* y, bool* p);
+extern uni_t encode_mouse_event(int x, int y, bool p);
 
 /* --- Word management --------------------------------------------------- */
 
@@ -131,6 +133,15 @@ enum
 	/* These cannot appear in text. */
 	DPY_BRIGHT = (1<<4),
 	DPY_DIM = (1<<5),
+};
+
+enum
+{
+	/* uni_t special values for representing mouse events. */
+
+	VKM_MOUSE = 3 << 29,
+	VK_MOUSEDOWN = 1 << 29,
+	VK_MOUSEUP = 2 << 29
 };
 
 typedef struct

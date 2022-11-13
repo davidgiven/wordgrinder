@@ -55,6 +55,8 @@ void dpy_start(void)
     intrflush(stdscr, FALSE);
     // notimeout(stdscr, TRUE);
     keypad(stdscr, TRUE);
+    mousemask(ALL_MOUSE_EVENTS|REPORT_MOUSE_POSITION, NULL);
+    mouseinterval(0);
 
 #if defined A_ITALIC
     use_italics = !!tigetstr("sitm");
@@ -68,14 +70,20 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
-	int w, h;
+    int w, h;
     getmaxyx(stdscr, h, w);
-    dpy_cleararea(0, 0, w-1, h-1);
+    dpy_cleararea(0, 0, w - 1, h - 1);
 }
 
 void dpy_getscreensize(int* x, int* y)
 {
     getmaxyx(stdscr, *y, *x);
+}
+
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
 }
 
 void dpy_sync(void)
@@ -124,7 +132,7 @@ void dpy_setattr(int andmask, int ormask)
     currentAttr &= andmask;
     currentAttr |= ormask;
 
-	update_attrs();
+    update_attrs();
 }
 
 static int lookup_colour(const colour_t* colour)
@@ -156,7 +164,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
         if ((p->fg == fgc) && (p->bg == bgc))
         {
             currentPair = FIRST_PAIR_ID + i;
-			update_attrs();
+            update_attrs();
             return;
         }
     }
@@ -166,7 +174,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     arrpush(colourPairs, pair);
 
     init_pair(currentPair, fgc, bgc);
-	update_attrs();
+    update_attrs();
 }
 
 void dpy_writechar(int x, int y, uni_t c)
@@ -186,6 +194,39 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
     for (int y = y1; y <= y2; y++)
         for (int x = x1; x <= x2; x++)
             mvaddnstr(y, x, &cc, 1);
+}
+
+static int handle_mouse(void)
+{
+    static int mx = -1;
+    static int my = -1;
+    static bool p = false;
+
+    MEVENT event;
+    getmouse(&event);
+    switch (event.bstate)
+    {
+        case REPORT_MOUSE_POSITION:
+            mx = event.x;
+            my = event.y;
+			if (!p)
+				return 0;
+            break;
+
+        case BUTTON1_PRESSED:
+            mx = event.x;
+            my = event.y;
+            p = true;
+            break;
+
+        case BUTTON1_RELEASED:
+            mx = event.x;
+            my = event.y;
+            p = false;
+            break;
+    }
+
+    return encode_mouse_event(mx, my, p);
 }
 
 uni_t dpy_getchar(double timeout)
@@ -218,6 +259,9 @@ uni_t dpy_getchar(double timeout)
 
         if (r == ERR) /* timeout */
             return -KEY_TIMEOUT;
+
+        if (c == KEY_MOUSE)
+            return -handle_mouse();
 
         if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
             return -c;

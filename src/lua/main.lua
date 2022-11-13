@@ -176,6 +176,38 @@ function WordProcessor(filename)
         ["KEY_QUIT"] = Cmd.TerminateProgram,
     }
 
+    local function handle_key_event(c)
+        -- Anything in masterkeymap overrides everything else.
+        local f = masterkeymap[c]
+        if f then
+            RunMenuAction(f)
+        else
+            -- It's not in masterkeymap. If it's printable, insert it; if it's
+            -- not, look it up in the menu hierarchy.
+
+            if not c:match("^KEY_") then
+                Cmd.Checkpoint()
+                Cmd.TypeWhileSelected()
+
+                local payload = { value = c }
+                FireEvent(Event.KeyTyped, payload)
+
+                Cmd.InsertStringIntoWord(payload.value)
+            else
+                f = DocumentSet.menu:lookupAccelerator(c)
+                if f then
+                    RunMenuAction(f)
+                else
+                    NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
+                end
+            end
+        end
+    end
+
+    local function handle_mouse_event(m)
+        NonmodalMessage(string.format("%s %s %s", m.x, m.y, tostring(m.b)))
+    end
+
     local function eventloop()
         local nl = string.char(13)
         while true do
@@ -201,31 +233,10 @@ function WordProcessor(filename)
             if c ~= "KEY_RESIZE" then
                 ResetNonmodalMessages()
             end
-
-            -- Anything in masterkeymap overrides everything else.
-            local f = masterkeymap[c]
-            if f then
-                RunMenuAction(f)
+            if type(c) == "table" then
+                handle_mouse_event(c)
             else
-                -- It's not in masterkeymap. If it's printable, insert it; if it's
-                -- not, look it up in the menu hierarchy.
-
-                if not c:match("^KEY_") then
-                    Cmd.Checkpoint()
-                    Cmd.TypeWhileSelected()
-
-                    local payload = { value = c }
-                    FireEvent(Event.KeyTyped, payload)
-
-                    Cmd.InsertStringIntoWord(payload.value)
-                else
-                    f = DocumentSet.menu:lookupAccelerator(c)
-                    if f then
-                        RunMenuAction(f)
-                    else
-                        NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
-                    end
-                end
+                handle_key_event(c)
             end
 
             -- Process system quit messages.

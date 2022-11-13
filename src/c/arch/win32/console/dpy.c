@@ -109,6 +109,12 @@ void dpy_getscreensize(int* x, int* y)
 	*y = screenHeight;
 }
 
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
+}
+
 void dpy_sync(void)
 {
 	COORD buffersize = { screenWidth, screenHeight };

@@ -152,6 +152,33 @@ static void close_cb(GLFWwindow* window)
     arrins(keyboardQueue, 0, -VK_QUIT);
 }
 
+static void handle_mouse(double x, double y, bool b)
+{
+    static bool motion = false;
+    if (!b && !motion)
+        return;
+    motion = b;
+
+    int ix = x / fontWidth;
+    int iy = y / fontHeight;
+    arrins(keyboardQueue, 0, -encode_mouse_event(ix, iy, b));
+}
+
+static void mousepos_cb(GLFWwindow* window, double x, double y)
+{
+    handle_mouse(x, y, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT));
+}
+
+static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        double x, y;
+        glfwGetCursorPos(window, &x, &y);
+        handle_mouse(x, y, (action == GLFW_PRESS) ? true : false);
+    }
+}
+
 void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
@@ -170,8 +197,12 @@ void dpy_start(void)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    glfwSetCursor(window, glfwCreateStandardCursor(GLFW_IBEAM_CURSOR));
+    glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, true);
     glfwSetKeyCallback(window, key_cb);
     glfwSetCharCallback(window, character_cb);
+    glfwSetCursorPosCallback(window, mousepos_cb);
+    glfwSetMouseButtonCallback(window, mousebutton_cb);
     glfwSetWindowSizeCallback(window, resize_cb);
     glfwSetWindowRefreshCallback(window, refresh_cb);
     glfwSetWindowCloseCallback(window, close_cb);
@@ -203,6 +234,12 @@ void dpy_getscreensize(int* x, int* y)
 {
     *x = screenWidth;
     *y = screenHeight;
+}
+
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
 }
 
 void dpy_sync(void)
@@ -272,7 +309,7 @@ void dpy_sync(void)
             glDisable(GL_BLEND);
             glDisable(GL_POLYGON_SMOOTH);
             glEnable(GL_COLOR_LOGIC_OP);
-            glRecti(x, y, x+fontWidth, y+fontHeight);
+            glRecti(x, y, x + fontWidth, y + fontHeight);
             glLogicOp(GL_CLEAR);
             glDisable(GL_COLOR_LOGIC_OP);
         }
