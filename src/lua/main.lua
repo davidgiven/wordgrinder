@@ -204,8 +204,12 @@ function WordProcessor(filename)
         end
     end
 
+    local oldmb = false
     local function handle_mouse_event(m)
-        NonmodalMessage(string.format("%s %s %s", m.x, m.y, tostring(m.b)))
+        if m.b and not oldmb then
+            Cmd.GotoXYPosition(m.x, m.y)
+        end
+        oldmb = m.b
     end
 
     local function eventloop()

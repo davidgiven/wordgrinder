@@ -198,7 +198,6 @@ void dpy_start(void)
     glfwSwapInterval(1);
 
     glfwSetCursor(window, glfwCreateStandardCursor(GLFW_IBEAM_CURSOR));
-    glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, true);
     glfwSetKeyCallback(window, key_cb);
     glfwSetCharCallback(window, character_cb);
     glfwSetCursorPosCallback(window, mousepos_cb);

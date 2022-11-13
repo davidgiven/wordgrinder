@@ -433,6 +433,16 @@ function Cmd.GotoXPosition(pos)
 	return false
 end
 
+function Cmd.GotoXYPosition(x, y)
+	local r = GetPositionOfLine(y)
+	if r then
+		Document.cp = r.p
+		Document.cw = r.w
+		return Cmd.GotoXPosition(x - r.x)
+	end
+	return false
+end
+
 local function getpos()
 	local paragraph = Document[Document.cp]
 	local lines = paragraph:wrap()

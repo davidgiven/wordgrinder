@@ -383,7 +383,10 @@ MenuClass = {
 
 				self:drawmenu(x, y, menu, n, top)
 
-				local c = GetChar():upper()
+				local c = GetChar()
+				if type(c) == "string" then
+					c = c:upper()
+				end
 				if (c == "KEY_RESIZE") then
 					ResizeScreen()
 					RedrawScreen()
