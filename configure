@@ -94,6 +94,9 @@ rule install
 
 rule manpage
     command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
+
+pool test-pool
+    depth = 1
 EOF
 
 add() {
@@ -209,6 +212,7 @@ reset_configuration() {
     BUILTIN_LPEG=y
     BUILTIN_MINIZIP=y
     BUILTIN_LIBSTB=y
+    BUILTIN_LIBCLIP=y
     DEBUG=
     LUA=builtin
     TEST=n
@@ -231,10 +235,12 @@ reset_configuration() {
 
     add CFLAGS -Werror=implicit-function-declaration
     add CFLAGS --std=gnu99
+    add CFLAGS -pthread
 
     add LDFLAGS -g
     add LDFLAGS -lm
     add LDFLAGS -lz
+    add LDFLAGS -lpthread
 }
 
 set_frontend() {
@@ -353,6 +359,24 @@ add_configuration() {
         add SRCS src/c/emu/libstb/stb.c
     fi
 
+    if [ "$BUILTIN_LIBCLIP" = "y" ]; then
+        add BOTHFLAGS -Isrc/c/emu/clip
+        add SRCS src/c/emu/clip/clip.cpp
+        add SRCS src/c/emu/clip/image.cpp
+
+        if [ "$(uname)" = "Darwin" ]; then
+            add SRCS src/c/emu/clip/clip_osx.mm
+            add LDFLAGS -framework Cocoa
+        elif [ "$OS" = "Windows_NT" ]; then
+            add SRCS src/c/emu/clip/clip_win.cpp
+        elif [ "$FRONTEND" = "ncurses" ]; then
+            add SRCS src/c/emu/clip/clip_none.cpp
+        else
+            add SRCS src/c/emu/clip/clip_x11.cpp
+            add LDFLAGS -lxcb
+        fi
+    fi
+
     # This must go *after* any other include or library path configuration,
     # to make sure any builtin headers get found before the system ones.
 
@@ -371,6 +395,7 @@ add_configuration() {
     add SRCS src/c/word.c
     add SRCS src/c/screen.c
     add SRCS src/c/bit32.c
+    add SRCS src/c/clipboard.cc
     add SRCS $OBJDIR/luascripts.c
 
     # Frontends
@@ -387,7 +412,7 @@ add_configuration() {
             add BOTHFLAGS -Dmain=appMain
             add BOTHFLAGS -mconsole
             add BOTHFLAGS -DFRONTEND=wincon
-            add LDFLAGS -mconsole
+            add LDFLAGS -mconsole -lole32 -lshlwapi -lwindowscodecs
             ;;
 
         glfw)
@@ -405,7 +430,7 @@ add_configuration() {
             elif [ "$(uname)" = "Darwin" ]; then
                 add LDFLAGS -framework OpenGL
             elif [ "$OS" = "Windows_NT" ]; then
-                add LDFLAGS -lopengl32 -lgdi32
+                add LDFLAGS -lopengl32 -lgdi32 -lole32 -lshlwapi -lwindowscodecs
             else
                 echo "No OpenGL found"
                 exit 1
@@ -416,7 +441,7 @@ add_configuration() {
 
     local objs
     for f in $SRCS; do
-        obj=$O/${f%*.c?}.o
+        obj=$O/${f%*.[cm]?}.o
         add OBJS $obj
         case $f in
             *.c)
@@ -425,7 +450,7 @@ add_configuration() {
                 echo "  cc = $CC" >&3
                 ;;
 
-            *.cc)
+            *.cc|*.cpp|*.mm)
                 echo "build $obj : cc $f" >&3
                 echo "  cflags = $BOTHFLAGS $CXXFLAGS" >&3
                 echo "  cc = $CXX" >&3
@@ -478,9 +503,9 @@ add_configuration() {
         add tests tests/get-style-from-word.lua
         add tests tests/immutable-paragraphs.lua
         add tests tests/import-from-html.lua
+        add tests tests/import-from-markdown.lua
         add tests tests/import-from-opendocument.lua
         add tests tests/import-from-text.lua
-        add tests tests/import-from-markdown.lua
         add tests tests/insert-space-with-style-hint.lua
         add tests tests/io-open-enoent.lua
         add tests tests/line-down-into-style.lua
@@ -494,9 +519,10 @@ add_configuration() {
         add tests tests/load-0.6-v6.lua
         add tests tests/load-0.6.lua
         add tests tests/load-0.7.2.lua
-        add tests tests/load-0.8.lua
         add tests tests/load-0.8.crlf.lua
+        add tests tests/load-0.8.lua
         add tests tests/load-failed.lua
+        add tests tests/lowlevelclipboard.lua
         add tests tests/move-while-selected.lua
         add tests tests/numbered-lists.lua
         add tests tests/parse-string-into-words.lua
@@ -528,8 +554,8 @@ add_configuration() {
         add tests tests/weirdness-upgrade-0.6-with-clipboard.lua
         add tests tests/weirdness-word-left-from-end-of-line.lua
         add tests tests/weirdness-word-right-to-last-word-in-doc.lua
-        add tests tests/word.lua
         add tests tests/windows-installdir.lua
+        add tests tests/word.lua
         add tests tests/xpattern.lua
 
         add testdeps tests/testsuite.lua
@@ -541,6 +567,7 @@ add_configuration() {
             stampfile=$O/${f%*.lua}.stamp
             echo "build $stampfile : wordgrindertest $f | $EXE$X $testdeps" >&3
             echo "  exe = $EXE$X" >&3
+            echo "  pool = test-pool" >&3
             echo "default $stampfile" >&3
         done
     fi
@@ -587,6 +614,7 @@ while [ $# != 0 ]; do
         lpeg=*)         BUILTIN_LPEG=n;         add PACKAGES ${1#*=} ;;
         minizip=*)      BUILTIN_MINIZIP=n;      add PACKAGES ${1#*=} ;;
         libstb=*)       BUILTIN_LIBSTB=n;       add PACKAGES ${1#*=} ;;
+        libclip=*)      BUILTIN_LIBCLIP=n;      add PACKAGES ${1#*=} ;;
         wincon)         set_frontend wincon ;;
         glfw)           set_frontend glfw ;;
         ncurses)        set_frontend ncurses;   add PACKAGES ncursesw ;;

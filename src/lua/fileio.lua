@@ -37,7 +37,14 @@ local PARAGRAPHCLASS = 102
 local WORDCLASS = 103
 local MENUCLASS = 104
 
-local function writetostream(object, write, writeo)
+local function writetostreamt(object, write)
+	local writeo = function(k, v)
+		write(k)
+		write(": ")
+		write(v)
+		write("\n")
+	end
+
 	local function save(key, t, force)
 		if (type(t) == "table") then
 			local m = GetClass(t)
@@ -46,22 +53,20 @@ local function writetostream(object, write, writeo)
 					save(key.."."..k, i)
 				end
 
-				if (t ~= DocumentSet.documents) then
-					-- Save the keys in alphabetical order, so we get repeatable
-					-- files.
-					local keys = {}
-					for k in pairs(t) do
-						if (type(k) ~= "number") then
-							if not k:find("^_") then
-								keys[#keys+1] = k
-							end
+				-- Save the keys in alphabetical order, so we get repeatable
+				-- files.
+				local keys = {}
+				for k in pairs(t) do
+					if (type(k) ~= "number") then
+						if not k:find("^_") then
+							keys[#keys+1] = k
 						end
 					end
-					table.sort(keys)
+				end
+				table.sort(keys)
 
-					for _, k in ipairs(keys) do
-						save(key.."."..k, t[k])
-					end
+				for _, k in ipairs(keys) do
+					save(key.."."..k, t[k])
 				end
 			end
 		elseif (type(t) == "boolean") then
@@ -71,38 +76,38 @@ local function writetostream(object, write, writeo)
 		elseif (type(t) == "number") then
 			writeo(key, tostring(t))
 		else
-			error("unsupported type "..type(t))
+			error(string.format("unsupported type %s for key %s", type(t), key))
 		end
+	end
+
+	local function save_document(i, d)
+		write("#")
+		write(tostring(i))
+		write("\n")
+
+		for _, p in ipairs(d) do
+			write(p.style)
+
+			for _, s in ipairs(p) do
+				write(" ")
+				write(s)
+			end
+
+			write("\n")
+		end
+
+		write(".")
+		write("\n")
 	end
 
 	save("", object)
 
-	if (GetClass(object) == DocumentSetClass) then
-		save(".current", object:_findDocument(object.current.name))
-
-		local function save_document(i, d)
-			write("#")
-			write(tostring(i))
-			write("\n")
-
-			for _, p in ipairs(d) do
-				write(p.style)
-
-				for _, s in ipairs(p) do
-					write(" ")
-					write(s)
-				end
-
-				write("\n")
-			end
-
-			write(".")
-			write("\n")
+	local class = GetClass(object)
+	if class == DocumentSetClass then
+		if object.current then
+			save(".current", object:_findDocument(object.current.name))
 		end
 
-		if object.clipboard then
-			save_document("clipboard", object.clipboard)
-		end
 		for i, d in ipairs(object.documents) do
 			save_document(i, d)
 		end
@@ -111,7 +116,17 @@ local function writetostream(object, write, writeo)
 	return true
 end
 
-function SaveToStream(filename, object)
+function SaveToString(object)
+	local ss = {}
+	local write = function(s)
+		ss[#ss+1] = s
+	end
+
+	local r = writetostreamt(object, write)
+	return r, table.concat(ss)
+end
+
+function SaveToFile(filename, object)
 	-- Write the file to a *different* filename (so that crashes during
 	-- writing doesn't corrupt the file).
 
@@ -122,20 +137,7 @@ function SaveToStream(filename, object)
 
 	local fpw = fp.write
 
-	local ss = {}
-	local write = function(s)
-		ss[#ss+1] = s
-	end
-
-	local writeo = function(k, v)
-		write(k)
-		write(": ")
-		write(v)
-		write("\n")
-	end
-
-	local r = writetostream(object, write, writeo)
-	local s = table.concat(ss)
+	local r, s = SaveToString(object)
 
 	local e
 	if r then
@@ -163,7 +165,7 @@ end
 
 function SaveDocumentSetRaw(filename)
 	DocumentSet:purge()
-	return SaveToStream(filename, DocumentSet)
+	return SaveToFile(filename, DocumentSet)
 end
 
 function Cmd.SaveCurrentDocumentAs(filename)
@@ -324,7 +326,7 @@ local function loadfromstream(fp)
 	return load()
 end
 
-function loadfromstreamz(fp)
+local function loadfromstreamz(fp)
 	local cache = {}
 	local load
 	local data = decompress(fp:read("*a"))
@@ -469,7 +471,7 @@ function loadfromstreamz(fp)
 	return load()
 end
 
-function loadfromstreamt(fp)
+local function loadfromstreamt(fp)
 	local data = CreateDocumentSet()
 	data.menu = CreateMenuBindings()
 	data.documents = {}
@@ -529,12 +531,8 @@ function loadfromstreamt(fp)
 		elseif line:find("^#") then
 			local id = line:sub(2)
 			local doc
-			if (id == "clipboard") then
+			if id == "clipboard" then
 				doc = data.clipboard
-				if not doc then
-					doc = {}
-					data.clipboard = doc
-				end
 			else
 				doc = data.documents[tonumber(id)]
 			end
@@ -552,6 +550,8 @@ function loadfromstreamt(fp)
 				doc[index] = para
 				index = index + 1
 			end
+		elseif line == "" then
+			-- Just ignore these.
 		else
 			error(
 				string.format("malformed line when reading file: %s", line))
@@ -564,14 +564,17 @@ function loadfromstreamt(fp)
 	end
 	data.current = data.documents[data.current]
 
-	-- Remove any broken clipboard (works around a bug in v0.6 saved files).
-	if data.clipboard and (#data.clipboard == 0) then
-		data.clipboard = nil
-	end
+	-- Remove any clipboard (unused).
+	data.clipboard = nil
+
 	return data
 end
 
-function LoadFromStream(filename)
+function LoadFromString(s)
+	return loadfromstreamt(CreateIStream(s))
+end
+
+function LoadFromFile(filename)
 	local fp, e = io.open(filename, "rb")
 	if not fp then
 		return nil, ("'"..filename.."' could not be opened: "..e)
@@ -596,7 +599,7 @@ function LoadFromStream(filename)
 end
 
 local function loaddocument(filename)
-	local d, e = LoadFromStream(filename)
+	local d, e = LoadFromFile(filename)
 	if e then
 		return nil, e
 	end
@@ -734,9 +737,6 @@ function UpgradeDocument(oldversion)
 		for _, document in ipairs(DocumentSet.documents) do
             convertStyles(document)
         end
-        if DocumentSet.clipboard then
-            convertStyles(DocumentSet.clipboard)
-        end
 		DocumentSet.styles = nil
 	end
 
@@ -753,3 +753,26 @@ function UpgradeDocument(oldversion)
 		DocumentSet.idletime = nil
 	end
 end
+
+function GetClipboard()
+	local text, wgdata = wg.clipboard_get()
+	if wgdata then
+		return LoadFromString(wgdata).documents[1]
+	end
+	if text then
+		return Cmd.ImportTextFileFromString(text)
+	end
+	return CreateDocument()
+end
+
+function SetClipboard(document)
+	local text = Cmd.ExportToTextString(document)
+
+	local documentSet = CreateDocumentSet()
+	document.name = "clipboard"
+	documentSet.documents = { document }
+
+	local r, wgdata = SaveToString(documentSet)
+	wg.clipboard_set(text, wgdata)
+end
+

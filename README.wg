@@ -26,20 +26,16 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.spellchecker.useuserdictionary: true
 .addons.widescreen.enabled: false
 .addons.widescreen.maxwidth: 80
-.clipboard.co: 1
-.clipboard.cp: 1
-.clipboard.cw: 1
-.clipboard.margin: 0
-.clipboard.viewmode: 1
-.clipboard.wordcount: 4
 .documents.1.co: 1
 .documents.1.cp: 1
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
+.documents.1.sp: 4
 .documents.1.sticky_selection: false
+.documents.1.sw: 3
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3862
+.documents.1.wordcount: 3952
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -56,36 +52,35 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.sticky_selection: false
 .documents.3.viewmode: 2
 .documents.3.wordcount: 161
+.documents.Unicode test document.co: 1
+.documents.Unicode test document.cp: 52
+.documents.Unicode test document.cw: 1
+.documents.Unicode test document.margin: 0
+.documents.Unicode test document.name: "Unicode test document"
+.documents.Unicode test document.sticky_selection: false
+.documents.Unicode test document.viewmode: 1
+.documents.Unicode test document.wordcount: 501
+.documents.User dictionary.co: 5
+.documents.User dictionary.cp: 1
+.documents.User dictionary.cw: 1
+.documents.User dictionary.margin: 4
+.documents.User dictionary.name: "User dictionary"
+.documents.User dictionary.sticky_selection: false
+.documents.User dictionary.viewmode: 2
+.documents.User dictionary.wordcount: 161
+.documents.Welcome to WordGrinder.co: 1
+.documents.Welcome to WordGrinder.cp: 1
+.documents.Welcome to WordGrinder.cw: 1
+.documents.Welcome to WordGrinder.margin: 0
+.documents.Welcome to WordGrinder.name: "Welcome to WordGrinder"
+.documents.Welcome to WordGrinder.sp: 4
+.documents.Welcome to WordGrinder.sticky_selection: false
+.documents.Welcome to WordGrinder.sw: 3
+.documents.Welcome to WordGrinder.viewmode: 1
+.documents.Welcome to WordGrinder.wordcount: 3952
 .fileformat: 8
-.findtext: "font_regul"
+.findtext: "clip"
 .idletime: 3
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
 .menu.accelerators.DOWN: "ZD"
@@ -98,8 +93,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.ET: "^X"
+.menu.accelerators.Eredo: "^Y"
 .menu.accelerators.Eundo: "^Z"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
@@ -108,12 +103,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.PGDN: "ZPGDN"
 .menu.accelerators.PGUP: "ZPGUP"
 .menu.accelerators.RIGHT: "ZR"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
-.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.SB: "^B"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
@@ -127,6 +116,12 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
 .menu.accelerators.SUP: "ZSU"
+.menu.accelerators.S^DOWN: "ZSNP"
+.menu.accelerators.S^LEFT: "ZSWL"
+.menu.accelerators.S^PGDN: "ZSED"
+.menu.accelerators.S^PGUP: "ZSBD"
+.menu.accelerators.S^RIGHT: "ZSWR"
+.menu.accelerators.S^UP: "ZSPP"
 .menu.accelerators.UP: "ZU"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
@@ -161,13 +156,37 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.name: "F:\\msys64\\home\\David Given\\nonshared\\wordgrinder/README.wg"
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
+.menu.accelerators.^C: "EC"
+.menu.accelerators.^DOWN: "ZNP"
+.menu.accelerators.^E: "ZDW"
+.menu.accelerators.^F: "EF"
+.menu.accelerators.^G: "EG"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
+.menu.accelerators.^PGUP: "ZBD"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
+.menu.accelerators.^S: "FS"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
+.name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
 .current: 1
-#clipboard
-P File→Global Settings→Look and Feel
-.
 #1
 H1 Welcome to WordGrinder
 H2 Important note for Windows users
@@ -191,7 +210,7 @@ LB typing CTRL+G will open this document’s table of contents.
 P You can load and save files using the File menu. A Document Set is a file on disk. Each file can contain multiple Documents. Pay careful attention to whether WordGrinder is talking about Documents or Document Sets. There’s more information below.
 P Some operations (applying character styles, cut and paste) require you to select text. There are two ways to do this:
 LB you can create an ephemeral selection by holding down SHIFT and pressing (most) navigation keys; this is the way most other applications make selections.
-LB you can set a mark by pressing CTRL+SPACE; then move the cursor normally. The selected text is between the mark and the cursor. Note that the mark are always placed on the left side of the cursor. Pressing CTRL+SPACE again will remove the mark.
+LB you can set a mark by pressing CTRL+SPACE; then move the cursor normally. The selected text is between the mark and the cursor.  Note that the mark are always placed on the left side of the cursor. Pressing CTRL+SPACE again will remove the mark.
 P That’s it. Now you can work WordGrinder.
 H2 Styles
 H3 Character styles
@@ -209,7 +228,7 @@ P The RAW paragraph style is interesting as it allows you to embed arbitrary ch
 H2 Documents and Document Sets
 P Each WordGrinder file can contain multiple pieces of text. A file is referred to as a Document Set; each piece of text within the Document Set is a Document.
 P You can have as many documents in a document set as you like (within reason). You can manage them using the File→Manage Documents... menu item, and can quickly see and switch between documents using the Documents menu (ESC, D).
-P Documents have their own text, selection, viewing style, cursor position, etc. The clipboard, however, is shared across the entire document set. This allows you to move pieces of text around within the document set using the clipboard.
+P Documents have their own text, selection, viewing style, cursor position, etc. The clipboard, however, is the standard system clipboard. This allows you to move pieces of text around within the document set using the clipboard.
 P Importing non-WordGrinder files always results in a new document being added to the current document set.
 H2 Templates
 P You may save a WordGrinder file as a template using File→Save as template. These files get set in a special (configurable) template directory. When creating a new document with File→Create from template, the template will be loaded but the current document will not be set. This means that when saving, you’ll be prompted for a filename in the normal way.
@@ -271,21 +290,25 @@ H2 Platforms
 P WordGrinder can be used on several platforms.
 H3 Unix terminal, OSX console
 P WordGrinder will run in a terminal on practically any Unix platform with a modern curses library; I use Linux with ncurses.
-P Underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also displayed highlighted. Sorry. That’s the best ncurses can do.
-P ncurses’ keyboard support is hugely variant on what terminal you’re using, and some terminals don’t support things like SHIFT+UP/DOWN, CTRL+arrows, SHIFT+function keys, etc. In addition, ncurses enforces a one second delay when responding to the ESCAPE key. This is really annoying, but can be avoided by using ALT+letter instead.
+P Styling: underlined text is displayed underlined. Italicised text will be displayed in italics if you have a curses which is new enough, if your terminal supports italics, and if WordGrinder can figure out that your terminal supports italics; otherwise it will be displayed highlighted. Bold text... is also displayed highlighted. Sorry. That’s the best ncurses can do.
+P Keyboard: ncurses’ keyboard support is hugely variant on what terminal you’re using, and some terminals don’t support things like SHIFT+UP/DOWN, CTRL+arrows, SHIFT+function keys, etc. In addition, ncurses enforces a one second delay when responding to the ESCAPE key. This is really annoying, but can be avoided by using ALT+letter instead.
 P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrinder can’t tell them apart; which is why pressing TAB toggles italics. Sorry. Use the X11 port instead.
 P You will also need a decent terminal emulator with Unicode support. On Linux, I use xfce4-terminal with the Terminus font.
 P For OSX it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
+P Clipboard: on the OSX console, the WordGrinder clipboard is the standard system clipboard. On a normal Unix terminal, it’s private to WordGrinder, so you can’t cut-and-paste with other programs.
 H3 Windows console
 P There’s a version of WordGrinder which will run in a Windows console (a cmd.exe shell window). This mostly works as for the ncurses version above, but uses highlight text for italics, bold and underlining. The keyboard support is pretty good with most key combinations working.
 P However, Unicode is not supported at all well, due to limitations of the Windows console, and this isn’t really recommended for everyday use. Use the GUI version below.
 P While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
 P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
+P The clipboard is the standard system clipboard.
 H3 Unix X11, Windows GUI, OSX GUI
 P There is also a specific version of WordGrinder which uses OpenGL for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
 P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document). It’s included in the binary so nothing needs installing.
 P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
+P The standard system clipboard is used.
+P Important note: if you find that styles are getting lost when doing cut-and-paste, it’s because you have a clipboard manager running which is dropping the style information from the clipboard content. xclipboard does this. Sorry, there’s nothing I can do about that --- try to avoid these.
 H2 Neat features
 H3 Table of contents
 P In a document containing structured content (like this one), you can use Edit→Goto to bring up a dialogue showing an outline of the document and which allows you to jump quickly to any heading in it.

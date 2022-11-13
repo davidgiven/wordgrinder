@@ -50,3 +50,10 @@ AssertEquals("foo", LargestCommonPrefix({ "foonly", "foobar", "footle" }))
 AssertEquals("foo", LargestCommonPrefix({ "foo" }))
 AssertEquals(nil,   LargestCommonPrefix({ }))
 
+local fp = CreateIStream("foo\nbar\nbaz\n\nbib")
+local t = {}
+for s in fp:lines() do
+	t[#t+1] = s
+end
+AssertTableEquals({"foo", "bar", "baz", "", "bib"}, t)
+

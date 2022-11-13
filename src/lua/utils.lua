@@ -8,6 +8,8 @@ local WriteU8 = wg.writeu8
 local string_byte = string.byte
 local string_format = string.format
 local string_find = string.find
+local string_gmatch = string.gmatch
+local string_sub = string.sub
 local table_concat = table.concat
 local table_remove = table.remove
 local HUGE = math.huge
@@ -516,5 +518,39 @@ function InterleaveArray(array, x)
 		t[#t+1] = v
 	end
 	return t
+end
+
+-- Create an input stream, from which lines can be read as if it were a file.
+-- It's incredibly limited to just the functions we need.
+
+function CreateIStream(data)
+	local ptr = 1
+	local o = {}
+	setmetatable(o,
+	{
+		__index =
+		{
+			read = function(self, a)
+				if a == "*l" then
+					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
+					if (s == "") and (n == "") then
+						return nil
+					end
+					ptr = e + 1
+					return s
+				else
+					error("unsupport read parameter")
+				end
+			end,
+
+			lines = function(self)
+				return function()
+					return self:read("*l")
+				end
+			end
+		}
+	})
+
+	return o
 end
 
