@@ -94,6 +94,9 @@ rule install
 
 rule manpage
     command = sed 's/@@@DATE@@@/$date/g; s/@@@VERSION@@@/$version/g' $in > $out
+
+pool test-pool
+    depth = 1
 EOF
 
 add() {
@@ -564,6 +567,7 @@ add_configuration() {
             stampfile=$O/${f%*.lua}.stamp
             echo "build $stampfile : wordgrindertest $f | $EXE$X $testdeps" >&3
             echo "  exe = $EXE$X" >&3
+            echo "  pool = test-pool" >&3
             echo "default $stampfile" >&3
         done
     fi
