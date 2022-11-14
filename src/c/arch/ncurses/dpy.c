@@ -224,6 +224,12 @@ static int handle_mouse(void)
             my = event.y;
             p = false;
             break;
+
+		case BUTTON2_PRESSED:
+		case BUTTON2_CLICKED:
+		case BUTTON3_PRESSED:
+		case BUTTON3_CLICKED:
+			return VK_MENU;
     }
 
     return encode_mouse_event(mx, my, p);
@@ -325,6 +331,13 @@ const char* dpy_getkeyname(uni_t k)
         case 127: /* Some misconfigured terminals produce this */
         case KEY_BACKSPACE:
             return "KEY_BACKSPACE";
+
+        case VK_SCROLLUP:
+            return "KEY_SCROLLUP";
+        case VK_SCROLLDOWN:
+            return "KEY_SCROLLDOWN";
+        case VK_MENU:
+            return "KEY_MENU";
 
         case KEY_TIMEOUT:
             return "KEY_TIMEOUT";

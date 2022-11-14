@@ -144,6 +144,7 @@ enum
 	VK_MOUSEUP = 2 << 24,
 	VK_SCROLLUP = 3 << 24,
 	VK_SCROLLDOWN = 4 << 24,
+	VK_MENU = 5 << 24,
 };
 
 typedef struct

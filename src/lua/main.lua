@@ -173,6 +173,7 @@ function WordProcessor(filename)
         ["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentParagraph },
         ["KEY_ESCAPE"] = Cmd.ActivateMenu,
+        ["KEY_MENU"] = Cmd.ActivateMenu,
         ["KEY_QUIT"] = Cmd.TerminateProgram,
     }
 

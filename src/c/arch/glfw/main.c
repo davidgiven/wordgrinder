@@ -181,11 +181,20 @@ static void mousepos_cb(GLFWwindow* window, double x, double y)
 
 static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    switch (button)
     {
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        handle_mouse(x, y, (action == GLFW_PRESS) ? true : false);
+        case GLFW_MOUSE_BUTTON_LEFT:
+        {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            handle_mouse(x, y, (action == GLFW_PRESS) ? true : false);
+            break;
+        }
+
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            if (action == GLFW_PRESS)
+                arrins(keyboardQueue, 0, -VK_MENU);
+            break;
     }
 }
 
@@ -440,6 +449,8 @@ const char* dpy_getkeyname(uni_t k)
             return "KEY_SCROLLUP";
         case VK_SCROLLDOWN:
             return "KEY_SCROLLDOWN";
+        case VK_MENU:
+            return "KEY_MENU";
     }
 
     int mods = -k;

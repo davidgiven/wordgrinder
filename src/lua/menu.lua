@@ -449,6 +449,8 @@ MenuClass = {
 						return nil
 					elseif (c == "KEY_ESCAPE") then
 						return false
+					elseif (c == "KEY_MENU") then
+						return false
 					elseif (c == "KEY_^C") then
 						return false
 					elseif (c == "KEY_^X") then
