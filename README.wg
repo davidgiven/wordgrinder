@@ -31,11 +31,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
-.documents.1.sp: 4
+.documents.1.sp: 2
 .documents.1.sticky_selection: false
-.documents.1.sw: 3
+.documents.1.sw: 1
 .documents.1.viewmode: 1
-.documents.1.wordcount: 3952
+.documents.1.wordcount: 4029
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -73,17 +73,22 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.Welcome to WordGrinder.cw: 1
 .documents.Welcome to WordGrinder.margin: 0
 .documents.Welcome to WordGrinder.name: "Welcome to WordGrinder"
-.documents.Welcome to WordGrinder.sp: 4
+.documents.Welcome to WordGrinder.sp: 2
 .documents.Welcome to WordGrinder.sticky_selection: false
-.documents.Welcome to WordGrinder.sw: 3
+.documents.Welcome to WordGrinder.sw: 1
 .documents.Welcome to WordGrinder.viewmode: 1
-.documents.Welcome to WordGrinder.wordcount: 3952
+.documents.Welcome to WordGrinder.wordcount: 4029
 .fileformat: 8
 .findtext: "clip"
 .idletime: 3
+.menu.accelerators.^@: "ZM"
+.menu.accelerators.^B: "SB"
 .menu.accelerators.BACKSPACE: "ZDPC"
+.menu.accelerators.^C: "EC"
 .menu.accelerators.DELETE: "ZDNC"
+.menu.accelerators.^DOWN: "ZNP"
 .menu.accelerators.DOWN: "ZD"
+.menu.accelerators.^E: "ZDW"
 .menu.accelerators.EC: "^C"
 .menu.accelerators.ECadd: "^M"
 .menu.accelerators.ECfind: "^L"
@@ -93,36 +98,58 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.END: "ZE"
 .menu.accelerators.EP: "^V"
 .menu.accelerators.ER: "^R"
-.menu.accelerators.ET: "^X"
 .menu.accelerators.Eredo: "^Y"
+.menu.accelerators.ET: "^X"
 .menu.accelerators.Eundo: "^Z"
+.menu.accelerators.^F: "EF"
 .menu.accelerators.FQ: "^Q"
 .menu.accelerators.FS: "^S"
+.menu.accelerators.^G: "EG"
 .menu.accelerators.HOME: "ZH"
+.menu.accelerators.^I: "SI"
+.menu.accelerators.^K: "EN"
+.menu.accelerators.^L: "ECfind"
+.menu.accelerators.^LEFT: "ZWL"
 .menu.accelerators.LEFT: "ZL"
+.menu.accelerators.^M: "ECadd"
+.menu.accelerators.^O: "SO"
+.menu.accelerators.^P: "SP"
+.menu.accelerators.^PGDN: "ZED"
 .menu.accelerators.PGDN: "ZPGDN"
+.menu.accelerators.^PGUP: "ZBD"
 .menu.accelerators.PGUP: "ZPGUP"
+.menu.accelerators.^Q: "FQ"
+.menu.accelerators.^R: "ER"
+.menu.accelerators.^RIGHT: "ZWR"
 .menu.accelerators.RIGHT: "ZR"
+.menu.accelerators.^S: "FS"
 .menu.accelerators.SB: "^B"
+.menu.accelerators.S^DOWN: "ZSNP"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
 .menu.accelerators.SHOME: "ZSH"
 .menu.accelerators.SI: "^I"
+.menu.accelerators.S^LEFT: "ZSWL"
 .menu.accelerators.SLEFT: "ZSL"
 .menu.accelerators.SO: "^O"
 .menu.accelerators.SP: "^P"
+.menu.accelerators.S^PGDN: "ZSED"
 .menu.accelerators.SPGDN: "ZSPGDN"
+.menu.accelerators.S^PGUP: "ZSBD"
 .menu.accelerators.SPGUP: "ZSPGUP"
+.menu.accelerators.S^RIGHT: "ZSWR"
 .menu.accelerators.SRIGHT: "ZSR"
 .menu.accelerators.SU: "^U"
-.menu.accelerators.SUP: "ZSU"
-.menu.accelerators.S^DOWN: "ZSNP"
-.menu.accelerators.S^LEFT: "ZSWL"
-.menu.accelerators.S^PGDN: "ZSED"
-.menu.accelerators.S^PGUP: "ZSBD"
-.menu.accelerators.S^RIGHT: "ZSWR"
 .menu.accelerators.S^UP: "ZSPP"
+.menu.accelerators.SUP: "ZSU"
+.menu.accelerators.^U: "SU"
+.menu.accelerators.^UP: "ZPP"
 .menu.accelerators.UP: "ZU"
+.menu.accelerators.^V: "EP"
+.menu.accelerators.^W: "ZSW"
+.menu.accelerators.^X: "ET"
+.menu.accelerators.^Y: "Eredo"
+.menu.accelerators.^Z: "Eundo"
 .menu.accelerators.ZBD: "^PGUP"
 .menu.accelerators.ZD: "DOWN"
 .menu.accelerators.ZDNC: "DELETE"
@@ -156,33 +183,6 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZU: "UP"
 .menu.accelerators.ZWL: "^LEFT"
 .menu.accelerators.ZWR: "^RIGHT"
-.menu.accelerators.^@: "ZM"
-.menu.accelerators.^B: "SB"
-.menu.accelerators.^C: "EC"
-.menu.accelerators.^DOWN: "ZNP"
-.menu.accelerators.^E: "ZDW"
-.menu.accelerators.^F: "EF"
-.menu.accelerators.^G: "EG"
-.menu.accelerators.^I: "SI"
-.menu.accelerators.^K: "EN"
-.menu.accelerators.^L: "ECfind"
-.menu.accelerators.^LEFT: "ZWL"
-.menu.accelerators.^M: "ECadd"
-.menu.accelerators.^O: "SO"
-.menu.accelerators.^P: "SP"
-.menu.accelerators.^PGDN: "ZED"
-.menu.accelerators.^PGUP: "ZBD"
-.menu.accelerators.^Q: "FQ"
-.menu.accelerators.^R: "ER"
-.menu.accelerators.^RIGHT: "ZWR"
-.menu.accelerators.^S: "FS"
-.menu.accelerators.^U: "SU"
-.menu.accelerators.^UP: "ZPP"
-.menu.accelerators.^V: "EP"
-.menu.accelerators.^W: "ZSW"
-.menu.accelerators.^X: "ET"
-.menu.accelerators.^Y: "Eredo"
-.menu.accelerators.^Z: "Eundo"
 .name: "/home/dg/nonshared/wordgrinder/README.wg"
 .replacetext: ""
 .statusbar: true
@@ -191,7 +191,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 H1 Welcome to WordGrinder
 H2 Important note for Windows users
 P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
-LB the mouse is ignored. WordGrinder is keyboard driven.
+LB the mouse is mostly ignored (you can use it to move the cursor and select text, and nothing else). WordGrinder is keyboard driven.
 LB to open the menu, press the ESCAPE key. (All functions can be found there.)
 P There’s more information on using WordGrinder with Windows further down in this file.
 H2 Introduction
@@ -296,18 +296,19 @@ P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrind
 P You will also need a decent terminal emulator with Unicode support. On Linux, I use xfce4-terminal with the Terminus font.
 P For OSX it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
 P Clipboard: on the OSX console, the WordGrinder clipboard is the standard system clipboard. On a normal Unix terminal, it’s private to WordGrinder, so you can’t cut-and-paste with other programs.
+P Mouse: if you have a terminal which is configured for use with a mouse, you can use it to move the cursor and select text in the normal ways.
 H3 Windows console
 P There’s a version of WordGrinder which will run in a Windows console (a cmd.exe shell window). This mostly works as for the ncurses version above, but uses highlight text for italics, bold and underlining. The keyboard support is pretty good with most key combinations working.
 P However, Unicode is not supported at all well, due to limitations of the Windows console, and this isn’t really recommended for everyday use. Use the GUI version below.
 P While fully functional, the main purpose of this version is for scripting, allowing you to convert documents and run user scripts.
 P The console version is called cwordgrinder.exe and is installed next to the main WordGrinder executable. I expect that if you want to use this, you know how to find it.
-P The clipboard is the standard system clipboard.
+P The clipboard is the standard system clipboard. The mouse is not supported.
 H3 Unix X11, Windows GUI, OSX GUI
 P There is also a specific version of WordGrinder which uses OpenGL for graphics rendering. This works on Unix under X11 (and probably Wayland), on Windows, and on OSX. You get antialiased fonts, configurable colours, underline, bold and italicised text being displayed natively as underline, bold and italics, and most key combinations work (including SHIFT+CTRL+cursor keys). This (should) behave identically on all three platforms.
 P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document). It’s included in the binary so nothing needs installing.
 P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
-P The standard system clipboard is used.
+P The standard system clipboard is used. If you have a terminal which is configured for use with a mouse, you can use it to move the cursor and select text in the normal ways.
 P Important note: if you find that styles are getting lost when doing cut-and-paste, it’s because you have a clipboard manager running which is dropping the style information from the clipboard content. xclipboard does this. Sorry, there’s nothing I can do about that --- try to avoid these.
 H2 Neat features
 H3 Table of contents
