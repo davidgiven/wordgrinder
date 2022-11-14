@@ -161,7 +161,17 @@ static void handle_mouse(double x, double y, bool b)
 
     int ix = x / fontWidth;
     int iy = y / fontHeight;
-    arrins(keyboardQueue, 0, -encode_mouse_event(ix, iy, b));
+    static int oldix = -1;
+    static int oldiy = -1;
+    static bool oldb = false;
+
+    if ((ix != oldix) || (iy != oldiy) || (b != oldb))
+    {
+        arrins(keyboardQueue, 0, -encode_mouse_event(ix, iy, b));
+        oldix = ix;
+        oldiy = iy;
+        oldb = b;
+    }
 }
 
 static void mousepos_cb(GLFWwindow* window, double x, double y)
