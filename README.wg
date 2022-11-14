@@ -31,11 +31,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.cw: 1
 .documents.1.margin: 0
 .documents.1.name: "Welcome to WordGrinder"
-.documents.1.sp: 2
+.documents.1.sp: 4
 .documents.1.sticky_selection: false
-.documents.1.sw: 1
+.documents.1.sw: 2
 .documents.1.viewmode: 1
-.documents.1.wordcount: 4029
+.documents.1.wordcount: 4035
 .documents.2.co: 1
 .documents.2.cp: 52
 .documents.2.cw: 1
@@ -73,11 +73,11 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.Welcome to WordGrinder.cw: 1
 .documents.Welcome to WordGrinder.margin: 0
 .documents.Welcome to WordGrinder.name: "Welcome to WordGrinder"
-.documents.Welcome to WordGrinder.sp: 2
+.documents.Welcome to WordGrinder.sp: 4
 .documents.Welcome to WordGrinder.sticky_selection: false
-.documents.Welcome to WordGrinder.sw: 1
+.documents.Welcome to WordGrinder.sw: 2
 .documents.Welcome to WordGrinder.viewmode: 1
-.documents.Welcome to WordGrinder.wordcount: 4029
+.documents.Welcome to WordGrinder.wordcount: 4035
 .fileformat: 8
 .findtext: "clip"
 .idletime: 3
@@ -124,6 +124,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.RIGHT: "ZR"
 .menu.accelerators.^S: "FS"
 .menu.accelerators.SB: "^B"
+.menu.accelerators.SCROLLDOWN: "ZMD"
+.menu.accelerators.SCROLLUP: "ZMU"
 .menu.accelerators.S^DOWN: "ZSNP"
 .menu.accelerators.SDOWN: "ZSD"
 .menu.accelerators.SEND: "ZSE"
@@ -160,6 +162,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .menu.accelerators.ZH: "HOME"
 .menu.accelerators.ZL: "LEFT"
 .menu.accelerators.ZM: "^@"
+.menu.accelerators.ZMD: "SCROLLDOWN"
+.menu.accelerators.ZMU: "SCROLLUP"
 .menu.accelerators.ZNP: "^DOWN"
 .menu.accelerators.ZPGDN: "PGDN"
 .menu.accelerators.ZPGUP: "PGUP"
@@ -191,8 +195,8 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 H1 Welcome to WordGrinder
 H2 Important note for Windows users
 P WordGrinder is a port of a Unix program, and a few things don’t map well onto the way Windows works. There are some things you need to know.
-LB the mouse is mostly ignored (you can use it to move the cursor and select text, and nothing else). WordGrinder is keyboard driven.
-LB to open the menu, press the ESCAPE key. (All functions can be found there.)
+LB the mouse handling is weird. WordGrinder is mostly keyboard driven.
+LB to open the menu, press the ESCAPE key or press the right mouse button. (All functions can be found there.)
 P There’s more information on using WordGrinder with Windows further down in this file.
 H2 Introduction
 P WordGrinder is a word processor for processing words.
@@ -296,7 +300,7 @@ P Plus, on most terminals, TAB produces the same code as CTRL+I. So WordGrind
 P You will also need a decent terminal emulator with Unicode support. On Linux, I use xfce4-terminal with the Terminus font.
 P For OSX it’s recommended that you turn on the ‘Use Option as meta key’ setting in Terminal (it’s in Preferences→Keyboard). This will let you use ALT+letter to open menus. Without it you have to use ESC. Personally I think that the Homebrew or Pro themes for Terminal look best with WordGrinder, although you’ll most likely need to increase the font size.
 P Clipboard: on the OSX console, the WordGrinder clipboard is the standard system clipboard. On a normal Unix terminal, it’s private to WordGrinder, so you can’t cut-and-paste with other programs.
-P Mouse: if you have a terminal which is configured for use with a mouse, you can use it to move the cursor and select text in the normal ways.
+P Mouse: if you have a terminal which is configured for use with a mouse, you can use it in the normal way. Please note that different terminals have different capabilities; for example, rxvt can’t (at time of writing) produce mouse drag events so selecting text is a little odd.
 H3 Windows console
 P There’s a version of WordGrinder which will run in a Windows console (a cmd.exe shell window). This mostly works as for the ncurses version above, but uses highlight text for italics, bold and underlining. The keyboard support is pretty good with most key combinations working.
 P However, Unicode is not supported at all well, due to limitations of the Windows console, and this isn’t really recommended for everyday use. Use the GUI version below.
@@ -308,7 +312,7 @@ P There is also a specific version of WordGrinder which uses OpenGL for graphics
 P ALT+ENTER will toggle full screen mode.
 P Unicode support is not so great as font substitution is not done, so you’re at the mercy of whatever glyphs your font supports. If Unicode is important to you, use a font like Unifont which has good Unicode coverage. The default font is Fantasque Sans Mono, which has reasonable coverage for Latin-ish character sets (see the Unicode test document in this file; Documents→Unicode test document). It’s included in the binary so nothing needs installing.
 P Configuration is done via the dialogue at File→Global Settings→Configure GUI, where you can change the font (to any TTF file or the built in ones) and font size.
-P The standard system clipboard is used. If you have a terminal which is configured for use with a mouse, you can use it to move the cursor and select text in the normal ways.
+P The standard system clipboard is used. If you have a terminal which is configured for use with a mouse, you can use it in the normal ways.
 P Important note: if you find that styles are getting lost when doing cut-and-paste, it’s because you have a clipboard manager running which is dropping the style information from the clipboard content. xclipboard does this. Sorry, there’s nothing I can do about that --- try to avoid these.
 H2 Neat features
 H3 Table of contents

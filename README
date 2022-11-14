@@ -177,7 +177,7 @@ read. Emacs orgmode export (contributed by VitorGoatman@github). ESCAPE can be
 used to cancel things. Both TAB and ^I can be used for autocompletion in file
 dialogues. Miscellaneous editor state machine bugfixes. Multiple scroll modes.
 Changed the cursor shape for visibility. Use the system clipboard where
-possible.
+possible. Added mouse support.
 
 WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more
