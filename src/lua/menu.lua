@@ -293,6 +293,7 @@ MenuClass = {
 		end
 
 		local w = menu.maxwidth + 4 + akw
+		menu.realwidth = w
 		local visiblelen = min(#menu, ScreenHeight-y-3)
 		top = max(1, min(#menu - visiblelen + 1, top))
 		SetColour(Palette.ControlFG, Palette.ControlBG)
@@ -384,83 +385,109 @@ MenuClass = {
 				self:drawmenu(x, y, menu, n, top)
 
 				local c = GetChar()
-				if type(c) == "string" then
+				if (type(c) == "table") then
+					if c.b then
+						-- Mouse event.
+						if c.x < x then
+							-- Go to the previous menu.
+							return nil
+						elseif c.x > (x + menu.realwidth) then
+							-- Close all menus.
+							return false
+						else
+							local row = top + c.y - y - 1
+							if row < 1 then
+								return nil
+							elseif row > visiblelen then
+								return false
+							else
+								item = menu[row]
+								if (type(item) ~= "string") and item.id then
+									n = row
+									self:drawmenu(x, y, menu, n, top)
+									break
+								end
+							end
+						end
+					end
+				else
+					-- Keyboard event.
 					c = c:upper()
-				end
-				if (c == "KEY_RESIZE") then
-					ResizeScreen()
-					RedrawScreen()
-					self:drawmenustack()
-				elseif (c == "KEY_QUIT") then
-					QuitForcedBySystem()
-					return false
-				elseif (c == "KEY_UP") and (n > 1) then
-					n = n - 1
-				elseif (c == "KEY_DOWN") and (n < #menu) then
-					n = n + 1
-				elseif (c == "KEY_PGDN") then
-					n = int(min(n + visiblelen/2, #menu))
-				elseif (c == "KEY_PGUP") then
-					n = int(max(n - visiblelen/2, 1))
-				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
-					if (type(menu[n]) ~= "string") then
-						item = menu[n]
+					if (c == "KEY_RESIZE") then
+						ResizeScreen()
+						RedrawScreen()
+						self:drawmenustack()
+					elseif (c == "KEY_QUIT") then
+						QuitForcedBySystem()
+						return false
+					elseif (c == "KEY_UP") and (n > 1) then
+						n = n - 1
+					elseif (c == "KEY_DOWN") and (n < #menu) then
+						n = n + 1
+					elseif (c == "KEY_PGDN") then
+						n = int(min(n + visiblelen/2, #menu))
+					elseif (c == "KEY_PGUP") then
+						n = int(max(n - visiblelen/2, 1))
+					elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
+						if (type(menu[n]) ~= "string") then
+							item = menu[n]
+							break
+						end
+					elseif (c == "KEY_LEFT") then
+						return nil
+					elseif (c == "KEY_ESCAPE") then
+						return false
+					elseif (c == "KEY_^C") then
+						return false
+					elseif (c == "KEY_^X") then
+						local item = menu[n]
+						if (type(item) ~= "string") and item.id then
+							local ak = self.accelerators[item.id]
+							if ak then
+								self.accelerators[ak] = nil
+								self.accelerators[item.id] = nil
+								self:drawmenustack()
+							end
+						end
+					elseif (c == "KEY_^V") then
+						local item = menu[n]
+						if (type(item) ~= "string") and item.id then
+							DrawStatusLine("Press new accelerator key for menu item.")
+
+							local oak = self.accelerators[item.id]
+							local ak = GetChar():upper()
+							if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
+								ak = ak:gsub("^KEY_", "")
+								if self.accelerators[ak] then
+									NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
+								elseif (ak == "ESCAPE") or (ak == "RESIZE") then
+									NonmodalMessage("You can't bind that key.")
+								else
+									if oak then
+										self.accelerators[oak] = nil
+									end
+
+									self.accelerators[ak] = item.id
+									self.accelerators[item.id] = ak
+								end
+								self:drawmenustack()
+							end
+						end
+					elseif (c == "KEY_^R") then
+						if PromptForYesNo("Reset menu keybindings?",
+							"Are you sure you want to reset all the menu "..
+							"keybindings back to their defaults?") then
+							DocumentSet.menu = CreateMenuBindings()
+							DocumentSet:touch()
+							NonmodalMessage("All keybindings have been reset to their default settings.")
+							menu_stack = {}
+							return false
+						end
+						self:drawmenustack()
+					elseif menu.mks[c] then
+						item = menu.mks[c]
 						break
 					end
-				elseif (c == "KEY_LEFT") then
-					return nil
-				elseif (c == "KEY_ESCAPE") then
-					return false
-				elseif (c == "KEY_^C") then
-					return false
-				elseif (c == "KEY_^X") then
-					local item = menu[n]
-					if (type(item) ~= "string") and item.id then
-						local ak = self.accelerators[item.id]
-						if ak then
-							self.accelerators[ak] = nil
-							self.accelerators[item.id] = nil
-							self:drawmenustack()
-						end
-					end
-				elseif (c == "KEY_^V") then
-					local item = menu[n]
-					if (type(item) ~= "string") and item.id then
-						DrawStatusLine("Press new accelerator key for menu item.")
-
-						local oak = self.accelerators[item.id]
-						local ak = GetChar():upper()
-						if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
-							ak = ak:gsub("^KEY_", "")
-							if self.accelerators[ak] then
-								NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
-							elseif (ak == "ESCAPE") or (ak == "RESIZE") then
-								NonmodalMessage("You can't bind that key.")
-							else
-								if oak then
-									self.accelerators[oak] = nil
-								end
-
-								self.accelerators[ak] = item.id
-								self.accelerators[item.id] = ak
-							end
-							self:drawmenustack()
-						end
-					end
-				elseif (c == "KEY_^R") then
-					if PromptForYesNo("Reset menu keybindings?",
-						"Are you sure you want to reset all the menu "..
-						"keybindings back to their defaults?") then
-						DocumentSet.menu = CreateMenuBindings()
-						DocumentSet:touch()
-						NonmodalMessage("All keybindings have been reset to their default settings.")
-						menu_stack = {}
-						return false
-					end
-					self:drawmenustack()
-				elseif menu.mks[c] then
-					item = menu.mks[c]
-					break
 				end
 			end
 			if Quitting then
