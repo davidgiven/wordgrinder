@@ -55,7 +55,7 @@ void dpy_start(void)
     intrflush(stdscr, FALSE);
     // notimeout(stdscr, TRUE);
     keypad(stdscr, TRUE);
-    mousemask(ALL_MOUSE_EVENTS|REPORT_MOUSE_POSITION, NULL);
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     mouseinterval(0);
 
 #if defined A_ITALIC
@@ -209,8 +209,8 @@ static int handle_mouse(void)
         case REPORT_MOUSE_POSITION:
             mx = event.x;
             my = event.y;
-			if (!p)
-				return 0;
+            if (!p)
+                return 0;
             break;
 
         case BUTTON1_PRESSED:
@@ -225,11 +225,21 @@ static int handle_mouse(void)
             p = false;
             break;
 
-		case BUTTON2_PRESSED:
-		case BUTTON2_CLICKED:
-		case BUTTON3_PRESSED:
-		case BUTTON3_CLICKED:
-			return VK_MENU;
+        case BUTTON2_PRESSED:
+        case BUTTON2_CLICKED:
+        case BUTTON3_PRESSED:
+        case BUTTON3_CLICKED:
+            return VK_MENU;
+
+#if NCURSES_MOUSE_VERSION > 1
+        case BUTTON4_PRESSED:
+        case BUTTON4_CLICKED:
+            return VK_SCROLLUP;
+
+        case BUTTON5_PRESSED:
+        case BUTTON5_CLICKED:
+            return VK_SCROLLDOWN;
+#endif
     }
 
     return encode_mouse_event(mx, my, p);
