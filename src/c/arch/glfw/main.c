@@ -189,6 +189,14 @@ static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
+void scroll_cb(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (yoffset < 0)
+        arrins(keyboardQueue, 0, -VK_SCROLLDOWN);
+    else
+        arrins(keyboardQueue, 0, -VK_SCROLLUP);
+}
+
 void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
@@ -215,6 +223,7 @@ void dpy_start(void)
     glfwSetWindowSizeCallback(window, resize_cb);
     glfwSetWindowRefreshCallback(window, refresh_cb);
     glfwSetWindowCloseCallback(window, close_cb);
+    glfwSetScrollCallback(window, scroll_cb);
 
     extern uint8_t icon_data[];
     GLFWimage image;
@@ -427,6 +436,10 @@ const char* dpy_getkeyname(uni_t k)
             return "KEY_TIMEOUT";
         case VK_QUIT:
             return "KEY_QUIT";
+        case VK_SCROLLUP:
+            return "KEY_SCROLLUP";
+        case VK_SCROLLDOWN:
+            return "KEY_SCROLLDOWN";
     }
 
     int mods = -k;

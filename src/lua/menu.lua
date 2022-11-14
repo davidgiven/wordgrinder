@@ -203,39 +203,41 @@ local StyleMenu = CreateMenu("Style",
 
 local NavigationMenu = CreateMenu("Navigation",
 {
-	{"ZU",     nil, "Cursor up",                    "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
-	{"ZR",     nil, "Cursor right",                 "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
-	{"ZD",     nil, "Cursor down",                  "DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
-	{"ZL",     nil, "Cursor left",                  "LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
-	{"ZSU",    nil, "Selection up",                 "SUP",       { Cmd.SetMark, Cmd.GotoPreviousLine }},
-	{"ZSR",    nil, "Selection right",              "SRIGHT",    { Cmd.SetMark, Cmd.GotoNextCharW }},
-	{"ZSD",    nil, "Selection down",               "SDOWN",     { Cmd.SetMark, Cmd.GotoNextLine }},
-	{"ZSL",    nil, "Selection left",               "SLEFT",     { Cmd.SetMark, Cmd.GotoPreviousCharW }},
-	{"ZSW",    nil, "Select word",                  "^W",        Cmd.SelectWord },
-	{"ZWL",    nil, "Goto previous word",           "^LEFT",     { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
-	{"ZWR",    nil, "Goto next word",               "^RIGHT",    { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
-	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",     { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
-	{"ZPP",    nil, "Goto previous paragraph",      "^UP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
-	{"ZSWL",   nil, "Select to previous word",      "S^LEFT",    { Cmd.SetMark, Cmd.GotoPreviousWordW }},
-	{"ZSWR",   nil, "Select to next word",          "S^RIGHT",   { Cmd.SetMark, Cmd.GotoNextWordW }},
-	{"ZSNP",   nil, "Select to next paragraph",     "S^DOWN",    { Cmd.SetMark, Cmd.GotoNextParagraphW }},
-	{"ZSPP",   nil, "Select to previous paragraph", "S^UP",      { Cmd.SetMark, Cmd.GotoPreviousParagraphW }},
-	{"ZH",     nil, "Goto beginning of line",       "HOME",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
-	{"ZE",     nil, "Goto end of line",             "END",       { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
-	{"ZSH",    nil, "Select to beginning of line",  "SHOME",     { Cmd.SetMark, Cmd.GotoBeginningOfLine }},
-	{"ZSE",    nil, "Select to end of line",        "SEND",      { Cmd.SetMark, Cmd.GotoEndOfLine }},
-	{"ZBD",    nil, "Goto beginning of document",   "^PGUP",     { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
-	{"ZED",    nil, "Goto end of document",         "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
-	{"ZSBD",   nil, "Select to beginning of document", "S^PGUP", { Cmd.SetMark, Cmd.GotoBeginningOfDocument }},
-	{"ZSED",   nil, "Select to end of document",    "S^PGDN",    { Cmd.SetMark, Cmd.GotoEndOfDocument }},
-	{"ZPGUP",  nil, "Page up",                      "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
-	{"ZPGDN",  nil, "Page down",                    "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
-	{"ZSPGUP", nil, "Selection page up",            "SPGUP",     { Cmd.SetMark, Cmd.GotoPreviousPage }},
-	{"ZSPGDN", nil, "Selection page down",          "SPGDN",     { Cmd.SetMark, Cmd.GotoNextPage }},
-	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE", { cp, Cmd.DeleteSelectionOrPreviousChar }},
-	{"ZDNC",   nil, "Delete next character",        "DELETE",    { cp, Cmd.DeleteSelectionOrNextChar }},
-	{"ZDW",    nil, "Delete word",                  "^E",        { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
-	{"ZM",     nil, "Toggle mark",                  "^@",        Cmd.ToggleMark},
+	{"ZU",     nil, "Cursor up",                    "UP",         { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZR",     nil, "Cursor right",                 "RIGHT",      { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
+	{"ZD",     nil, "Cursor down",                  "DOWN",       { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZL",     nil, "Cursor left",                  "LEFT",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
+	{"ZMU",    nil, "Scroll up",                    "SCROLLUP",   { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZMD",    nil, "Scroll down",                  "SCROLLDOWN", { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZSU",    nil, "Selection up",                 "SUP",        { Cmd.SetMark, Cmd.GotoPreviousLine }},
+	{"ZSR",    nil, "Selection right",              "SRIGHT",     { Cmd.SetMark, Cmd.GotoNextCharW }},
+	{"ZSD",    nil, "Selection down",               "SDOWN",      { Cmd.SetMark, Cmd.GotoNextLine }},
+	{"ZSL",    nil, "Selection left",               "SLEFT",      { Cmd.SetMark, Cmd.GotoPreviousCharW }},
+	{"ZSW",    nil, "Select word",                  "^W",         Cmd.SelectWord },
+	{"ZWL",    nil, "Goto previous word",           "^LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
+	{"ZWR",    nil, "Goto next word",               "^RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
+	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
+	{"ZPP",    nil, "Goto previous paragraph",      "^UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
+	{"ZSWL",   nil, "Select to previous word",      "S^LEFT",     { Cmd.SetMark, Cmd.GotoPreviousWordW }},
+	{"ZSWR",   nil, "Select to next word",          "S^RIGHT",    { Cmd.SetMark, Cmd.GotoNextWordW }},
+	{"ZSNP",   nil, "Select to next paragraph",     "S^DOWN",     { Cmd.SetMark, Cmd.GotoNextParagraphW }},
+	{"ZSPP",   nil, "Select to previous paragraph", "S^UP",       { Cmd.SetMark, Cmd.GotoPreviousParagraphW }},
+	{"ZH",     nil, "Goto beginning of line",       "HOME",       { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
+	{"ZE",     nil, "Goto end of line",             "END",        { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
+	{"ZSH",    nil, "Select to beginning of line",  "SHOME",      { Cmd.SetMark, Cmd.GotoBeginningOfLine }},
+	{"ZSE",    nil, "Select to end of line",        "SEND",       { Cmd.SetMark, Cmd.GotoEndOfLine }},
+	{"ZBD",    nil, "Goto beginning of document",   "^PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
+	{"ZED",    nil, "Goto end of document",         "^PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
+	{"ZSBD",   nil, "Select to beginning of document", "S^PGUP",  { Cmd.SetMark, Cmd.GotoBeginningOfDocument }},
+	{"ZSED",   nil, "Select to end of document",    "S^PGDN",     { Cmd.SetMark, Cmd.GotoEndOfDocument }},
+	{"ZPGUP",  nil, "Page up",                      "PGUP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
+	{"ZPGDN",  nil, "Page down",                    "PGDN",       { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
+	{"ZSPGUP", nil, "Selection page up",            "SPGUP",      { Cmd.SetMark, Cmd.GotoPreviousPage }},
+	{"ZSPGDN", nil, "Selection page down",          "SPGDN",      { Cmd.SetMark, Cmd.GotoNextPage }},
+	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE",  { cp, Cmd.DeleteSelectionOrPreviousChar }},
+	{"ZDNC",   nil, "Delete next character",        "DELETE",     { cp, Cmd.DeleteSelectionOrNextChar }},
+	{"ZDW",    nil, "Delete word",                  "^E",         { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
+	{"ZM",     nil, "Toggle mark",                  "^@",         Cmd.ToggleMark},
 })
 
 local MainMenu = CreateMenu("Main Menu",
@@ -424,6 +426,16 @@ MenuClass = {
 						n = n - 1
 					elseif (c == "KEY_DOWN") and (n < #menu) then
 						n = n + 1
+					elseif (c == "KEY_SCROLLUP") and (top > 1) then
+						top = top - 1
+						if (n > (top+visiblelen-1)) then
+							n = n - 1
+						end
+					elseif (c == "KEY_SCROLLDOWN") and (top < (#menu - visiblelen)) then
+						top = top + 1
+						if (n < top) then
+							n = n + 1
+						end
 					elseif (c == "KEY_PGDN") then
 						n = int(min(n + visiblelen/2, #menu))
 					elseif (c == "KEY_PGUP") then

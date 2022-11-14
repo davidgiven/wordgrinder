@@ -139,9 +139,11 @@ enum
 {
 	/* uni_t special values for representing mouse events. */
 
-	VKM_MOUSE = 3 << 29,
-	VK_MOUSEDOWN = 1 << 29,
-	VK_MOUSEUP = 2 << 29
+	VKM_MOUSE = 0x7f << 24,
+	VK_MOUSEDOWN = 1 << 24,
+	VK_MOUSEUP = 2 << 24,
+	VK_SCROLLUP = 3 << 24,
+	VK_SCROLLDOWN = 4 << 24,
 };
 
 typedef struct
