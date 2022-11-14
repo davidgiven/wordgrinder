@@ -467,22 +467,25 @@ MenuClass = {
 							DrawStatusLine("Press new accelerator key for menu item.")
 
 							local oak = self.accelerators[item.id]
-							local ak = GetChar():upper()
-							if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
-								ak = ak:gsub("^KEY_", "")
-								if self.accelerators[ak] then
-									NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
-								elseif (ak == "ESCAPE") or (ak == "RESIZE") then
-									NonmodalMessage("You can't bind that key.")
-								else
-									if oak then
-										self.accelerators[oak] = nil
-									end
+							local ak = GetChar()
+							if (type(ak) == "string") then
+								ak = ak:upper()
+								if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
+									ak = ak:gsub("^KEY_", "")
+									if self.accelerators[ak] then
+										NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
+									elseif (ak == "ESCAPE") or (ak == "RESIZE") then
+										NonmodalMessage("You can't bind that key.")
+									else
+										if oak then
+											self.accelerators[oak] = nil
+										end
 
-									self.accelerators[ak] = item.id
-									self.accelerators[item.id] = ak
+										self.accelerators[ak] = item.id
+										self.accelerators[item.id] = ak
+									end
+									self:drawmenustack()
 								end
-								self:drawmenustack()
 							end
 						end
 					elseif (c == "KEY_^R") then
