@@ -270,6 +270,7 @@ static int getchar_cb(lua_State* L)
 				{
 					int x, y;
 					bool b;
+					static bool oldb;
 					decode_mouse_event(-c, &x, &y, &b);
 
 					lua_newtable(L);
@@ -279,6 +280,9 @@ static int getchar_cb(lua_State* L)
 					lua_setfield(L, -2, "y");
 					lua_pushboolean(L, b);
 					lua_setfield(L, -2, "b");
+					lua_pushboolean(L, b && !oldb);
+					lua_setfield(L, -2, "clicked");
+					oldb = b;
 					return 1;
 				}
 

@@ -131,7 +131,7 @@ Form.Checkbox = makewidgetclass {
 			GotoXY(self.realx2, self.realy1)
 		end
 	end,
-
+		
 	changed = function(self) end,
 
 	[" "] = checkbox_toggle
@@ -348,6 +348,14 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
+	click = function(self, m)
+		local c = m.x - self.realx1 + self.offset
+		if (c >= 1) and (c <= #self.value) then
+			self.cursor = c
+			return "redraw"
+		end
+	end,
+
 	key = function(self, key)
 		if not key:match("^KEY_") then
 			discard_transient_textfield(self)
@@ -560,6 +568,29 @@ local function findaction(table, object, key)
 	return action
 end
 
+local function findmouseaction(dialogue, m)
+	local x = m.x
+	local y = m.y
+	for i, widget in ipairs(dialogue) do
+		if (x >= widget.realx1) and (x <= widget.realx2)
+			and (y >= widget.realy1) and (y <= widget.realy2)
+		then
+			local action = nil
+			if m.clicked and widget.focusable then
+				dialogue.focus = i
+				if widget.click then
+					action = widget:click(m)
+				end
+			end
+			if not action and widget.mouse then
+				action = widget:mouse(m)
+			end
+			return action or "redraw"
+		end
+	end
+	return nil
+end
+
 function Form.Run(dialogue, redraw, helptext)
 	local function redraw_dialogue()
 		-- Ensure the screen is properly sized.
@@ -696,19 +727,23 @@ function Form.Run(dialogue, redraw, helptext)
 		end
 
 		local action = nil
-		if dialogue.focus then
-			local w = dialogue[dialogue.focus]
-			action = findaction(w, w, key)
-		end
+		if type(key) == "table" then
+			action = findmouseaction(dialogue, key)
+		else
+			if dialogue.focus then
+				local w = dialogue[dialogue.focus]
+				action = findaction(w, w, key)
+			end
 
-		if not action then
-			if key == "KEY_^C" then
-				action = "cancel"
-			elseif key == "KEY_ESCAPE" then
-				action = "cancel"
-			else
-				action = findaction(dialogue, dialogue, key) or
-					findaction(standard_actions, dialogue, key)
+			if not action then
+				if key == "KEY_^C" then
+					action = "cancel"
+				elseif key == "KEY_ESCAPE" then
+					action = "cancel"
+				else
+					action = findaction(dialogue, dialogue, key) or
+						findaction(standard_actions, dialogue, key)
+				end
 			end
 		end
 
