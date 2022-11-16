@@ -229,16 +229,16 @@ static int handle_mouse(void)
         case BUTTON2_CLICKED:
         case BUTTON3_PRESSED:
         case BUTTON3_CLICKED:
-            return VK_MENU;
+            return KEY_MENU;
 
 #if NCURSES_MOUSE_VERSION > 1
         case BUTTON4_PRESSED:
         case BUTTON4_CLICKED:
-            return VK_SCROLLUP;
+            return KEY_SCROLLUP;
 
         case BUTTON5_PRESSED:
         case BUTTON5_CLICKED:
-            return VK_SCROLLDOWN;
+            return KEY_SCROLLDOWN;
 #endif
     }
 
@@ -342,11 +342,11 @@ const char* dpy_getkeyname(uni_t k)
         case KEY_BACKSPACE:
             return "KEY_BACKSPACE";
 
-        case VK_SCROLLUP:
+        case KEY_SCROLLUP:
             return "KEY_SCROLLUP";
-        case VK_SCROLLDOWN:
+        case KEY_SCROLLDOWN:
             return "KEY_SCROLLDOWN";
-        case VK_MENU:
+        case KEY_MENU:
             return "KEY_MENU";
 
         case KEY_TIMEOUT:

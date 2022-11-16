@@ -236,7 +236,7 @@ static int getbytesofcharacter_cb(lua_State* L)
 
 uni_t encode_mouse_event(int x, int y, bool b)
 {
-    uni_t key = b ? VK_MOUSEDOWN : VK_MOUSEUP;
+    uni_t key = b ? KEY_MOUSEDOWN : KEY_MOUSEUP;
     key |= (x & 0xff);
     key |= (y & 0xff) << 8;
 	return key;
@@ -244,7 +244,7 @@ uni_t encode_mouse_event(int x, int y, bool b)
 
 void decode_mouse_event(uni_t key, int* x, int* y, bool* b)
 {
-	*b = (key & VKM_MOUSE) == VK_MOUSEDOWN;
+	*b = (key & KEYM_MOUSE) == KEY_MOUSEDOWN;
 	*x = key & 0xff;
 	*y = (key >> 8) & 0xff;
 }
@@ -263,10 +263,10 @@ static int getchar_cb(lua_State* L)
 		uni_t c = dpy_getchar(t);
 		if (c <= 0)
 		{
-			switch (-c & VKM_MOUSE)
+			switch (-c & KEYM_MOUSE)
 			{
-				case VK_MOUSEDOWN:
-				case VK_MOUSEUP:
+				case KEY_MOUSEDOWN:
+				case KEY_MOUSEUP:
 				{
 					int x, y;
 					bool b;
