@@ -121,14 +121,14 @@ Form.Checkbox = makewidgetclass {
 			s = "> NO "
 		end
 
-		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
+		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 10))
 
 		SetBright()
-		Write(self.realx2, self.realy1, s)
+		Write(self.realx2-10, self.realy1, s)
 		SetNormal()
 
 		if self.focus then
-			GotoXY(self.realx2, self.realy1)
+			GotoXY(self.realx2-10, self.realy1)
 		end
 	end,
 		

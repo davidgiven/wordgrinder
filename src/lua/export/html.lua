@@ -242,7 +242,7 @@ function Cmd.ConfigureHTMLExport()
 
 		Form.Label {
 			x1 = 1, y1 = 1,
-			x2 = 32, y2 = 1,
+			x2 = 14, y2 = 1,
 			align = Form.Left,
 			value = "Underline on:"
 		},
@@ -250,7 +250,7 @@ function Cmd.ConfigureHTMLExport()
 		
 		Form.Label {
 			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
+			x2 = 14, y2 = 3,
 			align = Form.Left,
 			value = "Underline off:"
 		},
@@ -258,7 +258,7 @@ function Cmd.ConfigureHTMLExport()
 		
 		Form.Label {
 			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
+			x2 = 14, y2 = 5,
 			align = Form.Left,
 			value = "Italics on:"
 		},
@@ -266,7 +266,7 @@ function Cmd.ConfigureHTMLExport()
 		
 		Form.Label {
 			x1 = 1, y1 = 7,
-			x2 = 32, y2 = 7,
+			x2 = 14, y2 = 7,
 			align = Form.Left,
 			value = "Italics off:"
 		},
@@ -274,7 +274,7 @@ function Cmd.ConfigureHTMLExport()
 		
 		Form.Label {
 			x1 = 1, y1 = 9,
-			x2 = 32, y2 = 9,
+			x2 = 14, y2 = 9,
 			align = Form.Left,
 			value = "Bold on:"
 		},
@@ -282,7 +282,7 @@ function Cmd.ConfigureHTMLExport()
 		
 		Form.Label {
 			x1 = 1, y1 = 11,
-			x2 = 32, y2 = 11,
+			x2 = 14, y2 = 11,
 			align = Form.Left,
 			value = "Bold off:"
 		},
