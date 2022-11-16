@@ -173,8 +173,55 @@ function WordProcessor(filename)
         ["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentParagraph },
         ["KEY_ESCAPE"] = Cmd.ActivateMenu,
+        ["KEY_MENU"] = Cmd.ActivateMenu,
         ["KEY_QUIT"] = Cmd.TerminateProgram,
     }
+
+    local function handle_key_event(c)
+        -- Anything in masterkeymap overrides everything else.
+        local f = masterkeymap[c]
+        if f then
+            RunMenuAction(f)
+        else
+            -- It's not in masterkeymap. If it's printable, insert it; if it's
+            -- not, look it up in the menu hierarchy.
+
+            if not c:match("^KEY_") then
+                Cmd.Checkpoint()
+                Cmd.TypeWhileSelected()
+
+                local payload = { value = c }
+                FireEvent(Event.KeyTyped, payload)
+
+                Cmd.InsertStringIntoWord(payload.value)
+            else
+                f = DocumentSet.menu:lookupAccelerator(c)
+                if f then
+                    RunMenuAction(f)
+                else
+                    NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
+                end
+            end
+        end
+    end
+
+    local oldmb = false
+    local oldmx, oldmy
+    local function handle_mouse_event(m)
+        if m.b and not oldmb then
+            oldmx = m.x
+            oldmy = m.y
+            Cmd.UnsetMark()
+            Cmd.GotoXYPosition(m.x, m.y)
+            Cmd.SetMark()
+        else
+            Cmd.GotoXYPosition(m.x, m.y)
+        end
+        if not m.b and oldmb and (m.x == oldmx) and (m.y == oldmy) then
+            Cmd.UnsetMark();
+        end
+        oldmb = m.b
+    end
 
     local function eventloop()
         local nl = string.char(13)
@@ -201,31 +248,10 @@ function WordProcessor(filename)
             if c ~= "KEY_RESIZE" then
                 ResetNonmodalMessages()
             end
-
-            -- Anything in masterkeymap overrides everything else.
-            local f = masterkeymap[c]
-            if f then
-                RunMenuAction(f)
+            if type(c) == "table" then
+                handle_mouse_event(c)
             else
-                -- It's not in masterkeymap. If it's printable, insert it; if it's
-                -- not, look it up in the menu hierarchy.
-
-                if not c:match("^KEY_") then
-                    Cmd.Checkpoint()
-                    Cmd.TypeWhileSelected()
-
-                    local payload = { value = c }
-                    FireEvent(Event.KeyTyped, payload)
-
-                    Cmd.InsertStringIntoWord(payload.value)
-                else
-                    f = DocumentSet.menu:lookupAccelerator(c)
-                    if f then
-                        RunMenuAction(f)
-                    else
-                        NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
-                    end
-                end
+                handle_key_event(c)
             end
 
             -- Process system quit messages.

@@ -44,15 +44,15 @@ function Cmd.ConfigurePageCount()
 	local enabled_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
-			x2 = 33, y2 = 1,
+			x2 = -1, y2 = 1,
 			label = "Show approximate page count",
 			value = settings.enabled
 		}
 
 	local count_textfield =
 		Form.TextField {
-			x1 = 33, y1 = 3,
-			x2 = 43, y2 = 3,
+			x1 = -11, y1 = 3,
+			x2 = -1, y2 = 3,
 			value = tostring(settings.wordsperpage)
 		}
 		

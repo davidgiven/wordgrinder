@@ -98,22 +98,22 @@ function Cmd.ConfigureLookAndFeel()
 	local enabled_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
-			x2 = 50, y2 = 1,
+			x2 = -1, y2 = 1,
 			label = "Enable widescreen mode",
 			value = settings.enabled
 		}
 
 	local maxwidth_textfield =
 		Form.TextField {
-			x1 = 50, y1 = 3,
-			x2 = 60, y2 = 3,
+			x1 = -11, y1 = 3,
+			x2 = -1, y2 = 3,
 			value = tostring(settings.maxwidth)
 		}
 
 	local terminators_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 5,
-			x2 = 50, y2 = 5,
+			x2 = -1, y2 = 5,
 			label = "Show terminators above and below document",
 			value = settings.terminators
 		}
@@ -121,7 +121,7 @@ function Cmd.ConfigureLookAndFeel()
 	local denseparagraphs_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 7,
-			x2 = 50, y2 = 7,
+			x2 = -1, y2 = 7,
 			label = "Use dense paragraph layout",
 			value = settings.denseparagraphs
 		}
@@ -129,7 +129,7 @@ function Cmd.ConfigureLookAndFeel()
 	local fullstopspaces_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 9,
-			x2 = 50, y2 = 9,
+			x2 = -1, y2 = 9,
 			label = "Show an extra space after full stops",
 			value = settings.fullstopspaces
 		}
@@ -137,7 +137,7 @@ function Cmd.ConfigureLookAndFeel()
 	local palette_toggle =
 		Form.Toggle {
 			x1 = 1, y1 = 11,
-			x2 = 60, y2 = 11,
+			x2 = -1, y2 = 11,
 			label = "Colour theme",
 			values = themes,
 			value = find(themes, settings.palette)
@@ -146,7 +146,7 @@ function Cmd.ConfigureLookAndFeel()
 	local scrollmode_toggle =
 		Form.Toggle {
 			x1 = 1, y1 = 13,
-			x2 = 60, y2 = 13,
+			x2 = -1, y2 = 13,
 			label = "Scroll mode",
 			values = SCROLLMODES,
 			value = find(SCROLLMODES, settings.scrollmode)
@@ -166,7 +166,7 @@ function Cmd.ConfigureLookAndFeel()
 
 		Form.Label {
 			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
+			x2 = -12, y2 = 3,
 			align = Form.Left,
 			value = "Maximum allowed width",
 		},
