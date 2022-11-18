@@ -81,7 +81,7 @@ end
 
 local function convert_clipboard()
 	local settings = DocumentSet.addons.smartquotes or {}
-	local clipboard = DocumentSet:getClipboard()
+	local doc = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
 	local rd = escape(settings.rightdouble)
@@ -98,8 +98,8 @@ local function convert_clipboard()
 		 P("$")
 		):compile()
 
-	for pn = 1, #clipboard do
-		local para = clipboard[pn]
+	for pn = 1, #doc do
+		local para = doc[pn]
 		if settings.notinraw and (para.style ~= "RAW") then
 			local newwords = {}
 			for _, w in ipairs(para) do
@@ -125,17 +125,18 @@ local function convert_clipboard()
 				newwords[#newwords+1] = w
 			end
 
-			clipboard[pn] = CreateParagraph(para.style, newwords)
+			doc[pn] = CreateParagraph(para.style, newwords)
 		end
 	end
 
+	SetClipboard(doc)
 	NonmodalMessage("Clipboard smartquotified.")
 	return true
 end
 
 local function unconvert_clipboard()
 	local settings = DocumentSet.addons.smartquotes or {}
-	local clipboard = DocumentSet:getClipboard()
+	local clipboard = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
 	local rd = escape(settings.rightdouble)
@@ -158,6 +159,7 @@ local function unconvert_clipboard()
 		end
 	end
 
+	SetClipboard(clipboard)
 	NonmodalMessage("Clipboard unsmartquotified.")
 	return true
 end
@@ -185,7 +187,7 @@ function Cmd.ConfigureSmartQuotes()
 	local single_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
-			x2 = 38, y2 = 1,
+			x2 = -1, y2 = 1,
 			label = "Convert single quotes while typing:",
 			value = settings.singlequotes
 		}
@@ -193,43 +195,43 @@ function Cmd.ConfigureSmartQuotes()
 	local double_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 3,
-			x2 = 38, y2 = 3,
+			x2 = -1, y2 = 3,
 			label = "Convert double quotes while typing:",
 			value = settings.doublequotes
 		}
 
 	local leftsingle_textfield =
 		Form.TextField {
-			x1 = 41, y1 = 5,
-			x2 = 46, y2 = 5,
+			x1 = -16, y1 = 5,
+			x2 = -11, y2 = 5,
 			value = tostring(settings.leftsingle)
 		}
 
 	local rightsingle_textfield =
 		Form.TextField {
-			x1 = 51, y1 = 5,
-			x2 = 56, y2 = 5,
+			x1 = -6, y1 = 5,
+			x2 = -1, y2 = 5,
 			value = tostring(settings.rightsingle)
 		}
 
 	local leftdouble_textfield =
 		Form.TextField {
-			x1 = 41, y1 = 7,
-			x2 = 46, y2 = 7,
+			x1 = -16, y1 = 7,
+			x2 = -11, y2 = 7,
 			value = tostring(settings.leftdouble)
 		}
 
 	local rightdouble_textfield =
 		Form.TextField {
-			x1 = 51, y1 = 7,
-			x2 = 56, y2 = 7,
+			x1 = -6, y1 = 7,
+			x2 = -1, y2 = 7,
 			value = tostring(settings.rightdouble)
 		}
 
 	local notinraw_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 9,
-			x2 = 38, y2 = 1,
+			x2 = -1, y2 = 9,
 			label = "Don't convert in RAW paragraphs:",
 			value = settings.notinraw
 		}
@@ -260,15 +262,15 @@ function Cmd.ConfigureSmartQuotes()
 		},
 
 		Form.Label {
-			x1 = 38, y1 = 5,
-			x2 = 39, y2 = 5,
+			x1 = -19, y1 = 5,
+			x2 = -17, y2 = 5,
 			align = Form.Left,
 			value = "L:"
 		},
 
 		Form.Label {
-			x1 = 48, y1 = 5,
-			x2 = 49, y2 = 5,
+			x1 = -9, y1 = 5,
+			x2 = -7, y2 = 5,
 			align = Form.Left,
 			value = "R:"
 		},
@@ -281,15 +283,15 @@ function Cmd.ConfigureSmartQuotes()
 		},
 
 		Form.Label {
-			x1 = 38, y1 = 7,
-			x2 = 39, y2 = 7,
+			x1 = -19, y1 = 7,
+			x2 = -17, y2 = 7,
 			align = Form.Left,
 			value = "L:"
 		},
 
 		Form.Label {
-			x1 = 48, y1 = 7,
-			x2 = 49, y2 = 7,
+			x1 = -9, y1 = 7,
+			x2 = -7, y2 = 7,
 			align = Form.Left,
 			value = "R:"
 		},

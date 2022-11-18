@@ -11,7 +11,7 @@ function LoadGlobalSettings(f)
 		f = filename
 	end
 
-	local s = LoadFromStream(f)
+	local s = LoadFromFile(f)
 	if s then
 		if s.globalSettings then
 			GlobalSettings = s.globalSettings
@@ -29,7 +29,7 @@ function SaveGlobalSettings(f)
 		f = filename
 	end
 
-	local r, e = SaveToStream(
+	local r, e = SaveToFile(
 		f,
 		{globalSettings=GlobalSettings}
 	)

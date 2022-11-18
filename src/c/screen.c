@@ -234,6 +234,21 @@ static int getbytesofcharacter_cb(lua_State* L)
 	return 1;
 }
 
+uni_t encode_mouse_event(int x, int y, bool b)
+{
+    uni_t key = b ? KEY_MOUSEDOWN : KEY_MOUSEUP;
+    key |= (x & 0xff);
+    key |= (y & 0xff) << 8;
+	return key;
+}
+
+void decode_mouse_event(uni_t key, int* x, int* y, bool* b)
+{
+	*b = (key & KEYM_MOUSE) == KEY_MOUSEDOWN;
+	*x = key & 0xff;
+	*y = (key >> 8) & 0xff;
+}
+
 static int getchar_cb(lua_State* L)
 {
 	double t = -1.0;
@@ -248,11 +263,38 @@ static int getchar_cb(lua_State* L)
 		uni_t c = dpy_getchar(t);
 		if (c <= 0)
 		{
-			const char* s = dpy_getkeyname(c);
-			if (s)
+			switch (-c & KEYM_MOUSE)
 			{
-				lua_pushstring(L, s);
-				break;
+				case KEY_MOUSEDOWN:
+				case KEY_MOUSEUP:
+				{
+					int x, y;
+					bool b;
+					static bool oldb;
+					decode_mouse_event(-c, &x, &y, &b);
+
+					lua_newtable(L);
+					lua_pushnumber(L, x);
+					lua_setfield(L, -2, "x");
+					lua_pushnumber(L, y);
+					lua_setfield(L, -2, "y");
+					lua_pushboolean(L, b);
+					lua_setfield(L, -2, "b");
+					lua_pushboolean(L, b && !oldb);
+					lua_setfield(L, -2, "clicked");
+					oldb = b;
+					return 1;
+				}
+
+				default:
+				{
+					const char* s = dpy_getkeyname(c);
+					if (s)
+					{
+						lua_pushstring(L, s);
+						return 1;
+					}
+				}
 			}
 		}
 

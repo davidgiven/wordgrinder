@@ -10,8 +10,6 @@
 #define VKM_SHIFT 0x100
 #define VKM_CTRL 0x200
 #define VKM_CTRLASCII 0x400
-#define VK_RESIZE 0x1000
-#define VK_TIMEOUT 0x1001
 
 #define CTRL_PRESSED (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
 
@@ -104,6 +102,12 @@ void dpy_getscreensize(int* x, int* y)
 {
     *x = screenWidth;
     *y = screenHeight;
+}
+
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
 }
 
 void dpy_sync(void)
@@ -267,7 +271,7 @@ uni_t dpy_getchar(double timeout)
         DWORD numread;
         if (timeout != -1)
             if (WaitForSingleObject(cin, timeout * 1000) == WAIT_TIMEOUT)
-                return -VK_TIMEOUT;
+                return -KEY_TIMEOUT;
 
         ReadConsoleInputW(cin, &buffer, 1, &numread);
 
@@ -287,7 +291,7 @@ uni_t dpy_getchar(double timeout)
         }
 
         if (update_buffer_info())
-            queue(-VK_RESIZE);
+            queue(-KEY_RESIZE);
     }
 }
 
@@ -295,9 +299,9 @@ const char* dpy_getkeyname(uni_t k)
 {
     switch (-k)
     {
-        case VK_RESIZE:
+        case KEY_RESIZE:
             return "KEY_RESIZE";
-        case VK_TIMEOUT:
+        case KEY_TIMEOUT:
             return "KEY_TIMEOUT";
     }
 

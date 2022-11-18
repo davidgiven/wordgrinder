@@ -96,6 +96,8 @@ extern void bit32_init(lua_State* L);
 extern void screen_init(const char* argv[]);
 extern void screen_deinit(void);
 extern void dpy_writeunichar(int x, int y, uni_t c);
+extern void decode_mouse_event(uni_t key, int* x, int* y, bool* p);
+extern uni_t encode_mouse_event(int x, int y, bool p);
 
 /* --- Word management --------------------------------------------------- */
 
@@ -114,6 +116,7 @@ extern double gettime(void);
 
 extern void utils_init(void);
 extern void filesystem_init(void);
+extern void clipboard_init(void);
 
 #define STRINGIFY1(x) #x
 #define STRINGIFY(x) STRINGIFY1(x)
@@ -131,6 +134,21 @@ enum
 	/* These cannot appear in text. */
 	DPY_BRIGHT = (1<<4),
 	DPY_DIM = (1<<5),
+};
+
+enum
+{
+	/* uni_t special values for representing mouse events. */
+
+	KEYM_MOUSE = 0x7f << 24,
+	KEY_MOUSEDOWN = 1 << 24,
+	KEY_MOUSEUP = 2 << 24,
+	KEY_SCROLLUP = 3 << 24,
+	KEY_SCROLLDOWN = 4 << 24,
+	KEY_MENU = 5 << 24,
+	KEY_RESIZE = 6 << 24,
+	KEY_TIMEOUT = 7 << 24,
+	KEY_QUIT = 8 << 24,
 };
 
 typedef struct

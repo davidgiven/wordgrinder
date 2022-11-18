@@ -104,7 +104,7 @@ function Cmd.ConfigureScrapbook()
 	local timestamp_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 3,
-			x2 = 33, y2 = 3,
+			x2 = -1, y2 = 3,
 			label = "Enable timestamp",
 			value = settings.timestamp
 		}

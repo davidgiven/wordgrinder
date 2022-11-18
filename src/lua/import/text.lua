@@ -36,6 +36,10 @@ function Cmd.ImportTextFileFromStream(fp)
 	return document
 end
 
+function Cmd.ImportTextFileFromString(s)
+	return Cmd.ImportTextFileFromStream(CreateIStream(s))
+end
+
 function Cmd.ImportTextFile(filename)
 	return ImportFileWithUI(filename, "Import Text File", Cmd.ImportTextFileFromStream)
 end

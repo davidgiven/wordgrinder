@@ -271,7 +271,7 @@ function Cmd.ConfigureSpellchecker()
 	local highlight_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 1,
-			x2 = 33, y2 = 1,
+			x2 = -1, y2 = 1,
 			label = "",
 			value = settings.enabled
 		}
@@ -279,7 +279,7 @@ function Cmd.ConfigureSpellchecker()
 	local systemdictionary_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 3,
-			x2 = 33, y2 = 3,
+			x2 = -1, y2 = 3,
 			label = "",
 			value = settings.usesystemdictionary
 		}
@@ -287,7 +287,7 @@ function Cmd.ConfigureSpellchecker()
 	local userdictionary_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 5,
-			x2 = 33, y2 = 5,
+			x2 = -1, y2 = 5,
 			label = "",
 			value = settings.useuserdictionary
 		}

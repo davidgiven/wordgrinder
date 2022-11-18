@@ -16,10 +16,10 @@ Cmd.GotoPreviousCharW()
 Cmd.Copy()
 Cmd.UnsetMark()
 
-AssertEquals(3, #DocumentSet.clipboard)
+AssertEquals(3, #GetClipboard())
 
 local filename = os.tmpname()
 AssertEquals(Cmd.SaveCurrentDocumentAs(filename), true)
 AssertEquals(Cmd.LoadDocumentSet(filename), true)
 
-AssertEquals(3, #DocumentSet.clipboard)
+AssertEquals(3, #GetClipboard())

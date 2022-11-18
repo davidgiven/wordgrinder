@@ -13,7 +13,19 @@ jobs:
       run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev imagemagick
     - name: make
       run: |
-        ./configure dev
+        ./configure \
+          debug ncurses test \
+          -and release ncurses test \
+          -and release ncurses lua=lua5.1 test \
+          -and release ncurses lua=lua5.2 test \
+          -and release ncurses lua=lua5.3 test \
+          -and release ncurses lua=luajit test \
+          -and debug glfw \
+          -and release glfw \
+          -and release glfw lua=lua5.1 \
+          -and release glfw lua=lua5.2 \
+          -and release glfw lua=lua5.3 \
+          -and release glfw lua=luajit 
         make
 
   build-macos:

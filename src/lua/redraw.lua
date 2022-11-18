@@ -23,6 +23,7 @@ local UseUnicode = wg.useunicode
 local BLINK_TIME = 0.8
 
 local messages = {}
+local lineindex = {}
 local papermargin = 0
 
 local SYMBOLS = {
@@ -317,11 +318,34 @@ function RedrawScreen()
 
 	local pn = sp - 1
 	local sa = Document:spaceAbove(sp)
-	local y = (ScreenHeight/2) - sl - 1 - sa
+	local y = int(ScreenHeight/2) - sl - 1 - sa
 	local paragraph = Document[sp]
 	if paragraph then
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y+1, y+sa)
+	end
+	lineindex = {}
+
+	local function drawline(paragraph, line, ln)
+		local x = paragraph:getIndentOfLine(ln)
+
+		setparacolour(paragraph)
+		clear(y, y)
+		if not mp then
+			paragraph:renderLine(line, tx + x, y)
+		else
+			paragraph:renderMarkedLine(line, tx + x, y, nil, pn)
+		end
+
+		if (ln == 1) then
+			drawmargin(y, pn, paragraph)
+		end
+
+		lineindex[y] = {
+			p = pn,
+			w = paragraph:getWordOfLine(ln),
+			x = tx
+		}
 	end
 
 	Document.topp = nil
@@ -334,20 +358,8 @@ function RedrawScreen()
 
 		local lines = paragraph:wrap()
 		for ln = #lines, 1, -1 do
-			local x = paragraph:getIndentOfLine(ln)
 			local l = lines[ln]
-
-			setparacolour(paragraph)
-			clear(y, y)
-			if not mp then
-				paragraph:renderLine(l, tx + x, y)
-			else
-				paragraph:renderMarkedLine(l, tx + x, y, nil, pn)
-			end
-
-			if (ln == 1) then
-				drawmargin(y, pn, paragraph)
-			end
+			drawline(paragraph, l, ln)
 
 			Document.topp = pn
 			Document.topw = l.wn
@@ -371,7 +383,7 @@ function RedrawScreen()
 
 	-- Draw forwards.
 
-	y = (ScreenHeight/2) - sl
+	y = int(ScreenHeight/2) - sl
 	pn = sp
 	while (y < ScreenHeight) do
 		local paragraph = Document[pn]
@@ -382,18 +394,7 @@ function RedrawScreen()
 		drawmargin(y, pn, paragraph)
 
 		for ln, l in ipairs(paragraph:wrap()) do
-			local x = paragraph:getIndentOfLine(ln)
-			setparacolour(paragraph)
-			clear(y, y)
-			if not mp then
-				paragraph:renderLine(l, tx + x, y)
-			else
-				paragraph:renderMarkedLine(l, tx + x, y, nil, pn)
-			end
-
-			if (ln == 1) then
-				drawmargin(y, pn, paragraph)
-			end
+			drawline(paragraph, l, ln)
 
 			-- If the top of the page hasn't already been set, then the
 			-- current paragraph extends off the top of the screen.
@@ -433,6 +434,14 @@ function RedrawScreen()
 	redrawstatus()
 
 	FireEvent(Event.Redraw)
+end
+
+function GetPositionOfLine(y)
+	local r = nil
+	for yy = 1, y do
+		r = lineindex[yy] or r
+	end
+	return r
 end
 
 function GetCharWithBlinkingCursor(timeout)

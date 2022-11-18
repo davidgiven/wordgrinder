@@ -6,9 +6,6 @@
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
 #define VKM_CTRLASCII 0x40000
-#define VK_RESIZE 0x80000
-#define VK_TIMEOUT 0x80001
-#define VK_QUIT 0x80002
 
 static GLFWwindow* window;
 static int currentAttr;
@@ -32,7 +29,7 @@ static void queueRedraw()
 {
     if (!pendingRedraw)
     {
-        arrins(keyboardQueue, 0, -VK_RESIZE);
+        arrins(keyboardQueue, 0, -KEY_RESIZE);
         pendingRedraw = true;
     }
 }
@@ -149,7 +146,61 @@ static void refresh_cb(GLFWwindow* window)
 
 static void close_cb(GLFWwindow* window)
 {
-    arrins(keyboardQueue, 0, -VK_QUIT);
+    arrins(keyboardQueue, 0, -KEY_QUIT);
+}
+
+static void handle_mouse(double x, double y, bool b)
+{
+    static bool motion = false;
+    if (!b && !motion)
+        return;
+    motion = b;
+
+    int ix = x / fontWidth;
+    int iy = y / fontHeight;
+    static int oldix = -1;
+    static int oldiy = -1;
+    static bool oldb = false;
+
+    if ((ix != oldix) || (iy != oldiy) || (b != oldb))
+    {
+        arrins(keyboardQueue, 0, -encode_mouse_event(ix, iy, b));
+        oldix = ix;
+        oldiy = iy;
+        oldb = b;
+    }
+}
+
+static void mousepos_cb(GLFWwindow* window, double x, double y)
+{
+    handle_mouse(x, y, glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT));
+}
+
+static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
+{
+    switch (button)
+    {
+        case GLFW_MOUSE_BUTTON_LEFT:
+        {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            handle_mouse(x, y, (action == GLFW_PRESS) ? true : false);
+            break;
+        }
+
+        case GLFW_MOUSE_BUTTON_RIGHT:
+            if (action == GLFW_PRESS)
+                arrins(keyboardQueue, 0, -KEY_MENU);
+            break;
+    }
+}
+
+void scroll_cb(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if (yoffset < 0)
+        arrins(keyboardQueue, 0, -KEY_SCROLLDOWN);
+    else
+        arrins(keyboardQueue, 0, -KEY_SCROLLUP);
 }
 
 void dpy_init(const char* argv[]) {}
@@ -170,11 +221,15 @@ void dpy_start(void)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    glfwSetCursor(window, glfwCreateStandardCursor(GLFW_IBEAM_CURSOR));
     glfwSetKeyCallback(window, key_cb);
     glfwSetCharCallback(window, character_cb);
+    glfwSetCursorPosCallback(window, mousepos_cb);
+    glfwSetMouseButtonCallback(window, mousebutton_cb);
     glfwSetWindowSizeCallback(window, resize_cb);
     glfwSetWindowRefreshCallback(window, refresh_cb);
     glfwSetWindowCloseCallback(window, close_cb);
+    glfwSetScrollCallback(window, scroll_cb);
 
     extern uint8_t icon_data[];
     GLFWimage image;
@@ -203,6 +258,12 @@ void dpy_getscreensize(int* x, int* y)
 {
     *x = screenWidth;
     *y = screenHeight;
+}
+
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
 }
 
 void dpy_sync(void)
@@ -246,7 +307,7 @@ void dpy_sync(void)
         screenWidth = sw;
         screenHeight = sh;
         screen = calloc(screenWidth * screenHeight, sizeof(cell_t));
-        arrins(keyboardQueue, 0, -VK_RESIZE);
+        arrins(keyboardQueue, 0, -KEY_RESIZE);
     }
     else
     {
@@ -369,7 +430,7 @@ uni_t dpy_getchar(double timeout)
         {
             double waitTime = endTime - glfwGetTime();
             if (waitTime < 0)
-                return -VK_TIMEOUT;
+                return -KEY_TIMEOUT;
             glfwWaitEventsTimeout(waitTime);
         }
     }
@@ -380,12 +441,18 @@ const char* dpy_getkeyname(uni_t k)
     static char buffer[32];
     switch (-k)
     {
-        case VK_RESIZE:
+        case KEY_RESIZE:
             return "KEY_RESIZE";
-        case VK_TIMEOUT:
+        case KEY_TIMEOUT:
             return "KEY_TIMEOUT";
-        case VK_QUIT:
+        case KEY_QUIT:
             return "KEY_QUIT";
+        case KEY_SCROLLUP:
+            return "KEY_SCROLLUP";
+        case KEY_SCROLLDOWN:
+            return "KEY_SCROLLDOWN";
+        case KEY_MENU:
+            return "KEY_MENU";
     }
 
     int mods = -k;

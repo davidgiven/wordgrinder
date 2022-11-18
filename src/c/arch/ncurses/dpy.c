@@ -55,6 +55,8 @@ void dpy_start(void)
     intrflush(stdscr, FALSE);
     // notimeout(stdscr, TRUE);
     keypad(stdscr, TRUE);
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
+    mouseinterval(0);
 
 #if defined A_ITALIC
     use_italics = !!tigetstr("sitm");
@@ -76,6 +78,12 @@ void dpy_clearscreen(void)
 void dpy_getscreensize(int* x, int* y)
 {
     getmaxyx(stdscr, *y, *x);
+}
+
+void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
+{
+    x = y = 0;
+    p = false;
 }
 
 void dpy_sync(void)
@@ -188,6 +196,55 @@ void dpy_cleararea(int x1, int y1, int x2, int y2)
             mvaddnstr(y, x, &cc, 1);
 }
 
+static int handle_mouse(void)
+{
+    static int mx = -1;
+    static int my = -1;
+    static bool p = false;
+
+    MEVENT event;
+    getmouse(&event);
+    switch (event.bstate)
+    {
+        case REPORT_MOUSE_POSITION:
+            mx = event.x;
+            my = event.y;
+            if (!p)
+                return 0;
+            break;
+
+        case BUTTON1_PRESSED:
+            mx = event.x;
+            my = event.y;
+            p = true;
+            break;
+
+        case BUTTON1_RELEASED:
+            mx = event.x;
+            my = event.y;
+            p = false;
+            break;
+
+        case BUTTON2_PRESSED:
+        case BUTTON2_CLICKED:
+        case BUTTON3_PRESSED:
+        case BUTTON3_CLICKED:
+            return KEY_MENU;
+
+#if NCURSES_MOUSE_VERSION > 1
+        case BUTTON4_PRESSED:
+        case BUTTON4_CLICKED:
+            return KEY_SCROLLUP;
+
+        case BUTTON5_PRESSED:
+        case BUTTON5_CLICKED:
+            return KEY_SCROLLDOWN;
+#endif
+    }
+
+    return encode_mouse_event(mx, my, p);
+}
+
 uni_t dpy_getchar(double timeout)
 {
     struct timeval then;
@@ -218,6 +275,9 @@ uni_t dpy_getchar(double timeout)
 
         if (r == ERR) /* timeout */
             return -KEY_TIMEOUT;
+
+        if (c == KEY_MOUSE)
+            return -handle_mouse();
 
         if ((r == KEY_CODE_YES) || !iswprint(c)) /* function key */
             return -c;
@@ -281,6 +341,13 @@ const char* dpy_getkeyname(uni_t k)
         case 127: /* Some misconfigured terminals produce this */
         case KEY_BACKSPACE:
             return "KEY_BACKSPACE";
+
+        case KEY_SCROLLUP:
+            return "KEY_SCROLLUP";
+        case KEY_SCROLLDOWN:
+            return "KEY_SCROLLDOWN";
+        case KEY_MENU:
+            return "KEY_MENU";
 
         case KEY_TIMEOUT:
             return "KEY_TIMEOUT";

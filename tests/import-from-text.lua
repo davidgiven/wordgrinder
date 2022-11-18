@@ -40,3 +40,9 @@ local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 
 
+document = Cmd.ImportTextFileFromString("no trailing newline")
+DocumentSet:addDocument(document, "imported")
+DocumentSet:setCurrent("imported")
+AssertTableEquals({"no", "trailing", "newline"}, Document[1])
+
+

@@ -63,14 +63,14 @@ function Cmd.ConfigureDebug()
 	local memory_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 3,
-			x2 = 40, y2 = 3,
+			x2 = -1, y2 = 3,
 			label = "Show memory usage on status bar",
 			value = settings.memory
 		}
 	local location_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 5,
-			x2 = 40, y2 = 5,
+			x2 = -1, y2 = 5,
 			label = "Show detailed location on status bar",
 			value = settings.location
 		}
@@ -78,7 +78,7 @@ function Cmd.ConfigureDebug()
 	local currentword_checkbox =
 		Form.Checkbox {
 			x1 = 1, y1 = 7,
-			x2 = 40, y2 = 8,
+			x2 = -1, y2 = 8,
 			label = "Show word representation on status bar",
 			value = settings.currentword
 		}

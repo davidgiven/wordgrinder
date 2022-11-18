@@ -203,39 +203,41 @@ local StyleMenu = CreateMenu("Style",
 
 local NavigationMenu = CreateMenu("Navigation",
 {
-	{"ZU",     nil, "Cursor up",                    "UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
-	{"ZR",     nil, "Cursor right",                 "RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
-	{"ZD",     nil, "Cursor down",                  "DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
-	{"ZL",     nil, "Cursor left",                  "LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
-	{"ZSU",    nil, "Selection up",                 "SUP",       { Cmd.SetMark, Cmd.GotoPreviousLine }},
-	{"ZSR",    nil, "Selection right",              "SRIGHT",    { Cmd.SetMark, Cmd.GotoNextCharW }},
-	{"ZSD",    nil, "Selection down",               "SDOWN",     { Cmd.SetMark, Cmd.GotoNextLine }},
-	{"ZSL",    nil, "Selection left",               "SLEFT",     { Cmd.SetMark, Cmd.GotoPreviousCharW }},
-	{"ZSW",    nil, "Select word",                  "^W",        Cmd.SelectWord },
-	{"ZWL",    nil, "Goto previous word",           "^LEFT",     { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
-	{"ZWR",    nil, "Goto next word",               "^RIGHT",    { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
-	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",     { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
-	{"ZPP",    nil, "Goto previous paragraph",      "^UP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
-	{"ZSWL",   nil, "Select to previous word",      "S^LEFT",    { Cmd.SetMark, Cmd.GotoPreviousWordW }},
-	{"ZSWR",   nil, "Select to next word",          "S^RIGHT",   { Cmd.SetMark, Cmd.GotoNextWordW }},
-	{"ZSNP",   nil, "Select to next paragraph",     "S^DOWN",    { Cmd.SetMark, Cmd.GotoNextParagraphW }},
-	{"ZSPP",   nil, "Select to previous paragraph", "S^UP",      { Cmd.SetMark, Cmd.GotoPreviousParagraphW }},
-	{"ZH",     nil, "Goto beginning of line",       "HOME",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
-	{"ZE",     nil, "Goto end of line",             "END",       { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
-	{"ZSH",    nil, "Select to beginning of line",  "SHOME",     { Cmd.SetMark, Cmd.GotoBeginningOfLine }},
-	{"ZSE",    nil, "Select to end of line",        "SEND",      { Cmd.SetMark, Cmd.GotoEndOfLine }},
-	{"ZBD",    nil, "Goto beginning of document",   "^PGUP",     { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
-	{"ZED",    nil, "Goto end of document",         "^PGDN",     { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
-	{"ZSBD",   nil, "Select to beginning of document", "S^PGUP", { Cmd.SetMark, Cmd.GotoBeginningOfDocument }},
-	{"ZSED",   nil, "Select to end of document",    "S^PGDN",    { Cmd.SetMark, Cmd.GotoEndOfDocument }},
-	{"ZPGUP",  nil, "Page up",                      "PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
-	{"ZPGDN",  nil, "Page down",                    "PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
-	{"ZSPGUP", nil, "Selection page up",            "SPGUP",     { Cmd.SetMark, Cmd.GotoPreviousPage }},
-	{"ZSPGDN", nil, "Selection page down",          "SPGDN",     { Cmd.SetMark, Cmd.GotoNextPage }},
-	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE", { cp, Cmd.DeleteSelectionOrPreviousChar }},
-	{"ZDNC",   nil, "Delete next character",        "DELETE",    { cp, Cmd.DeleteSelectionOrNextChar }},
-	{"ZDW",    nil, "Delete word",                  "^E",        { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
-	{"ZM",     nil, "Toggle mark",                  "^@",        Cmd.ToggleMark},
+	{"ZU",     nil, "Cursor up",                    "UP",         { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZR",     nil, "Cursor right",                 "RIGHT",      { Cmd.MoveWhileSelected, Cmd.GotoNextCharW }},
+	{"ZD",     nil, "Cursor down",                  "DOWN",       { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZL",     nil, "Cursor left",                  "LEFT",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousCharW }},
+	{"ZMU",    nil, "Scroll up",                    "SCROLLUP",   { Cmd.MoveWhileSelected, Cmd.GotoPreviousLine }},
+	{"ZMD",    nil, "Scroll down",                  "SCROLLDOWN", { Cmd.MoveWhileSelected, Cmd.GotoNextLine }},
+	{"ZSU",    nil, "Selection up",                 "SUP",        { Cmd.SetMark, Cmd.GotoPreviousLine }},
+	{"ZSR",    nil, "Selection right",              "SRIGHT",     { Cmd.SetMark, Cmd.GotoNextCharW }},
+	{"ZSD",    nil, "Selection down",               "SDOWN",      { Cmd.SetMark, Cmd.GotoNextLine }},
+	{"ZSL",    nil, "Selection left",               "SLEFT",      { Cmd.SetMark, Cmd.GotoPreviousCharW }},
+	{"ZSW",    nil, "Select word",                  "^W",         Cmd.SelectWord },
+	{"ZWL",    nil, "Goto previous word",           "^LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
+	{"ZWR",    nil, "Goto next word",               "^RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
+	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
+	{"ZPP",    nil, "Goto previous paragraph",      "^UP",        { Cmd.MoveWhileSelected, Cmd.GotoPreviousParagraphW }},
+	{"ZSWL",   nil, "Select to previous word",      "S^LEFT",     { Cmd.SetMark, Cmd.GotoPreviousWordW }},
+	{"ZSWR",   nil, "Select to next word",          "S^RIGHT",    { Cmd.SetMark, Cmd.GotoNextWordW }},
+	{"ZSNP",   nil, "Select to next paragraph",     "S^DOWN",     { Cmd.SetMark, Cmd.GotoNextParagraphW }},
+	{"ZSPP",   nil, "Select to previous paragraph", "S^UP",       { Cmd.SetMark, Cmd.GotoPreviousParagraphW }},
+	{"ZH",     nil, "Goto beginning of line",       "HOME",       { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfLine }},
+	{"ZE",     nil, "Goto end of line",             "END",        { Cmd.MoveWhileSelected, Cmd.GotoEndOfLine }},
+	{"ZSH",    nil, "Select to beginning of line",  "SHOME",      { Cmd.SetMark, Cmd.GotoBeginningOfLine }},
+	{"ZSE",    nil, "Select to end of line",        "SEND",       { Cmd.SetMark, Cmd.GotoEndOfLine }},
+	{"ZBD",    nil, "Goto beginning of document",   "^PGUP",      { Cmd.MoveWhileSelected, Cmd.GotoBeginningOfDocument }},
+	{"ZED",    nil, "Goto end of document",         "^PGDN",      { Cmd.MoveWhileSelected, Cmd.GotoEndOfDocument }},
+	{"ZSBD",   nil, "Select to beginning of document", "S^PGUP",  { Cmd.SetMark, Cmd.GotoBeginningOfDocument }},
+	{"ZSED",   nil, "Select to end of document",    "S^PGDN",     { Cmd.SetMark, Cmd.GotoEndOfDocument }},
+	{"ZPGUP",  nil, "Page up",                      "PGUP",       { Cmd.MoveWhileSelected, Cmd.GotoPreviousPage }},
+	{"ZPGDN",  nil, "Page down",                    "PGDN",       { Cmd.MoveWhileSelected, Cmd.GotoNextPage }},
+	{"ZSPGUP", nil, "Selection page up",            "SPGUP",      { Cmd.SetMark, Cmd.GotoPreviousPage }},
+	{"ZSPGDN", nil, "Selection page down",          "SPGDN",      { Cmd.SetMark, Cmd.GotoNextPage }},
+	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE",  { cp, Cmd.DeleteSelectionOrPreviousChar }},
+	{"ZDNC",   nil, "Delete next character",        "DELETE",     { cp, Cmd.DeleteSelectionOrNextChar }},
+	{"ZDW",    nil, "Delete word",                  "^E",         { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
+	{"ZM",     nil, "Toggle mark",                  "^@",         Cmd.ToggleMark},
 })
 
 local MainMenu = CreateMenu("Main Menu",
@@ -293,6 +295,7 @@ MenuClass = {
 		end
 
 		local w = menu.maxwidth + 4 + akw
+		menu.realwidth = w
 		local visiblelen = min(#menu, ScreenHeight-y-3)
 		top = max(1, min(#menu - visiblelen + 1, top))
 		SetColour(Palette.ControlFG, Palette.ControlBG)
@@ -383,81 +386,125 @@ MenuClass = {
 
 				self:drawmenu(x, y, menu, n, top)
 
-				local c = GetChar():upper()
-				if (c == "KEY_RESIZE") then
-					ResizeScreen()
-					RedrawScreen()
-					self:drawmenustack()
-				elseif (c == "KEY_QUIT") then
-					QuitForcedBySystem()
-					return false
-				elseif (c == "KEY_UP") and (n > 1) then
-					n = n - 1
-				elseif (c == "KEY_DOWN") and (n < #menu) then
-					n = n + 1
-				elseif (c == "KEY_PGDN") then
-					n = int(min(n + visiblelen/2, #menu))
-				elseif (c == "KEY_PGUP") then
-					n = int(max(n - visiblelen/2, 1))
-				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
-					if (type(menu[n]) ~= "string") then
-						item = menu[n]
+				local c = GetChar()
+				if (type(c) == "table") then
+					if c.b then
+						-- Mouse event.
+						if c.x < x then
+							-- Go to the previous menu.
+							return nil
+						elseif c.x > (x + menu.realwidth) then
+							-- Close all menus.
+							return false
+						else
+							local row = top + c.y - y - 1
+							if row < 1 then
+								return nil
+							elseif row > visiblelen then
+								return false
+							else
+								item = menu[row]
+								if (type(item) ~= "string") and item.id then
+									n = row
+									self:drawmenu(x, y, menu, n, top)
+									break
+								end
+							end
+						end
+					end
+				else
+					-- Keyboard event.
+					c = c:upper()
+					if (c == "KEY_RESIZE") then
+						ResizeScreen()
+						RedrawScreen()
+						self:drawmenustack()
+					elseif (c == "KEY_QUIT") then
+						QuitForcedBySystem()
+						return false
+					elseif (c == "KEY_UP") and (n > 1) then
+						n = n - 1
+					elseif (c == "KEY_DOWN") and (n < #menu) then
+						n = n + 1
+					elseif (c == "KEY_SCROLLUP") and (top > 1) then
+						top = top - 1
+						if (n > (top+visiblelen-1)) then
+							n = n - 1
+						end
+					elseif (c == "KEY_SCROLLDOWN") and (top < (#menu - visiblelen)) then
+						top = top + 1
+						if (n < top) then
+							n = n + 1
+						end
+					elseif (c == "KEY_PGDN") then
+						n = int(min(n + visiblelen/2, #menu))
+					elseif (c == "KEY_PGUP") then
+						n = int(max(n - visiblelen/2, 1))
+					elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
+						if (type(menu[n]) ~= "string") then
+							item = menu[n]
+							break
+						end
+					elseif (c == "KEY_LEFT") then
+						return nil
+					elseif (c == "KEY_ESCAPE") then
+						return false
+					elseif (c == "KEY_MENU") then
+						return false
+					elseif (c == "KEY_^C") then
+						return false
+					elseif (c == "KEY_^X") then
+						local item = menu[n]
+						if (type(item) ~= "string") and item.id then
+							local ak = self.accelerators[item.id]
+							if ak then
+								self.accelerators[ak] = nil
+								self.accelerators[item.id] = nil
+								self:drawmenustack()
+							end
+						end
+					elseif (c == "KEY_^V") then
+						local item = menu[n]
+						if (type(item) ~= "string") and item.id then
+							DrawStatusLine("Press new accelerator key for menu item.")
+
+							local oak = self.accelerators[item.id]
+							local ak = GetChar()
+							if (type(ak) == "string") then
+								ak = ak:upper()
+								if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
+									ak = ak:gsub("^KEY_", "")
+									if self.accelerators[ak] then
+										NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
+									elseif (ak == "ESCAPE") or (ak == "RESIZE") then
+										NonmodalMessage("You can't bind that key.")
+									else
+										if oak then
+											self.accelerators[oak] = nil
+										end
+
+										self.accelerators[ak] = item.id
+										self.accelerators[item.id] = ak
+									end
+									self:drawmenustack()
+								end
+							end
+						end
+					elseif (c == "KEY_^R") then
+						if PromptForYesNo("Reset menu keybindings?",
+							"Are you sure you want to reset all the menu "..
+							"keybindings back to their defaults?") then
+							DocumentSet.menu = CreateMenuBindings()
+							DocumentSet:touch()
+							NonmodalMessage("All keybindings have been reset to their default settings.")
+							menu_stack = {}
+							return false
+						end
+						self:drawmenustack()
+					elseif menu.mks[c] then
+						item = menu.mks[c]
 						break
 					end
-				elseif (c == "KEY_LEFT") then
-					return nil
-				elseif (c == "KEY_ESCAPE") then
-					return false
-				elseif (c == "KEY_^C") then
-					return false
-				elseif (c == "KEY_^X") then
-					local item = menu[n]
-					if (type(item) ~= "string") and item.id then
-						local ak = self.accelerators[item.id]
-						if ak then
-							self.accelerators[ak] = nil
-							self.accelerators[item.id] = nil
-							self:drawmenustack()
-						end
-					end
-				elseif (c == "KEY_^V") then
-					local item = menu[n]
-					if (type(item) ~= "string") and item.id then
-						DrawStatusLine("Press new accelerator key for menu item.")
-
-						local oak = self.accelerators[item.id]
-						local ak = GetChar():upper()
-						if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
-							ak = ak:gsub("^KEY_", "")
-							if self.accelerators[ak] then
-								NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
-							elseif (ak == "ESCAPE") or (ak == "RESIZE") then
-								NonmodalMessage("You can't bind that key.")
-							else
-								if oak then
-									self.accelerators[oak] = nil
-								end
-
-								self.accelerators[ak] = item.id
-								self.accelerators[item.id] = ak
-							end
-							self:drawmenustack()
-						end
-					end
-				elseif (c == "KEY_^R") then
-					if PromptForYesNo("Reset menu keybindings?",
-						"Are you sure you want to reset all the menu "..
-						"keybindings back to their defaults?") then
-						DocumentSet.menu = CreateMenuBindings()
-						DocumentSet:touch()
-						NonmodalMessage("All keybindings have been reset to their default settings.")
-						menu_stack = {}
-						return false
-					end
-					self:drawmenustack()
-				elseif menu.mks[c] then
-					item = menu.mks[c]
-					break
 				end
 			end
 			if Quitting then

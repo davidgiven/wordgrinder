@@ -433,6 +433,16 @@ function Cmd.GotoXPosition(pos)
 	return false
 end
 
+function Cmd.GotoXYPosition(x, y)
+	local r = GetPositionOfLine(y)
+	if r then
+		Document.cp = r.p
+		Document.cw = r.w
+		return Cmd.GotoXPosition(x - r.x)
+	end
+	return false
+end
+
 local function getpos()
 	local paragraph = Document[Document.cp]
 	local lines = paragraph:wrap()
@@ -762,7 +772,6 @@ function Cmd.Copy(keepselection)
 
 	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
 	local buffer = CreateDocument()
-	DocumentSet:setClipboard(buffer)
 
 	-- Copy all the paragraphs from the selected area into the clipboard.
 
@@ -818,6 +827,8 @@ function Cmd.Copy(keepselection)
 	end
 
 	buffer:renumber()
+	SetClipboard(buffer)
+
 	NonmodalMessage(buffer.wordcount.." words copied to clipboard.")
 	if not keepselection then
 		return Cmd.UnsetMark()
@@ -827,7 +838,7 @@ function Cmd.Copy(keepselection)
 end
 
 function Cmd.Paste()
-	local buffer = DocumentSet:getClipboard()
+	local buffer = GetClipboard()
 	if not buffer then
 		return false
 	end
