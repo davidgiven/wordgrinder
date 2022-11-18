@@ -4,12 +4,12 @@
  */
 
 #include "globals.h"
-#include <string.h>
+#include "stb_ds.h"
 #include <curses.h>
-#include <wctype.h>
+#include <string.h>
 #include <sys/time.h>
 #include <time.h>
-#include "stb_ds.h"
+#include <wctype.h>
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
 #define FIRST_COLOUR_ID 1
@@ -68,9 +68,9 @@ void dpy_shutdown(void)
 
 void dpy_clearscreen(void)
 {
-	int w, h;
+    int w, h;
     getmaxyx(stdscr, h, w);
-    dpy_cleararea(0, 0, w-1, h-1);
+    dpy_cleararea(0, 0, w - 1, h - 1);
 }
 
 void dpy_getscreensize(int* x, int* y)
@@ -124,7 +124,7 @@ void dpy_setattr(int andmask, int ormask)
     currentAttr &= andmask;
     currentAttr |= ormask;
 
-	update_attrs();
+    update_attrs();
 }
 
 static int lookup_colour(const colour_t* colour)
@@ -156,7 +156,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
         if ((p->fg == fgc) && (p->bg == bgc))
         {
             currentPair = FIRST_PAIR_ID + i;
-			update_attrs();
+            update_attrs();
             return;
         }
     }
@@ -166,7 +166,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     arrpush(colourPairs, pair);
 
     init_pair(currentPair, fgc, bgc);
-	update_attrs();
+    update_attrs();
 }
 
 void dpy_writechar(int x, int y, uni_t c)

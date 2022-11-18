@@ -1,7 +1,7 @@
 #include "globals.h"
 #include "gui.h"
-#include <GLFW/glfw3.h>
 #include "stb_ds.h"
+#include <GLFW/glfw3.h>
 
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
@@ -209,14 +209,14 @@ void dpy_sync(void)
 {
     pendingRedraw = false;
 
-double t1 = gettime();
+    double t1 = gettime();
 
     /* Configure viewport for 2D graphics. */
 
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glEnable(GL_TEXTURE_2D);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glDisable(GL_TEXTURE_2D);
     glEnable(GL_COLOR_MATERIAL);
-    glEnable(GL_BLEND);
+    glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_CULL_FACE);
@@ -280,10 +280,10 @@ double t1 = gettime();
         }
     }
 
-double t2 = gettime();
+    double t2 = gettime();
     glfwSwapBuffers(window);
-double t3 = gettime();
-printf("%f %f\n", t2-t1, t3-t2);
+    double t3 = gettime();
+    printf("%f %f\n", t2 - t1, t3 - t2);
 }
 
 void dpy_setattr(int andmask, int ormask)
@@ -400,7 +400,7 @@ const char* dpy_getkeyname(uni_t k)
     const char* t = NULL;
     switch (key)
     {
-        // clang-format off
+            // clang-format off
         case GLFW_KEY_ESCAPE:    t = "ESCAPE"; break;
         case GLFW_KEY_ENTER:     t = "RETURN"; break;
         case GLFW_KEY_TAB:       t = "TAB"; break;
