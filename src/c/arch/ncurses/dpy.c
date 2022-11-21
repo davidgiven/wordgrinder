@@ -32,6 +32,8 @@ typedef struct
 static colour_t* colours = NULL;
 static pair_t* colourPairs = NULL;
 
+static int get_bvar(const char* name);
+
 void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
@@ -41,7 +43,8 @@ void dpy_start(void)
 
     initscr();
 
-    use_colours = has_colors() && can_change_color();
+    use_colours =
+        has_colors() && can_change_color() && !get_bvar("nocoloursonterminal");
     if (use_colours)
         start_color();
 
@@ -442,4 +445,12 @@ const char* dpy_getkeyname(uni_t k)
 
     sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");
     return buffer;
+}
+
+static int get_bvar(const char* name)
+{
+    lua_getglobal(L, "GlobalSettings");
+    lua_getfield(L, -1, "lookandfeel");
+    lua_getfield(L, -1, name);
+    return lua_toboolean(L, -1);
 }

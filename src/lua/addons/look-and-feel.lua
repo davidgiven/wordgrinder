@@ -70,6 +70,7 @@ do
 				maxwidth = 80,
 				terminators = true,
 				denseparagraphs = false,
+				nocoloursonterminal = false,
 				palette = "Light",
 				scrollmode = "Fixed",
 			}
@@ -134,10 +135,18 @@ function Cmd.ConfigureLookAndFeel()
 			value = settings.fullstopspaces
 		}
 
-	local palette_toggle =
-		Form.Toggle {
+	local nocoloursonterminal_checkbox =
+		Form.Checkbox {
 			x1 = 1, y1 = 11,
 			x2 = -1, y2 = 11,
+			label = "Don't use colours on the terminal",
+			value = settings.nocoloursonterminal
+		}
+
+	local palette_toggle =
+		Form.Toggle {
+			x1 = 1, y1 = 13,
+			x2 = -1, y2 = 13,
 			label = "Colour theme",
 			values = themes,
 			value = find(themes, settings.palette)
@@ -145,8 +154,8 @@ function Cmd.ConfigureLookAndFeel()
 
 	local scrollmode_toggle =
 		Form.Toggle {
-			x1 = 1, y1 = 13,
-			x2 = -1, y2 = 13,
+			x1 = 1, y1 = 15,
+			x2 = -1, y2 = 15,
 			label = "Scroll mode",
 			values = SCROLLMODES,
 			value = find(SCROLLMODES, settings.scrollmode)
@@ -175,6 +184,7 @@ function Cmd.ConfigureLookAndFeel()
 		terminators_checkbox,
 		denseparagraphs_checkbox,
 		fullstopspaces_checkbox,
+		nocoloursonterminal_checkbox,
 		palette_toggle,
 		scrollmode_toggle,
 	}
@@ -190,16 +200,26 @@ function Cmd.ConfigureLookAndFeel()
 		if not maxwidth or (maxwidth < 20) then
 			ModalMessage("Parameter error", "The maximum width must be a valid number that's at least 20.")
 		else
+			local needsrestart =
+				settings.nocoloursonterminal ~= nocoloursonterminal_checkbox.value
+
 			settings.enabled = enabled_checkbox.value
 			settings.maxwidth = maxwidth
 			settings.terminators = terminators_checkbox.value
 			settings.denseparagraphs = denseparagraphs_checkbox.value
 			settings.fullstopspaces = fullstopspaces_checkbox.value
+			settings.nocoloursonterminal = nocoloursonterminal_checkbox.value
 			settings.palette = themes[palette_toggle.value]
 			settings.scrollmode = SCROLLMODES[scrollmode_toggle.value]
 			SetTheme(settings.palette)
 			SaveGlobalSettings()
 			UpdateDocumentStyles()
+
+			if needsrestart then
+				wg.deinitscreen()
+				wg.initscreen()
+				FireEvent(Event.ScreenInitialised)
+			end
 
 			return true
 		end
