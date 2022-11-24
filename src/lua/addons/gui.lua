@@ -146,14 +146,14 @@ function Cmd.ConfigureGui()
 			x1 = 1, y1 = 9,
 			x2 = L-1, y2 = 9,
 			align = Form.Left,
-			value = "Bold font:"
+			value = "Italic font:"
 		},
 
 		Form.Label {
 			x1 = 1, y1 = 11,
 			x2 = L-1, y2 = 11,
 			align = Form.Left,
-			value = "Italic font:"
+			value = "Bold font:"
 		},
 
 		Form.Label {
