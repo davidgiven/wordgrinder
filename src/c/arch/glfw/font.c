@@ -49,10 +49,9 @@ static void freeFont(struct font* font)
     free(font);
 }
 
-static struct font* loadFont(const char* filename)
+static struct font* loadFont(const char* filename, int defaultfont)
 {
     struct font* font = NULL;
-
     FILE* fp = fopen(filename, "rb");
     if (fp)
     {
@@ -68,22 +67,9 @@ static struct font* loadFont(const char* filename)
     }
     else
     {
-        const FileDescriptor* p = font_table;
-        while (p->data)
-        {
-            if (strcmp(p->name, filename) == 0)
-            {
-                font = calloc(1, sizeof(struct font));
-                font->data = (void*)p->data;
-                font->needsFreeing = false;
-                break;
-            }
-
-            p++;
-        }
-
-        if (!font)
-            font = loadFont("font_regular");
+        font = calloc(1, sizeof(struct font));
+        font->data = (void*)font_table[defaultfont].data;
+        font->needsFreeing = false;
     }
 
     stbtt_InitFont(&font->info, font->data, 0);
@@ -93,10 +79,10 @@ static struct font* loadFont(const char* filename)
 void loadFonts()
 {
     fontSize = get_ivar("font_size");
-    fonts[REGULAR] = loadFont(get_svar("font_regular"));
-    fonts[ITALIC] = loadFont(get_svar("font_italic"));
-    fonts[BOLD] = loadFont(get_svar("font_bold"));
-    fonts[BOLD | ITALIC] = loadFont(get_svar("font_bolditalic"));
+    fonts[REGULAR] = loadFont(get_svar("font_regular"),0);
+    fonts[ITALIC] = loadFont(get_svar("font_italic"),1);
+    fonts[BOLD] = loadFont(get_svar("font_bold"),2);
+    fonts[BOLD | ITALIC] = loadFont(get_svar("font_bolditalic"),3);
 
     struct font* font = fonts[REGULAR];
 
