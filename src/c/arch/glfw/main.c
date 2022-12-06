@@ -44,7 +44,7 @@ static void key_cb(
     {
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
-            arrins(keyboardQueue, 0, -((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
+            arrins(keyboardQueue, 0, -(((unsigned int)(glfwGetKeyName(key,scancode)[0]) - GLFW_KEY_A + 1) | VKM_CTRLASCII));
             return;
         }
         if (key == GLFW_KEY_SPACE)
