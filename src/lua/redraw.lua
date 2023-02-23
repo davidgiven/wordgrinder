@@ -18,7 +18,6 @@ local SetDim = wg.setdim
 local GetStringWidth = wg.getstringwidth
 local ShowCursor = wg.showcursor
 local HideCursor = wg.hidecursor
-local Sync = wg.sync
 
 local UseUnicode = wg.useunicode
 local BLINK_TIME = 0.8
