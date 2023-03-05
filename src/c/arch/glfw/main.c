@@ -34,6 +34,36 @@ static void queueRedraw()
     }
 }
 
+static int convert_numpad_key(int key)
+{
+    switch (key)
+    {
+        case GLFW_KEY_KP_0:
+            return GLFW_KEY_INSERT;
+        case GLFW_KEY_KP_1:
+            return GLFW_KEY_END;
+        case GLFW_KEY_KP_2:
+            return GLFW_KEY_DOWN;
+        case GLFW_KEY_KP_3:
+            return GLFW_KEY_PAGE_DOWN;
+        case GLFW_KEY_KP_4:
+            return GLFW_KEY_LEFT;
+        case GLFW_KEY_KP_5:
+            return 0;
+        case GLFW_KEY_KP_6:
+            return GLFW_KEY_RIGHT;
+        case GLFW_KEY_KP_7:
+            return GLFW_KEY_HOME;
+        case GLFW_KEY_KP_8:
+            return GLFW_KEY_UP;
+        case GLFW_KEY_KP_9:
+            return GLFW_KEY_PAGE_UP;
+        case GLFW_KEY_KP_DECIMAL:
+            return GLFW_KEY_DELETE;
+    }
+    return key;
+}
+
 static void key_cb(
     GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -94,6 +124,13 @@ static void key_cb(
             arrins(keyboardQueue, 0, 'A' + (key - GLFW_KEY_A));
             return;
         }
+    }
+
+    if (!(mods & GLFW_MOD_NUM_LOCK))
+    {
+        key = convert_numpad_key(key);
+        if (!key)
+            return;
     }
 
     switch (key)
@@ -221,6 +258,7 @@ void dpy_start(void)
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
+    glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
     glfwSetCursor(window, glfwCreateStandardCursor(GLFW_IBEAM_CURSOR));
     glfwSetKeyCallback(window, key_cb);
     glfwSetCharCallback(window, character_cb);
