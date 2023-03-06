@@ -68,6 +68,8 @@ jobs:
     - name: build
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure
+        cat .obj/build.ninja
+        ls /minw32/include
         PATH=/mingw32/bin:/opt/bin:$PATH make
     - name: zip
       run: |
