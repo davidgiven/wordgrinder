@@ -240,6 +240,12 @@ function RedrawScreen()
 	if GetScrollMode() == "Fixed" then
 		sp = Document.cp
 		sw = Document.cw
+	else
+		if sp > #Document then
+			sp = #Document
+		elseif sp < 1 then
+			sp = 1
+		end
 	end
 
 	-- Find out the offset of the paragraph at the middle of the screen.
