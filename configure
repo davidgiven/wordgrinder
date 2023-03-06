@@ -277,7 +277,7 @@ add_configuration() {
         add BOTHFLAGS -DEMULATED_WCWIDTH
         add BOTHFLAGS -DWINSHIM
         add BOTHFLAGS -DARCH=windows
-        add LDFLAGS -static
+        add LDFLAGS -static -lssp
         add OBJS $OBJDIR/wordgrinder.rc.o
         add SRCS src/c/emu/wcwidth.c
         add SRCS src/c/emu/lua-5.1.5/winshim.c
