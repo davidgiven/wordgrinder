@@ -49,7 +49,6 @@ jobs:
     steps:
     - uses: msys2/setup-msys2@v2
       with:
-        msystem: mingw32
         update: true
         install: >-
           make
@@ -68,8 +67,6 @@ jobs:
     - name: build
       run: |
         PATH=/mingw32/bin:/opt/bin:$PATH ./configure
-        cat .obj/build.ninja
-        ls /mingw32/include
         PATH=/mingw32/bin:/opt/bin:$PATH make
     - name: zip
       run: |
