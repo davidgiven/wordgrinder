@@ -112,6 +112,7 @@ extern void zip_init(void);
 extern int getu8bytes(char c);
 extern uni_t readu8(const char** ptr);
 extern void writeu8(char** ptr, uni_t value);
+extern double gettime(void);
 
 extern void utils_init(void);
 extern void filesystem_init(void);

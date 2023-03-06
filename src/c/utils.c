@@ -183,15 +183,17 @@ static int transcode_cb(lua_State* L)
 	return 1;
 }
 
-static int time_cb(lua_State* L)
+double gettime(void)
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
 
-	double t = (double)tv.tv_sec +
-			(double)tv.tv_usec / 1000000.0;
-	lua_pushnumber(L, t);
+	return (double)tv.tv_sec + (double)tv.tv_usec / 1000000.0;
+}
 
+static int time_cb(lua_State* L)
+{
+	lua_pushnumber(L, gettime());
 	return 1;
 }
 

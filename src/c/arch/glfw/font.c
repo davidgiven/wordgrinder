@@ -1,8 +1,8 @@
 #include "globals.h"
 #include "gui.h"
-#include "stb_truetype.h"
-#include "stb_rect_pack.h"
 #include "stb_ds.h"
+#include "stb_rect_pack.h"
+#include "stb_truetype.h"
 
 extern const FileDescriptor font_table[];
 
@@ -40,6 +40,7 @@ static int fontXOffset;
 static float fontScale;
 static struct font* fonts[8];
 static struct page** pages = NULL;
+static struct chardata lowchardata[128 * 4];
 static struct chardata* chardata = NULL;
 
 static void freeFont(struct font* font)
@@ -172,7 +173,7 @@ static int rawRender(
         &page->ctx, &font->info, &range, 1, &rect);
 }
 
-static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
+static void renderTtfChar(uni_t c, uint8_t attrs, GLfloat* bg, float x, float y)
 {
     int style = REGULAR;
     if (attrs & DPY_BOLD)
@@ -180,9 +181,26 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     if (attrs & DPY_ITALIC)
         style |= ITALIC;
 
-    uint32_t key = c | (style << 24);
-    struct chardata* cd = hmgetp_null(chardata, key);
-    if (!cd)
+    uint32_t key = (c << 2) | style;
+    uint32_t akey = key - 32;
+    struct chardata* cd;
+    if (akey < sizeof(lowchardata) / sizeof(*lowchardata))
+    {
+        cd = &lowchardata[akey];
+        cd->key = key;
+    }
+    else
+    {
+        cd = hmgetp_null(chardata, key);
+        if (!cd)
+        {
+            struct chardata cds = {.key = key};
+            hmputs(chardata, cds);
+            cd = hmgetp_null(chardata, key);
+        }
+    }
+
+    if (!cd->page)
     {
         struct page* page;
         if (arrlen(pages) == 0)
@@ -193,10 +211,6 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         struct font* font = fonts[style];
         if (!font)
             return;
-
-        struct chardata cds = {.key = key};
-        hmputs(chardata, cds);
-        cd = hmgetp_null(chardata, key);
 
         /* First try rendering into the current page. If that fails, the
          * page is full and we need a new one. */
@@ -226,14 +240,24 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
             GL_ALPHA,
             GL_UNSIGNED_BYTE,
             &page->textureData[0]);
+
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+        glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+        glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_CONSTANT);
+        glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+        glTexEnvi(GL_TEXTURE_ENV, GL_SRC2_RGB, GL_TEXTURE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
     }
 
     stbtt_aligned_quad q;
     stbtt_GetPackedQuad(
-        &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
+        &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, false);
 
-    glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, cd->page->texture);
+    glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, bg);
     glBegin(GL_QUADS);
     glTexCoord2f(q.s0, q.t0);
     glVertex2f(q.x0, q.y0);
@@ -244,6 +268,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
     glTexCoord2f(q.s0, q.t1);
     glVertex2f(q.x0, q.y1);
     glEnd();
+    glDisable(GL_TEXTURE_2D);
 }
 
 void printChar(const cell_t* cell, float x, float y)
@@ -253,7 +278,6 @@ void printChar(const cell_t* cell, float x, float y)
 
     /* Draw background. */
 
-    glDisable(GL_BLEND);
     glColor3fv((cell->attr & DPY_REVERSE) ? fg : bg);
     glRectf(x, y, x + fontWidth, y + fontHeight);
 
@@ -447,17 +471,23 @@ void printChar(const cell_t* cell, float x, float y)
         case 0x2089: /* ₉ */
             renderTtfChar(cell->c - 0x2080 + '0',
                 cell->attr,
+                (cell->attr & DPY_REVERSE) ? fg : bg,
                 x + fontXOffset,
                 y + fontAscent);
             break;
 
         default:
-            renderTtfChar(cell->c, cell->attr, x + fontXOffset, y + fontAscent);
+        {
+            renderTtfChar(cell->c,
+                cell->attr,
+                (cell->attr & DPY_REVERSE) ? fg : bg,
+                x + fontXOffset,
+                y + fontAscent);
+        }
     }
 
     if (cell->attr & DPY_UNDERLINE)
     {
-        glDisable(GL_BLEND);
         glBegin(GL_LINES);
         glVertex2i(x + fontXOffset, y + fontAscent + 1);
         glVertex2i(x + fontXOffset + fontWidth, y + fontAscent + 1);
