@@ -49,10 +49,11 @@ jobs:
     steps:
     - uses: msys2/setup-msys2@v2
       with:
+        msystem: mingw32
         update: true
         install: >-
           make
-          mingw-w64-cross-gcc
+          mingw-w64-i686-gcc
           mingw-w64-i686-glfw
           mingw-w64-i686-imagemagick
           mingw-w64-i686-nsis
