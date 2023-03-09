@@ -53,6 +53,7 @@ jobs:
         update: true
         install: >-
           make
+          mingw-w64-i686-binutils
           mingw-w64-i686-gcc
           mingw-w64-i686-glfw
           mingw-w64-i686-imagemagick
@@ -67,8 +68,8 @@ jobs:
         fetch-depth: 1
     - name: build
       run: |
-        PATH=/mingw32/bin:/opt/bin:$PATH ./configure
-        PATH=/mingw32/bin:/opt/bin:$PATH make
+        PATH=/mingw32/bin:$PATH ./configure
+        PATH=/mingw32/bin:$PATH make
     - name: zip
       run: |
         zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
