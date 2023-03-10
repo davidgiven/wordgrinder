@@ -9,8 +9,8 @@ FILEFORMAT=8
 WINCC=${WINCC:-i686-w64-mingw32-gcc}
 WINCXX=${WINCC:-i686-w64-mingw32-g++}
 WINLINK=${WINLINK:-i686-w64-mingw32-g++}
-WINSTRIP=${WINSTRIP:-i686-w64-mingw32-strip}
-WINDRES=${WINDRES:-i686-w64-mingw32-windres}
+WINSTRIP=${WINSTRIP:-strip}
+WINDRES=${WINDRES:-windres}
 MAKENSIS=${MAKENSIS:-makensis}
 DATE=${DATE:-$(date +'%-d %B %Y')}
 PREFIX=${PREFIX:-$HOME}
@@ -291,7 +291,7 @@ add_configuration() {
         if [ "$done_common_windows" != "y" ]; then
             done_common_windows=y
             echo "build $OBJDIR/wordgrinder.rc.o: rcfile src/c/arch/win32/wordgrinder.rc | src/c/arch/win32/manifest.xml" >&3
-            echo "  windres = i686-w64-mingw32-windres" >&3
+            echo "  windres = $WINDRES" >&3
         fi
     else
         add BOTHFLAGS -DARCH=normal
@@ -430,7 +430,7 @@ add_configuration() {
             elif [ "$(uname)" = "Darwin" ]; then
                 add LDFLAGS -framework OpenGL
             elif [ "$OS" = "Windows_NT" ]; then
-                add LDFLAGS -lopengl32 -lgdi32 -lole32 -lshlwapi -lwindowscodecs
+                add LDFLAGS -lopengl32 -lgdi32 -lole32 -lshlwapi -lwindowscodecs -mwindows
             else
                 echo "No OpenGL found"
                 exit 1
