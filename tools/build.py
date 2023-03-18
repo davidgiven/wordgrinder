@@ -7,8 +7,6 @@ def multibin(self, name, symbol, srcs: Targets = []):
         replaces=self,
         ins=srcs,
         outs=[symbol + ".h"],
-        commands=[
-            "sh tools/multibin2c.sh "+symbol+" {ins} > {outs}"
-        ],
+        commands=["sh tools/multibin2c.sh " + symbol + " {ins} > {outs}"],
         label="MULTIBIN",
     )
