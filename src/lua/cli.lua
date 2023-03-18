@@ -4,7 +4,6 @@
 
 local string_find = string.find
 local table_concat = table.concat
-local stderr = io.stderr
 
 local import_table =
 {

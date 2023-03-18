@@ -2,20 +2,6 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
--- Lua 5.3 moved unpack into table.unpack.
-
-unpack = unpack or table.unpack
-
--- Urrgh, luajit's path defaults to all the wrong places. This is painfully
--- evil but does at least work.
-
-if jit then
-	package.path = package.path ..
-		";/usr/share/lua/5.1/?.lua;/usr/share/lua/5.1/?/init.lua"
-	package.cpath = package.cpath ..
-		";/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;/usr/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so"
-end
-
 -- Make sure that reads of undefined global variables fail. Note: this will
 -- prevent us from storing nil in a global.
 

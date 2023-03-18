@@ -13,19 +13,22 @@ local GetStringWidth = wg.getstringwidth
 local GetCwd = wg.getcwd
 local Stat = wg.stat
 local SetUnicode = wg.setunicode
+local PrintErr = wg.printerr
+local PrintOut = wg.printout
+local ReadFile = wg.readfile
 
 local redrawpending = true
 
 -- Determine the user's home directory.
 
-HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
+HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE")
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
 
 -- Determine the installation directory (Windows only).
 
 if (ARCH == "windows") then
-    local exe = os.getenv("WINDOWS_EXE")
+    local exe = wg.getenv("WINDOWS_EXE")
     local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
     WINDOWS_INSTALL_DIR = dir
 end
@@ -131,15 +134,14 @@ function WordProcessor(filename)
     -- Which config file are we loading?
 
     do
-        local fp, e, errno = io.open(configfile, "r")
-        if fp then
-            f, e = load(ChunkStream(fp:read("*a")), configfile)
+        local data, errno, e = ReadFile(configfile)
+        if data then
+            f, e = loadstring(data, configfile)
             if f then
                 xpcall(f, CLIError)
             else
                 CLIError("config file compilation error: "..e)
             end
-            fp:close()
         elseif (errno ~= wg.ENOENT) then
             CLIError("config file load error: "..e)
         end
@@ -293,16 +295,13 @@ function Main(...)
     table_remove(arg, 1) -- contains the executable name
     local filename = nil
     do
-        local stdout = io.stdout
-        local stderr = io.stderr
-
         local function do_help()
-            stdout:write("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
+            PrintErr("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
             if DEBUG then
-                stdout:write("(This version has been compiled with debugging enabled.)\n")
+                PrintErr("(This version has been compiled with debugging enabled.)\n")
             end
 
-            stdout:write([[
+            PrintErr([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
    -h    --help                Displays this message.

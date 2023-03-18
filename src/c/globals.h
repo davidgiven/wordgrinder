@@ -49,9 +49,8 @@ extern int main(int argc, char* argv[]);
 
 /* --- Lua --------------------------------------------------------------- */
 
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
+#include "src/c/luau/VM/include/lua.h"
+#include "src/c/luau/VM/include/lualib.h"
 
 #if defined WINSHIM
 #include "winshim.h"

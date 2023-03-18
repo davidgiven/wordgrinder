@@ -554,7 +554,7 @@ local function loadfromstreamt(fp)
 			-- Just ignore these.
 		else
 			error(
-				string.format("malformed line when reading file: %s", line))
+				string.format("malformed line when reading file: '%s'", line))
 		end
 	end
 
@@ -575,10 +575,12 @@ function LoadFromString(s)
 end
 
 function LoadFromFile(filename)
-	local fp, e = io.open(filename, "rb")
-	if not fp then
+	local data, _, e = wg.readfile(filename);
+	if not data then
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
+	local fp = FakeIO(data)
+
 	local loader = nil
 	local magic = fp:read("*l"):gsub("\r", "")
 	if (magic == MAGIC) then
@@ -592,10 +594,7 @@ function LoadFromFile(filename)
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 
-	local d, e = loader(fp)
-	fp:close()
-
-	return d, e
+	return loader(fp)
 end
 
 local function loaddocument(filename)
