@@ -63,11 +63,8 @@ multibin(
 
 normalrule(
     name="typecheck",
-    ins=["src/c/luau+analyse"] + SRCS,
+    ins=["tools+typechecker"] + SRCS,
     outs=["stamp"],
     label="TYPECHECK",
-    commands=[
-        "{ins[0]} " + " ".join(SRCS)
-    ]
+    commands=["{ins[0]} " + " ".join(SRCS)],
 )
-

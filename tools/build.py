@@ -1,4 +1,5 @@
 from build.ab2 import normalrule, Rule, Targets
+from build.c import cxxprogram
 
 
 @Rule
@@ -10,3 +11,6 @@ def multibin(self, name, symbol, srcs: Targets = []):
         commands=["sh tools/multibin2c.sh " + symbol + " {ins} > {outs}"],
         label="MULTIBIN",
     )
+
+
+cxxprogram(name="typechecker", srcs=["./typechecker.cc"], deps=["src/c/luau"])
