@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 Cmd.Checkpoint()
 Cmd.InsertStringIntoParagraph("Hello,")

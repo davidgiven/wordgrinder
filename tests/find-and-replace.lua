@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 local function assert_sel(top, bot)
 	AssertEquals(not not Document.mp, true)

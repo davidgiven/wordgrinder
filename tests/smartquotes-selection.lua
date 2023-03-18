@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 DocumentSet.addons.smartquotes.singlequotes = false
 DocumentSet.addons.smartquotes.doublequotes = false

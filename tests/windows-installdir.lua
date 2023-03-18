@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 if (ARCH == "windows") then
 	AssertNotNull(WINDOWS_INSTALL_DIR)

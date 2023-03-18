@@ -1,8 +1,8 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 -- See https://github.com/davidgiven/wordgrinder/issues/206
 
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 Cmd.SetStyle("i")
 Cmd.InsertStringIntoParagraph("foo")

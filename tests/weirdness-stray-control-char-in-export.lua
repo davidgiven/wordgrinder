@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 -- Test the low level function that's actually got the bug in it.
 

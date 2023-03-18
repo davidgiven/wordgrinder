@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoWord("foo")
 Cmd.SetMark()

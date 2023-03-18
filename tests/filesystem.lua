@@ -1,7 +1,6 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
-local tmpfile = os.tmpname()
-local dir = tmpfile..".dir"
+local dir = wg.mkdtemp()
 
 local t, _, errno = Mkdirs(dir.."/foo/bar/baz")
 AssertEquals(nil, errno)

@@ -2,6 +2,7 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local PrintErr = wg.printerr
 local string_find = string.find
 local table_concat = table.concat
 
@@ -27,9 +28,8 @@ local export_table =
 }
 
 function CLIMessage(...)
-	stderr:write("wordgrinder: ", ...)
-	stderr:write("\n")
-	stderr:flush()
+	PrintErr("wordgrinder: ", ...)
+	PrintErr("\n")
 end
 
 function CLIError(...)

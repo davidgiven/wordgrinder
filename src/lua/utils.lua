@@ -271,16 +271,6 @@ function GetClass(t)
 	return index
 end
 
--- Returns a load() callback which supplies a string.
-
-function ChunkStream(text)
-	return function()
-		local t = text
-		text = nil
-		return t
-	end
-end
-
 -- string.format("%q"); early Luas don't support control codes, so we emulate it.
 
 function Format(w)

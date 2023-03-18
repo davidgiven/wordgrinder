@@ -1,4 +1,4 @@
-require "tests/testsuite"
+require "tests/testsuite.lua"
 
 Cmd.InsertStringIntoParagraph("The quick brown fox jumps")
 Cmd.SplitCurrentParagraph()

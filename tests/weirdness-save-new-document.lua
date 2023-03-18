@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 local function assert_class(t, c)
 	AssertEquals(GetClass(t), c)

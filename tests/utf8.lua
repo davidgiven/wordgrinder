@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 local writeu8 = wg.writeu8
 local readu8 = wg.readu8

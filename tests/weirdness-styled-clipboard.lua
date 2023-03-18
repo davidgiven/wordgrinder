@@ -1,4 +1,4 @@
-require("tests/testsuite")
+loadfile("tests/testsuite.lua")()
 
 local w = "\17→Edit→FnordFile→Edit→Fnord"
 AssertEquals("\17→", wg.deletefromword(w, 5, #w+1))
