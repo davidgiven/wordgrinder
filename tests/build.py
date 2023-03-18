@@ -19,7 +19,7 @@ TESTS = [
     "get-style-from-word",
     "immutable-paragraphs",
     "import-from-html",
-    #"import-from-markdown",
+    # "import-from-markdown",
     "import-from-opendocument",
     "import-from-text",
     "insert-space-with-style-hint",

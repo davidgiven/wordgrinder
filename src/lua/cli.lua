@@ -59,10 +59,10 @@ end
 -- @param file1                 Source filename
 -- @param file2                 Destination filename
 
-function CliConvert(file1, file2)
+function CliConvert(file1: string, file2: string)
 	EngageCLI()
 	
-	local function decode_filename(f)
+	local function decode_filename(f: string): (string, string, string, string)
 		local _, _, root, extension, hassubdoc, subdoc = string_find(f,
 			"^(.*)%.(%w*)(:?)(.*)$")
 		
@@ -75,7 +75,7 @@ function CliConvert(file1, file2)
 	
 	local f1r, f1e, f1hs, f1s = decode_filename(file1)
 	local f1 = f1r.."."..f1e
-	local f2r, f2e, f2hs, f2s = decode_filename(file2)
+	local f2r, f2e, f2hs, _f2s = decode_filename(file2)
 	local f2 = f2r.."."..f2e
 	
 	if (f2hs ~= "") then

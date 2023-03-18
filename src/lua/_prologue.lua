@@ -20,7 +20,7 @@ if DEBUG then
 
 	setmetatable(_G,
 		{
-			__index = function(self, k)
+			__index = function(self, k: string)
 				if not allowed[k] then
 					error("read from undefined local '"..k.."'")
 				end
@@ -41,7 +41,7 @@ IDLE_TIME = (BLINK_ON_TIME + BLINK_OFF_TIME) * 5
 
 -- Polyfills for Luau.
 
-function loadfile(filename)
+function loadfile(filename: string)
 	local data, e = wg.readfile(filename)
 	if data then
 		return loadstring(data, filename)
