@@ -6,6 +6,7 @@ local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
 local ParseWord = wg.parseword
 local WriteU8 = wg.writeu8
+local ReadFile = wg.readfile
 local bitand = bit32.band
 local bitor = bit32.bor
 local bitxor = bit32.bxor
@@ -89,19 +90,17 @@ function ImportFileWithUI(filename, title, callback)
 
 	-- Actually import the file.
 
-	local fp = io.open(filename)
-	if not fp then
+	local data, e = ReadFile(filename)
+	if not data then
 		return nil
 	end
 
-	local document = callback(fp)
+	local document = callback(data)
 	if not document then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")
 		QueueRedraw()
 		return false
 	end
-
-	fp:close()
 
 	-- Add the document to the document set.
 

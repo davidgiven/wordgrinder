@@ -3,6 +3,7 @@
 -- file in this distribution for the full text.
 
 local ParseWord = wg.parseword
+local WriteFile = wg.writefile
 local bitand = bit32.band
 local bitor = bit32.bor
 local bitxor = bit32.bxor
@@ -112,8 +113,6 @@ local function writetostreamt(object, write)
 			save_document(i, d)
 		end
 	end
-
-	return true
 end
 
 function SaveToString(object)
@@ -122,30 +121,20 @@ function SaveToString(object)
 		ss[#ss+1] = s
 	end
 
-	local r = writetostreamt(object, write)
-	return r, table.concat(ss)
+	writetostreamt(object, write)
+	return table.concat(ss)
 end
 
 function SaveToFile(filename, object)
 	-- Write the file to a *different* filename (so that crashes during
 	-- writing doesn't corrupt the file).
 
-	local fp, e = io.open(filename..".new", "wb")
-	if not fp then
-		return nil, e
-	end
+	local s = TMAGIC .. "\n" .. SaveToString(object)
 
-	local fpw = fp.write
-
-	local r, s = SaveToString(object)
-
-	local e
-	if r then
-		r, e = fp:write(TMAGIC, "\n", s)
-	end
-	r, e = fp:close()
+	local new_filename = filename..".new"
+	local _, e = WriteFile(new_filename, s)
 	if e then
-		return r, e
+		return nil, e
 	end
 
 	-- At this point, we know the new file has been written correctly.
@@ -153,8 +142,8 @@ function SaveToFile(filename, object)
 	-- one. On proper operating systems we could do this in a single
 	-- os.rename, but Windows doesn't support clobbering renames.
 
-	os.remove(filename)
-	r, e = os.rename(filename..".new", filename)
+	wg.remove(filename)
+	r, e = wg.rename(new_filename, filename)
 	if e then
 		-- Yikes! The old file has gone, but we couldn't rename the new
 		-- one...
@@ -579,7 +568,7 @@ function LoadFromFile(filename)
 	if not data then
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
-	local fp = FakeIO(data)
+	local fp = CreateIStream(data)
 
 	local loader = nil
 	local magic = fp:read("*l"):gsub("\r", "")
@@ -759,7 +748,7 @@ function GetClipboard()
 		return LoadFromString(wgdata).documents[1]
 	end
 	if text then
-		return Cmd.ImportTextFileFromString(text)
+		return Cmd.ImportTextString(text)
 	end
 	return CreateDocument()
 end
@@ -771,7 +760,7 @@ function SetClipboard(document)
 	document.name = "clipboard"
 	documentSet.documents = { document }
 
-	local r, wgdata = SaveToString(documentSet)
+	local wgdata = SaveToString(documentSet)
 	wg.clipboard_set(text, wgdata)
 end
 

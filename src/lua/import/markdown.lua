@@ -20,7 +20,7 @@ local table_insert = table.insert
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-function Cmd.ImportMarkdownFileFromStream(fp)
+function Cmd.ImportMarkdownString(fp)
 	local document = CreateDocument()
 	local importer = CreateImporter(document)
 
@@ -267,7 +267,6 @@ function Cmd.ImportMarkdownFileFromStream(fp)
 		require_blank_before_blockquote = true,
 		require_blank_before_header = true,
 	})
-	local data = fp:read("*a")
     local parsetree, metadata = parser(data)
 
     -- Now we have a parse tree, execute all the actions to generate the document.
@@ -287,7 +286,7 @@ function Cmd.ImportMarkdownFileFromStream(fp)
 end
 
 function Cmd.ImportMarkdownFile(filename)
-	return ImportFileWithUI(filename, "Import Markdown File", Cmd.ImportMarkdownFileFromStream)
+	return ImportFileWithUI(filename, "Import Markdown File", Cmd.ImportMarkdownString)
 end
 
 -- vim: sw=4 ts=4 et

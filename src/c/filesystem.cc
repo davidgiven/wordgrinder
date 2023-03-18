@@ -62,6 +62,27 @@ static int getcwd_cb(lua_State* L)
     return 1;
 }
 
+static int remove_cb(lua_State* L)
+{
+    const char* filename = luaL_checklstring(L, 1, NULL);
+    if (remove(filename) != 0)
+        return pusherrno(L);
+
+    lua_pushboolean(L, true);
+    return 1;
+}
+
+static int rename_cb(lua_State* L)
+{
+    const char* oldfilename = luaL_checklstring(L, 1, NULL);
+    const char* newfilename = luaL_checklstring(L, 2, NULL);
+    if (rename(oldfilename, newfilename) != 0)
+        return pusherrno(L);
+
+    lua_pushboolean(L, true);
+    return 1;
+}
+
 static int readdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
@@ -193,13 +214,14 @@ static int printout_cb(lua_State* L)
 static int mkdtemp_cb(lua_State* L)
 {
     std::string path = std::filesystem::temp_directory_path();
-	path += "/XXXXXX";
+    path += "/XXXXXX";
     if (mkdtemp(&path[0]))
     {
         lua_pushstring(L, path.c_str());
         return 1;
     }
-    else return pusherrno(L);
+    else
+        return pusherrno(L);
 }
 
 static int readfile_cb(lua_State* L)
@@ -230,7 +252,7 @@ static int readfile_cb(lua_State* L)
     return 1;
 
 error:
-	pusherrno(L);
+    pusherrno(L);
     if (fp)
         fclose(fp);
     return 3;
@@ -259,7 +281,7 @@ static int writefile_cb(lua_State* L)
     return 0;
 
 error:
-pusherrno(L);
+    pusherrno(L);
     if (fp)
         fclose(fp);
     return 3;
@@ -278,6 +300,8 @@ void filesystem_init(void)
         {"printout",  printout_cb },
         {"readdir",   readdir_cb  },
         {"readfile",  readfile_cb },
+        {"remove",    remove_cb   },
+        {"rename",    rename_cb   },
         {"stat",      stat_cb     },
         {"writefile", writefile_cb},
         {NULL,        NULL        }

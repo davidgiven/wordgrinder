@@ -1,6 +1,6 @@
 loadfile("tests/testsuite.lua")()
 
-local filename = os.tmpname()
+local filename = wg.mkdtemp().."/temp.wg"
 
 GlobalSettings = {
 	boolValue = true,

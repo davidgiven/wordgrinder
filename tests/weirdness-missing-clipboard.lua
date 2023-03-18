@@ -1,4 +1,4 @@
-require "tests/testsuite.lua"
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("The quick brown fox jumps")
 Cmd.SplitCurrentParagraph()
@@ -18,7 +18,7 @@ Cmd.UnsetMark()
 
 AssertEquals(3, #GetClipboard())
 
-local filename = os.tmpname()
+local filename = wg.mkdtemp().."/tempfile"
 AssertEquals(Cmd.SaveCurrentDocumentAs(filename), true)
 AssertEquals(Cmd.LoadDocumentSet(filename), true)
 

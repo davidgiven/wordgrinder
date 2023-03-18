@@ -19,7 +19,7 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-function Cmd.ImportHTMLData(data)
+function Cmd.ImportHTMLString(data)
 	-- Collapse whitespace; this makes things far easier to parse.
 
 	data = data:gsub("[\t\f]", " ")
@@ -157,5 +157,5 @@ function Cmd.ImportHTMLData(data)
 end
 
 function Cmd.ImportHTMLFile(filename)
-	return ImportFileWithUI(filename, "Import HTML File", Cmd.ImportHTMLData)
+	return ImportFileWithUI(filename, "Import HTML File", Cmd.ImportHTMLString)
 end

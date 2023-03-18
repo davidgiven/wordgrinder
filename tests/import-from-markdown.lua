@@ -1,7 +1,6 @@
 loadfile("tests/testsuite.lua")()
 
-local tempfile = io.tmpfile()
-tempfile:write([[
+local data = [[
 # Header 1
 ## Header 2
 ### Header 3
@@ -66,11 +65,9 @@ Line 2
 
 Stuff here.
 ```
-]])
+]]
 
-tempfile:seek("set", 0)
-tempfile:flush()
-local document = Cmd.ImportMarkdownFileFromStream(tempfile)
+local document = Cmd.ImportMarkdownString(data)
 
 local expected = [[
 <html xmlns="http://www.w3.org/1999/xhtml"><head>

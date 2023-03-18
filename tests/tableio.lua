@@ -1,6 +1,6 @@
 loadfile("tests/testsuite.lua")()
 
-local tmpfile = os.tmpname()
+local tmpfile = wg.mkdtemp().."/testfile"
 
 local t = {
 	foo = {

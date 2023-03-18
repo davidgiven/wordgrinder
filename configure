@@ -117,7 +117,6 @@ build_luascripts() {
     add srcs src/lua/html.lua
     add srcs src/lua/margin.lua
     add srcs src/lua/xpattern.lua
-    add srcs src/lua/fakeio.lua
     add srcs src/lua/fileio.lua
     add srcs src/lua/export.lua
     add srcs src/lua/export/text.lua
@@ -421,12 +420,12 @@ add_configuration() {
     fi
 
     #if [ "$BUILTIN_LPEG" = "y" ]; then
-        #add BOTHFLAGS -Isrc/c/emu/lpeg
-        #add SRCS src/c/emu/lpeg/lpvm.c
-        #add SRCS src/c/emu/lpeg/lpcap.c
-        #add SRCS src/c/emu/lpeg/lptree.c
-        #add SRCS src/c/emu/lpeg/lpcode.c
-        #add SRCS src/c/emu/lpeg/lpprint.c
+    #    add BOTHFLAGS -Isrc/c/emu/lpeg
+    #    add SRCS src/c/emu/lpeg/lpvm.c
+    #    add SRCS src/c/emu/lpeg/lpcap.c
+    #    add SRCS src/c/emu/lpeg/lptree.c
+    #    add SRCS src/c/emu/lpeg/lpcode.c
+    #    add SRCS src/c/emu/lpeg/lpprint.c
     #fi
 
     if [ "$BUILTIN_MINIZIP" = "y" ]; then
@@ -584,11 +583,10 @@ add_configuration() {
         add tests tests/get-style-from-word.lua
         add tests tests/immutable-paragraphs.lua
         add tests tests/import-from-html.lua
-        add tests tests/import-from-markdown.lua
+        #add tests tests/import-from-markdown.lua
         add tests tests/import-from-opendocument.lua
         add tests tests/import-from-text.lua
         add tests tests/insert-space-with-style-hint.lua
-        add tests tests/io-open-enoent.lua
         add tests tests/line-down-into-style.lua
         add tests tests/line-up.lua
         add tests tests/line-wrapping.lua

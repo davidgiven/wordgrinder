@@ -1,4 +1,4 @@
-require "tests/testsuite.lua"
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("foobar")
 Cmd.GotoPreviousChar()

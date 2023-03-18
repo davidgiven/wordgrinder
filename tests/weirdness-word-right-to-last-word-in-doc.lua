@@ -1,4 +1,4 @@
-require "tests/testsuite.lua"
+loadfile("tests/testsuite.lua")()
 
 ScreenWidth = 80
 Document:wrap(ScreenWidth)

@@ -10,7 +10,7 @@ Cmd.AddBlankDocument("other")
 Cmd.InsertStringIntoParagraph("blarg")
 assert_class(Document[1], ParagraphClass)
 
-local filename = os.tmpname()
+local filename = wg.mkdtemp().."/tempfile"
 AssertEquals(Cmd.SaveCurrentDocumentAs(filename), true)
 AssertEquals(Cmd.LoadDocumentSet(filename), true)
 

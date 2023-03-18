@@ -528,8 +528,12 @@ function CreateIStream(data)
 					end
 					ptr = e + 1
 					return s
+				elseif a == "*a" then
+					local s = data:sub(ptr)
+					ptr = #data
+					return s
 				else
-					error("unsupport read parameter")
+					error("unsupported read parameter '"..a.."'")
 				end
 			end,
 
