@@ -135,16 +135,16 @@ void dpy_setattr(int andmask, int ormask)
     update_attrs();
 }
 
-static int lookup_colour(const colour_t* colour)
+static uint8_t lookup_colour(const colour_t* colour)
 {
-    for (int i = 0; i < arrlen(colours); i++)
+    for (uint8_t i = 0; i < arrlen(colours); i++)
     {
         if ((colours[i].r == colour->r) && (colours[i].g == colour->g) &&
             (colours[i].b == colour->b))
             return i + FIRST_COLOUR_ID;
     }
 
-    int id = arrlen(colours) + FIRST_COLOUR_ID;
+    uint8_t id = arrlen(colours) + FIRST_COLOUR_ID;
     arrpush(colours, *colour);
     init_color(id, colour->r * 1000.0, colour->g * 1000.0, colour->b * 1000.0);
     return id;
@@ -155,8 +155,8 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     if (!use_colours)
         return;
 
-    int fgc = lookup_colour(fg);
-    int bgc = lookup_colour(bg);
+    uint8_t fgc = lookup_colour(fg);
+    uint8_t bgc = lookup_colour(bg);
 
     for (int i = 0; i < arrlen(colourPairs); i++)
     {
