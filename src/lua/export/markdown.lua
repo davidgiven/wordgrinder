@@ -1,3 +1,5 @@
+--!strict
+--
 local function unmarkdown(s)
 	s = s:gsub("#", "\\#")
 	s = s:gsub("- ", "\\- ")

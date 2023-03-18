@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoWord("foo")

@@ -1,3 +1,4 @@
+--!strict
 -- xpattern.lua
 -- Preliminary regular expression-like support in Lua
 -- Uses Lua patterns as the core building block.
@@ -27,7 +28,6 @@ local ipairs = ipairs
 local setmetatable = setmetatable
 local type   = type
 local print  = print
-local load   = load
 
 
 -- Adds whitespace to string `s`.

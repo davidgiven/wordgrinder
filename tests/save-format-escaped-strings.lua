@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 local filename = wg.mkdtemp().."/temp.wg"

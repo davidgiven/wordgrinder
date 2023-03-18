@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 local w = "\17→Edit→FnordFile→Edit→Fnord"

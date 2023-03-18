@@ -1,84 +1,37 @@
-# Note: there are no configuration options here (other than the NINJA
-# variable). To configure properly, you need to pass parameters and/or
-# environment variables into the configure script.
+export OBJ = .obj
+export LUA = lua
+export CC = gcc
+export CXX = g++
+export AR = ar
+export CFLAGS = -g -O0
+export LDFLAGS = -g
+export NINJAFLAGS =
 
-# Which ninja do you want to use?
-ifeq ($(strip $(shell type ninja >/dev/null; echo $$?)),0)
-	NINJA ?= ninja
-else
-	ifeq ($(strip $(shell type ninja-build >/dev/null; echo $$?)),0)
-		NINJA ?= ninja-build
-    else
-        $(error No ninja found)
-    endif
-endif
+export PYTHONHASHSEED = 1
 
-hide = @
-OBJDIR = .obj
+#all: $(OBJ)/build.mk
+#	@+make -f $(OBJ)/build.mk +all
 
-NINJABUILD = \
-	$(hide) $(NINJA) -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
-
-.PHONY: all
-all: $(OBJDIR)/build.ninja
-	$(NINJABUILD)
-
-.PHONY: install
-install: $(OBJDIR)/build.ninja
-	$(NINJABUILD) install
-
-$(OBJDIR)/build.ninja: configure
-	$(hide) sh ./configure
-
-.DELETE_ON_ERROR:
-
+all: $(OBJ)/build.ninja
+	@ninja -f $< +all
+	
 clean:
 	@echo CLEAN
-	@rm -rf $(OBJDIR) bin
+	@rm -rf $(OBJ) bin
 
-.PHONY: distr
-distr: wordgrinder-$(VERSION).tar.xz
+build-files = $(shell find . -name 'build.py') build/*.py
+$(OBJ)/build.mk: Makefile $(build-files)
+	@echo ACKBUILDER
+	@mkdir -p $(OBJ)
+	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m make -t +all -o $@ build.py
 
-.PHONY: debian-distr
-debian-distr: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+$(OBJ)/build.ninja: Makefile $(build-files)
+	@echo ACKBUILDER
+	@mkdir -p $(OBJ)
+	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m ninja -t +all -o $@ \
+		-v OBJ,CC,CXX,AR \
+		build.py
 
-.PHONY: wordgrinder-$(VERSION).tar.xz
-wordgrinder-$(VERSION).tar.xz:
-	tar cvaf $@ \
-		--transform "s,^,wordgrinder-$(VERSION)/," \
-		extras \
-		licenses \
-		scripts \
-		src \
-		testdocs \
-		tests \
-		tools \
-		configure \
-		Makefile \
-		README \
-		README.wg \
-		README.Windows.txt \
-		wordgrinder.man \
-		xwordgrinder.man
-
-.PHONY: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
-wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
-	tar cvaf $@ \
-		--transform "s,^,wordgrinder-$(VERSION)/," \
-		--exclude "*.dictionary" \
-		--exclude "src/c/emu" \
-		extras \
-		licenses \
-		scripts \
-		src \
-		testdocs \
-		tests \
-		tools \
-		configure \
-		Makefile \
-		README \
-		README.wg \
-		README.Windows.txt \
-		wordgrinder.man \
-		xwordgrinder.man
+.DELETE_ON_ERROR:
+.SECONDARY:
 

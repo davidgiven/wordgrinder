@@ -9,7 +9,7 @@
 #include <locale.h>
 #include "globals.h"
 
-extern int luaopen_lpeg (lua_State *L);
+#include "script_table.h"
 
 #if !defined WIN32
 #include <langinfo.h>
@@ -48,12 +48,6 @@ int main(int argc, char* argv[])
 	filesystem_init();
 	zip_init();
 	clipboard_init();
-//	#if (LUA_VERSION_NUM < 502)
-//		luaopen_lpeg(L);
-//	#else
-//		luaL_requiref(L, "lpeg", luaopen_lpeg, 1);
-//		lua_pop(L, 1);
-//	#endif
 
 	script_load_from_table(script_table);
 	script_run((const char**) argv);

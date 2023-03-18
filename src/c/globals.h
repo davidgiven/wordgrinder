@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <wctype.h>
+#include <string>
 
 /* --- Platform detection ------------------------------------------------ */
 
@@ -68,12 +69,9 @@ extern void luaL_setconstants(lua_State* L, const luaL_Constant* array, int len)
 
 typedef struct
 {
-	const uint8_t* data;
-	size_t size;
+	std::string data;
 	const char* name;
 } FileDescriptor;
-
-extern const FileDescriptor script_table[];
 
 extern void script_init(void);
 extern void script_load(const char* filename);

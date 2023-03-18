@@ -4,7 +4,6 @@
  */
 
 #include "globals.h"
-#include "luacode.h"
 #include <fstream>
 #include <string>
 #include "Luau/Compiler.h"
@@ -74,7 +73,7 @@ void script_deinit(void)
 static Luau::CompileOptions copts()
 {
     Luau::CompileOptions result = {};
-    result.optimizationLevel = 1;
+    result.optimizationLevel = 2;
     result.debugLevel = 1;
     result.coverageLevel = 0;
     return result;
@@ -149,13 +148,10 @@ void script_init(void)
 
 void script_load_from_table(const FileDescriptor* table)
 {
-    while (table->data)
+    while (table->name)
     {
-        size_t bytecodeSize;
-        char* bytecode = luau_compile(
-            (const char*)table->data, table->size, NULL, &bytecodeSize);
-        int status = luau_load(L, table->name, bytecode, bytecodeSize, 0);
-        free(bytecode);
+		std::string bytecode = Luau::compile(table->data, copts());
+        int status = luau_load(L, table->name, &bytecode[0], bytecode.size(), 0);
         status = status || docall(L, 0, 1);
         if (status)
         {

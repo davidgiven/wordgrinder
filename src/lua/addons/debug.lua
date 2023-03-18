@@ -1,3 +1,4 @@
+--!strict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -12,7 +13,7 @@ do
 	local function cb(event, token, terms)
 		local settings = GlobalSettings.debug
 		if settings.memory then
-			local mem = floor(collectgarbage("count"))
+			local mem = floor(gcinfo())
 			terms[#terms+1] = 
 				{
 					priority=50,

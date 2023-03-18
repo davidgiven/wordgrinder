@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 AssertTableEquals({"one", "two", "three"}, SplitString("one two three", "%s"))

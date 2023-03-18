@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 AssertEquals(Cmd.LoadDocumentSet("testdocs/0.6-with-clipboard.wg"), true)

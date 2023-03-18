@@ -1,3 +1,4 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("foo bar baz")

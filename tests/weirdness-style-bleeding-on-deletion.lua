@@ -1,7 +1,9 @@
+--!strict
 loadfile("tests/testsuite.lua")()
 
 -- See https://github.com/davidgiven/wordgrinder/issues/206
 
+--!strict
 loadfile("tests/testsuite.lua")()
 
 Cmd.SetStyle("i")
