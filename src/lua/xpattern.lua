@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- xpattern.lua
 -- Preliminary regular expression-like support in Lua
 -- Uses Lua patterns as the core building block.
@@ -152,7 +152,7 @@ end
 --  `totncaptures0` - number of captures prior to this match
 --  `code`      - Lua code string (code) and number of
 --  `ncaptures` - number of captures in pattern.
-local function gen(anypat, srcidx0, destidx0, totncaptures0)
+local function gen(anypat, srcidx0, destidx0, totncaptures0, b)
   if type(anypat) == 'string' then
     anypat = pat_prepend_carrot(anypat)
     anypat = pattern(anypat)

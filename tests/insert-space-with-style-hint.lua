@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 -- Make sure that toggling the style hint just before typing a space

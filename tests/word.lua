@@ -10,7 +10,7 @@ local CreateStyleByte = wg.createstylebyte
 local ReadU8 = wg.readu8
 local WriteU8 = wg.writeu8
 
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 AssertEquals(NextCharInWord("abcd", 1), 2)

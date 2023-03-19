@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -643,7 +643,7 @@ end
 
 function Cmd.TerminateProgram()
 	if ConfirmDocumentErasure() then
-		os.exit()
+		wg.exit(0)
 	end
 
 	return false

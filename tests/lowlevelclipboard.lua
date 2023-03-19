@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 wg.clipboard_set("text data", "wg data");

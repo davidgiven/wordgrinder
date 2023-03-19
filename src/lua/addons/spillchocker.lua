@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,8 +6,19 @@
 local GetWordText = wg.getwordtext
 local GetCwd = wg.getcwd
 local ChDir = wg.chdir
+local ReadFile = wg.readfile
 
 local USER_DICTIONARY_NAME = "User dictionary"
+
+type SpellcheckerSettings = {
+	enabled: boolean,
+	usesystemdictionary: boolean,
+	useuserdictionary: boolean
+}
+
+type GlobalSpellcheckerSettings = {
+	filename: string
+}
 
 -----------------------------------------------------------------------------
 -- Addon registration. Create the default settings in the DocumentSet.
@@ -26,11 +37,11 @@ do
 			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
-		}
+		} :: SpellcheckerSettings
 
 		GlobalSettings.systemdictionary = GlobalSettings.systemdictionary or {
 			filename = find_default_dictionary()
-		}
+		} :: GlobalSpellcheckerSettings
 	end
 
 	AddEventListener(Event.RegisterAddons, cb)
@@ -55,12 +66,10 @@ end
 -----------------------------------------------------------------------------
 -- Utilities.
 
-local user_dictionary_cache
-local user_dictionary_cache
-local system_dictionary_cache
+local user_dictionary_cache: {[string]: string}?
+local system_dictionary_cache: {[string]: string}?
 
-local function user_dictionary_document_modified()
-	user_dictionary_cache = nil
+local function user_dictionary_document_modified(s: string)
 	user_dictionary_cache = nil
 end
 
@@ -113,12 +122,12 @@ function GetSystemDictionary()
 		if settings.filename then
 			NonmodalMessage("Loading system dictionary '"
 				.. settings.filename .. "'")
-			local fp, e = io.open(settings.filename, "r")
-			if fp then
+			local data, e = ReadFile(settings.filename)
+			if data then
+				fp = CreateIStream(data)
 				for s in fp:lines() do
 					system_dictionary_cache[s:lower()] = s
 				end
-				fp:close()
 			else
 				NonmodalMessage("Failed to load system dictionary: " .. e)
 			end
@@ -180,6 +189,8 @@ function Cmd.AddToUserDictionary()
 		DocumentSet:touch()
 		QueueRedraw()
 	end
+
+	return true
 end
 
 -----------------------------------------------------------------------------
@@ -352,8 +363,7 @@ function Cmd.ConfigureSystemDictionary()
 	local filename = FileBrowser(
 		"Load new system dictionary",
 		"Select the dictionary file to load.",
-		false,
-		settings.filename)
+		false)
 	ChDir(oldcwd)
 
 	if filename then

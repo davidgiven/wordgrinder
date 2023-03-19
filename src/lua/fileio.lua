@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -198,7 +198,7 @@ function Cmd.SaveCurrentDocument()
 end
 
 local function loadfromstream(fp)
-	local cache = {}
+	local cache: {{[number]: any, text: string?}} = {}
 	local load
 
 	local function populate_table(t)

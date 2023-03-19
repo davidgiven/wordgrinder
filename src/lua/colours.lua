@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2022 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -9,6 +9,9 @@ local string_char = string.char
 
 type Colour = {number}
 type ColourMap = {[string]: Colour}
+
+declare Palette: ColourMap
+Palette = {} :: ColourMap
 
 local function MakeDark(): ColourMap
 	local ink = {1, 1, 1}

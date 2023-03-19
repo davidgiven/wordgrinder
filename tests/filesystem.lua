@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 local dir = wg.mkdtemp()

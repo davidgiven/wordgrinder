@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -9,7 +9,7 @@ local GetCwd = wg.getcwd
 -----------------------------------------------------------------------------
 -- Save a new template.
 
-function Cmd.SaveCurrentDocumentAsTemplate()
+function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 	local templatedir = GlobalSettings.directories.templates
 	local oldcwd = GetCwd()
 
@@ -30,16 +30,17 @@ function Cmd.SaveCurrentDocumentAsTemplate()
 	local r, e = SaveDocumentSetRaw(filename)
 	if not r then
 			ModalMessage("Save failed", "The document could not be saved: "..e)
+			return false, e
 	else
 			NonmodalMessage("Save succeeded.")
+			return true
 	end
-	return r
 end
 
 -----------------------------------------------------------------------------
 -- Create a new document set from a template.
 
-function Cmd.CreateDocumentSetFromTemplate()
+function Cmd.CreateDocumentSetFromTemplate(): (boolean, string?)
 	if not ConfirmDocumentErasure() then
 		return false
 	end
@@ -54,8 +55,8 @@ function Cmd.CreateDocumentSetFromTemplate()
 		return false
 	end
 
-	local r = Cmd.LoadDocumentSet(filename)
+	local r, e = Cmd.LoadDocumentSet(filename)
 	DocumentSet.name = nil
-	return r
+	return r, e
 end
 

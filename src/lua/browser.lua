@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -31,7 +31,7 @@ local function compare_filenames(f1, f2)
 	end
 end
 
-function FileBrowser(title, message, saving)
+function FileBrowser(title: string, message: string, saving: boolean, default: string?): string
 	local files = {}
 	for _, filename in ipairs(ReadDir(".")) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then

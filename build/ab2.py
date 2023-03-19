@@ -84,7 +84,12 @@ def Vars(parent=None):
             data[k] = v
 
         def __getattr__(self, k):
-            return data.get(k, ParameterList())
+            if k in data:
+                return data.get(k)
+            k = k.upper()
+            if k in os.environ:
+                return ParameterList([os.environ[k]])
+            return ParameterList()
 
         def __repr__(self):
             return f"<Vars-{id(self)}: {data}>"

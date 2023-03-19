@@ -118,7 +118,13 @@ int main(int argc, char* const* argv)
 	auto result = frontend.loadDefinitionFile(typedefs, "main",false);
 	if (!result.success)
 	{
-		fprintf(stderr, "couldn't load type definition file\n");
+		fprintf(stderr, "couldn't load type definition file:\n");
+		for (const auto& error : result.parseResult.errors)
+		{
+			fprintf(stderr, "%d: %s\n", 
+				error.getLocation().begin.line,
+				error.getMessage().c_str());
+		}
 		exit(1);
 	}
 

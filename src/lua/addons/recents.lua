@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -14,7 +14,7 @@ local NUMBER_OF_RECENTS = 10
 
 do
 	local function cb()
-		GlobalSettings.recents = GlobalSettings.recents or {}
+		GlobalSettings.recents = (GlobalSettings.recents or {}) :: {string}
 	end
 
 	AddEventListener(Event.RegisterAddons, cb)
@@ -53,12 +53,14 @@ end
 
 function Cmd.LoadRecentDocument()
 	local recents = GlobalSettings.recents
-	local m = {}
+	local m: {{any}} = {}
 	for i, v in pairs(recents) do
 		m[#m+1] = { nil, string_char(48 + i), Leafname(v), nil,
-			function()
-				Cmd.LoadDocumentSet(v)
-			end
+			{
+				function()
+					return Cmd.LoadDocumentSet(v)
+				end
+			}
 		}
 	end
 

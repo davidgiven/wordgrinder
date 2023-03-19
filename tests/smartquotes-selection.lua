@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 DocumentSet.addons.smartquotes.singlequotes = false

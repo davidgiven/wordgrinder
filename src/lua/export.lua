@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -13,6 +13,7 @@ local bitxor = bit32.bxor
 local bit = bit32.btest
 local string_lower = string.lower
 local time = wg.time
+local WriteFile = wg.writefile
 
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
@@ -166,20 +167,20 @@ function ExportFileWithUI(filename, title, extension, callback)
 	end
 
 	ImmediateMessage("Exporting "..filename.."...")
-	local fp, e = io.open(filename, "w")
-	if not fp then
+
+	local data: {string} = {}
+	local writer = function(...: string)
+		for s in {...} do
+			data[#data+1] = s
+		end
+	end
+
+	local _, e = WriteFile(filename, table.concat(data))
+	if e then
 		ModalMessage(nil, "Unable to open the output file "..e..".")
 		QueueRedraw()
 		return false
 	end
-
-	local fpw = fp.write
-	local writer = function(...)
-		fpw(fp, ...)
-	end
-
-	callback(writer, Document)
-	fp:close()
 
 	QueueRedraw()
 	return true

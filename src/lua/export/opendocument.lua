@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -363,7 +363,7 @@ local function export_odt_with_ui(filename, title, extension)
 	}
 	
 	if not writezip(filename, xml) then
-		ModalMessage(nil, "Unable to open the output file "..e..".")
+		ModalMessage(nil, "Unable to open the output file.")
 		QueueRedraw()
 		return false
 	end

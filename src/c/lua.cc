@@ -79,6 +79,13 @@ static Luau::CompileOptions copts()
     return result;
 }
 
+static Luau::ParseOptions popts()
+{
+	Luau::ParseOptions result = {};
+	result.allowDeclarationSyntax = true;
+	return result;
+}
+
 static int loadstring_cb(lua_State* L)
 {
     size_t len;
@@ -87,7 +94,7 @@ static int loadstring_cb(lua_State* L)
 
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
 
-    std::string bytecode = Luau::compile(std::string(s, len), copts());
+    std::string bytecode = Luau::compile(std::string(s, len), copts(), popts());
     if (luau_load(L, name, bytecode.data(), bytecode.size(), 0) == 0)
         return 1;
 
@@ -150,7 +157,7 @@ void script_load_from_table(const FileDescriptor* table)
 {
     while (table->name)
     {
-		std::string bytecode = Luau::compile(table->data, copts());
+		std::string bytecode = Luau::compile(table->data, copts(), popts());
         int status = luau_load(L, table->name, &bytecode[0], bytecode.size(), 0);
         status = status || docall(L, 0, 1);
         if (status)

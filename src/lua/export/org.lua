@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 local function unorg(s)
 	s = s:gsub("#", "\\#")
 	s = s:gsub("- ", "\\- ")

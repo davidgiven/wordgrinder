@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -501,14 +501,14 @@ end
 -- Create an input stream, from which lines can be read as if it were a file.
 -- It's incredibly limited to just the functions we need.
 
-function CreateIStream(data)
+function CreateIStream(data: string)
 	local ptr = 1
 	local o = {}
 	setmetatable(o,
 	{
 		__index =
 		{
-			read = function(self, a)
+			read = function(self, a): string
 				if a == "*l" then
 					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
 					if (s == "") and (n == "") then

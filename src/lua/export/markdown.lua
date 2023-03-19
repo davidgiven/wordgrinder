@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 --
 local function unmarkdown(s)
 	s = s:gsub("#", "\\#")

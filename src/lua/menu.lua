@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -21,9 +21,9 @@ local menu_stack: {StackedMenu} = {}
 local UseUnicode = wg.useunicode
 
 type MenuItem = {
-	id: string,
-	mk: string?,
 	label: string,
+	id: string?,
+	mk: string?,
 	ak: string?,
 	fn: MenuCallback?,
 	menu: Menu?,
@@ -31,11 +31,13 @@ type MenuItem = {
 
 type Menu = {
 	[number]: MenuItem,
+	label: string,
 	maxwidth: number,
+	realwidth: number,
 	mks: {[string]: MenuItem}
 }
 
-type MenuCallback = {() -> (boolean, any?)}
+type MenuCallback = {() -> (boolean | Menu, any?)}
 
 type StackedMenu = {
 	menu: Menu,
@@ -43,9 +45,14 @@ type StackedMenu = {
 	top: number
 }
 
-function CreateMenu(n: string, m: {any}, menu: Menu?): Menu
+function CreateMenu(n: string, m: {{any}}, menu: Menu?): Menu
 	local w = n:len()
-	menu = menu or {}
+	menu = if menu then menu else {
+		label = "",
+		maxwidth = 0,
+		realwidth = 0,
+		mks = {}
+	}
 	menu.label = n
 	menu.mks = {}
 
@@ -54,8 +61,8 @@ function CreateMenu(n: string, m: {any}, menu: Menu?): Menu
 	end
 
 	for _, data in ipairs(m) do
-		if (data == "-") then
-			menu[#menu+1] = "-"
+		if data[1] == "-" then
+			menu[#menu+1] = {label = "-"}
 		else
 			local item = {
 				id = data[1],
@@ -149,7 +156,7 @@ local GlobalSettingsMenu = CreateMenu("Global settings",
 	{"FSlookandfeel", "L", "Change look and feel...",       nil,   { Cmd.ConfigureLookAndFeel }},
 	{"FSDictionary",  "D", "Load new system dictionary...", nil,   { Cmd.ConfigureSystemDictionary }},
 	{"FSdirectories", "R", "Change directories...",         nil,   { Cmd.ConfigureDirectories }},
-	"-",
+	{"-"},
 	{"FSDebug",       "X", "Debugging options...",    nil,         { Cmd.ConfigureDebug }},
 })
 
@@ -160,18 +167,18 @@ local FileMenu = CreateMenu("File",
 	{"FS",         "S", "Save document set",         "^S",        { Cmd.SaveCurrentDocument }},
 	{"FA",         "A", "Save document set as...",   nil,         { Cmd.SaveCurrentDocumentAs }},
 	{"FR",         "R", "Load recent document >",    nil,         { Cmd.LoadRecentDocument }},
-	"-",
+	{"-"},
 	{"FCtemplate", "C", "Create from template...",   nil,         { Cmd.CreateDocumentSetFromTemplate }},
 	{"FMtemplate", "M", "Save as template...",       nil,         { Cmd.SaveCurrentDocumentAsTemplate }},
-	"-",
+	{"-"},
 	{"FB",         "B", "Add new blank document",    nil,         { Cmd.AddBlankDocument }},
 	{"FI",         "I", "Import new document >",     nil,         nil, ImportMenu },
 	{"FE",         "E", "Export current document >", nil,         nil, ExportMenu },
 	{"Fdocman",    "D", "Manage documents...",       nil,         { Cmd.ManageDocumentsUI }},
-	"-",
+	{"-"},
 	{"Fsettings",  "T", "Document settings >",       nil,         nil, DocumentSettingsMenu },
 	{"Fglobals",   "G", "Global settings >",         nil,         nil, GlobalSettingsMenu },
-	"-",
+	{"-"},
 	{"Fabout",     "Z", "About WordGrinder...",      nil,         { Cmd.AboutWordGrinder }},
 	{"FQ",         "X", "Exit",                      "^Q",        { Cmd.TerminateProgram }}
 })
@@ -195,16 +202,16 @@ local EditMenu = CreateMenu("Edit",
 	{"EC",         "C", "Copy",                      "^C",        { Cmd.Copy }},
 	{"EP",         "P", "Paste",                     "^V",        { cp, Cmd.Paste }},
 	{"ED",         "D", "Delete",                    nil,         { cp, Cmd.Delete }},
-	"-",
+	{"-"},
 	{"Eundo",      "U", "Undo",                      "^Z",        { Cmd.Undo }},
 	{"Eredo",      "E", "Redo",                      "^Y",        { Cmd.Redo }},
-	"-",
+	{"-"},
 	{"EF",         "F", "Find and replace...",       "^F",        { Cmd.Find }},
 	{"EN",         "N", "Find next",                 "^K",        { Cmd.FindNext }},
 	{"ER",         "R", "Replace then find",         "^R",        { cp, Cmd.ReplaceThenFind }},
 	{"Esq",        "Q", "Smartquotify selection",    nil,         { Cmd.Smartquotify }},
 	{"Eusq",       "W", "Unsmartquotify selection",  nil,         { Cmd.Unsmartquotify }},
-	"-",
+	{"-"},
 	{"EG",         "G", "Go to...",                  "^G",        { Cmd.Goto }},
 	{"Escrapbook", "S", "Scrapbook >",               nil,         nil, ScrapbookMenu },
 	{"Espell",     "K", "Spellchecker >",            nil,         nil, SpellcheckMenu },
@@ -212,19 +219,19 @@ local EditMenu = CreateMenu("Edit",
 
 local MarginMenu = CreateMenu("Margin",
 {
-	{"SM1",    "H", "Hide margin",                nil,         { function() Cmd.SetViewMode(1) end}},
-	{"SM2",    "S", "Show paragraph styles",      nil,         { function() Cmd.SetViewMode(2) end}},
-	{"SM3",    "N", "Show paragraph numbers",     nil,         { function() Cmd.SetViewMode(3) end}},
-	{"SM4",    "W", "Show paragraph word counts", nil,         { function() Cmd.SetViewMode(4) end}},
+	{"SM1",    "H", "Hide margin",                nil,         { function() return Cmd.SetViewMode(1) end}},
+	{"SM2",    "S", "Show paragraph styles",      nil,         { function() return Cmd.SetViewMode(2) end}},
+	{"SM3",    "N", "Show paragraph numbers",     nil,         { function() return Cmd.SetViewMode(3) end}},
+	{"SM4",    "W", "Show paragraph word counts", nil,         { function() return Cmd.SetViewMode(4) end}},
 })
 
 local StyleMenu = CreateMenu("Style",
 {
-	{"SI",     "I", "Set italic",                 "^I",        { cp, function() Cmd.SetStyle("i") end }},
-	{"SU",     "U", "Set underline",              "^U",        { cp, function() Cmd.SetStyle("u") end }},
-	{"SB",     "B", "Set bold",                   "^B",        { cp, function() Cmd.SetStyle("b") end }},
-	{"SO",     "O", "Set plain",                  "^O",        { cp, function() Cmd.SetStyle("o") end }},
-	"-",
+	{"SI",     "I", "Set italic",                 "^I",        { cp, function() return Cmd.SetStyle("i") end }},
+	{"SU",     "U", "Set underline",              "^U",        { cp, function() return Cmd.SetStyle("u") end }},
+	{"SB",     "B", "Set bold",                   "^B",        { cp, function() return Cmd.SetStyle("b") end }},
+	{"SO",     "O", "Set plain",                  "^O",        { cp, function() return Cmd.SetStyle("o") end }},
+	{"-"},
 	{"SP",     "P", "Change paragraph style >",   "^P",        nil, ParagraphStylesMenu },
 	{"SM",     "M", "Set margin mode >",          nil,         nil, MarginMenu },
 	{"SS",     "S", "Toggle status bar",          nil,         { Cmd.ToggleStatusBar }},
@@ -278,7 +285,7 @@ local MainMenu = CreateMenu("Main Menu",
 	{"Z",  "Z", "Navigation >",     nil,  nil, NavigationMenu }
 })
 
-function RunMenuAction(ff: MenuCallback): (boolean, any?)
+function RunMenuAction(ff: MenuCallback): (boolean | Menu, any?)
 	for _, f in ipairs(ff) do
 		local result, e = f()
 		if not result then
@@ -298,7 +305,7 @@ MenuClass = {
 		SetNormal()
 	end,
 
-	drawmenu = function(self, x, y, menu, n, top)
+	drawmenu = function(self, x: number, y: number, menu: Menu, n: number, top: number)
 		local akw = 0
 		for _, item in ipairs(menu) do
 			local ak = self.accelerators[item.id]
@@ -406,7 +413,7 @@ MenuClass = {
 				self:drawmenu(x, y, menu, n, top)
 
 				local c = GetChar()
-				if type(c) == "table" then
+				if typeof(c) == "table" then
 					if c.b then
 						-- Mouse event.
 						if c.x < x then
@@ -423,7 +430,7 @@ MenuClass = {
 								return false
 							else
 								item = menu[row]
-								if (type(item) ~= "string") and item.id then
+								if (typeof(item) ~= "string") and item.id then
 									n = row
 									self:drawmenu(x, y, menu, n, top)
 									break
@@ -460,7 +467,7 @@ MenuClass = {
 					elseif (c == "KEY_PGUP") then
 						n = int(max(n - visiblelen/2, 1))
 					elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
-						if (type(menu[n]) ~= "string") then
+						if (typeof(menu[n]) ~= "string") then
 							item = menu[n]
 							break
 						end
@@ -474,7 +481,7 @@ MenuClass = {
 						return false
 					elseif (c == "KEY_^X") then
 						local item = menu[n]
-						if (type(item) ~= "string") and item.id then
+						if (typeof(item) ~= "string") and item.id then
 							local ak = self.accelerators[item.id]
 							if ak then
 								self.accelerators[ak] = nil
@@ -484,12 +491,12 @@ MenuClass = {
 						end
 					elseif (c == "KEY_^V") then
 						local item = menu[n]
-						if (type(item) ~= "string") and item.id then
+						if (typeof(item) ~= "string") and item.id then
 							DrawStatusLine("Press new accelerator key for menu item.")
 
 							local oak = self.accelerators[item.id]
 							local ak = GetChar()
-							if (type(ak) == "string") then
+							if (typeof(ak) == "string") then
 								ak = ak:upper()
 								if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
 									ak = ak:gsub("^KEY_", "")
@@ -530,9 +537,12 @@ MenuClass = {
 				return false
 			end
 
+			local newmenu = item.menu
 			if item.fn then
-				local f, msg = RunMenuAction(f)
-				if not u(f) then
+				local f, msg = RunMenuAction(item.fn)
+				if typeof(f) == "table" then
+					newmenu = f
+				else
 					if msg then
 						NonmodalMessage(msg)
 					end
@@ -541,14 +551,14 @@ MenuClass = {
 				end
 			end
 
-			if IsMenu(f) then
+			if newmenu then
 				menu_stack[#menu_stack+1] = {
 					menu = menu,
 					n = n,
 					top = top
 				}
 
-				local r = self:runmenu(x+4, y+2, f)
+				local r = self:runmenu(x+4, y+2, newmenu)
 				menu_stack[#menu_stack] = nil
 
 				if (r == true) then
@@ -576,7 +586,7 @@ MenuClass = {
 		-- (Or maybe it's a raw function.)
 
 		local f
-		if (type(id) == "function") then
+		if (typeof(id) == "function") then
 			f = id
 		else
 			local item = menu_tab[id]
@@ -641,7 +651,7 @@ function RebuildDocumentsMenu(documents)
 	local ak_tab: {[string]: string} = {}
 	for _, item in ipairs(DocumentsMenu) do
 		local ak = DocumentSet.menu.accelerators[item.id]
-		if ak then
+		if ak and item.label then
 			ak_tab[item.label] = ak
 		end
 	end
@@ -673,9 +683,9 @@ end
 function ListMenuItems()
 	local function list(menu: Menu)
 		for _, item in ipairs(menu) do
-			if type(item) ~= "string" then
+			if item.label ~= "-" then
 				wg.printerr(
-					string.format("%15s %s\n", item.id, item.label))
+					string.format("%15s %s\n", item.id or "", item.label))
 				if item.menu then
 					list(item.menu)
 				end

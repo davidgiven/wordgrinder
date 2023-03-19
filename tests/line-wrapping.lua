@@ -1,4 +1,4 @@
---!strict
+--!nonstrict
 loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("The quick brown fox jumps over the lazy dog.")
