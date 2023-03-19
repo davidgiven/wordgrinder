@@ -20,21 +20,8 @@ local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
 local EISDIR = wg.EISDIR
 
-function max(a, b)
-	if (a > b) then
-		return a
-	else
-		return b
-	end
-end
-
-function min(a, b)
-	if (a < b) then
-		return a
-	else
-		return b
-	end
-end
+max = math.max
+min = math.min
 
 --- Transcodes a string.
 -- Converts the string to guaranteed valid UTF-8.
@@ -42,7 +29,7 @@ end
 -- @param s                  string to process
 -- @return                   canonicalised string
 
-function CanonicaliseString(s)
+function CanonicaliseString(s: string): string
 	return wg.transcode(s)
 end
 
@@ -53,7 +40,7 @@ end
 -- @param plural             returned if number ~= 1
 -- @return                   either singular or plural
 
-function Pluralise(n, singular, plural)
+function Pluralise(n: number, singular: string, plural: string): string
 	if (n == 1) then
 		return singular
 	else
@@ -66,7 +53,7 @@ end
 -- @param filename           filename
 -- @return                   leaf
 
-function Leafname(filename)
+function Leafname(filename: string): string
 	local _, _, f = filename:find("([^/\\]*)$")
 	if f then
 		return f
@@ -79,7 +66,7 @@ end
 -- @param filename           filename
 -- @return                   directory
 
-function Dirname(filename)
+function Dirname(filename: string): string
 	local _, _, f = filename:find("(.*)[/\\][^/\\]*$")
 	if f then
 		if (f == "") then
@@ -116,7 +103,7 @@ end
 -- @param delim              the delimiter
 -- @return                   the list of words
 
-function SplitString(str, delim)
+function SplitString(str: string, delim: string): {string}
     -- Eliminate bad cases...
     if not str:find(delim) then
     	return {str}
@@ -138,7 +125,7 @@ end
 -- @param t                  input table
 -- @return                   a string
 
-function TableToString(t)
+function TableToString(t: any): string
 	local function stringify(n)
 		if (type(n) == "string") then
 			return string.format("%q", n)
@@ -171,7 +158,7 @@ end
 
 --- Return a table of the bytes of a string.
 
-function StringBytesToString(s)
+function StringBytesToString(s: string): {number}
 	local ts = {}
 	for i = 1, #s do
 		ts[#ts+1] = string.byte(s, i)
@@ -186,7 +173,7 @@ end
 -- @param spacer             the element to insert
 -- @return                   a new array
 
-function Intersperse(array, spacer)
+function Intersperse(array: any, spacer: any): any
 	local a = {}
 	for i = 1, #array-1 do
 		a[#a+1] = array[i]
@@ -205,7 +192,7 @@ end
 -- @param new                new table
 -- @return                   modified new table
 
-function MergeTables(old, new)
+function MergeTables(old: any, new: any): any
 	if old then
 		for k, v in pairs(old) do
 			new[k] = v
@@ -220,7 +207,7 @@ end
 -- @param o                  object
 -- @return                   the proxy
 
-function ImmutabliseArray(o)
+function ImmutabliseArray(o: any): any
 	local p = {}
 	setmetatable(p,
 		{
@@ -259,7 +246,7 @@ end
 --- Returns the index metatable field of a table.
 -- Immutable objects are handled correctly.
 
-function GetClass(t)
+function GetClass(t: any): any
 	local index = nil
 	local mt = getmetatable(t)
 	if mt then
@@ -274,7 +261,7 @@ end
 
 -- string.format("%q"); early Luas don't support control codes, so we emulate it.
 
-function Format(w)
+function Format(w: string): string
 	local ss = {'"'}
 
 	local i = 1
@@ -297,7 +284,7 @@ end
 
 -- Splits a string by whitespace.
 
-function ParseStringIntoWords(s)
+function ParseStringIntoWords(s: string): {string}
 	local words = {}
 	for w in s:gmatch("[^ \t\r\n]+") do
 		words[#words + 1] = w
@@ -310,7 +297,7 @@ end
 
 -- Convert an array to a map.
 
-function ArrayToMap(array)
+function ArrayToMap(array: any): any
 	local map = {}
 	for _, i in ipairs(array) do
 		map[i] = true
@@ -404,12 +391,12 @@ end
 
 -- Returns the largest common prefix of the array.
 
-function LargestCommonPrefix(array)
+function LargestCommonPrefix(array: {string}): string
 	if (#array == 0) then
 		return nil
 	end
 
-	local function all_strings_contain(p1, p2, s)
+	local function all_strings_contain(p1: number, p2: number, s: string)
 		s = s:sub(p1, p2)
 		for _, ss in ipairs(array) do
 			if (ss:sub(p1, p2) ~= s) then

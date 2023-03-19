@@ -28,26 +28,26 @@ local export_table =
 --	["rtf"] = Cmd.ExportRTFFile,
 }
 
-function CLIMessage(...)
+function CLIMessage(...: string)
 	PrintErr("wordgrinder: ", ...)
 	PrintErr("\n")
 end
 
-function CLIError(...)
+function CLIError(...: string)
 	CLIMessage(...)
-	os.exit(1)
+	wg.exit(1)
 end
 		
 --- Engages CLI mode.
 
 function EngageCLI()
-	function ImmediateMessage(s)
+	function ImmediateMessage(s: string)
 		if s then
 			CLIMessage(s)
 		end
 	end
 	
-	function ModalMessage(s1, s2)
+	function ModalMessage(s1: string, s2: string)
 		if s2 then
 			CLIMessage(s2)
 		end
@@ -131,6 +131,6 @@ function CliConvert(file1: string, file2: string)
 		CLIError("failed")
 	end
 	
-	os.exit(0)
+	wg.exit(0)
 end
 

@@ -176,7 +176,7 @@ function Autocomplete(filename, x1, x2, y)
 end
 
 function Browser(title, topmessage, bottommessage, data)
-	local dialogue
+	local dialogue: table
 
 	local browser = Form.Browser {
 		focusable = false,

@@ -3,33 +3,6 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
--- Make sure that reads of undefined global variables fail. Note: this will
--- prevent us from storing nil in a global.
-
-if DEBUG then
-	local allowed = 
-	{
-		FONT_REGULAR = true,
-		FONT_BOLD = true,
-		FONT_ITALIC = true,
-		FONT_BOLDITALIC = true,
-		FONT_SIZE = true,
-		WINDOW_WIDTH = true,
-		WINDOW_HEIGHT = true,
-	}
-
-	setmetatable(_G,
-		{
-			__index = function(self, k: string)
-				if not allowed[k] then
-					error("read from undefined local '"..k.."'")
-				end
-				return rawget(_G, k)
-			end
-		}
-	)
-end
-
 -- Global definitions that the various source files need.
 
 Cmd = {}

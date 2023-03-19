@@ -16,11 +16,34 @@ local GetStringWidth = wg.getstringwidth
 
 local menu_tab = {}
 local key_tab = {}
-local menu_stack = {}
+local menu_stack: {StackedMenu} = {}
 
 local UseUnicode = wg.useunicode
 
-function CreateMenu(n, m, menu)
+type MenuItem = {
+	id: string,
+	mk: string?,
+	label: string,
+	ak: string?,
+	fn: MenuCallback?,
+	menu: Menu?,
+}
+
+type Menu = {
+	[number]: MenuItem,
+	maxwidth: number,
+	mks: {[string]: MenuItem}
+}
+
+type MenuCallback = {() -> (boolean, any?)}
+
+type StackedMenu = {
+	menu: Menu,
+	n: number,
+	top: number
+}
+
+function CreateMenu(n: string, m: {any}, menu: Menu?): Menu
 	local w = n:len()
 	menu = menu or {}
 	menu.label = n
@@ -39,7 +62,8 @@ function CreateMenu(n, m, menu)
 				mk = data[2],
 				label = data[3],
 				ak = data[4],
-				fn = data[5]
+				fn = data[5],
+				menu = data[6],
 			}
 			menu[#menu+1] = item
 
@@ -71,7 +95,11 @@ function CreateMenu(n, m, menu)
 	return menu
 end
 
-local function submenu(menu)
+function IsMenu(m: MenuCallback): boolean
+	return (type(m) == "table") and (type(m[1]) ~= "function")
+end
+
+local function submenu(menu: Menu)
 	for _, item in ipairs(menu) do
 		menu_tab[item.id] = nil
 		if item.ak then
@@ -87,107 +115,107 @@ local cp = Cmd.Checkpoint
 
 local ImportMenu = CreateMenu("Import new document",
 {
-	{"FIodt",  "O", "Import ODT file...",        nil,         Cmd.ImportODTFile},
-	{"FIhtml", "H", "Import HTML file...",       nil,         Cmd.ImportHTMLFile},
-	{"FImd",   "M", "Import Markdown file...",   nil,         Cmd.ImportMarkdownFile},
-	{"FItxt",  "T", "Import text file...",       nil,         Cmd.ImportTextFile},
+	{"FIodt",  "O", "Import ODT file...",        nil,         { Cmd.ImportODTFile }},
+	{"FIhtml", "H", "Import HTML file...",       nil,         { Cmd.ImportHTMLFile }},
+	{"FImd",   "M", "Import Markdown file...",   nil,         { Cmd.ImportMarkdownFile }},
+	{"FItxt",  "T", "Import text file...",       nil,         { Cmd.ImportTextFile }},
 })
 
 local ExportMenu = CreateMenu("Export current document",
 {
-	{"FEodt",  "O", "Export to ODT...",          nil,         Cmd.ExportODTFile},
-	{"FEhtml", "H", "Export to HTML...",         nil,         Cmd.ExportHTMLFile},
-	{"FEmd",   "M", "Export to Markdown...",     nil,         Cmd.ExportMarkdownFile},
-	{"FEtxt",  "T", "Export to plain text...",   nil,         Cmd.ExportTextFile},
-	{"FEtex",  "L", "Export to LaTeX...",        nil,         Cmd.ExportLatexFile},
-	{"FEtr",   "F", "Export to Troff...",        nil,         Cmd.ExportTroffFile},
-	{"FEorg",  "E", "Export to Emacs Org...",    nil,         Cmd.ExportOrgFile},
+	{"FEodt",  "O", "Export to ODT...",          nil,         { Cmd.ExportODTFile }},
+	{"FEhtml", "H", "Export to HTML...",         nil,         { Cmd.ExportHTMLFile }},
+	{"FEmd",   "M", "Export to Markdown...",     nil,         { Cmd.ExportMarkdownFile }},
+	{"FEtxt",  "T", "Export to plain text...",   nil,         { Cmd.ExportTextFile }},
+	{"FEtex",  "L", "Export to LaTeX...",        nil,         { Cmd.ExportLatexFile }},
+	{"FEtr",   "F", "Export to Troff...",        nil,         { Cmd.ExportTroffFile }},
+	{"FEorg",  "E", "Export to Emacs Org...",    nil,         { Cmd.ExportOrgFile }},
 --	{"FErtf",  "R", "Export to Rtf...",          nil,         Cmd.ExportRTFFile},
 })
 
 local DocumentSettingsMenu = CreateMenu("Document settings",
 {
-    {"FSautosave",     "A", "Autosave...",           nil,         Cmd.ConfigureAutosave},
-    {"FSscrapbook",    "S", "Scrapbook...",          nil,         Cmd.ConfigureScrapbook},
-    {"FSHTMLExport",   "H", "HTML export...",        nil,         Cmd.ConfigureHTMLExport},
-	{"FSPageCount",    "P", "Page count...",         nil,         Cmd.ConfigurePageCount},
-	{"FSSmartquotes",  "Q", "Smart quotes...",       nil,         Cmd.ConfigureSmartQuotes},
-	{"FSSpellchecker", "K", "Spellchecker...",       nil,         Cmd.ConfigureSpellchecker},
+    {"FSautosave",     "A", "Autosave...",           nil,         { Cmd.ConfigureAutosave }},
+    {"FSscrapbook",    "S", "Scrapbook...",          nil,         { Cmd.ConfigureScrapbook }},
+    {"FSHTMLExport",   "H", "HTML export...",        nil,         { Cmd.ConfigureHTMLExport }},
+	{"FSPageCount",    "P", "Page count...",         nil,         { Cmd.ConfigurePageCount }},
+	{"FSSmartquotes",  "Q", "Smart quotes...",       nil,         { Cmd.ConfigureSmartQuotes }},
+	{"FSSpellchecker", "K", "Spellchecker...",       nil,         { Cmd.ConfigureSpellchecker }},
 })
 
 local GlobalSettingsMenu = CreateMenu("Global settings",
 {
-	{"FSgui",         "G", "Configure GUI...",              nil,   Cmd.ConfigureGui},
-	{"FSlookandfeel", "L", "Change look and feel...",       nil,   Cmd.ConfigureLookAndFeel},
-	{"FSDictionary",  "D", "Load new system dictionary...", nil,   Cmd.ConfigureSystemDictionary},
-	{"FSdirectories", "R", "Change directories...",         nil,   Cmd.ConfigureDirectories},
+	{"FSgui",         "G", "Configure GUI...",              nil,   { Cmd.ConfigureGui }},
+	{"FSlookandfeel", "L", "Change look and feel...",       nil,   { Cmd.ConfigureLookAndFeel }},
+	{"FSDictionary",  "D", "Load new system dictionary...", nil,   { Cmd.ConfigureSystemDictionary }},
+	{"FSdirectories", "R", "Change directories...",         nil,   { Cmd.ConfigureDirectories }},
 	"-",
-	{"FSDebug",       "X", "Debugging options...",    nil,         Cmd.ConfigureDebug},
+	{"FSDebug",       "X", "Debugging options...",    nil,         { Cmd.ConfigureDebug }},
 })
 
 local FileMenu = CreateMenu("File",
 {
-	{"FN",         "N", "New document set",          nil,         Cmd.CreateBlankDocumentSet},
-	{"FO",         "O", "Load document set...",      nil,         Cmd.LoadDocumentSet},
-	{"FS",         "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument},
-	{"FA",         "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs},
-	{"FR",         "R", "Load recent document >",    nil,         Cmd.LoadRecentDocument},
+	{"FN",         "N", "New document set",          nil,         { Cmd.CreateBlankDocumentSet }},
+	{"FO",         "O", "Load document set...",      nil,         { Cmd.LoadDocumentSet }},
+	{"FS",         "S", "Save document set",         "^S",        { Cmd.SaveCurrentDocument }},
+	{"FA",         "A", "Save document set as...",   nil,         { Cmd.SaveCurrentDocumentAs }},
+	{"FR",         "R", "Load recent document >",    nil,         { Cmd.LoadRecentDocument }},
 	"-",
-	{"FCtemplate", "C", "Create from template...",   nil,         Cmd.CreateDocumentSetFromTemplate},
-	{"FMtemplate", "M", "Save as template...",       nil,         Cmd.SaveCurrentDocumentAsTemplate},
+	{"FCtemplate", "C", "Create from template...",   nil,         { Cmd.CreateDocumentSetFromTemplate }},
+	{"FMtemplate", "M", "Save as template...",       nil,         { Cmd.SaveCurrentDocumentAsTemplate }},
 	"-",
-	{"FB",         "B", "Add new blank document",    nil,         Cmd.AddBlankDocument},
-	{"FI",         "I", "Import new document >",     nil,         ImportMenu},
-	{"FE",         "E", "Export current document >", nil,         ExportMenu},
-	{"Fdocman",    "D", "Manage documents...",       nil,         Cmd.ManageDocumentsUI},
+	{"FB",         "B", "Add new blank document",    nil,         { Cmd.AddBlankDocument }},
+	{"FI",         "I", "Import new document >",     nil,         nil, ImportMenu },
+	{"FE",         "E", "Export current document >", nil,         nil, ExportMenu },
+	{"Fdocman",    "D", "Manage documents...",       nil,         { Cmd.ManageDocumentsUI }},
 	"-",
-	{"Fsettings",  "T", "Document settings >",       nil,         DocumentSettingsMenu},
-	{"Fglobals",   "G", "Global settings >",         nil,         GlobalSettingsMenu},
+	{"Fsettings",  "T", "Document settings >",       nil,         nil, DocumentSettingsMenu },
+	{"Fglobals",   "G", "Global settings >",         nil,         nil, GlobalSettingsMenu },
 	"-",
-	{"Fabout",     "Z", "About WordGrinder...",      nil,         Cmd.AboutWordGrinder},
-	{"FQ",         "X", "Exit",                      "^Q",        Cmd.TerminateProgram}
+	{"Fabout",     "Z", "About WordGrinder...",      nil,         { Cmd.AboutWordGrinder }},
+	{"FQ",         "X", "Exit",                      "^Q",        { Cmd.TerminateProgram }}
 })
 
 local ScrapbookMenu = CreateMenu("Scrapbook",
 {
 	{"EScut",      "T", "Cut to scrapbook",          nil,         { cp, Cmd.CutToScrapbook }},
-	{"EScopy",     "C", "Copy to scrapbook",         nil,         Cmd.CopyToScrapbook},
+	{"EScopy",     "C", "Copy to scrapbook",         nil,         { Cmd.CopyToScrapbook }},
 	{"ESpaste",    "P", "Paste to scrapbook",        nil,         { cp, Cmd.PasteToScrapbook }},
 })
 
 local SpellcheckMenu = CreateMenu("Spellchecker",
 {
-	{"ECfind",     "F", "Find next misspelt word",        "^L",   Cmd.FindNextMisspeltWord },
+	{"ECfind",     "F", "Find next misspelt word",        "^L",   { Cmd.FindNextMisspeltWord }},
 	{"ECadd",      "A", "Add current word to dictionary", "^M",   { cp, Cmd.AddToUserDictionary }},
 })
 
 local EditMenu = CreateMenu("Edit",
 {
 	{"ET",         "T", "Cut",                       "^X",        { cp, Cmd.Cut }},
-	{"EC",         "C", "Copy",                      "^C",        Cmd.Copy},
+	{"EC",         "C", "Copy",                      "^C",        { Cmd.Copy }},
 	{"EP",         "P", "Paste",                     "^V",        { cp, Cmd.Paste }},
 	{"ED",         "D", "Delete",                    nil,         { cp, Cmd.Delete }},
 	"-",
-	{"Eundo",      "U", "Undo",                      "^Z",        Cmd.Undo},
-	{"Eredo",      "E", "Redo",                      "^Y",        Cmd.Redo},
+	{"Eundo",      "U", "Undo",                      "^Z",        { Cmd.Undo }},
+	{"Eredo",      "E", "Redo",                      "^Y",        { Cmd.Redo }},
 	"-",
-	{"EF",         "F", "Find and replace...",       "^F",        Cmd.Find},
-	{"EN",         "N", "Find next",                 "^K",        Cmd.FindNext},
+	{"EF",         "F", "Find and replace...",       "^F",        { Cmd.Find }},
+	{"EN",         "N", "Find next",                 "^K",        { Cmd.FindNext }},
 	{"ER",         "R", "Replace then find",         "^R",        { cp, Cmd.ReplaceThenFind }},
-	{"Esq",        "Q", "Smartquotify selection",    nil,         Cmd.Smartquotify},
-	{"Eusq",       "W", "Unsmartquotify selection",  nil,         Cmd.Unsmartquotify},
+	{"Esq",        "Q", "Smartquotify selection",    nil,         { Cmd.Smartquotify }},
+	{"Eusq",       "W", "Unsmartquotify selection",  nil,         { Cmd.Unsmartquotify }},
 	"-",
-	{"EG",         "G", "Go to...",                  "^G",        Cmd.Goto},
-	{"Escrapbook", "S", "Scrapbook >",               nil,         ScrapbookMenu},
-	{"Espell",     "K", "Spellchecker >",            nil,         SpellcheckMenu},
+	{"EG",         "G", "Go to...",                  "^G",        { Cmd.Goto }},
+	{"Escrapbook", "S", "Scrapbook >",               nil,         nil, ScrapbookMenu },
+	{"Espell",     "K", "Spellchecker >",            nil,         nil, SpellcheckMenu },
 })
 
 local MarginMenu = CreateMenu("Margin",
 {
-	{"SM1",    "H", "Hide margin",                nil,         function() Cmd.SetViewMode(1) end},
-	{"SM2",    "S", "Show paragraph styles",      nil,         function() Cmd.SetViewMode(2) end},
-	{"SM3",    "N", "Show paragraph numbers",     nil,         function() Cmd.SetViewMode(3) end},
-	{"SM4",    "W", "Show paragraph word counts", nil,         function() Cmd.SetViewMode(4) end},
+	{"SM1",    "H", "Hide margin",                nil,         { function() Cmd.SetViewMode(1) end}},
+	{"SM2",    "S", "Show paragraph styles",      nil,         { function() Cmd.SetViewMode(2) end}},
+	{"SM3",    "N", "Show paragraph numbers",     nil,         { function() Cmd.SetViewMode(3) end}},
+	{"SM4",    "W", "Show paragraph word counts", nil,         { function() Cmd.SetViewMode(4) end}},
 })
 
 local StyleMenu = CreateMenu("Style",
@@ -197,9 +225,9 @@ local StyleMenu = CreateMenu("Style",
 	{"SB",     "B", "Set bold",                   "^B",        { cp, function() Cmd.SetStyle("b") end }},
 	{"SO",     "O", "Set plain",                  "^O",        { cp, function() Cmd.SetStyle("o") end }},
 	"-",
-	{"SP",     "P", "Change paragraph style >",   "^P",        ParagraphStylesMenu},
-	{"SM",     "M", "Set margin mode >",          nil,         MarginMenu},
-	{"SS",     "S", "Toggle status bar",          nil,         Cmd.ToggleStatusBar},
+	{"SP",     "P", "Change paragraph style >",   "^P",        nil, ParagraphStylesMenu },
+	{"SM",     "M", "Set margin mode >",          nil,         nil, MarginMenu },
+	{"SS",     "S", "Toggle status bar",          nil,         { Cmd.ToggleStatusBar }},
 })
 
 local NavigationMenu = CreateMenu("Navigation",
@@ -214,7 +242,7 @@ local NavigationMenu = CreateMenu("Navigation",
 	{"ZSR",    nil, "Selection right",              "SRIGHT",     { Cmd.SetMark, Cmd.GotoNextCharW }},
 	{"ZSD",    nil, "Selection down",               "SDOWN",      { Cmd.SetMark, Cmd.GotoNextLine }},
 	{"ZSL",    nil, "Selection left",               "SLEFT",      { Cmd.SetMark, Cmd.GotoPreviousCharW }},
-	{"ZSW",    nil, "Select word",                  "^W",         Cmd.SelectWord },
+	{"ZSW",    nil, "Select word",                  "^W",         { Cmd.SelectWord }},
 	{"ZWL",    nil, "Goto previous word",           "^LEFT",      { Cmd.MoveWhileSelected, Cmd.GotoPreviousWordW }},
 	{"ZWR",    nil, "Goto next word",               "^RIGHT",     { Cmd.MoveWhileSelected, Cmd.GotoNextWordW }},
 	{"ZNP",    nil, "Goto next paragraph",          "^DOWN",      { Cmd.MoveWhileSelected, Cmd.GotoNextParagraphW }},
@@ -238,36 +266,26 @@ local NavigationMenu = CreateMenu("Navigation",
 	{"ZDPC",   nil, "Delete previous character",    "BACKSPACE",  { cp, Cmd.DeleteSelectionOrPreviousChar }},
 	{"ZDNC",   nil, "Delete next character",        "DELETE",     { cp, Cmd.DeleteSelectionOrNextChar }},
 	{"ZDW",    nil, "Delete word",                  "^E",         { cp, Cmd.TypeWhileSelected, Cmd.DeleteWord }},
-	{"ZM",     nil, "Toggle mark",                  "^@",         Cmd.ToggleMark},
+	{"ZM",     nil, "Toggle mark",                  "^@",         { Cmd.ToggleMark }},
 })
 
 local MainMenu = CreateMenu("Main Menu",
 {
-	{"F",  "F", "File >",           nil,  FileMenu},
-	{"E",  "E", "Edit >",           nil,  EditMenu},
-	{"S",  "S", "Style >",          nil,  StyleMenu},
-	{"D",  "D", "Documents >",      nil,  DocumentsMenu},
-	{"Z",  "Z", "Navigation >",     nil,  NavigationMenu}
+	{"F",  "F", "File >",           nil,  nil, FileMenu },
+	{"E",  "E", "Edit >",           nil,  nil, EditMenu },
+	{"S",  "S", "Style >",          nil,  nil, StyleMenu },
+	{"D",  "D", "Documents >",      nil,  nil, DocumentsMenu },
+	{"Z",  "Z", "Navigation >",     nil,  nil, NavigationMenu }
 })
 
-function IsMenu(m)
-	return (type(m) == "table") and (type(m[1]) ~= "function")
-end
-
-function RunMenuAction(ff)
-	if (type(ff) == "function") then
-		return ff()
-	elseif IsMenu(ff) then
-		Cmd.ActivateMenu(ff)
-	else
-		for _, f in ipairs(ff) do
-			local result, e = f()
-			if not result then
-				return false, e
-			end
+function RunMenuAction(ff: MenuCallback): (boolean, any?)
+	for _, f in ipairs(ff) do
+		local result, e = f()
+		if not result then
+			return false, e
 		end
-		return true
 	end
+	return true, nil
 end
 
 --- MENU DRIVER CLASS ---
@@ -365,7 +383,7 @@ MenuClass = {
 		end
 	end,
 
-	runmenu = function(self, x, y, menu)
+	runmenu = function(self, x: number, y: number, menu: Menu): boolean?
 		local n = 1
 		local top = 1
 
@@ -388,7 +406,7 @@ MenuClass = {
 				self:drawmenu(x, y, menu, n, top)
 
 				local c = GetChar()
-				if (type(c) == "table") then
+				if type(c) == "table" then
 					if c.b then
 						-- Mouse event.
 						if c.x < x then
@@ -512,21 +530,14 @@ MenuClass = {
 				return false
 			end
 
-			local f = item.fn
-
-			if not IsMenu(f) then
-				if not f then
-					ModalMessage("Not implemented yet", "Sorry, that feature isn't implemented yet. (This should never happen. Complain.)")
-				else
-					local msg
-					f, msg = RunMenuAction(f)
-					if not IsMenu(f) then
-						if msg then
-							NonmodalMessage(msg)
-						end
-						menu_stack = {}
-						return true
+			if item.fn then
+				local f, msg = RunMenuAction(f)
+				if not u(f) then
+					if msg then
+						NonmodalMessage(msg)
 					end
+					menu_stack = {}
+					return true
 				end
 			end
 
@@ -596,12 +607,16 @@ function CreateMenuBindings()
 	return m
 end
 
-function RebuildParagraphStylesMenu(styles)
+function RebuildParagraphStylesMenu(styles: DocumentStyles)
 	submenu(ParagraphStylesMenu)
 
-	local m = {}
+	local m: {{any}} = {}
 
-	for id, style in ipairs(styles) do
+	local id = 1
+
+	while styles[id] do
+		local style = styles[id]
+
 		local shortcut
 		if (id <= 10) then
 			shortcut = tostring(id - 1)
@@ -613,6 +628,8 @@ function RebuildParagraphStylesMenu(styles)
 			function()
 				Cmd.ChangeParagraphStyle(style.name)
 			end}
+
+		id += 1
 	end
 
 	CreateMenu("Paragraph Styles", m, ParagraphStylesMenu)
@@ -621,7 +638,7 @@ end
 function RebuildDocumentsMenu(documents)
 	-- Remember any accelerator keys and unhook the old menu.
 
-	local ak_tab = {}
+	local ak_tab: {[string]: string} = {}
 	for _, item in ipairs(DocumentsMenu) do
 		local ak = DocumentSet.menu.accelerators[item.id]
 		if ak then
@@ -632,7 +649,7 @@ function RebuildDocumentsMenu(documents)
 
 	-- Construct the new menu.
 
-	local m = {}
+	local m: {{any}} = {}
 	for id, document in ipairs(documents) do
 		local ak = ak_tab[document.name]
 		local shortcut
@@ -654,19 +671,19 @@ function RebuildDocumentsMenu(documents)
 end
 
 function ListMenuItems()
-	local function list(menu)
+	local function list(menu: Menu)
 		for _, item in ipairs(menu) do
-			if IsMenu(item) then
-				io.stdout:write(
+			if type(item) ~= "string" then
+				wg.printerr(
 					string.format("%15s %s\n", item.id, item.label))
-				if IsMenu(item.fn) then
-					list(item.fn)
+				if item.menu then
+					list(item.menu)
 				end
 			end
 		end
 	end
 
-	io.stdout:write("All supported menu items:\n\n")
+	wg.printout("All supported menu items:\n\n")
 	list(MainMenu)
 end
 

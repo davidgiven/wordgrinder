@@ -1,3 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sstream>
+#include <fstream>
+#include <map>
 #include "Luau/ModuleResolver.h"
 #include "Luau/TypeInfer.h"
 #include "Luau/BuiltinDefinitions.h"
@@ -5,9 +11,6 @@
 #include "Luau/TypeAttach.h"
 #include "Luau/Transpiler.h"
 #include "assert.h"
-#include <sstream>
-#include <fstream>
-#include <map>
 
 static Luau::Config singletonConfig;
 
@@ -52,25 +55,54 @@ public:
     }
 };
 
-int main(int argc, const char* argv[])
+int main(int argc, char* const* argv)
 {
+	std::string typedefs;
     int lineno = 1;
     std::multimap<int, std::string> fileLookup;
     std::stringstream ss;
-    for (int i = 1; i < argc; i++)
+
+    for (;;)
     {
-        fileLookup.emplace(lineno, argv[i]);
+        int opt = getopt(argc, argv, "-t:");
+        if (opt == -1)
+            break;
 
-        std::ifstream f(argv[i]);
-        if (!f)
-            perror(argv[i]);
-
-        char c;
-        while (f.get(c))
+        switch (opt)
         {
-            if (c == '\n')
-                lineno++;
-            ss.put(c);
+            case 't':
+            {
+                std::ifstream f(optarg);
+                if (!f)
+                    perror(optarg);
+
+				std::stringstream ts;
+				ts << f.rdbuf();
+				typedefs = ts.str();
+				break;
+            }
+
+            case 1:
+            {
+                fileLookup.emplace(lineno, optarg);
+
+                std::ifstream f(optarg);
+                if (!f)
+                    perror(optarg);
+
+                char c;
+                while (f.get(c))
+                {
+                    if (c == '\n')
+                        lineno++;
+                    ss.put(c);
+                }
+                break;
+            }
+
+            default:
+                fprintf(stderr, "Unknown option '%c'", opt);
+                exit(1);
         }
     }
 
@@ -83,7 +115,15 @@ int main(int argc, const char* argv[])
     Luau::Frontend frontend(&fileResolver, &configResolver, frontendOptions);
     Luau::registerBuiltinGlobals(frontend.typeChecker, frontend.globals);
 
+	auto result = frontend.loadDefinitionFile(typedefs, "main",false);
+	if (!result.success)
+	{
+		fprintf(stderr, "couldn't load type definition file\n");
+		exit(1);
+	}
+
     Luau::CheckResult cr = frontend.check("main");
+	int count = 0;
     for (auto& error : cr.errors)
     {
         auto i = fileLookup.lower_bound(error.location.begin.line);
@@ -100,7 +140,10 @@ int main(int argc, const char* argv[])
                 Luau::toString(error,
                     Luau::TypeErrorToStringOptions{frontend.fileResolver})
                     .c_str());
+
+		count++;
     }
+	printf("(%d errors)\n", count);
 
     return 0;
 }

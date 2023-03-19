@@ -63,8 +63,8 @@ multibin(
 
 normalrule(
     name="typecheck",
-    ins=["tools+typechecker"] + SRCS,
+    ins=["tools+typechecker", "./_types.def"] + SRCS,
     outs=["stamp"],
     label="TYPECHECK",
-    commands=["{ins[0]} " + " ".join(SRCS)],
+    commands=["{ins[0]} -t {ins[1]} " + " ".join(SRCS)],
 )

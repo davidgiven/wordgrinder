@@ -24,6 +24,21 @@ local REVERSE = wg.REVERSE
 local BRIGHT = wg.BRIGHT
 local DIM = wg.DIM
 
+type DocumentStyle = {
+	desc: string,
+	name: string,
+	above: number,
+	below: number,
+	indent: number?,
+	bullet: string?,
+	list: boolean?,
+	firstindent: number?,
+}
+
+type DocumentStyles = {[number | string]: DocumentStyle}
+
+DocumentStyles = {} :: DocumentStyles
+
 local stylemarkup =
 {
 	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,

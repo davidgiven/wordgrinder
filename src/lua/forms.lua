@@ -32,6 +32,10 @@ Form.Center = Form.Centre
 
 Form.Large = {}
 
+-- Types.
+
+type Widget = table
+
 local function min(a, b)
 	if (a < b) then
 		return a
@@ -48,7 +52,7 @@ local function max(a, b)
 	end
 end
 
-local function makewidgetclass(class)
+local function makewidgetclass(class): Widget
 	return function(table)
 		setmetatable(table, {__index = class})
 		table.class = class
