@@ -137,12 +137,12 @@ local function redrawstatus()
 		for _, v in ipairs(ss) do
 			s[#s+1] = v.value
 		end
-		s = table.concat(s, " │ ")
-		if (string.sub(s, #s) == " ") then
-			s = string.sub(s, 1, #s-1)
+		local ss = table.concat(s, " │ ")
+		if (string.sub(ss, #ss) == " ") then
+			ss = string.sub(ss, 1, #ss-1)
 		end
 
-		RAlignInField(0, ScreenHeight-1, ScreenWidth, s)
+		RAlignInField(0, ScreenHeight-1, ScreenWidth, ss)
 		SetNormal()
 
 		y = y - 1

@@ -137,7 +137,7 @@ void script_init(void)
     lua_setglobal(L, "wg");
 
     luaL_register(L,
-        "os",
+        "wg",
         (const luaL_Reg[]){
             {"exit", exit_cb},
             {}

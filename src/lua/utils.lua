@@ -156,16 +156,6 @@ function TableToString(t: any): string
 	return "{"..table.concat(ts, ", ").."}"
 end
 
---- Return a table of the bytes of a string.
-
-function StringBytesToString(s: string): {number}
-	local ts = {}
-	for i = 1, #s do
-		ts[#ts+1] = string.byte(s, i)
-	end
-	return TableToString(ts)
-end
-
 --- Insert element between elements of an array.
 -- The old array is left untouched.
 --
@@ -391,7 +381,7 @@ end
 
 -- Returns the largest common prefix of the array.
 
-function LargestCommonPrefix(array: {string}): string
+function LargestCommonPrefix(array: {string}): string?
 	if (#array == 0) then
 		return nil
 	end
@@ -501,14 +491,14 @@ end
 -- Create an input stream, from which lines can be read as if it were a file.
 -- It's incredibly limited to just the functions we need.
 
-function CreateIStream(data: string)
+function CreateIStream(data: string): any
 	local ptr = 1
 	local o = {}
 	setmetatable(o,
 	{
 		__index =
 		{
-			read = function(self, a): string
+			read = function(self, a): string?
 				if a == "*l" then
 					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
 					if (s == "") and (n == "") then

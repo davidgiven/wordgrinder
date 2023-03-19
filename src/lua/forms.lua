@@ -1,4 +1,4 @@
---!nonstrict
+--!strict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -34,7 +34,7 @@ Form.Large = {}
 
 -- Types.
 
-type Widget = table
+type Widget = any
 
 local function min(a, b)
 	if (a < b) then

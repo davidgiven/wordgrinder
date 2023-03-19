@@ -10,7 +10,6 @@ local string_char = string.char
 type Colour = {number}
 type ColourMap = {[string]: Colour}
 
-declare Palette: ColourMap
 Palette = {} :: ColourMap
 
 local function MakeDark(): ColourMap

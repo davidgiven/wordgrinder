@@ -122,7 +122,7 @@ function WordProcessor(filename)
                     ..src.." vs "..dest)
             end
             
-            local _, e = os.rename(src, dest)
+            local _, e = wg.rename(src, dest)
             if e then
                 CLIError("unable to migrate legacy config file: "..e)
             end
@@ -332,7 +332,7 @@ the program starts up (but after any --lua files). It defaults to:
                 -- List debugging options here.
             end
 
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_lua(opt, ...)
@@ -347,7 +347,7 @@ the program starts up (but after any --lua files). It defaults to:
 
             EngageCLI()
             f(...)
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_exec(opt, ...)
@@ -361,7 +361,7 @@ the program starts up (but after any --lua files). It defaults to:
             end
 
             f(...)
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_convert(opt1, opt2)

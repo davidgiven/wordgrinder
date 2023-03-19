@@ -31,7 +31,7 @@ local function compare_filenames(f1, f2)
 	end
 end
 
-function FileBrowser(title: string, message: string, saving: boolean, default: string?): string
+function FileBrowser(title: string, message: string, saving: boolean, default: string?): string?
 	local files = {}
 	for _, filename in ipairs(ReadDir(".")) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
@@ -176,7 +176,7 @@ function Autocomplete(filename, x1, x2, y)
 end
 
 function Browser(title, topmessage, bottommessage, data)
-	local dialogue: table
+	local dialogue: any
 
 	local browser = Form.Browser {
 		focusable = false,

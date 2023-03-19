@@ -47,7 +47,7 @@ local function writetostreamt(object, write)
 		write("\n")
 	end
 
-	local function save(key, t, force)
+	local function save(key: string, t: any)
 		if (type(t) == "table") then
 			local m = GetClass(t)
 			if (m ~= ParagraphClass) and (key ~= ".current") then
@@ -198,7 +198,8 @@ function Cmd.SaveCurrentDocument()
 end
 
 local function loadfromstream(fp)
-	local cache: {{[number]: any, text: string?}} = {}
+	type Value = {[number]: any, text: string?}
+	local cache: {any} = {}
 	local load
 
 	local function populate_table(t)
@@ -221,21 +222,21 @@ local function loadfromstream(fp)
 
 	local load_cb = {
 		["DS"] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = DocumentSetClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["D"] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = DocumentClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["P"] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = ParagraphClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
@@ -244,7 +245,7 @@ local function loadfromstream(fp)
 		["W"] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
-			local t = {}
+			local t: any = {}
 
 			-- Ensure we allocate a cache entry *before* calling
 			-- populate_table(), or else the numbers will go all wrong; the
@@ -259,14 +260,14 @@ local function loadfromstream(fp)
 		end,
 
 		["M"] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = MenuClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["T"] = function()
-			local t = {}
+			local t: any = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -317,7 +318,7 @@ local function loadfromstream(fp)
 end
 
 local function loadfromstreamz(fp)
-	local cache = {}
+	local cache: {any} = {}
 	local load
 	local data = decompress(fp:read("*a"))
 	local offset = 1
@@ -349,21 +350,21 @@ local function loadfromstreamz(fp)
 		end,
 
 		[DOCUMENTSETCLASS] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = DocumentSetClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[DOCUMENTCLASS] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = DocumentClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[PARAGRAPHCLASS] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = ParagraphClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
@@ -372,7 +373,7 @@ local function loadfromstreamz(fp)
 		[WORDCLASS] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
-			local t = {}
+			local t: any = {}
 
 			-- Ensure we allocate a cache slot *before* calling populate_table,
 			-- or else the numbers all go wrong.
@@ -389,20 +390,20 @@ local function loadfromstreamz(fp)
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
 
-			local t = load()
+			local t: any = load()
 			cache[#cache+1] = t
 			return t
 		end,
 
 		[MENUCLASS] = function()
-			local t = {}
+			local t: any = {}
 			setmetatable(t, {__index = MenuClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[TABLE] = function()
-			local t = {}
+			local t: any = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,

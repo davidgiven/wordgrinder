@@ -45,9 +45,9 @@ type StackedMenu = {
 	top: number
 }
 
-function CreateMenu(n: string, m: {{any}}, menu: Menu?): Menu
+function CreateMenu(n: string, m: {{any}}, replaces: Menu?): Menu
 	local w = n:len()
-	menu = if menu then menu else {
+	local menu = replaces or {
 		label = "",
 		maxwidth = 0,
 		realwidth = 0,

@@ -147,7 +147,7 @@ local function callback(writer, document)
 		end,
 		
 		epilogue = function()
-			changepara(nil, nil)
+			changepara(nil)
 			writer('</body>\n')	
 			writer('</html>\n')
 		end
