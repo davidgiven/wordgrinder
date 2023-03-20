@@ -32,10 +32,10 @@ cxxprogram(
         "src/lua+luacode",
     ],
     deps=[
-        "third_party/luau",
+        "+globals",
         "src/c/arch/ncurses",
         "third_party/clip+clip_none",
-        "src/c/emu/minizip",
-        "+globals",
+        "third_party/luau",
+        "third_party/minizip",
     ],
 )
