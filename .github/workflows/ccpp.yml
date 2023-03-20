@@ -38,7 +38,6 @@ jobs:
       run: brew install pkg-config ninja glfw imagemagick wxwidgets
     - name: make
       run: |
-        ./configure
         make
 
   build-windows:
@@ -68,7 +67,6 @@ jobs:
         fetch-depth: 1
     - name: build
       run: |
-        PATH=/mingw32/bin:$PATH ./configure
         PATH=/mingw32/bin:$PATH make
     - name: zip
       run: |
