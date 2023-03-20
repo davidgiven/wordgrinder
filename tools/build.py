@@ -13,4 +13,4 @@ def multibin(self, name, symbol, srcs: Targets = []):
     )
 
 
-cxxprogram(name="typechecker", srcs=["./typechecker.cc"], deps=["src/c/luau"])
+cxxprogram(name="typechecker", srcs=["./typechecker.cc"], deps=["third_party/luau"])
