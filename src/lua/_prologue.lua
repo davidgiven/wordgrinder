@@ -22,3 +22,36 @@ function loadfile(filename: string)
 	return nil, e
 end
 
+-- Global declarations.
+
+CLIError = nil
+CliConvert = nil
+CreateDocument = nil
+CreateDocumentSet = nil
+CreateMenuBindings = nil
+CreateParagraph = nil
+Document = nil
+DocumentStyles = nil
+EngageCLI = nil
+GetThemes = nil
+GetMaximumAllowedWidth = nil
+LAlignInField = nil
+MenuClass = nil
+ModalMessage = nil
+Palette = nil
+RAlignInField = nil
+RebuildDocumentsMenu = nil
+RebuildParagraphStylesMenu = nil
+ResizeScreen = nil
+RunMenuAction = nil
+ScreenHeight = 0
+ScreenWidth = 0
+SetColour = nil
+SetCurrentStyleHint = nil
+SetTheme = nil
+SpellcheckerOff = nil
+SpellcheckerRestore = nil
+UpdateDocumentStyles = nil
+WantFullStopSpaces = nil
+
+

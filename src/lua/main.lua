@@ -87,18 +87,6 @@ do
     AddEventListener(Event.DocumentCreated, cb)
 end
 
--- Kick the garbage collector whenever we're idle, just to keep
--- memory usage down.
-
-do
-    local function cb(event)
-        collectgarbage("collect")
-        QueueRedraw()
-    end
-
-    AddEventListener(Event.Idle, cb)
-end
-
 -- This function contains the word processor proper, including the main event
 -- loop.
 
@@ -268,7 +256,7 @@ function WordProcessor(filename)
 
     NonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.")
     while true do
-        local f, e = xpcall(eventloop, Traceback)
+        local f, e = xpcall(eventloop, debug.traceback)
         if not f then
             print(e)
             ModalMessage("Internal error!",

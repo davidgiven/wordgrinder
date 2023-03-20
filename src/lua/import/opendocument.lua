@@ -124,8 +124,8 @@ local function add_text(styles, importer, xml)
 				importer:flushword(false)
 			end
 		elseif (element._name == SPACE) then
-			local count = tonumber(element[SPACECOUNT] or 0) + 1
-			for i = 1, count do
+			local count = tonumber(element[SPACECOUNT]) or 0
+			for i = 1, count+1 do
 				importer:flushword(false)
 			end
 		elseif (element._name == SPAN) then

@@ -102,14 +102,15 @@ end
 function GetUserDictionary()
 	if not user_dictionary_cache then
 		local d = get_user_dictionary_document()
-		user_dictionary_cache = {}
 
+		local c = {}
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
 				local w = GetWordSimpleText(p[1])
-				user_dictionary_cache[w:lower()] = w
+				c[w:lower()] = w
 			end
 		end
+		user_dictionary_cache = c
 	end
 	return user_dictionary_cache
 end
@@ -117,7 +118,8 @@ end
 function GetSystemDictionary()
 	local settings = GlobalSettings.systemdictionary or {}
 	if not system_dictionary_cache then
-		system_dictionary_cache = {}
+		local c = {}
+		system_dictionary_cache = c
 
 		if settings.filename then
 			NonmodalMessage("Loading system dictionary '"
@@ -126,7 +128,7 @@ function GetSystemDictionary()
 			if data then
 				fp = CreateIStream(data)
 				for s in fp:lines() do
-					system_dictionary_cache[s:lower()] = s
+					c[s:lower()] = s
 				end
 			else
 				NonmodalMessage("Failed to load system dictionary: " .. e)
@@ -138,9 +140,11 @@ function GetSystemDictionary()
 end
 
 function SetSystemDictionaryForTesting(array)
-	system_dictionary_cache = {}
+	local c = {}
+	system_dictionary_cache = c
+
 	for _, w in ipairs(array) do
-		system_dictionary_cache[w:lower()] = w
+		c[w:lower()] = w
 	end
 end
 
