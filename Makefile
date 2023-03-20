@@ -4,6 +4,7 @@ export CC = gcc
 export CXX = g++
 export AR = ar
 export CFLAGS = -g -O0
+export CXXFLAGS = $(CFLAGS) --std=c++17
 export LDFLAGS = -g
 export NINJAFLAGS =
 

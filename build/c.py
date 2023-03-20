@@ -12,7 +12,7 @@ from os.path import *
 
 
 def cfileimpl(
-    self, name, srcs, deps, vars, suffix, commands, label, kind, flags
+    self, name, srcs, deps, vars, suffix, commands, label
 ):
     if not name:
         name = filenamesof(srcs)[1]
@@ -33,7 +33,7 @@ def cfileimpl(
             pass
 
     includeflags = set(["-I" + f for f in filenamesof(dirs)])
-    vars = vars + {"+" + flags: flatten(includeflags)}
+    vars = vars + {"+includes": flatten(includeflags)}
 
     outleaf = stripext(basename(name)) + suffix
 
@@ -56,11 +56,11 @@ def cfile(
     deps: Targets = [],
     vars=DefaultVars,
     suffix=".o",
-    commands=["$(CC) -c -o {outs[0]} {ins[0]} {vars.cflags}"],
+    commands=["$(CC) -c -o {outs[0]} {ins[0]} {vars.cflags} {vars.includes}"],
     label="CC",
 ):
     cfileimpl(
-        self, name, srcs, deps, vars, suffix, commands, label, "cfile", "cflags"
+        self, name, srcs, deps, vars, suffix, commands, label
     )
 
 
@@ -72,7 +72,7 @@ def cxxfile(
     deps: Targets = [],
     vars=DefaultVars,
     suffix=".o",
-    commands=["$(CXX) -c -o {outs[0]} {ins[0]} {vars.cxxflags}"],
+    commands=["$(CXX) -c -o {outs[0]} {ins[0]} {vars.cxxflags} {vars.includes}"],
     label="CXX",
 ):
     cfileimpl(
@@ -83,9 +83,7 @@ def cxxfile(
         vars,
         suffix,
         commands,
-        label,
-        "cxxfile",
-        "cxxflags",
+        label
     )
 
 
@@ -93,8 +91,12 @@ def findsources(name, srcs, deps, vars):
     ins = []
     for f in filenamesof(srcs):
         if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp"):
+            handler = cxxfile
+            if f.endswith(".c"):
+                handler = cfile
+
             ins += [
-                cfile(
+                handler(
                     name=name + "/" + basename(filenamesof(f)[0]),
                     srcs=[f],
                     deps=deps,

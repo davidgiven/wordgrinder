@@ -123,7 +123,7 @@ clibrary(
     ],
     vars=DefaultVars
     + {
-        "+cflags": [
+        "+includes": [
             "-I./third_party/luau/Analysis/include",
             "-I./third_party/luau/Ast/include",
             "-I./third_party/luau/CodeGen/include",
@@ -134,7 +134,7 @@ clibrary(
         ]
     },
     exportvars={
-        "+cflags": [
+        "+includes": [
             "-I./third_party/luau/Analysis/include",
             "-I./third_party/luau/Ast/include",
             "-I./third_party/luau/CodeGen/include",
@@ -155,7 +155,7 @@ cxxprogram(
     deps=["+luau"],
     vars=DefaultVars
     + {
-        "+cflags": [
+        "+includes": [
             "-I./src/c/luau/Analysis/include",
             "-I./src/c/luau/Ast/include",
             "-I./src/c/luau/CodeGen/include",

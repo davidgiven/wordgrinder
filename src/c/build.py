@@ -8,13 +8,13 @@ clibrary(
     hdrs=["./globals.h"],
     vars=DefaultVars
     + {
-        "+cflags": [
+        "+cxxflags": [
             f"-DFILEFORMAT={FILEFORMAT}",
             "-I.",
         ]
     },
     exportvars={
-        "+cflags": [f"-DFILEFORMAT={FILEFORMAT}", "-I."],
+        "+cxxflags": [f"-DFILEFORMAT={FILEFORMAT}", "-I."],
     },
 )
 
