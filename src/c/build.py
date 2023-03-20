@@ -34,7 +34,7 @@ cxxprogram(
     deps=[
         "third_party/luau",
         "src/c/arch/ncurses",
-        "src/c/emu/clip+clip_none",
+        "third_party/clip+clip_none",
         "src/c/emu/minizip",
         "+globals",
     ],
