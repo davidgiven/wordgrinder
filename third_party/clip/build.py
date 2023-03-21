@@ -2,7 +2,7 @@ from build.c import clibrary
 from build.pkg import package
 
 package(name="xcb", package="xcb")
-clibrary(name="clip_common", srcs=["./clip.cpp"])
+clibrary(name="clip_common", srcs=["./clip.cpp", "./image.cpp"])
 
 clibrary(
     name="clip_none",

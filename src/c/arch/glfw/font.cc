@@ -4,6 +4,8 @@
 #include "stb_rect_pack.h"
 #include "stb_truetype.h"
 
+#include "font_table.h"
+
 extern const FileDescriptor font_table[];
 
 #define FONT_XPADDING 1

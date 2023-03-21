@@ -16,3 +16,11 @@ def multibin(self, name, symbol, srcs: Targets = []):
 cxxprogram(
     name="typechecker", srcs=["./typechecker.cc"], deps=["third_party/luau"]
 )
+
+normalrule(
+    name="icon_cc",
+    ins=["./makeicon.sh", "extras/icon.png"],
+    outs=["icon.cc"],
+    commands=["{ins[0]} {ins[1]} > {outs[0]}"],
+    label="MAKEICON",
+)
