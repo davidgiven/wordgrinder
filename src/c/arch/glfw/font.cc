@@ -11,24 +11,24 @@ extern const FileDescriptor font_table[];
 #define PAGE_WIDTH 256
 #define PAGE_HEIGHT 256
 
-struct font
+struct Font
 {
-    void* data;
+    uint8_t* data;
     bool needsFreeing;
     stbtt_fontinfo info;
 };
 
-struct page
+struct Page
 {
     uint8_t textureData[PAGE_WIDTH * PAGE_HEIGHT];
     stbtt_pack_context ctx;
     GLuint texture;
 };
 
-struct chardata
+struct CharData
 {
     uint32_t key;
-    struct page* page;
+    Page* page;
     stbtt_packedchar packData;
 };
 
@@ -38,20 +38,20 @@ static int fontSize;
 static int fontAscent;
 static int fontXOffset;
 static float fontScale;
-static struct font* fonts[8];
-static struct page** pages = NULL;
-static struct chardata* chardata = NULL;
+static Font* fonts[8];
+static Page** pages = NULL;
+static CharData* chardata = NULL;
 
-static void freeFont(struct font* font)
+static void freeFont(Font* font)
 {
     if (font->needsFreeing)
-        free(font->data);
-    free(font);
+        delete [] font->data;
+    delete font;
 }
 
-static struct font* loadFont(const char* filename, int defaultfont)
+static Font* loadFont(const char* filename, int defaultfont)
 {
-    struct font* font = NULL;
+    Font* font = NULL;
     FILE* fp = fopen(filename, "rb");
     if (fp)
     {
@@ -59,16 +59,16 @@ static struct font* loadFont(const char* filename, int defaultfont)
         unsigned len = ftell(fp);
         (void)fseek(fp, 0, SEEK_SET);
 
-        font = calloc(1, sizeof(struct font));
-        font->data = malloc(len);
+        font = new Font;
+        font->data = new uint8_t[len];
         font->needsFreeing = true;
         fread(font->data, 1, len, fp);
         fclose(fp);
     }
     else
     {
-        font = calloc(1, sizeof(struct font));
-        font->data = (void*)font_table[defaultfont].data;
+        font = new Font;
+        font->data = (uint8_t*) &font_table[defaultfont].data[0];
         font->needsFreeing = false;
     }
 
@@ -84,7 +84,7 @@ void loadFonts()
     fonts[BOLD] = loadFont(get_svar("font_bold"), 2);
     fonts[BOLD | ITALIC] = loadFont(get_svar("font_bolditalic"), 3);
 
-    struct font* font = fonts[REGULAR];
+    Font* font = fonts[REGULAR];
 
     fontScale = stbtt_ScaleForPixelHeight(&font->info, fontSize);
     int ascent, descent, lineGap;
@@ -104,15 +104,15 @@ void unloadFonts()
     {
         if (fonts[i])
         {
-            freeFont(fonts[i]);
+            delete fonts[i];
             fonts[i] = NULL;
         }
     }
 }
 
-static struct page* newPage()
+static Page* newPage()
 {
-    struct page* page = calloc(1, sizeof(struct page));
+    Page* page = new Page;
     glGenTextures(1, &page->texture);
     glBindTexture(GL_TEXTURE_2D, page->texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -129,16 +129,16 @@ static struct page* newPage()
     return page;
 }
 
-static void freePage(struct page* page)
+static void freePage(Page* page)
 {
     stbtt_PackEnd(&page->ctx);
     glDeleteTextures(1, &page->texture);
-    free(page);
+    delete page;
 }
 
-static struct page* addPage()
+static Page* addPage()
 {
-    struct page* page = newPage();
+    Page* page = newPage();
     arrput(pages, page);
     return page;
 }
@@ -151,7 +151,7 @@ void flushFontCache()
 }
 
 static int rawRender(
-    struct font* font, struct page* page, struct chardata* cd, uni_t c)
+    Font* font, Page* page, CharData* cd, uni_t c)
 {
     stbtt_pack_range range;
     range.first_unicode_codepoint_in_range = c;
@@ -181,20 +181,20 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         style |= ITALIC;
 
     uint32_t key = c | (style << 24);
-    struct chardata* cd = hmgetp_null(chardata, key);
+    CharData* cd = hmgetp_null(chardata, key);
     if (!cd)
     {
-        struct page* page;
+        Page* page;
         if (arrlen(pages) == 0)
             page = addPage();
         else
             page = pages[arrlen(pages) - 1];
 
-        struct font* font = fonts[style];
+        Font* font = fonts[style];
         if (!font)
             return;
 
-        struct chardata cds = {.key = key};
+        CharData cds = {.key = key};
         hmputs(chardata, cds);
         cd = hmgetp_null(chardata, key);
 

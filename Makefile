@@ -3,7 +3,9 @@ export LUA = lua
 export CC = gcc
 export CXX = g++
 export AR = ar
-export CFLAGS = -g -O0
+export PKG_CONFIG = pkg-config
+
+export CFLAGS = -g -Os -ffunction-sections -fdata-sections
 export CXXFLAGS = $(CFLAGS) --std=c++17
 export LDFLAGS = -g
 export NINJAFLAGS =

@@ -11,9 +11,7 @@ from build.ab2 import (
 from os.path import *
 
 
-def cfileimpl(
-    self, name, srcs, deps, vars, suffix, commands, label
-):
+def cfileimpl(self, name, srcs, deps, vars, suffix, commands, label):
     if not name:
         name = filenamesof(srcs)[1]
 
@@ -59,9 +57,7 @@ def cfile(
     commands=["$(CC) -c -o {outs[0]} {ins[0]} {vars.cflags} {vars.includes}"],
     label="CC",
 ):
-    cfileimpl(
-        self, name, srcs, deps, vars, suffix, commands, label
-    )
+    cfileimpl(self, name, srcs, deps, vars, suffix, commands, label)
 
 
 @Rule
@@ -72,19 +68,12 @@ def cxxfile(
     deps: Targets = [],
     vars=DefaultVars,
     suffix=".o",
-    commands=["$(CXX) -c -o {outs[0]} {ins[0]} {vars.cxxflags} {vars.includes}"],
+    commands=[
+        "$(CXX) -c -o {outs[0]} {ins[0]} {vars.cxxflags} {vars.includes}"
+    ],
     label="CXX",
 ):
-    cfileimpl(
-        self,
-        name,
-        srcs,
-        deps,
-        vars,
-        suffix,
-        commands,
-        label
-    )
+    cfileimpl(self, name, srcs, deps, vars, suffix, commands, label)
 
 
 def findsources(name, srcs, deps, vars):
@@ -131,26 +120,30 @@ def clibrary(
         vars=vars,
     )
 
+    alldeps = set(deps)
+    for d in deps:
+        if hasattr(d, "clibrary"):
+            alldeps = alldeps.union(set(flatten(d.clibrary.deps)))
+
     dirs = set([dirname(f) for f in filenamesof(hdrs)])
 
     self.clibrary.hdrs = hdrs
     self.clibrary.dirs = dirs
-    self.clibrary.deps = [
-        d.outs + d.clibrary.deps for d in deps if hasattr(d, "clibrary")
-    ]
+    self.clibrary.deps = list(alldeps)
     self.exportvars = exportvars
 
 
 def programimpl(self, name, srcs, deps, vars, commands, label, filerule, kind):
-    libraries = [
-        d.outs + d.clibrary.deps for d in deps if hasattr(d, "clibrary")
-    ]
+    alldeps = flatten([d.clibrary.deps for d in deps if hasattr(d, "clibrary")])
+    libraries = flatten(
+        [d.outs for d in deps + alldeps if hasattr(d, "clibrary")]
+    )
 
     for f in filenamesof(srcs):
         if f.endswith(".h"):
             deps += [f]
 
-    for d in deps:
+    for d in deps + alldeps:
         exportvars = getattr(d, "exportvars", None)
         if exportvars:
             vars = vars + exportvars

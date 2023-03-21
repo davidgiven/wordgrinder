@@ -155,7 +155,7 @@ class Invocation:
                 )
                 print(f"Arguments: {self.args}")
                 raise e
-            if not self.outs:
+            if self.outs == None:
                 raise ABException(f"{self.name} didn't set self.outs")
 
             # Destack the variable and invocation frame.

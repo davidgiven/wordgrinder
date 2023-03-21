@@ -301,7 +301,7 @@ void dpy_getscreensize(int* x, int* y)
 void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
 {
     x = y = 0;
-    p = false;
+    *p = false;
 }
 
 void dpy_sync(void)
@@ -339,10 +339,10 @@ void dpy_sync(void)
     int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
-        free(screen);
+        delete [] screen;
         screenWidth = sw;
         screenHeight = sh;
-        screen = calloc(screenWidth * screenHeight, sizeof(cell_t));
+        screen = new cell_t[screenWidth * screenHeight];
         arrins(keyboardQueue, 0, -KEY_RESIZE);
     }
     else

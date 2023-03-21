@@ -1,4 +1,7 @@
 from build.c import clibrary
+from build.pkg import package
+
+package(name="zlib", package="zlib")
 
 clibrary(
     name="minizip",
@@ -8,5 +11,5 @@ clibrary(
         "./zip.c",
     ],
     hdrs=["./zip.h", "./unzip.h"],
-    exportvars={"+ldflags": ["-lz"]},
+    deps=["+zlib"],
 )

@@ -1,4 +1,5 @@
 from build.ab2 import normalrule, Rule, Target, export
+from config import TEST_BINARY
 
 TESTS = [
     "apply-markup",
@@ -88,6 +89,6 @@ def test(self, name, exe: Target = None):
     )
 
 
-tests = [test(name=t, exe="src/c+wordgrinder") for t in TESTS]
+tests = [test(name=t, exe=TEST_BINARY) for t in TESTS]
 
 export(name="tests", deps=tests)
