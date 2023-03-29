@@ -5,7 +5,16 @@ from config import FILEFORMAT
 
 clibrary(
     name="globals",
-    srcs=[],
+    srcs=[
+        "./utils.cc",
+        "./cmark.cc",
+        "./filesystem.cc",
+        "./main.cc",
+        "./screen.cc",
+        "./word.cc",
+        "./zip.cc",
+        "src/lua+luacode",
+    ],
     hdrs=["./globals.h"],
     vars=DefaultVars
     + {
@@ -17,26 +26,22 @@ clibrary(
     exportvars={
         "+cxxflags": [f"-DFILEFORMAT={FILEFORMAT}", "-I."],
     },
+    deps=[
+        "third_party/luau",
+        "src/c/luau-em",
+        "third_party/minizip",
+    ],
 )
 
-package(
-    name="libcmark",
-    package="libcmark")
+package(name="libcmark", package="libcmark")
+
 
 def make_wordgrinder(name, arch, frontend, clip):
     cxxprogram(
         name=name,
         srcs=[
-            "./clipboard.cc",
-            "./cmark.cc",
-            "./filesystem.cc",
             "./lua.cc",
-            "./main.cc",
-            "./screen.cc",
-            "./utils.cc",
-            "./word.cc",
-            "./zip.cc",
-            "src/lua+luacode",
+            "./clipboard.cc",
         ],
         deps=[
             "+libcmark",
@@ -44,7 +49,6 @@ def make_wordgrinder(name, arch, frontend, clip):
             arch,
             "third_party/clip+" + clip,
             "third_party/luau",
-            "third_party/minizip",
             "src/c/luau-em",
         ],
         vars=DefaultVars + {"+cxxflags": ["-DFRONTEND=" + frontend]},
