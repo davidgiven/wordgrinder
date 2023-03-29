@@ -6,6 +6,7 @@ local data = [[
 ## Header 2
 ### Header 3
 #### Header 4
+##### Header 5
 
 Header 1
 ========
@@ -40,7 +41,7 @@ Spacing text.
 2. ordered list two
  1. ordered list with leading spaces
 
-<div></div>
+<div>This is raw HTML in a div!</div>
 
 > More text, but this is in a block quotation.
 
@@ -66,14 +67,20 @@ Line 2
 
 Stuff here.
 ```
+
+This is a http://cowlark.com simple link. This is a [Complex
+link!](http://cowlark.com).
+
+---
+
+That was an hrule.
 ]]
 
 local document = Cmd.ImportMarkdownString(data)
 
-local expected = [[
-<html xmlns="http://www.w3.org/1999/xhtml"><head>
+local expected = [[<html xmlns="http://www.w3.org/1999/xhtml"><head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
-<meta name="generator" content="WordGrinder @@@"/>
+<meta name="generator" content="WordGrinder VERSION"/>
 <title>imported</title>
 </head><body>
 
@@ -82,10 +89,11 @@ local expected = [[
 <h2>Header 2</h2>
 <h3>Header 3</h3>
 <h4>Header 4</h4>
+<h4>Header 5</h4>
 <h1>Header 1</h1>
 <h2>Header 2</h2>
 <p>This is normal paragraph text.</p>
-<p>This is normal paragraph text with <b>bold </b>and <i>italic</i>. And <b>bold </b>and <i>italic </i>and <u>underline</u>. And <i><b><u>all </u></b></i><i><b><u>three!</u></b></i></p>
+<p>This is normal paragraph text with <b>bold</b> and <i>italic</i>. And <b>bold</b> and <i>italic</i> and <u>underline</u>. And <i><b><u>all three!</u></b></i></p>
 <p>Some of this is <u>code</u>.</p>
 <ul>
 <li>bullet point one</li>
@@ -105,7 +113,7 @@ local expected = [[
 <li style="list-style-type: decimal;" value=2>ordered list two</li>
 <li style="list-style-type: decimal;" value=3>ordered list with leading spaces</li>
 </ul>
-<div></div>
+<div>This is raw HTML in a div!</div>
 <blockquote>More text, but this is in a block quotation.</blockquote>
 <p>Spacing normal text.</p>
 <blockquote>Block text paragraph 1.</blockquote>
@@ -113,11 +121,16 @@ local expected = [[
 <pre>This is a verbatim paragraph.</pre>
 <p>Spacing normal text.</p>
 <pre>This is verbatim paragraph 1.
+
 This is verbatim paragraph 2.</pre>
 <p>More spacing normal text.</p>
 <pre>This is in backticks.
 Line 2
+
 Stuff here.</pre>
+<p>This is a http://cowlark.com simple link. This is a Complex link!.</p>
+<p><br/></p>
+<p>That was an hrule.</p>
 </body>
 </html>
 ]]

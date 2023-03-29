@@ -1,4 +1,3 @@
---!nonstrict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -18,10 +17,12 @@ local string_sub = string.sub
 local table_concat = table.concat
 local table_insert = table.insert
 
+type Markdown = any
+
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-function Cmd.ImportMarkdownString(fp)
+function Cmd.ImportMarkdownString(data: string)
 	local document = CreateDocument()
 	local importer = CreateImporter(document)
 
@@ -33,21 +34,10 @@ function Cmd.ImportMarkdownString(fp)
 	local metadata = {}
     local current_style = "P"
 
-    local function nop() return "" end
+    local function nop(s) end
     local function style_on(s) return function() importer:style_on(s) end end
     local function style_off(s) return function() importer:style_off(s) end end
     local function flushparagraph(s) return function() importer:flushparagraph(s) end end
-
-    local function list(items, kind)
-        local flush = flushparagraph(kind)
-        local oldstyle
-        return {
-            function() oldstyle = current_style current_style = kind end,
-            InterleaveArray(items, flush),
-            flush,
-            function() current_style = oldstyle end,
-        }
-    end
 
     local htmltags = {
         ["<b>"] = style_on(BOLD),
@@ -62,223 +52,103 @@ function Cmd.ImportMarkdownString(fp)
         ["</u>"] = style_off(UNDERLINE),
     }
 
-	local writer = {
-        --- Set metadata field `key` to `val`.
-        set_metadata = function(key, val)
-            metadata[key] = val
-            return {}
-        end,
-
-        --- Add `val` to an array in metadata field `key`.
-        add_metadata = function(key, val)
-            local cur = metadata[key]
-            if (type(cur) == "table") then
-                table_insert(cur,val)
-            elseif cur then
-                metadata[key] = {cur, val}
-            else
-                metadata[key] = {val}
+	local enter: {[number]: (string, Markdown) -> never} = {
+        [CMARK_NODE_DOCUMENT] = nop,
+        [CMARK_NODE_BLOCK_QUOTE] = function() current_style = "Q" end,
+        [CMARK_NODE_LIST] = function(s, node)
+            local listtype = CMarkGetList(node)
+            if listtype == CMARK_BULLET_LIST then
+                current_style = "LB"
+            elseif listtype == CMARK_ORDERED_LIST then
+                current_style = "LN"
             end
         end,
-
-        --- Return metadata table.
-        get_metadata = function()
-            return metadata
-        end,
-
-        --- A space (string).
-        space = function()
-            return function() importer:flushword() end
-        end,
-
-        --- Tasks at the beginning and end of the document.
-        start_document = nop,
-        stop_document = nop,
-
-        --- Plain text block (not formatted as a pragraph).
-        plain = function(s)
-            return s
-        end,
-
-        --- A line break (string).
-        linebreak = "",
-
-        --- Line breaks to use between block elements.
-        interblocksep = "",
-
-        --- Line breaks to use between a container (like a `<div>`
-        -- tag) and the adjacent block element.
-        containersep = "",
-
-        --- Ellipsis (string).
-        ellipsis = "...",
-
-        --- Em dash (string).
-        mdash = "—",
-
-        --- En dash (string).
-        ndash = "–",
-
-        --- Non-breaking space.
-        nbsp = { function() importer:flushword() end },
-
-        --- String in curly single quotes.
-        singlequoted = function(s)
-            return {"'", s, "'"}
-        end,
-
-        --- String in curly double quotes.
-        doublequoted = function(s)
-            return {'"', s, '"'}
-        end,
-
-        --- String, escaped as needed for the output format.
-        string = function(s)
-            return s
-        end,
-
-        --- Inline (verbatim) code.
-        code = function(s)
-            if s:find("[\n\r]") then
-                -- Multiline.
-                local lines = SplitString(s, "[\n\r]")
-                local flush = flushparagraph("PRE")
-                return { InterleaveArray(lines, flush), flush }
-            else
-                -- Inline.
-                return {
-                    style_on(UNDERLINE),
-                    s,
-                    style_off(UNDERLINE)
-                }
-            end
-        end,
-
-        --- A link with link text `label`, uri `uri`,
-        -- and title `title`.
-        link = function(label, uri, title)
-            return label
-        end,
-
-        --- An image link with alt text `label`,
-        -- source `src`, and title `title`.
-        image = function(label, src, title)
-            return label
-        end,
-
-        --- A paragraph.
-        paragraph = function(s)
-            return {
-                s,
-                function() importer:flushparagraph(current_style) end
-            }
-        end,
-
-        --- A bullet list with contents `items` (an array).  If
-        -- `tight` is true, returns a "tight" list (with
-        -- minimal space between items).
-        bulletlist = function(items, tight) return list(items, "LB") end,
-
-        --- An ordered list with contents `items` (an array). If
-        -- `tight` is true, returns a "tight" list (with
-        -- minimal space between items). If optional
-        -- number `startnum` is present, use it as the
-        -- number of the first list item.
-        orderedlist = function(items, tight, startnum) return list(items, "LN") end,
-
-        --- Inline HTML.
-        inline_html = function(s)
-            return htmltags[s] or ""
-        end,
-
-        --- Display HTML (HTML block).
-        display_html = function(s)
-            return {
-                s,
-                flushparagraph("RAW")
-            }
-        end,
-
-        --- Emphasized text.
-        emphasis = function(s)
-            return {
-                style_on(ITALIC),
-                s,
-                style_off(ITALIC)
-            }
-        end,
-
-        --- Strongly emphasized text.
-        strong = function(s)
-            return {
-                style_on(BOLD),
-                s,
-                style_off(BOLD)
-            }
-        end,
-
-        --- Block quotation.
-        blockquote = function(s)
-            return {
-                function() current_style = "Q" end,
-                s,
-                function() current_style = "P" end,
-            }
-        end,
-
-        --- Verbatim block.
-        verbatim = function(s)
+        [CMARK_NODE_ITEM] = nop,
+        [CMARK_NODE_CODE_BLOCK] = function(s)
+            s = s:gsub("[\n\r]+$", "")
             local lines = SplitString(s, "[\n\r]")
-            local flush = flushparagraph("PRE")
-            return { InterleaveArray(lines, flush), flush }
-        end,
-
-        --- Fenced code block, with infostring `i`.
-        fenced_code = function(s, i)
-            return {}
-        end,
-
-        --- Header level `level`, with text `s`.
-        header = function(s, level)
-            if (level > 4) then
-                level = 4
+            for _, line in lines do
+                importer:text(line)
+                importer:flushparagraph("PRE")
             end
-            return {
-                s,
-                flushparagraph("H"..level)
-            }
         end,
+        [CMARK_NODE_HTML_BLOCK] = function(s)
+            importer:text(s)
+            importer:flushparagraph("RAW")
+        end,
+        [CMARK_NODE_CUSTOM_BLOCK] = nop,
+        [CMARK_NODE_PARAGRAPH] = nop,
+        [CMARK_NODE_HEADING] = nop,
+        [CMARK_NODE_THEMATIC_BREAK] = function()
+            importer:flushparagraph("P")
+            importer:text("")
+            importer:flushparagraph("P")
+        end,
+        [CMARK_NODE_TEXT] = function(s) importer:text(s) end,
+        [CMARK_NODE_SOFTBREAK] = function() importer:flushword() end,
+        [CMARK_NODE_LINEBREAK] = nop,
+        [CMARK_NODE_CODE] = function(s)
+            importer:style_on(UNDERLINE)
+            importer:text(s)
+            importer:style_off(UNDERLINE)
+        end,
+        [CMARK_NODE_HTML_INLINE] = function(s)
+            local fn = htmltags[s:lower()]
+            if fn then
+                fn()
+            end
+        end,
+        [CMARK_NODE_CUSTOM_INLINE] = nop,
+        [CMARK_NODE_EMPH] = style_on(ITALIC),
+        [CMARK_NODE_STRONG] = style_on(BOLD),
+        [CMARK_NODE_LINK] = nop,
+        [CMARK_NODE_IMAGE] = nop,
+    }
 
+    local exit: {[number]: (string, Markdown) -> never} = {
+        [CMARK_NODE_DOCUMENT] = nop,
+        [CMARK_NODE_BLOCK_QUOTE] = function(s) current_style = "P" end,
+        [CMARK_NODE_LIST] = function() current_style = "P" end,
+        [CMARK_NODE_ITEM] = nop,
+        [CMARK_NODE_CUSTOM_BLOCK] = nop,
+        [CMARK_NODE_PARAGRAPH] = function(s) importer:flushparagraph(current_style) end,
+        [CMARK_NODE_HEADING] = function(s, node)
+            local heading = CMarkGetHeading(node)
+            if heading > 4 then
+                heading = 4
+            end
+            local style = string.format("H%d", heading)
+            importer:flushparagraph(style)
+        end,
+        [CMARK_NODE_CUSTOM_INLINE] = nop,
+        [CMARK_NODE_EMPH] = style_off(ITALIC),
+        [CMARK_NODE_STRONG] = style_off(BOLD),
+        [CMARK_NODE_LINK] = nop,
+        [CMARK_NODE_IMAGE] = nop,
+    }
+
+    local w = {
         --- Horizontal rule.
         hrule = function()
             importer:flushparagraph("P")
             importer:flushparagraph("P")
         end,
-
-        definitionlist = nop,
-        citation = nop,
-        citations = nop,
-        note = nop,
 	}
 
-	local metadata = {}
-	local parser = lunamark.reader.new(writer,
-	{
-		smart = true,
-		require_blank_before_blockquote = true,
-		require_blank_before_header = true,
-	})
-    local parsetree, metadata = parser(data)
+    local markdown = CMarkParse(data)
 
     -- Now we have a parse tree, execute all the actions to generate the document.
 
     importer:reset()
-    for _, v in ipairs(FlattenArray(parsetree)) do
-        local t = type(v)
-        if (t == "string") and (v ~= "") then
-            importer:text(v)
-        elseif (t == "function") then
-            v()
+    local iter = CMarkIterate(markdown)
+    while true do
+        local event, nodeType, node, text = CMarkNext(iter)
+        if event == CMARK_EVENT_DONE then
+            break
+        elseif event == CMARK_EVENT_ENTER then
+            enter[nodeType](text, node)
+        elseif event == CMARK_EVENT_EXIT then
+            exit[nodeType](text, node)
         end
     end
     importer:flushparagraph(current_style)

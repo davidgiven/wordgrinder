@@ -1,6 +1,6 @@
 from build.ab2 import DefaultVars
 from build.c import cxxprogram, clibrary
-from build.pkg import has_package
+from build.pkg import has_package, package
 from config import FILEFORMAT
 
 clibrary(
@@ -19,12 +19,16 @@ clibrary(
     },
 )
 
+package(
+    name="libcmark",
+    package="libcmark")
 
 def make_wordgrinder(name, arch, frontend, clip):
     cxxprogram(
         name=name,
         srcs=[
             "./clipboard.cc",
+            "./cmark.cc",
             "./filesystem.cc",
             "./lua.cc",
             "./main.cc",
@@ -35,6 +39,7 @@ def make_wordgrinder(name, arch, frontend, clip):
             "src/lua+luacode",
         ],
         deps=[
+            "+libcmark",
             "+globals",
             arch,
             "third_party/clip+" + clip,

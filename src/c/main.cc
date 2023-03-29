@@ -48,6 +48,7 @@ int main(int argc, char* argv[])
     filesystem_init();
     zip_init();
     clipboard_init();
+    cmark_init();
 
     script_load_from_table(script_table);
     script_run((const char**)argv);

@@ -14,5 +14,5 @@
 
 #define lua_rawlen lua_objlen
 
-extern int luaL_loadstring(lua_State* L, const char* str);
-extern int luaL_dostring(lua_State* L, const char* str);
+extern int luaL_loadstring(lua_State* L, const char* str, const char* name);
+extern int luaL_dostring(lua_State* L, const char* str, const char* name);

@@ -1,8 +1,17 @@
 function AssertEquals(want, got)
 	if (want ~= got) then
+		local ws = tostring(want)
+		local gs = tostring(got)
+		local q = ""
+		for i = 1, math.min(#ws, #gs) do
+			if ws:sub(i, i) ~= gs:sub(i, i) then
+				q = string.format("; first changed character at %d", i)
+				break
+			end
+		end
 		error(
-			string.format("Assertion failed: wanted %q; got %q\n",
-				tostring(want), tostring(got)))
+			string.format("Assertion failed: wanted %q; got %q%s\n",
+				tostring(want), tostring(got), q))
 	end
 end
 

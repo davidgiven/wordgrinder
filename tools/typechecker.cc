@@ -57,7 +57,7 @@ public:
 
 int main(int argc, char* const* argv)
 {
-	std::string typedefs;
+    std::string typedefs;
     int lineno = 1;
     std::multimap<int, std::string> fileLookup;
     std::stringstream ss;
@@ -76,10 +76,10 @@ int main(int argc, char* const* argv)
                 if (!f)
                     perror(optarg);
 
-				std::stringstream ts;
-				ts << f.rdbuf();
-				typedefs = ts.str();
-				break;
+                std::stringstream ts;
+                ts << f.rdbuf();
+                typedefs = ts.str();
+                break;
             }
 
             case 1:
@@ -115,21 +115,31 @@ int main(int argc, char* const* argv)
     Luau::Frontend frontend(&fileResolver, &configResolver, frontendOptions);
     Luau::registerBuiltinGlobals(frontend.typeChecker, frontend.globals);
 
-	auto result = frontend.loadDefinitionFile(typedefs, "main",false);
-	if (!result.success)
-	{
-		fprintf(stderr, "couldn't load type definition file:\n");
-		for (const auto& error : result.parseResult.errors)
-		{
-			fprintf(stderr, "%d: %s\n", 
-				error.getLocation().begin.line,
-				error.getMessage().c_str());
-		}
-		exit(1);
-	}
+    auto result = frontend.loadDefinitionFile(typedefs, "main", false);
+    if (!result.success)
+    {
+        fprintf(stderr, "couldn't load type definition file:\n");
+        for (const auto& error : result.parseResult.errors)
+        {
+            fprintf(stderr,
+                "%d: %s\n",
+                error.getLocation().begin.line,
+                error.getMessage().c_str());
+        }
+        for (const auto& error : result.module->errors)
+        {
+            fprintf(stderr,
+                "%d: %s\n",
+                error.location.begin.line,
+                toString(error,
+                    Luau::TypeErrorToStringOptions{frontend.fileResolver})
+                    .c_str());
+        }
+        exit(1);
+    }
 
     Luau::CheckResult cr = frontend.check("main");
-	int count = 0;
+    int count = 0;
     for (auto& error : cr.errors)
     {
         auto i = fileLookup.lower_bound(error.location.begin.line);
@@ -147,9 +157,9 @@ int main(int argc, char* const* argv)
                     Luau::TypeErrorToStringOptions{frontend.fileResolver})
                     .c_str());
 
-		count++;
+        count++;
     }
-	printf("(%d errors)\n", count);
+    printf("(%d errors)\n", count);
 
     return 0;
 }

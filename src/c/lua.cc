@@ -76,7 +76,7 @@ static int loadstring_cb(lua_State* L)
     const char* s = luaL_checklstring(L, 1, &len);
 
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
-    if (luaL_loadstring(L, s) == 0)
+    if (luaL_loadstring(L, s, nullptr) == 0)
         return 1;
 
     lua_pushnil(L);
@@ -138,7 +138,7 @@ void script_load_from_table(const FileDescriptor* table)
 {
     while (table->name)
     {
-        int status = luaL_dostring(L, table->data.c_str());
+        int status = luaL_dostring(L, table->data.c_str(), table->name);
         if (status)
         {
             (void)report(L, status);

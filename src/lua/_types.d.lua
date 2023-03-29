@@ -10,6 +10,9 @@ type Stat = {
 	mode: number
 }
 
+type Markdown = any
+type MarkdownIterator = any
+
 declare wg: {
 	access: (string, number) -> (boolean, string?, number?),
 	applystyletoword: (string, number, number, number, number, number) -> (string, number),
@@ -94,4 +97,40 @@ declare DEBUG: boolean
 declare VERSION: string
 declare FILEFORMAT: number
 declare ARCH: string
+
+declare function CMarkParse(data: string): Markdown
+declare function CMarkIterate(node: Markdown): MarkdownIterator
+declare function CMarkNext(iter: MarkdownIterator): (number, number, string?)
+declare function CMarkGetHeading(node: Markdown): number
+declare function CMarkGetList(node: Markdown): number
+
+declare CMARK_EVENT_NONE: number
+declare CMARK_EVENT_DONE: number
+declare CMARK_EVENT_ENTER: number
+declare CMARK_EVENT_EXIT: number
+
+declare CMARK_NO_LIST: number
+declare CMARK_BULLET_LIST: number
+declare CMARK_ORDERED_LIST: number
+
+declare CMARK_NODE_DOCUMENT: number
+declare CMARK_NODE_BLOCK_QUOTE: number
+declare CMARK_NODE_LIST: number
+declare CMARK_NODE_ITEM: number
+declare CMARK_NODE_CODE_BLOCK: number
+declare CMARK_NODE_HTML_BLOCK: number
+declare CMARK_NODE_CUSTOM_BLOCK: number
+declare CMARK_NODE_PARAGRAPH: number
+declare CMARK_NODE_HEADING: number
+declare CMARK_NODE_THEMATIC_BREAK: number
+declare CMARK_NODE_TEXT: number
+declare CMARK_NODE_SOFTBREAK: number
+declare CMARK_NODE_LINEBREAK: number
+declare CMARK_NODE_CODE: number
+declare CMARK_NODE_HTML_INLINE: number
+declare CMARK_NODE_CUSTOM_INLINE: number
+declare CMARK_NODE_EMPH: number
+declare CMARK_NODE_STRONG: number
+declare CMARK_NODE_LINK: number
+declare CMARK_NODE_IMAGE: number
 
