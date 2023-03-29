@@ -50,8 +50,8 @@ extern int main(int argc, char* argv[]);
 
 /* --- Lua --------------------------------------------------------------- */
 
-#include "third_party/luau/VM/include/lua.h"
-#include "third_party/luau/VM/include/lualib.h"
+#include "lua.h"
+#include "lauxlib.h"
 
 #if defined WINSHIM
 #include "winshim.h"

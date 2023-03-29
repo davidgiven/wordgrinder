@@ -317,6 +317,4 @@ void filesystem_init(void)
     lua_getglobal(L, "wg");
     luaL_register(L, NULL, funcs);
     luaL_setconstants(L, consts, sizeof(consts) / sizeof(*consts));
-
-
 }

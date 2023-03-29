@@ -8,5 +8,11 @@ clibrary(
     name="ncurses",
     srcs=["./dpy.cc"],
     vars=DefaultVars + {"+cflags": ["-Isrc/c"]},
-    deps=["src/c+globals", "third_party/libstb", "+libncursesw"],
+    deps=[
+        "+libncursesw",
+        "src/c+globals",
+        "src/c/luau-em",
+        "third_party/libstb",
+        "third_party/luau",
+    ],
 )

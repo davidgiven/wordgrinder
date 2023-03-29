@@ -130,10 +130,6 @@ The distribution contains a copy of Luau. This is also MIT licensed and is ©
 2019-2022 Roblox Corporation and © 1994-2019 Lua.org, PUC-Rio. See
 http://luau-lang.org and http://lua.org for more information.
 
-The distribution contains a copy of the cmark-lua library. This is BSD 2-clause
-licensed and is © 2014-2015, John MacFarlane. See
-https://github.com/jgm/cmark-lua for more information.
-
 The distribution contains a copy of the Lpeg parser library. This is also MIT
 licensed and is © 2007-2019 Lua.org, PUC-Rio. See
 http://inf.puc-rio.br/~roberto/lpeg for more information.

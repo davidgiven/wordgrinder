@@ -21,36 +21,36 @@ bool enable_unicode;
 #include <windows.h>
 static void find_exe(void)
 {
-	char path[MAX_PATH] = "WINDOWS_EXE=";
-	const int len = strlen(path);
-	GetModuleFileName(NULL, path+len, sizeof(path)-len);
-	putenv(path);
+    char path[MAX_PATH] = "WINDOWS_EXE=";
+    const int len = strlen(path);
+    GetModuleFileName(NULL, path + len, sizeof(path) - len);
+    putenv(path);
 }
 #endif
 
 int main(int argc, char* argv[])
 {
-	#if defined WIN32
-		find_exe();
-	#endif
+#if defined WIN32
+    find_exe();
+#endif
 
-	setlocale(LC_ALL, "");
-	#if defined WIN32
-		enable_unicode = true;
-	#else
-		enable_unicode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
-	#endif
+    setlocale(LC_ALL, "");
+#if defined WIN32
+    enable_unicode = true;
+#else
+    enable_unicode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+#endif
 
-	script_init();
-	screen_init((const char**) argv);
-	word_init();
-	utils_init();
-	filesystem_init();
-	zip_init();
-	clipboard_init();
+    script_init();
+    screen_init((const char**)argv);
+    word_init();
+    utils_init();
+    filesystem_init();
+    zip_init();
+    clipboard_init();
 
-	script_load_from_table(script_table);
-	script_run((const char**) argv);
+    script_load_from_table(script_table);
+    script_run((const char**)argv);
 
-	return 0;
+    return 0;
 }

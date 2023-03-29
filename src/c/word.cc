@@ -18,480 +18,479 @@
 
 enum
 {
-	STYLE_MARKER = (1<<4), /* always set */
-	STYLE_ALL = 15
+    STYLE_MARKER = (1 << 4), /* always set */
+    STYLE_ALL = 15
 };
 
-#define OVERHEAD (3*2 + 1)
+#define OVERHEAD (3 * 2 + 1)
 
 static bool iscontrolbyte(int c)
 {
-	return (c >= 0) && (c <= 31);
+    return (c >= 0) && (c <= 31);
 }
 
 /* Parse a styled word. */
 
 static int parseword_cb(lua_State* L)
 {
-	size_t size;
-	const char* s = luaL_checklstring(L, 1, &size);
-	const char* send = s + size;
-	int dstyle = forceinteger(L, 2);
-	/* pos 3 contains the callback function */
+    size_t size;
+    const char* s = luaL_checklstring(L, 1, &size);
+    const char* send = s + size;
+    int dstyle = forceinteger(L, 2);
+    /* pos 3 contains the callback function */
 
-	int oldattr = 0;
-	int attr = 0;
-	const char* w = s;
-	const char* wend = NULL;
-	bool flush = false;
+    int oldattr = 0;
+    int attr = 0;
+    const char* w = s;
+    const char* wend = NULL;
+    bool flush = false;
 
-	for (;;)
-	{
-		if (flush)
-		{
-			if (w != wend)
-			{
-				lua_pushvalue(L, 3);
-				lua_pushnumber(L, oldattr | dstyle);
-				lua_pushlstring(L, w, wend - w);
-				lua_call(L, 2, 0);
-			}
-			w = s;
-			oldattr = attr;
-			flush = false;
-		}
+    for (;;)
+    {
+        if (flush)
+        {
+            if (w != wend)
+            {
+                lua_pushvalue(L, 3);
+                lua_pushnumber(L, oldattr | dstyle);
+                lua_pushlstring(L, w, wend - w);
+                lua_call(L, 2, 0);
+            }
+            w = s;
+            oldattr = attr;
+            flush = false;
+        }
 
-		if (s == send)
-		{
-			if (w == s)
-				break;
+        if (s == send)
+        {
+            if (w == s)
+                break;
 
-			flush = true;
-		}
-		else
-		{
-			uni_t c = readu8(&s);
+            flush = true;
+        }
+        else
+        {
+            uni_t c = readu8(&s);
 
-			if (iswcntrl(c))
-			{
-				oldattr = attr;
-				attr = c & STYLE_ALL;
-				flush = true;
-				wend = s - 1;
-			}
-			else
-				wend = s;
-		}
-	}
+            if (iswcntrl(c))
+            {
+                oldattr = attr;
+                attr = c & STYLE_ALL;
+                flush = true;
+                wend = s - 1;
+            }
+            else
+                wend = s;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 /* Draw a styled word at a particular location. */
 
 static int writestyled_cb(lua_State* L)
 {
-	int x = forceinteger(L, 1);
-	int y = forceinteger(L, 2);
-	size_t size;
-	const char* s = luaL_checklstring(L, 3, &size);
-	const char* send = s + size;
-	int oattr = forceinteger(L, 4);
-	const char* revon = s + forceinteger(L, 5) - 1;
-	const char* revoff = s + forceinteger(L, 6) - 1;
-	int sor = forceinteger(L, 7);
+    int x = forceinteger(L, 1);
+    int y = forceinteger(L, 2);
+    size_t size;
+    const char* s = luaL_checklstring(L, 3, &size);
+    const char* send = s + size;
+    int oattr = forceinteger(L, 4);
+    const char* revon = s + forceinteger(L, 5) - 1;
+    const char* revoff = s + forceinteger(L, 6) - 1;
+    int sor = forceinteger(L, 7);
 
-	int attr = sor;
-	int mark = 0;
+    int attr = sor;
+    int mark = 0;
 
-	dpy_setattr(0, sor);
-	bool first = true;
-	while (s < send)
-	{
-		if (s == revon)
-		{
-			mark = DPY_REVERSE;
-			dpy_setattr(0, attr | mark);
-		}
-		if (s == revoff)
-		{
-			mark = 0;
-			dpy_setattr(0, attr | mark);
-		}
+    dpy_setattr(0, sor);
+    bool first = true;
+    while (s < send)
+    {
+        if (s == revon)
+        {
+            mark = DPY_REVERSE;
+            dpy_setattr(0, attr | mark);
+        }
+        if (s == revoff)
+        {
+            mark = 0;
+            dpy_setattr(0, attr | mark);
+        }
 
-		uni_t c = readu8(&s);
+        uni_t c = readu8(&s);
 
-		if (iswcntrl(c))
-		{
-			c &= STYLE_ALL;
-			attr = c | sor;
-			dpy_setattr(0, attr | mark);
-		}
-		else
-		{
-			if (first && (oattr & (DPY_REVERSE|DPY_UNDERLINE))
-				&& ((attr | mark) == oattr))
-				dpy_writeunichar(x-1, y, 160); /* non-breaking space */
+        if (iswcntrl(c))
+        {
+            c &= STYLE_ALL;
+            attr = c | sor;
+            dpy_setattr(0, attr | mark);
+        }
+        else
+        {
+            if (first && (oattr & (DPY_REVERSE | DPY_UNDERLINE)) &&
+                ((attr | mark) == oattr))
+                dpy_writeunichar(x - 1, y, 160); /* non-breaking space */
 
-			dpy_writeunichar(x, y, c);
-			x += emu_wcwidth(c);
-			first = false;
-		}
-	}
-	dpy_setattr(0, 0);
+            dpy_writeunichar(x, y, c);
+            x += emu_wcwidth(c);
+            first = false;
+        }
+    }
+    dpy_setattr(0, 0);
 
-	lua_pushnumber(L, attr | mark);
-	return 1;
+    lua_pushnumber(L, attr | mark);
+    return 1;
 }
 
 /* Returns the raw text of a word, with no styling. */
 
 static int getwordtext_cb(lua_State* L)
 {
-	size_t bytes;
-	const char* src = luaL_checklstring(L, 1, &bytes);
-	char dest[bytes+1];
-	char* p = dest;
+    size_t bytes;
+    const char* src = luaL_checklstring(L, 1, &bytes);
+    char dest[bytes + 1];
+    char* p = dest;
 
-	for (;;)
-	{
-		uni_t c = readu8(&src);
-		if (c == '\0')
-			break;
+    for (;;)
+    {
+        uni_t c = readu8(&src);
+        if (c == '\0')
+            break;
 
-		if (!iswcntrl(c))
-			writeu8(&p, c);
-	}
+        if (!iswcntrl(c))
+            writeu8(&p, c);
+    }
 
-	lua_pushlstring(L, dest, p - dest);
-	return 1;
+    lua_pushlstring(L, dest, p - dest);
+    return 1;
 }
 
 /* Advances an offset pointer to the next thing in the string. */
 
 static int nextcharinword_cb(lua_State* L)
 {
-	const char* src = luaL_checkstring(L, 1);
-	int offset = forceinteger(L, 2) - 1;
-	const char* p = src + offset;
+    const char* src = luaL_checkstring(L, 1);
+    int offset = forceinteger(L, 2) - 1;
+    const char* p = src + offset;
 
-	/* At the end of the string? */
+    /* At the end of the string? */
 
-	if (*p == '\0')
-	{
-	atend:
-		lua_pushnil(L);
-		return 1;
-	}
+    if (*p == '\0')
+    {
+    atend:
+        lua_pushnil(L);
+        return 1;
+    }
 
-	/* Skip any control codes. */
+    /* Skip any control codes. */
 
-	while (*p && iscontrolbyte(*p))
-		p++;
+    while (*p && iscontrolbyte(*p))
+        p++;
 
-	if (*p == '\0')
-		goto atend;
+    if (*p == '\0')
+        goto atend;
 
-	/* Skip exactly one UTF-8 code point. */
+    /* Skip exactly one UTF-8 code point. */
 
-	(void) readu8(&p);
+    (void)readu8(&p);
 
-	lua_pushnumber(L, 1 + p - src);
-	return 1;
+    lua_pushnumber(L, 1 + p - src);
+    return 1;
 }
 
 /* Backs up to the previous thing in a string. */
 
 static int prevcharinword_cb(lua_State* L)
 {
-	const char* src = luaL_checkstring(L, 1);
-	int offset = forceinteger(L, 2) - 1;
-	const char* p = src + offset;
+    const char* src = luaL_checkstring(L, 1);
+    int offset = forceinteger(L, 2) - 1;
+    const char* p = src + offset;
 
-	/* Back up over any control codes; give up if we find ourselves at
-	 * the beginning of the string. */
+    /* Back up over any control codes; give up if we find ourselves at
+     * the beginning of the string. */
 
-	do
-	{
-		if (p == src)
-		{
-			lua_pushnil(L);
-			return 1;
-		}
+    do
+    {
+        if (p == src)
+        {
+            lua_pushnil(L);
+            return 1;
+        }
 
-		p--;
-	}
-	while (iscontrolbyte(*p));
+        p--;
+    } while (iscontrolbyte(*p));
 
-	/* We now know that there is a character, and it's definitively not a
-	 * control code. Skip any UTF-8 trailing bytes. */
+    /* We now know that there is a character, and it's definitively not a
+     * control code. Skip any UTF-8 trailing bytes. */
 
-	while ((p != src) && (getu8bytes(*p) == 0))
-		p--;
+    while ((p != src) && (getu8bytes(*p) == 0))
+        p--;
 
-	/* Back up over any additional control codes. */
+    /* Back up over any additional control codes. */
 
-	while (p != src)
-	{
-		if (iscontrolbyte(*(p-1)))
-			p--;
-		else
-			break;
-	}
+    while (p != src)
+    {
+        if (iscontrolbyte(*(p - 1)))
+            p--;
+        else
+            break;
+    }
 
-	lua_pushnumber(L, 1 + p - src);
-	return 1;
+    lua_pushnumber(L, 1 + p - src);
+    return 1;
 }
 
 /* Copies one character (or control code) from the source to the destination
  * string.
  */
 
-static bool copy(char** dest, int* dstate, const char** src, int* sstate, int stateor, int stateand)
+static bool copy(char** dest,
+    int* dstate,
+    const char** src,
+    int* sstate,
+    int stateor,
+    int stateand)
 {
-	const char* oldsrc = *src;
-	int c = readu8(src);
+    const char* oldsrc = *src;
+    int c = readu8(src);
 
-	if (c == '\0')
-		return false;
+    if (c == '\0')
+        return false;
 
-	if (iswcntrl(c))
-	{
-		*sstate = c & STYLE_ALL;
-		return true;
-	}
+    if (iswcntrl(c))
+    {
+        *sstate = c & STYLE_ALL;
+        return true;
+    }
 
-	/* If we got here, we've just read a printable character. */
+    /* If we got here, we've just read a printable character. */
 
-	if (dest)
-	{
-		int estate = (*sstate & stateand) | stateor;
-		if (*dstate != estate)
-		{
-			/* We need to emit a style change byte; we do this, then we
-			 * back up over the printable character we just read, so we
-			 * can read it again next time.
-			 */
-			writeu8(dest, estate | STYLE_MARKER);
-			*dstate = estate;
+    if (dest)
+    {
+        int estate = (*sstate & stateand) | stateor;
+        if (*dstate != estate)
+        {
+            /* We need to emit a style change byte; we do this, then we
+             * back up over the printable character we just read, so we
+             * can read it again next time.
+             */
+            writeu8(dest, estate | STYLE_MARKER);
+            *dstate = estate;
 
-			*src = oldsrc;
-			return true;
-		}
+            *src = oldsrc;
+            return true;
+        }
 
-		writeu8(dest, c);
-	}
-	return true;
+        writeu8(dest, c);
+    }
+    return true;
 }
 
 /* Inserts a word into another word, at a particular offset. */
 
 static int insertintoword_cb(lua_State* L)
 {
-	size_t srcbytes;
-	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	const char* s = src;
-	size_t insbytes;
-	const char* ins = luaL_checklstring(L, 2, &insbytes);
-	int offset = forceinteger(L, 3) - 1;
-	int newstate = forceinteger(L, 4);
+    size_t srcbytes;
+    const char* src = luaL_checklstring(L, 1, &srcbytes);
+    const char* s = src;
+    size_t insbytes;
+    const char* ins = luaL_checklstring(L, 2, &insbytes);
+    int offset = forceinteger(L, 3) - 1;
+    int newstate = forceinteger(L, 4);
 
-	char dest[srcbytes + insbytes + OVERHEAD];
-	char* p = dest;
+    char dest[srcbytes + insbytes + OVERHEAD];
+    char* p = dest;
 
-	int sstate = 0;
-	int dstate = 0;
-	int insstart = -1;
-	int insend = -1;
-	bool copied = 0;
+    int sstate = 0;
+    int dstate = 0;
+    int insstart = -1;
+    int insend = -1;
+    bool copied = 0;
 
-	do
-	{
-		/* If we reach the right point in the source string, copy in the
-		 * destination string. */
+    do
+    {
+        /* If we reach the right point in the source string, copy in the
+         * destination string. */
 
-		if (!copied && ((s - src) >= offset))
-		{
-			insstart = p - dest;
+        if (!copied && ((s - src) >= offset))
+        {
+            insstart = p - dest;
 
-			while (copy(&p, &dstate, &ins, &newstate, 0, STYLE_ALL))
-				;
+            while (copy(&p, &dstate, &ins, &newstate, 0, STYLE_ALL))
+                ;
 
-			insend = p - dest;
-			copied = 1;
-		}
-	}
-	while (copy(&p, &dstate, &s, &sstate, 0, STYLE_ALL));
+            insend = p - dest;
+            copied = 1;
+        }
+    } while (copy(&p, &dstate, &s, &sstate, 0, STYLE_ALL));
 
-	/* Return both the new string, and the offset to the end of the inserted
-	 * section, and the offset to the *start* of the inserted section (because
-	 * it might have changed). */
+    /* Return both the new string, and the offset to the end of the inserted
+     * section, and the offset to the *start* of the inserted section (because
+     * it might have changed). */
 
-	lua_pushlstring(L, dest, p - dest);
+    lua_pushlstring(L, dest, p - dest);
 
-	if (insend != -1)
-		lua_pushnumber(L, 1 + insend);
-	else
-		lua_pushnil(L);
+    if (insend != -1)
+        lua_pushnumber(L, 1 + insend);
+    else
+        lua_pushnil(L);
 
-	if (insstart != -1)
-		lua_pushnumber(L, 1 + insstart);
-	else
-		lua_pushnil(L);
-	return 3;
+    if (insstart != -1)
+        lua_pushnumber(L, 1 + insstart);
+    else
+        lua_pushnil(L);
+    return 3;
 }
 
 /* Deletes all characters between certain offsets in a word. */
 
 static int deletefromword_cb(lua_State* L)
 {
-	size_t srcbytes;
-	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	const char* offset1 = src + forceinteger(L, 2) - 1;
-	const char* offset2 = src + forceinteger(L, 3) - 1;
+    size_t srcbytes;
+    const char* src = luaL_checklstring(L, 1, &srcbytes);
+    const char* offset1 = src + forceinteger(L, 2) - 1;
+    const char* offset2 = src + forceinteger(L, 3) - 1;
 
-	char dest[srcbytes];
-	char* p = dest;
+    char dest[srcbytes];
+    char* p = dest;
 
-	int sstate = 0;
-	int dstate = 0;
+    int sstate = 0;
+    int dstate = 0;
 
-	do
-	{
-		/* If we reach the right point in the source string, skip characters
-		 * until we reach the end offset. */
+    do
+    {
+        /* If we reach the right point in the source string, skip characters
+         * until we reach the end offset. */
 
-		if (src == offset1)
-		{
-			while (src < offset2)
-			{
-				if (!copy(NULL, &dstate, &src, &sstate, 0, STYLE_ALL))
-					goto finished;
-			}
-		}
-	}
-	while (copy(&p, &dstate, &src, &sstate, 0, STYLE_ALL));
+        if (src == offset1)
+        {
+            while (src < offset2)
+            {
+                if (!copy(NULL, &dstate, &src, &sstate, 0, STYLE_ALL))
+                    goto finished;
+            }
+        }
+    } while (copy(&p, &dstate, &src, &sstate, 0, STYLE_ALL));
 finished:
 
-	lua_pushlstring(L, dest, p - dest);
-	return 1;
+    lua_pushlstring(L, dest, p - dest);
+    return 1;
 }
 
 /* Turns on or off a style to a particular range of a word. */
 
 static int applystyletoword_cb(lua_State* L)
 {
-	size_t srcbytes;
-	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	int targetsor = forceinteger(L, 2);
-	int targetsand = forceinteger(L, 3);
-	const char* offset1 = src + forceinteger(L, 4) - 1;
-	const char* offset2 = src + forceinteger(L, 5) - 1;
-	const char* csoffset = src + forceinteger(L, 6) - 1;
+    size_t srcbytes;
+    const char* src = luaL_checklstring(L, 1, &srcbytes);
+    int targetsor = forceinteger(L, 2);
+    int targetsand = forceinteger(L, 3);
+    const char* offset1 = src + forceinteger(L, 4) - 1;
+    const char* offset2 = src + forceinteger(L, 5) - 1;
+    const char* csoffset = src + forceinteger(L, 6) - 1;
 
-	/* Adding a style will add at most two extra bytes to the string
-	 * (on, and then off again). Probably less. */
-	char dest[srcbytes+2];
-	char* p = dest;
-	char* cdoffset = dest;
+    /* Adding a style will add at most two extra bytes to the string
+     * (on, and then off again). Probably less. */
+    char dest[srcbytes + 2];
+    char* p = dest;
+    char* cdoffset = dest;
 
-	int sand = STYLE_ALL;
-	int sor = 0;
+    int sand = STYLE_ALL;
+    int sor = 0;
 
-	int sstate = 0;
-	int dstate = 0;
+    int sstate = 0;
+    int dstate = 0;
 
-	do
-	{
-		/* If we reach the right point in the source string, set the mask to
-		 * apply the desired style. Also, turn it off again afterwards. */
+    do
+    {
+        /* If we reach the right point in the source string, set the mask to
+         * apply the desired style. Also, turn it off again afterwards. */
 
-		if (src == offset1)
-		{
-			sand = targetsand;
-			sor = targetsor;
-		}
+        if (src == offset1)
+        {
+            sand = targetsand;
+            sor = targetsor;
+        }
 
-		if (src == offset2)
-		{
-			sand = STYLE_ALL;
-			sor = 0;
-		}
+        if (src == offset2)
+        {
+            sand = STYLE_ALL;
+            sor = 0;
+        }
 
-		/* If we reach csoffset in the src, remember where we were in the dest
-		 * so we can move the cursor correctly. */
+        /* If we reach csoffset in the src, remember where we were in the dest
+         * so we can move the cursor correctly. */
 
-		if (src == csoffset)
-			cdoffset = p;
-	}
-	while (copy(&p, &dstate, &src, &sstate, sor, sand));
+        if (src == csoffset)
+            cdoffset = p;
+    } while (copy(&p, &dstate, &src, &sstate, sor, sand));
 
-	lua_pushlstring(L, dest, p - dest);
-	lua_pushnumber(L, 1 + cdoffset - dest);
-	return 2;
+    lua_pushlstring(L, dest, p - dest);
+    lua_pushnumber(L, 1 + cdoffset - dest);
+    return 2;
 }
 
 /* Fetch the style at a particular offset into a word. */
 
 static int getstylefromword_cb(lua_State* L)
 {
-	size_t srcbytes;
-	const char* src = luaL_checklstring(L, 1, &srcbytes);
-	const char* offset = src + forceinteger(L, 2) - 1;
+    size_t srcbytes;
+    const char* src = luaL_checklstring(L, 1, &srcbytes);
+    const char* offset = src + forceinteger(L, 2) - 1;
 
-	int state = 0;
-	while (src < offset)
-	{
-		int c = readu8(&src);
-		if (c == '\0')
-			break;
+    int state = 0;
+    while (src < offset)
+    {
+        int c = readu8(&src);
+        if (c == '\0')
+            break;
 
-		if (iswcntrl(c))
-			state = c & STYLE_ALL;
-	}
+        if (iswcntrl(c))
+            state = c & STYLE_ALL;
+    }
 
-	lua_pushnumber(L, state);
-	return 1;
+    lua_pushnumber(L, state);
+    return 1;
 }
 
 /* Create a raw style byte. */
 
 static int createstylebyte_cb(lua_State* L)
 {
-	int style = forceinteger(L, 1);
-	char buffer = style | STYLE_MARKER;
-	lua_pushlstring(L, &buffer, 1);
-	return 1;
+    int style = forceinteger(L, 1);
+    char buffer = style | STYLE_MARKER;
+    lua_pushlstring(L, &buffer, 1);
+    return 1;
 }
 
 void word_init(void)
 {
-	const static luaL_Reg funcs[] =
-	{
-		{ "parseword",                 parseword_cb },
-		{ "writestyled",               writestyled_cb },
-		{ "getwordtext",               getwordtext_cb },
-		{ "nextcharinword",            nextcharinword_cb },
-		{ "prevcharinword",            prevcharinword_cb },
-		{ "insertintoword",            insertintoword_cb },
-		{ "deletefromword",            deletefromword_cb },
-		{ "applystyletoword",          applystyletoword_cb },
-		{ "getstylefromword",          getstylefromword_cb },
-		{ "createstylebyte",           createstylebyte_cb },
-		{ NULL,                        NULL }
-	};
+    const static luaL_Reg funcs[] = {
+        {"parseword",        parseword_cb       },
+        {"writestyled",      writestyled_cb     },
+        {"getwordtext",      getwordtext_cb     },
+        {"nextcharinword",   nextcharinword_cb  },
+        {"prevcharinword",   prevcharinword_cb  },
+        {"insertintoword",   insertintoword_cb  },
+        {"deletefromword",   deletefromword_cb  },
+        {"applystyletoword", applystyletoword_cb},
+        {"getstylefromword", getstylefromword_cb},
+        {"createstylebyte",  createstylebyte_cb },
+        {NULL,               NULL               }
+    };
 
-	const static luaL_Constant consts[] =
-	{
-		{ "ITALIC",						DPY_ITALIC },
-		{ "UNDERLINE",					DPY_UNDERLINE },
-		{ "REVERSE",					DPY_REVERSE },
-		{ "BOLD",						DPY_BOLD },
-		{ "BRIGHT",						DPY_BRIGHT },
-		{ "DIM",						DPY_DIM },
-	};
+    const static luaL_Constant consts[] = {
+        {"ITALIC",    DPY_ITALIC   },
+        {"UNDERLINE", DPY_UNDERLINE},
+        {"REVERSE",   DPY_REVERSE  },
+        {"BOLD",      DPY_BOLD     },
+        {"BRIGHT",    DPY_BRIGHT   },
+        {"DIM",       DPY_DIM      },
+    };
 
-	lua_getglobal(L, "wg");
-	luaL_register(L, NULL, funcs);
-	luaL_setconstants(L, consts, sizeof(consts)/sizeof(*consts));
+    lua_getglobal(L, "wg");
+    luaL_register(L, NULL, funcs);
+    luaL_setconstants(L, consts, sizeof(consts) / sizeof(*consts));
 }

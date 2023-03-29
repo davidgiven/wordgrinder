@@ -40,6 +40,7 @@ def make_wordgrinder(name, arch, frontend, clip):
             "third_party/clip+" + clip,
             "third_party/luau",
             "third_party/minizip",
+            "src/c/luau-em",
         ],
         vars=DefaultVars + {"+cxxflags": ["-DFRONTEND=" + frontend]},
     )

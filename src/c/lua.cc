@@ -53,7 +53,7 @@ static int traceback(lua_State* L)
 static int docall(lua_State* L, int narg, int clear)
 {
     int base = lua_gettop(L) - narg;
-    lua_pushcfunction(L, traceback, "traceback");
+    lua_pushcclosurek(L, traceback, "traceback", 0, nullptr);
     lua_insert(L, base);
 
     int status = lua_pcall(L, narg, (clear ? 0 : LUA_MULTRET), base);
@@ -70,32 +70,13 @@ void script_deinit(void)
     lua_close(L);
 }
 
-static Luau::CompileOptions copts()
-{
-    Luau::CompileOptions result = {};
-    result.optimizationLevel = 2;
-    result.debugLevel = 1;
-    result.coverageLevel = 0;
-    return result;
-}
-
-static Luau::ParseOptions popts()
-{
-	Luau::ParseOptions result = {};
-	result.allowDeclarationSyntax = true;
-	return result;
-}
-
 static int loadstring_cb(lua_State* L)
 {
     size_t len;
     const char* s = luaL_checklstring(L, 1, &len);
-    const char* name = luaL_optstring(L, 2, s);
 
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
-
-    std::string bytecode = Luau::compile(std::string(s, len), copts(), popts());
-    if (luau_load(L, name, bytecode.data(), bytecode.size(), 0) == 0)
+    if (luaL_loadstring(L, s) == 0)
         return 1;
 
     lua_pushnil(L);
@@ -130,7 +111,7 @@ void script_init(void)
     lua_pushstring(L, STRINGIFY(FRONTEND));
     lua_setglobal(L, "FRONTEND");
 
-    lua_pushcfunction(L, loadstring_cb, "loadstring");
+    lua_pushcclosurek(L, loadstring_cb, "loadstring", 0, nullptr);
     lua_setglobal(L, "loadstring");
 
     lua_newtable(L);
@@ -157,9 +138,7 @@ void script_load_from_table(const FileDescriptor* table)
 {
     while (table->name)
     {
-		std::string bytecode = Luau::compile(table->data, copts(), popts());
-        int status = luau_load(L, table->name, &bytecode[0], bytecode.size(), 0);
-        status = status || docall(L, 0, 1);
+        int status = luaL_dostring(L, table->data.c_str());
         if (status)
         {
             (void)report(L, status);

@@ -27,5 +27,12 @@ clibrary(
         "tools+icon_cc",
     ],
     vars=DefaultVars + {"+cflags": ["-I./src/c"]},
-    deps=["src/c+globals", "third_party/libstb", "+libglfw3", "+opengl"],
+    deps=[
+        "+libglfw3",
+        "+opengl",
+        "src/c+globals",
+        "src/c/luau-em",
+        "third_party/libstb",
+        "third_party/luau",
+    ],
 )
