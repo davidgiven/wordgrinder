@@ -2,6 +2,7 @@ from build.ab2 import DefaultVars
 from build.c import clibrary
 from build.pkg import package
 from tools.build import multibin
+import platform
 
 package(name="libglfw3", package="glfw3")
 package(name="opengl", package="opengl")
@@ -26,7 +27,12 @@ clibrary(
         "+font_table",
         "tools+icon_cc",
     ],
-    vars=DefaultVars + {"+cflags": ["-I./src/c"]},
+    vars=DefaultVars
+    + {
+        "+cxxflags": ["-I./src/c"] + ["-DGL_SILENCE_DEPRECATION"]
+        if platform.system() == "Darwin"
+        else []
+    },
     deps=[
         "+libglfw3",
         "+opengl",

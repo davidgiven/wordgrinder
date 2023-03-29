@@ -3,6 +3,9 @@ from build.c import cxxprogram, clibrary
 from build.pkg import has_package, package
 from config import FILEFORMAT
 
+package(name="libcmark", package="libcmark")
+package(name="fmt", package="fmt")
+
 clibrary(
     name="globals",
     srcs=[
@@ -27,16 +30,15 @@ clibrary(
         "+cxxflags": [f"-DFILEFORMAT={FILEFORMAT}", "-I."],
     },
     deps=[
+        "+fmt",
         "third_party/luau",
         "src/c/luau-em",
         "third_party/minizip",
     ],
 )
 
-package(name="libcmark", package="libcmark")
 
-
-def make_wordgrinder(name, arch, frontend, clip):
+def make_wordgrinder(name, arch, clip, vars={}):
     cxxprogram(
         name=name,
         srcs=[
@@ -51,11 +53,30 @@ def make_wordgrinder(name, arch, frontend, clip):
             "third_party/luau",
             "src/c/luau-em",
         ],
-        vars=DefaultVars + {"+cxxflags": ["-DFRONTEND=" + frontend]},
+        vars=DefaultVars + vars,
     )
 
 
 make_wordgrinder(
-    "wordgrinder-ncurses", "src/c/arch/ncurses", "ncurses", "clip_none"
+    "wordgrinder-ncurses",
+    "src/c/arch/ncurses",
+    "clip_none",
+    vars={"+cxxflags": ["-DFRONTEND=ncurses"]},
 )
-make_wordgrinder("wordgrinder-glfw", "src/c/arch/glfw", "glfw", "clip_x11")
+
+make_wordgrinder(
+    "wordgrinder-glfw-x11",
+    "src/c/arch/glfw",
+    "clip_x11",
+    vars={"+cxxflags": ["-DFRONTEND=glfw"]},
+)
+
+make_wordgrinder(
+    "wordgrinder-glfw-osx",
+    "src/c/arch/glfw",
+    "clip_osx",
+    vars={
+        "+cxxflags": ["-DFRONTEND=glfw"],
+        "+ldflags": ["-framework", "Cocoa", "-framework", "OpenGL"],
+    },
+)

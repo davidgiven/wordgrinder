@@ -47,7 +47,7 @@ static CharData* chardata = NULL;
 static void freeFont(Font* font)
 {
     if (font->needsFreeing)
-        delete [] font->data;
+        delete[] font->data;
     delete font;
 }
 
@@ -70,7 +70,7 @@ static Font* loadFont(const char* filename, int defaultfont)
     else
     {
         font = new Font;
-        font->data = (uint8_t*) &font_table[defaultfont].data[0];
+        font->data = (uint8_t*)&font_table[defaultfont].data[0];
         font->needsFreeing = false;
     }
 
@@ -152,8 +152,7 @@ void flushFontCache()
     hmfree(chardata);
 }
 
-static int rawRender(
-    Font* font, Page* page, CharData* cd, uni_t c)
+static int rawRender(Font* font, Page* page, CharData* cd, uni_t c)
 {
     stbtt_pack_range range;
     range.first_unicode_codepoint_in_range = c;

@@ -1,4 +1,4 @@
-from build.c import clibrary
+from build.c import clibrary, DefaultVars
 from build.pkg import package
 
 package(name="xcb", package="xcb")
@@ -16,4 +16,11 @@ clibrary(
     srcs=["./clip_x11.cpp"],
     hdrs=["./clip.h"],
     deps=["+clip_common", "+xcb"],
+)
+
+clibrary(
+    name="clip_osx",
+    srcs=["./clip_osx.mm"],
+    hdrs=["./clip.h"],
+    deps=["+clip_common"],
 )

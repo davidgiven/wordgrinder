@@ -79,7 +79,12 @@ def cxxfile(
 def findsources(name, srcs, deps, vars):
     ins = []
     for f in filenamesof(srcs):
-        if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp"):
+        if (
+            f.endswith(".c")
+            or f.endswith(".cc")
+            or f.endswith(".cpp")
+            or f.endswith(".mm")
+        ):
             handler = cxxfile
             if f.endswith(".c"):
                 handler = cfile
