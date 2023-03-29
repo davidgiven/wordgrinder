@@ -10,7 +10,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
     - name: make
       run: |
         make
@@ -22,7 +22,7 @@ jobs:
       with:
         fetch-depth: 1
     - name: brew
-      run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark
+      run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark fmt
     - name: make
       run: |
         make
@@ -40,6 +40,7 @@ jobs:
         install: >-
           make
           mingw-w64-i686-binutils
+          mingw-w64-i686-fmt
           mingw-w64-i686-gcc
           mingw-w64-i686-glfw
           mingw-w64-i686-imagemagick
@@ -48,6 +49,7 @@ jobs:
           mingw-w64-i686-zlib
           mingw-w64-i686-cmark
           ninja
+          python3
           vim
           zip
     - uses: actions/checkout@v1
