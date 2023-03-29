@@ -170,7 +170,7 @@ extern void dpy_sync(void);
 extern void dpy_cleararea(int x1, int y1, int x2, int y2);
 extern void dpy_getscreensize(int* x, int* y);
 extern uni_t dpy_getchar(double timeout);
-extern const char* dpy_getkeyname(uni_t key);
+extern std::string dpy_getkeyname(uni_t key);
 
 extern bool enable_unicode;
 

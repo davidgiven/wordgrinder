@@ -288,12 +288,9 @@ static int getchar_cb(lua_State* L)
 
                 default:
                 {
-                    const char* s = dpy_getkeyname(c);
-                    if (s)
-                    {
-                        lua_pushstring(L, s);
-                        return 1;
-                    }
+                    std::string s = dpy_getkeyname(c);
+					lua_pushstring(L, s.c_str());
+					return 1;
                 }
             }
         }

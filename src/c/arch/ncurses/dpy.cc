@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include "stb_ds.h"
+#include <fmt/format.h>
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
 #define FIRST_COLOUR_ID 1
@@ -332,7 +333,7 @@ static const char* ncurses_suffix_to_name(int suffix)
     return NULL;
 }
 
-const char* dpy_getkeyname(uni_t k)
+std::string dpy_getkeyname(uni_t k)
 {
     k = -k;
 
@@ -405,18 +406,11 @@ const char* dpy_getkeyname(uni_t k)
             return "KEY_ESCAPE";
     }
 
-    static char buffer[32];
     if (k < 32)
-    {
-        sprintf(buffer, "KEY_^%c", k + 'A' - 1);
-        return buffer;
-    }
+        return fmt::format("KEY_^{:c}", k + 'A' - 1);
 
     if ((k >= KEY_F0) && (k < (KEY_F0 + 64)))
-    {
-        sprintf(buffer, "KEY_F%d", k - KEY_F0);
-        return buffer;
-    }
+        return fmt::format("KEY_F{}", k - KEY_F0);
 
     const char* name = keyname(k);
     if (name)
@@ -433,13 +427,9 @@ const char* dpy_getkeyname(uni_t k)
             const char* ps = ncurses_prefix_to_name(buf);
             const char* ss = ncurses_suffix_to_name(suffix);
             if (ss)
-            {
-                sprintf(buffer, "KEY_%s%s", ss, ps);
-                return buffer;
-            }
+                return fmt::format("KEY_{}{}", ss, ps);
         }
     }
 
-    sprintf(buffer, "KEY_UNKNOWN_%d (%s)", k, name ? name : "???");
-    return buffer;
+    return fmt::format("KEY_UNKNOWN_{} ({})", k, name ? name : "???");
 }

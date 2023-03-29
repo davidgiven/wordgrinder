@@ -6,6 +6,7 @@
 #include "globals.h"
 #include <string.h>
 #include <windows.h>
+#include <fmt/format.h>
 
 #define VKM_SHIFT 0x100
 #define VKM_CTRL 0x200
@@ -295,7 +296,7 @@ uni_t dpy_getchar(double timeout)
     }
 }
 
-const char* dpy_getkeyname(uni_t k)
+std::string dpy_getkeyname(uni_t k)
 {
     switch (-k)
     {
@@ -310,81 +311,70 @@ const char* dpy_getkeyname(uni_t k)
     static char buffer[32];
 
     if (mods & VKM_CTRLASCII)
-    {
-        sprintf(buffer, "KEY_%s^%c", (mods & VKM_SHIFT) ? "S" : "", key + 64);
-        return buffer;
-    }
+        return fmt::format(
+            "KEY_{}^{:c}", (mods & VKM_SHIFT) ? "S" : "", key + 64);
 
-    const char* template = NULL;
+    const char* base = NULL;
     switch (key)
     {
         case VK_NUMLOCK:
             return NULL;
 
         case VK_DOWN:
-            template = "DOWN";
+            base = "DOWN";
             break;
         case VK_UP:
-            template = "UP";
+            base = "UP";
             break;
         case VK_LEFT:
-            template = "LEFT";
+            base = "LEFT";
             break;
         case VK_RIGHT:
-            template = "RIGHT";
+            base = "RIGHT";
             break;
         case VK_HOME:
-            template = "HOME";
+            base = "HOME";
             break;
         case VK_END:
-            template = "END";
+            base = "END";
             break;
         case VK_BACK:
-            template = "BACKSPACE";
+            base = "BACKSPACE";
             break;
         case VK_DELETE:
-            template = "DELETE";
+            base = "DELETE";
             break;
         case VK_INSERT:
-            template = "INSERT";
+            base = "INSERT";
             break;
         case VK_NEXT:
-            template = "PGDN";
+            base = "PGDN";
             break;
         case VK_PRIOR:
-            template = "PGUP";
+            base = "PGUP";
             break;
         case VK_TAB:
-            template = "TAB";
+            base = "TAB";
             break;
         case VK_RETURN:
-            template = "RETURN";
+            base = "RETURN";
             break;
         case VK_ESCAPE:
-            template = "ESCAPE";
+            base = "ESCAPE";
             break;
     }
 
-    if (template)
-    {
-        sprintf(buffer,
-            "KEY_%s%s%s",
+    if (base)
+        return fmt::format("KEY_{}{}{}",
             (mods & VKM_SHIFT) ? "S" : "",
             (mods & VKM_CTRL) ? "^" : "",
-            template);
-        return buffer;
-    }
+            base);
 
     if ((key >= VK_F1) && (key <= (VK_F24)))
-    {
-        sprintf(buffer,
-            "KEY_%s%sF%d",
+        return fmt::format("KEY_{}{}F{}",
             (mods & VKM_SHIFT) ? "S" : "",
             (mods & VKM_CTRL) ? "^" : "",
             key - VK_F1 + 1);
-        return buffer;
-    }
 
-    sprintf(buffer, "KEY_UNKNOWN_%d", -k);
-    return buffer;
+    return fmt::format("KEY_UNKNOWN_{}", -k);
 }
