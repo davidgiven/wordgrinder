@@ -16,10 +16,11 @@
 #include <algorithm>
 
 LUAU_FASTFLAG(DebugLuauDeferredConstraintResolution);
-LUAU_FASTFLAGVARIABLE(LuauClonePublicInterfaceLess, false);
+LUAU_FASTFLAGVARIABLE(LuauClonePublicInterfaceLess2, false);
 LUAU_FASTFLAG(LuauSubstitutionReentrant);
 LUAU_FASTFLAG(LuauClassTypeVarsInSubstitution);
 LUAU_FASTFLAG(LuauSubstitutionFixMissingFields);
+LUAU_FASTFLAGVARIABLE(LuauCopyExportedTypes, false);
 
 namespace Luau
 {
@@ -37,14 +38,14 @@ static bool contains(Position pos, Comment comment)
         return false;
 }
 
-bool isWithinComment(const SourceModule& sourceModule, Position pos)
+static bool isWithinComment(const std::vector<Comment>& commentLocations, Position pos)
 {
-    auto iter = std::lower_bound(sourceModule.commentLocations.begin(), sourceModule.commentLocations.end(),
-        Comment{Lexeme::Comment, Location{pos, pos}}, [](const Comment& a, const Comment& b) {
+    auto iter = std::lower_bound(
+        commentLocations.begin(), commentLocations.end(), Comment{Lexeme::Comment, Location{pos, pos}}, [](const Comment& a, const Comment& b) {
             return a.location.end < b.location.end;
         });
 
-    if (iter == sourceModule.commentLocations.end())
+    if (iter == commentLocations.end())
         return false;
 
     if (contains(pos, *iter))
@@ -53,10 +54,20 @@ bool isWithinComment(const SourceModule& sourceModule, Position pos)
     // Due to the nature of std::lower_bound, it is possible that iter points at a comment that ends
     // at pos.  We'll try the next comment, if it exists.
     ++iter;
-    if (iter == sourceModule.commentLocations.end())
+    if (iter == commentLocations.end())
         return false;
 
     return contains(pos, *iter);
+}
+
+bool isWithinComment(const SourceModule& sourceModule, Position pos)
+{
+    return isWithinComment(sourceModule.commentLocations, pos);
+}
+
+bool isWithinComment(const ParseResult& result, Position pos)
+{
+    return isWithinComment(result.commentLocations, pos);
 }
 
 struct ClonePublicInterface : Substitution
@@ -194,7 +205,7 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
     TxnLog log;
     ClonePublicInterface clonePublicInterface{&log, builtinTypes, this};
 
-    if (FFlag::LuauClonePublicInterfaceLess)
+    if (FFlag::LuauClonePublicInterfaceLess2)
         returnType = clonePublicInterface.cloneTypePack(returnType);
     else
         returnType = clone(returnType, interfaceTypes, cloneState);
@@ -202,7 +213,7 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
     moduleScope->returnType = returnType;
     if (varargPack)
     {
-        if (FFlag::LuauClonePublicInterfaceLess)
+        if (FFlag::LuauClonePublicInterfaceLess2)
             varargPack = clonePublicInterface.cloneTypePack(*varargPack);
         else
             varargPack = clone(*varargPack, interfaceTypes, cloneState);
@@ -211,7 +222,7 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
 
     for (auto& [name, tf] : moduleScope->exportedTypeBindings)
     {
-        if (FFlag::LuauClonePublicInterfaceLess)
+        if (FFlag::LuauClonePublicInterfaceLess2)
             tf = clonePublicInterface.cloneTypeFun(tf);
         else
             tf = clone(tf, interfaceTypes, cloneState);
@@ -219,7 +230,7 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
 
     for (auto& [name, ty] : declaredGlobals)
     {
-        if (FFlag::LuauClonePublicInterfaceLess)
+        if (FFlag::LuauClonePublicInterfaceLess2)
             ty = clonePublicInterface.cloneType(ty);
         else
             ty = clone(ty, interfaceTypes, cloneState);
@@ -227,7 +238,7 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
 
     // Copy external stuff over to Module itself
     this->returnType = moduleScope->returnType;
-    if (FFlag::DebugLuauDeferredConstraintResolution)
+    if (FFlag::DebugLuauDeferredConstraintResolution || FFlag::LuauCopyExportedTypes)
         this->exportedTypeBindings = moduleScope->exportedTypeBindings;
     else
         this->exportedTypeBindings = std::move(moduleScope->exportedTypeBindings);

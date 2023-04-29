@@ -31,8 +31,9 @@ LUAU_FASTFLAG(LuauInferInNoCheckMode)
 LUAU_FASTFLAGVARIABLE(LuauKnowsTheDataModel3, false)
 LUAU_FASTINTVARIABLE(LuauAutocompleteCheckTimeoutMs, 100)
 LUAU_FASTFLAGVARIABLE(DebugLuauDeferredConstraintResolution, false)
-LUAU_FASTFLAGVARIABLE(LuauDefinitionFileSourceModule, false)
-LUAU_FASTFLAGVARIABLE(DebugLuauLogSolverToJson, false);
+LUAU_FASTFLAGVARIABLE(DebugLuauLogSolverToJson, false)
+LUAU_FASTFLAG(LuauRequirePathTrueModuleName)
+LUAU_FASTFLAGVARIABLE(DebugLuauReadWriteProperties, false)
 
 namespace Luau
 {
@@ -84,90 +85,20 @@ static void generateDocumentationSymbols(TypeId ty, const std::string& rootName)
     }
 }
 
-LoadDefinitionFileResult Frontend::loadDefinitionFile(std::string_view source, const std::string& packageName, bool captureComments)
+static ParseResult parseSourceForModule(std::string_view source, Luau::SourceModule& sourceModule, bool captureComments)
 {
-    if (!FFlag::DebugLuauDeferredConstraintResolution)
-        return Luau::loadDefinitionFile(typeChecker, globals, globals.globalScope, source, packageName, captureComments);
-
-    LUAU_TIMETRACE_SCOPE("loadDefinitionFile", "Frontend");
-
-    Luau::SourceModule sourceModule;
-
     ParseOptions options;
     options.allowDeclarationSyntax = true;
     options.captureComments = captureComments;
 
     Luau::ParseResult parseResult = Luau::Parser::parse(source.data(), source.size(), *sourceModule.names, *sourceModule.allocator, options);
-
-    if (parseResult.errors.size() > 0)
-        return LoadDefinitionFileResult{false, parseResult, sourceModule, nullptr};
-
     sourceModule.root = parseResult.root;
     sourceModule.mode = Mode::Definition;
-
-    ModulePtr checkedModule = check(sourceModule, Mode::Definition, {});
-
-    if (checkedModule->errors.size() > 0)
-        return LoadDefinitionFileResult{false, parseResult, sourceModule, checkedModule};
-
-    CloneState cloneState;
-
-    std::vector<TypeId> typesToPersist;
-    typesToPersist.reserve(checkedModule->declaredGlobals.size() + checkedModule->exportedTypeBindings.size());
-
-    for (const auto& [name, ty] : checkedModule->declaredGlobals)
-    {
-        TypeId globalTy = clone(ty, globals.globalTypes, cloneState);
-        std::string documentationSymbol = packageName + "/global/" + name;
-        generateDocumentationSymbols(globalTy, documentationSymbol);
-        globals.globalScope->bindings[globals.globalNames.names->getOrAdd(name.c_str())] = {globalTy, Location(), false, {}, documentationSymbol};
-
-        typesToPersist.push_back(globalTy);
-    }
-
-    for (const auto& [name, ty] : checkedModule->exportedTypeBindings)
-    {
-        TypeFun globalTy = clone(ty, globals.globalTypes, cloneState);
-        std::string documentationSymbol = packageName + "/globaltype/" + name;
-        generateDocumentationSymbols(globalTy.type, documentationSymbol);
-        globals.globalScope->exportedTypeBindings[name] = globalTy;
-
-        typesToPersist.push_back(globalTy.type);
-    }
-
-    for (TypeId ty : typesToPersist)
-    {
-        persist(ty);
-    }
-
-    return LoadDefinitionFileResult{true, parseResult, sourceModule, checkedModule};
+    return parseResult;
 }
 
-LoadDefinitionFileResult loadDefinitionFile_DEPRECATED(
-    TypeChecker& typeChecker, GlobalTypes& globals, ScopePtr targetScope, std::string_view source, const std::string& packageName)
+static void persistCheckedTypes(ModulePtr checkedModule, GlobalTypes& globals, ScopePtr targetScope, const std::string& packageName)
 {
-    LUAU_TIMETRACE_SCOPE("loadDefinitionFile", "Frontend");
-
-    Luau::Allocator allocator;
-    Luau::AstNameTable names(allocator);
-
-    ParseOptions options;
-    options.allowDeclarationSyntax = true;
-
-    Luau::ParseResult parseResult = Luau::Parser::parse(source.data(), source.size(), names, allocator, options);
-
-    if (parseResult.errors.size() > 0)
-        return LoadDefinitionFileResult{false, parseResult, {}, nullptr};
-
-    Luau::SourceModule module;
-    module.root = parseResult.root;
-    module.mode = Mode::Definition;
-
-    ModulePtr checkedModule = typeChecker.check(module, Mode::Definition);
-
-    if (checkedModule->errors.size() > 0)
-        return LoadDefinitionFileResult{false, parseResult, {}, checkedModule};
-
     CloneState cloneState;
 
     std::vector<TypeId> typesToPersist;
@@ -197,66 +128,24 @@ LoadDefinitionFileResult loadDefinitionFile_DEPRECATED(
     {
         persist(ty);
     }
-
-    return LoadDefinitionFileResult{true, parseResult, {}, checkedModule};
 }
 
-LoadDefinitionFileResult loadDefinitionFile(TypeChecker& typeChecker, GlobalTypes& globals, ScopePtr targetScope, std::string_view source,
-    const std::string& packageName, bool captureComments)
+LoadDefinitionFileResult Frontend::loadDefinitionFile(GlobalTypes& globals, ScopePtr targetScope, std::string_view source,
+    const std::string& packageName, bool captureComments, bool typeCheckForAutocomplete)
 {
-    if (!FFlag::LuauDefinitionFileSourceModule)
-        return loadDefinitionFile_DEPRECATED(typeChecker, globals, targetScope, source, packageName);
-
     LUAU_TIMETRACE_SCOPE("loadDefinitionFile", "Frontend");
 
     Luau::SourceModule sourceModule;
-
-    ParseOptions options;
-    options.allowDeclarationSyntax = true;
-    options.captureComments = captureComments;
-
-    Luau::ParseResult parseResult = Luau::Parser::parse(source.data(), source.size(), *sourceModule.names, *sourceModule.allocator, options);
-
+    Luau::ParseResult parseResult = parseSourceForModule(source, sourceModule, captureComments);
     if (parseResult.errors.size() > 0)
         return LoadDefinitionFileResult{false, parseResult, sourceModule, nullptr};
 
-    sourceModule.root = parseResult.root;
-    sourceModule.mode = Mode::Definition;
-
-    ModulePtr checkedModule = typeChecker.check(sourceModule, Mode::Definition);
+    ModulePtr checkedModule = check(sourceModule, Mode::Definition, {}, std::nullopt, /*forAutocomplete*/ false, /*recordJsonLog*/ false, {});
 
     if (checkedModule->errors.size() > 0)
         return LoadDefinitionFileResult{false, parseResult, sourceModule, checkedModule};
 
-    CloneState cloneState;
-
-    std::vector<TypeId> typesToPersist;
-    typesToPersist.reserve(checkedModule->declaredGlobals.size() + checkedModule->exportedTypeBindings.size());
-
-    for (const auto& [name, ty] : checkedModule->declaredGlobals)
-    {
-        TypeId globalTy = clone(ty, globals.globalTypes, cloneState);
-        std::string documentationSymbol = packageName + "/global/" + name;
-        generateDocumentationSymbols(globalTy, documentationSymbol);
-        targetScope->bindings[globals.globalNames.names->getOrAdd(name.c_str())] = {globalTy, Location(), false, {}, documentationSymbol};
-
-        typesToPersist.push_back(globalTy);
-    }
-
-    for (const auto& [name, ty] : checkedModule->exportedTypeBindings)
-    {
-        TypeFun globalTy = clone(ty, globals.globalTypes, cloneState);
-        std::string documentationSymbol = packageName + "/globaltype/" + name;
-        generateDocumentationSymbols(globalTy.type, documentationSymbol);
-        targetScope->exportedTypeBindings[name] = globalTy;
-
-        typesToPersist.push_back(globalTy.type);
-    }
-
-    for (TypeId ty : typesToPersist)
-    {
-        persist(ty);
-    }
+    persistCheckedTypes(checkedModule, globals, targetScope, packageName);
 
     return LoadDefinitionFileResult{true, parseResult, sourceModule, checkedModule};
 }
@@ -330,8 +219,8 @@ std::optional<std::string> pathExprToModuleName(const ModuleName& currentModuleN
 namespace
 {
 
-ErrorVec accumulateErrors(
-    const std::unordered_map<ModuleName, SourceNode>& sourceNodes, const std::unordered_map<ModuleName, ModulePtr>& modules, const ModuleName& name)
+static ErrorVec accumulateErrors(
+    const std::unordered_map<ModuleName, SourceNode>& sourceNodes, ModuleResolver& moduleResolver, const ModuleName& name)
 {
     std::unordered_set<ModuleName> seen;
     std::vector<ModuleName> queue{name};
@@ -357,11 +246,11 @@ ErrorVec accumulateErrors(
         // FIXME: If a module has a syntax error, we won't be able to re-report it here.
         // The solution is probably to move errors from Module to SourceNode
 
-        auto it2 = modules.find(next);
-        if (it2 == modules.end())
+        auto modulePtr = moduleResolver.getModule(next);
+        if (!modulePtr)
             continue;
 
-        Module& module = *it2->second;
+        Module& module = *modulePtr;
 
         std::sort(module.errors.begin(), module.errors.end(), [](const TypeError& e1, const TypeError& e2) -> bool {
             return e1.location.begin > e2.location.begin;
@@ -373,6 +262,23 @@ ErrorVec accumulateErrors(
     std::reverse(result.begin(), result.end());
 
     return result;
+}
+
+static void filterLintOptions(LintOptions& lintOptions, const std::vector<HotComment>& hotcomments, Mode mode)
+{
+    uint64_t ignoreLints = LintWarning::parseMask(hotcomments);
+
+    lintOptions.warningMask &= ~ignoreLints;
+
+    if (mode != Mode::NoCheck)
+    {
+        lintOptions.disableWarning(Luau::LintWarning::Code_UnknownGlobal);
+    }
+
+    if (mode == Mode::Strict)
+    {
+        lintOptions.disableWarning(Luau::LintWarning::Code_ImplicitReturn);
+    }
 }
 
 // Given a source node (start), find all requires that start a transitive dependency path that ends back at start
@@ -414,9 +320,9 @@ std::vector<RequireCycle> getRequireCycles(
                 if (top == start)
                 {
                     for (const SourceNode* node : path)
-                        cycle.push_back(resolver->getHumanReadableModuleName(node->name));
+                        cycle.push_back(FFlag::LuauRequirePathTrueModuleName ? node->name : node->humanReadableName);
 
-                    cycle.push_back(resolver->getHumanReadableModuleName(top->name));
+                    cycle.push_back(FFlag::LuauRequirePathTrueModuleName ? top->name : top->humanReadableName);
                     break;
                 }
             }
@@ -477,15 +383,8 @@ Frontend::Frontend(FileResolver* fileResolver, ConfigResolver* configResolver, c
     , moduleResolverForAutocomplete(this)
     , globals(builtinTypes)
     , globalsForAutocomplete(builtinTypes)
-    , typeChecker(globals, &moduleResolver, builtinTypes, &iceHandler)
-    , typeCheckerForAutocomplete(globalsForAutocomplete, &moduleResolverForAutocomplete, builtinTypes, &iceHandler)
     , configResolver(configResolver)
     , options(options)
-{
-}
-
-FrontendModuleResolver::FrontendModuleResolver(Frontend* frontend)
-    : frontend(frontend)
 {
 }
 
@@ -497,25 +396,23 @@ CheckResult Frontend::check(const ModuleName& name, std::optional<FrontendOption
     FrontendOptions frontendOptions = optionOverride.value_or(options);
     CheckResult checkResult;
 
+    FrontendModuleResolver& resolver = frontendOptions.forAutocomplete ? moduleResolverForAutocomplete : moduleResolver;
+
     auto it = sourceNodes.find(name);
     if (it != sourceNodes.end() && !it->second.hasDirtyModule(frontendOptions.forAutocomplete))
     {
         // No recheck required.
-        if (frontendOptions.forAutocomplete)
-        {
-            auto it2 = moduleResolverForAutocomplete.modules.find(name);
-            if (it2 == moduleResolverForAutocomplete.modules.end() || it2->second == nullptr)
-                throw InternalCompilerError("Frontend::modules does not have data for " + name, name);
-        }
-        else
-        {
-            auto it2 = moduleResolver.modules.find(name);
-            if (it2 == moduleResolver.modules.end() || it2->second == nullptr)
-                throw InternalCompilerError("Frontend::modules does not have data for " + name, name);
-        }
+        ModulePtr module = resolver.getModule(name);
 
-        return CheckResult{
-            accumulateErrors(sourceNodes, frontendOptions.forAutocomplete ? moduleResolverForAutocomplete.modules : moduleResolver.modules, name)};
+        if (!module)
+            throw InternalCompilerError("Frontend::modules does not have data for " + name, name);
+
+        checkResult.errors = accumulateErrors(sourceNodes, resolver, name);
+
+        // Get lint result only for top checked module
+        checkResult.lintResult = module->lintResult;
+
+        return checkResult;
     }
 
     std::vector<ModuleName> buildQueue;
@@ -554,36 +451,34 @@ CheckResult Frontend::check(const ModuleName& name, std::optional<FrontendOption
 
         if (frontendOptions.forAutocomplete)
         {
-            // The autocomplete typecheck is always in strict mode with DM awareness
-            // to provide better type information for IDE features
-            typeCheckerForAutocomplete.requireCycles = requireCycles;
-
             double autocompleteTimeLimit = FInt::LuauAutocompleteCheckTimeoutMs / 1000.0;
 
+            // The autocomplete typecheck is always in strict mode with DM awareness
+            // to provide better type information for IDE features
+            TypeCheckLimits typeCheckLimits;
+
             if (autocompleteTimeLimit != 0.0)
-                typeCheckerForAutocomplete.finishTime = TimeTrace::getClock() + autocompleteTimeLimit;
+                typeCheckLimits.finishTime = TimeTrace::getClock() + autocompleteTimeLimit;
             else
-                typeCheckerForAutocomplete.finishTime = std::nullopt;
+                typeCheckLimits.finishTime = std::nullopt;
 
             // TODO: This is a dirty ad hoc solution for autocomplete timeouts
             // We are trying to dynamically adjust our existing limits to lower total typechecking time under the limit
             // so that we'll have type information for the whole file at lower quality instead of a full abort in the middle
             if (FInt::LuauTarjanChildLimit > 0)
-                typeCheckerForAutocomplete.instantiationChildLimit = std::max(1, int(FInt::LuauTarjanChildLimit * sourceNode.autocompleteLimitsMult));
+                typeCheckLimits.instantiationChildLimit = std::max(1, int(FInt::LuauTarjanChildLimit * sourceNode.autocompleteLimitsMult));
             else
-                typeCheckerForAutocomplete.instantiationChildLimit = std::nullopt;
+                typeCheckLimits.instantiationChildLimit = std::nullopt;
 
             if (FInt::LuauTypeInferIterationLimit > 0)
-                typeCheckerForAutocomplete.unifierIterationLimit =
-                    std::max(1, int(FInt::LuauTypeInferIterationLimit * sourceNode.autocompleteLimitsMult));
+                typeCheckLimits.unifierIterationLimit = std::max(1, int(FInt::LuauTypeInferIterationLimit * sourceNode.autocompleteLimitsMult));
             else
-                typeCheckerForAutocomplete.unifierIterationLimit = std::nullopt;
+                typeCheckLimits.unifierIterationLimit = std::nullopt;
 
-            ModulePtr moduleForAutocomplete = FFlag::DebugLuauDeferredConstraintResolution
-                                                  ? check(sourceModule, mode, requireCycles, /*forAutocomplete*/ true, /*recordJsonLog*/ false)
-                                                  : typeCheckerForAutocomplete.check(sourceModule, Mode::Strict, environmentScope);
+            ModulePtr moduleForAutocomplete = check(sourceModule, Mode::Strict, requireCycles, environmentScope, /*forAutocomplete*/ true,
+                /*recordJsonLog*/ false, typeCheckLimits);
 
-            moduleResolverForAutocomplete.modules[moduleName] = moduleForAutocomplete;
+            resolver.setModule(moduleName, moduleForAutocomplete);
 
             double duration = getTimestamp() - timestamp;
 
@@ -605,12 +500,8 @@ CheckResult Frontend::check(const ModuleName& name, std::optional<FrontendOption
             continue;
         }
 
-        typeChecker.requireCycles = requireCycles;
-
         const bool recordJsonLog = FFlag::DebugLuauLogSolverToJson && moduleName == name;
-
-        ModulePtr module = FFlag::DebugLuauDeferredConstraintResolution ? check(sourceModule, mode, requireCycles, /*forAutocomplete*/ false, recordJsonLog)
-                                                                        : typeChecker.check(sourceModule, mode, environmentScope);
+        ModulePtr module = check(sourceModule, mode, requireCycles, environmentScope, /*forAutocomplete*/ false, recordJsonLog, {});
 
         stats.timeCheck += getTimestamp() - timestamp;
         stats.filesStrict += mode == Mode::Strict;
@@ -618,6 +509,26 @@ CheckResult Frontend::check(const ModuleName& name, std::optional<FrontendOption
 
         if (module == nullptr)
             throw InternalCompilerError("Frontend::check produced a nullptr module for " + moduleName, moduleName);
+
+        if (FFlag::DebugLuauDeferredConstraintResolution && mode == Mode::NoCheck)
+            module->errors.clear();
+
+        if (frontendOptions.runLintChecks)
+        {
+            LUAU_TIMETRACE_SCOPE("lint", "Frontend");
+
+            LintOptions lintOptions = frontendOptions.enabledLintWarnings.value_or(config.enabledLint);
+            filterLintOptions(lintOptions, sourceModule.hotcomments, mode);
+
+            double timestamp = getTimestamp();
+
+            std::vector<LintWarning> warnings =
+                Luau::lint(sourceModule.root, *sourceModule.names, environmentScope, module.get(), sourceModule.hotcomments, lintOptions);
+
+            stats.timeLint += getTimestamp() - timestamp;
+
+            module->lintResult = classifyLints(warnings, config);
+        }
 
         if (!frontendOptions.retainFullTypeGraphs)
         {
@@ -661,9 +572,13 @@ CheckResult Frontend::check(const ModuleName& name, std::optional<FrontendOption
 
         checkResult.errors.insert(checkResult.errors.end(), module->errors.begin(), module->errors.end());
 
-        moduleResolver.modules[moduleName] = std::move(module);
+        resolver.setModule(moduleName, std::move(module));
         sourceNode.dirtyModule = false;
     }
+
+    // Get lint result only for top checked module
+    if (ModulePtr module = resolver.getModule(name))
+        checkResult.lintResult = module->lintResult;
 
     return checkResult;
 }
@@ -786,60 +701,11 @@ ScopePtr Frontend::getModuleEnvironment(const SourceModule& module, const Config
             AstName name = module.names->get(global.c_str());
 
             if (name.value)
-                result->bindings[name].typeId = typeChecker.anyType;
+                result->bindings[name].typeId = builtinTypes->anyType;
         }
     }
 
     return result;
-}
-
-LintResult Frontend::lint(const ModuleName& name, std::optional<Luau::LintOptions> enabledLintWarnings)
-{
-    LUAU_TIMETRACE_SCOPE("Frontend::lint", "Frontend");
-    LUAU_TIMETRACE_ARGUMENT("name", name.c_str());
-
-    auto [_sourceNode, sourceModule] = getSourceNode(name);
-
-    if (!sourceModule)
-        return LintResult{}; // FIXME: We really should do something a bit more obvious when a file is too broken to lint.
-
-    return lint(*sourceModule, enabledLintWarnings);
-}
-
-LintResult Frontend::lint(const SourceModule& module, std::optional<Luau::LintOptions> enabledLintWarnings)
-{
-    LUAU_TIMETRACE_SCOPE("Frontend::lint", "Frontend");
-    LUAU_TIMETRACE_ARGUMENT("module", module.name.c_str());
-
-    const Config& config = configResolver->getConfig(module.name);
-
-    uint64_t ignoreLints = LintWarning::parseMask(module.hotcomments);
-
-    LintOptions options = enabledLintWarnings.value_or(config.enabledLint);
-    options.warningMask &= ~ignoreLints;
-
-    Mode mode = module.mode.value_or(config.mode);
-    if (mode != Mode::NoCheck)
-    {
-        options.disableWarning(Luau::LintWarning::Code_UnknownGlobal);
-    }
-
-    if (mode == Mode::Strict)
-    {
-        options.disableWarning(Luau::LintWarning::Code_ImplicitReturn);
-    }
-
-    ScopePtr environmentScope = getModuleEnvironment(module, config, /*forAutocomplete*/ false);
-
-    ModulePtr modulePtr = moduleResolver.getModule(module.name);
-
-    double timestamp = getTimestamp();
-
-    std::vector<LintWarning> warnings = Luau::lint(module.root, *module.names, environmentScope, modulePtr.get(), module.hotcomments, options);
-
-    stats.timeLint += getTimestamp() - timestamp;
-
-    return classifyLints(warnings, config);
 }
 
 bool Frontend::isDirty(const ModuleName& name, bool forAutocomplete) const
@@ -856,7 +722,7 @@ bool Frontend::isDirty(const ModuleName& name, bool forAutocomplete) const
  */
 void Frontend::markDirty(const ModuleName& name, std::vector<ModuleName>* markedDirty)
 {
-    if (!moduleResolver.modules.count(name) && !moduleResolverForAutocomplete.modules.count(name))
+    if (!moduleResolver.getModule(name) && !moduleResolverForAutocomplete.getModule(name))
         return;
 
     std::unordered_map<ModuleName, std::vector<ModuleName>> reverseDeps;
@@ -912,24 +778,28 @@ const SourceModule* Frontend::getSourceModule(const ModuleName& moduleName) cons
 
 ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle>& requireCycles, NotNull<BuiltinTypes> builtinTypes,
     NotNull<InternalErrorReporter> iceHandler, NotNull<ModuleResolver> moduleResolver, NotNull<FileResolver> fileResolver,
-    const ScopePtr& globalScope, FrontendOptions options)
+    const ScopePtr& parentScope, std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope, FrontendOptions options)
 {
     const bool recordJsonLog = FFlag::DebugLuauLogSolverToJson;
-    return check(sourceModule, requireCycles, builtinTypes, iceHandler, moduleResolver, fileResolver, globalScope, options, recordJsonLog);
+    return check(sourceModule, requireCycles, builtinTypes, iceHandler, moduleResolver, fileResolver, parentScope, std::move(prepareModuleScope),
+        options, recordJsonLog);
 }
 
 ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle>& requireCycles, NotNull<BuiltinTypes> builtinTypes,
     NotNull<InternalErrorReporter> iceHandler, NotNull<ModuleResolver> moduleResolver, NotNull<FileResolver> fileResolver,
-    const ScopePtr& globalScope, FrontendOptions options, bool recordJsonLog)
+    const ScopePtr& parentScope, std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope, FrontendOptions options,
+    bool recordJsonLog)
 {
     ModulePtr result = std::make_shared<Module>();
+    result->name = sourceModule.name;
+    result->humanReadableName = sourceModule.humanReadableName;
     result->reduction = std::make_unique<TypeReduction>(NotNull{&result->internalTypes}, builtinTypes, iceHandler);
 
     std::unique_ptr<DcrLogger> logger;
     if (recordJsonLog)
     {
         logger = std::make_unique<DcrLogger>();
-        std::optional<SourceCode> source = fileResolver->readSource(sourceModule.name);
+        std::optional<SourceCode> source = fileResolver->readSource(result->name);
         if (source)
         {
             logger->captureSource(source->source);
@@ -945,13 +815,13 @@ ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle
     Normalizer normalizer{&result->internalTypes, builtinTypes, NotNull{&unifierState}};
 
     ConstraintGraphBuilder cgb{
-        sourceModule.name,
         result,
         &result->internalTypes,
         moduleResolver,
         builtinTypes,
         iceHandler,
-        globalScope,
+        parentScope,
+        std::move(prepareModuleScope),
         logger.get(),
         NotNull{&dfg},
     };
@@ -959,8 +829,8 @@ ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle
     cgb.visit(sourceModule.root);
     result->errors = std::move(cgb.errors);
 
-    ConstraintSolver cs{NotNull{&normalizer}, NotNull(cgb.rootScope), borrowConstraints(cgb.constraints), sourceModule.name,
-        NotNull{result->reduction.get()}, moduleResolver, requireCycles, logger.get()};
+    ConstraintSolver cs{
+        NotNull{&normalizer}, NotNull(cgb.rootScope), borrowConstraints(cgb.constraints), result->name, moduleResolver, requireCycles, logger.get()};
 
     if (options.randomizeConstraintResolutionSeed)
         cs.randomize(*options.randomizeConstraintResolutionSeed);
@@ -975,7 +845,7 @@ ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle
 
     result->clonePublicInterface(builtinTypes, *iceHandler);
 
-    Luau::check(builtinTypes, logger.get(), sourceModule, result.get());
+    Luau::check(builtinTypes, NotNull{&unifierState}, logger.get(), sourceModule, result.get());
 
     // Ideally we freeze the arenas before the call into Luau::check, but TypeReduction
     // needs to allocate new types while Luau::check is in progress, so here we are.
@@ -994,11 +864,38 @@ ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle
     return result;
 }
 
-ModulePtr Frontend::check(const SourceModule& sourceModule, Mode mode, std::vector<RequireCycle> requireCycles, bool forAutocomplete, bool recordJsonLog)
+ModulePtr Frontend::check(const SourceModule& sourceModule, Mode mode, std::vector<RequireCycle> requireCycles,
+    std::optional<ScopePtr> environmentScope, bool forAutocomplete, bool recordJsonLog, TypeCheckLimits typeCheckLimits)
 {
-    return Luau::check(sourceModule, requireCycles, builtinTypes, NotNull{&iceHandler},
-        NotNull{forAutocomplete ? &moduleResolverForAutocomplete : &moduleResolver}, NotNull{fileResolver},
-        forAutocomplete ? globalsForAutocomplete.globalScope : globals.globalScope, options, recordJsonLog);
+    if (FFlag::DebugLuauDeferredConstraintResolution && mode == Mode::Strict)
+    {
+        auto prepareModuleScopeWrap = [this, forAutocomplete](const ModuleName& name, const ScopePtr& scope) {
+            if (prepareModuleScope)
+                prepareModuleScope(name, scope, forAutocomplete);
+        };
+
+        return Luau::check(sourceModule, requireCycles, builtinTypes, NotNull{&iceHandler},
+            NotNull{forAutocomplete ? &moduleResolverForAutocomplete : &moduleResolver}, NotNull{fileResolver},
+            environmentScope ? *environmentScope : globals.globalScope, prepareModuleScopeWrap, options, recordJsonLog);
+    }
+    else
+    {
+        TypeChecker typeChecker(globals.globalScope, forAutocomplete ? &moduleResolverForAutocomplete : &moduleResolver, builtinTypes, &iceHandler);
+
+        if (prepareModuleScope)
+        {
+            typeChecker.prepareModuleScope = [this, forAutocomplete](const ModuleName& name, const ScopePtr& scope) {
+                prepareModuleScope(name, scope, forAutocomplete);
+            };
+        }
+
+        typeChecker.requireCycles = requireCycles;
+        typeChecker.finishTime = typeCheckLimits.finishTime;
+        typeChecker.instantiationChildLimit = typeCheckLimits.instantiationChildLimit;
+        typeChecker.unifierIterationLimit = typeCheckLimits.unifierIterationLimit;
+
+        return typeChecker.check(sourceModule, mode, environmentScope);
+    }
 }
 
 // Read AST into sourceModules if necessary.  Trace require()s.  Report parse errors.
@@ -1048,7 +945,8 @@ std::pair<SourceNode*, SourceModule*> Frontend::getSourceNode(const ModuleName& 
     sourceModule = std::move(result);
     sourceModule.environmentName = environmentName;
 
-    sourceNode.name = name;
+    sourceNode.name = sourceModule.name;
+    sourceNode.humanReadableName = sourceModule.humanReadableName;
     sourceNode.requireSet.clear();
     sourceNode.requireLocations.clear();
     sourceNode.dirtySourceModule = false;
@@ -1110,6 +1008,7 @@ SourceModule Frontend::parse(const ModuleName& name, std::string_view src, const
     }
 
     sourceModule.name = name;
+    sourceModule.humanReadableName = fileResolver->getHumanReadableModuleName(name);
 
     if (parseOptions.captureComments)
     {
@@ -1118,6 +1017,12 @@ SourceModule Frontend::parse(const ModuleName& name, std::string_view src, const
     }
 
     return sourceModule;
+}
+
+
+FrontendModuleResolver::FrontendModuleResolver(Frontend* frontend)
+    : frontend(frontend)
+{
 }
 
 std::optional<ModuleInfo> FrontendModuleResolver::resolveModuleInfo(const ModuleName& currentModuleName, const AstExpr& pathExpr)
@@ -1144,6 +1049,8 @@ std::optional<ModuleInfo> FrontendModuleResolver::resolveModuleInfo(const Module
 
 const ModulePtr FrontendModuleResolver::getModule(const ModuleName& moduleName) const
 {
+    std::scoped_lock lock(moduleMutex);
+
     auto it = modules.find(moduleName);
     if (it != modules.end())
         return it->second;
@@ -1159,6 +1066,20 @@ bool FrontendModuleResolver::moduleExists(const ModuleName& moduleName) const
 std::string FrontendModuleResolver::getHumanReadableModuleName(const ModuleName& moduleName) const
 {
     return frontend->fileResolver->getHumanReadableModuleName(moduleName);
+}
+
+void FrontendModuleResolver::setModule(const ModuleName& moduleName, ModulePtr module)
+{
+    std::scoped_lock lock(moduleMutex);
+
+    modules[moduleName] = std::move(module);
+}
+
+void FrontendModuleResolver::clearModules()
+{
+    std::scoped_lock lock(moduleMutex);
+
+    modules.clear();
 }
 
 ScopePtr Frontend::addEnvironment(const std::string& environmentName)
@@ -1184,7 +1105,7 @@ ScopePtr Frontend::getEnvironmentScope(const std::string& environmentName) const
     return {};
 }
 
-void Frontend::registerBuiltinDefinition(const std::string& name, std::function<void(TypeChecker&, GlobalTypes&, ScopePtr)> applicator)
+void Frontend::registerBuiltinDefinition(const std::string& name, std::function<void(Frontend&, GlobalTypes&, ScopePtr)> applicator)
 {
     LUAU_ASSERT(builtinDefinitions.count(name) == 0);
 
@@ -1197,7 +1118,7 @@ void Frontend::applyBuiltinDefinitionToEnvironment(const std::string& environmen
     LUAU_ASSERT(builtinDefinitions.count(definitionName) > 0);
 
     if (builtinDefinitions.count(definitionName) > 0)
-        builtinDefinitions[definitionName](typeChecker, globals, getEnvironmentScope(environmentName));
+        builtinDefinitions[definitionName](*this, globals, getEnvironmentScope(environmentName));
 }
 
 LintResult Frontend::classifyLints(const std::vector<LintWarning>& warnings, const Config& config)
@@ -1223,8 +1144,8 @@ void Frontend::clear()
 {
     sourceNodes.clear();
     sourceModules.clear();
-    moduleResolver.modules.clear();
-    moduleResolverForAutocomplete.modules.clear();
+    moduleResolver.clearModules();
+    moduleResolverForAutocomplete.clearModules();
     requireTrace.clear();
 }
 

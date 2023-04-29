@@ -7,7 +7,8 @@
 #include "Luau/Unifiable.h"
 
 LUAU_FASTFLAG(DebugLuauCopyBeforeNormalizing)
-LUAU_FASTFLAG(LuauClonePublicInterfaceLess)
+LUAU_FASTFLAG(LuauClonePublicInterfaceLess2)
+LUAU_FASTFLAG(DebugLuauReadWriteProperties)
 
 LUAU_FASTINTVARIABLE(LuauTypeCloneRecursionLimit, 300)
 
@@ -16,6 +17,40 @@ namespace Luau
 
 namespace
 {
+
+Property clone(const Property& prop, TypeArena& dest, CloneState& cloneState)
+{
+    if (FFlag::DebugLuauReadWriteProperties)
+    {
+        std::optional<TypeId> cloneReadTy;
+        if (auto ty = prop.readType())
+            cloneReadTy = clone(*ty, dest, cloneState);
+
+        std::optional<TypeId> cloneWriteTy;
+        if (auto ty = prop.writeType())
+            cloneWriteTy = clone(*ty, dest, cloneState);
+
+        std::optional<Property> cloned = Property::create(cloneReadTy, cloneWriteTy);
+        LUAU_ASSERT(cloned);
+        cloned->deprecated = prop.deprecated;
+        cloned->deprecatedSuggestion = prop.deprecatedSuggestion;
+        cloned->location = prop.location;
+        cloned->tags = prop.tags;
+        cloned->documentationSymbol = prop.documentationSymbol;
+        return *cloned;
+    }
+    else
+    {
+        return Property{
+            clone(prop.type(), dest, cloneState),
+            prop.deprecated,
+            prop.deprecatedSuggestion,
+            prop.location,
+            prop.tags,
+            prop.documentationSymbol,
+        };
+    }
+}
 
 struct TypePackCloner;
 
@@ -44,10 +79,10 @@ struct TypeCloner
     template<typename T>
     void defaultClone(const T& t);
 
-    void operator()(const Unifiable::Free& t);
-    void operator()(const Unifiable::Generic& t);
-    void operator()(const Unifiable::Bound<TypeId>& t);
-    void operator()(const Unifiable::Error& t);
+    void operator()(const FreeType& t);
+    void operator()(const GenericType& t);
+    void operator()(const BoundType& t);
+    void operator()(const ErrorType& t);
     void operator()(const BlockedType& t);
     void operator()(const PendingExpansionType& t);
     void operator()(const PrimitiveType& t);
@@ -89,15 +124,15 @@ struct TypePackCloner
         seenTypePacks[typePackId] = cloned;
     }
 
-    void operator()(const Unifiable::Free& t)
+    void operator()(const FreeTypePack& t)
     {
         defaultClone(t);
     }
-    void operator()(const Unifiable::Generic& t)
+    void operator()(const GenericTypePack& t)
     {
         defaultClone(t);
     }
-    void operator()(const Unifiable::Error& t)
+    void operator()(const ErrorTypePack& t)
     {
         defaultClone(t);
     }
@@ -145,12 +180,12 @@ void TypeCloner::defaultClone(const T& t)
     seenTypes[typeId] = cloned;
 }
 
-void TypeCloner::operator()(const Unifiable::Free& t)
+void TypeCloner::operator()(const FreeType& t)
 {
     defaultClone(t);
 }
 
-void TypeCloner::operator()(const Unifiable::Generic& t)
+void TypeCloner::operator()(const GenericType& t)
 {
     defaultClone(t);
 }
@@ -251,7 +286,7 @@ void TypeCloner::operator()(const TableType& t)
         ttv->boundTo = clone(*t.boundTo, dest, cloneState);
 
     for (const auto& [name, prop] : t.props)
-        ttv->props[name] = {clone(prop.type, dest, cloneState), prop.deprecated, {}, prop.location, prop.tags};
+        ttv->props[name] = clone(prop, dest, cloneState);
 
     if (t.indexer)
         ttv->indexer = TableIndexer{clone(t.indexer->indexType, dest, cloneState), clone(t.indexer->indexResultType, dest, cloneState)};
@@ -285,7 +320,7 @@ void TypeCloner::operator()(const ClassType& t)
     seenTypes[typeId] = result;
 
     for (const auto& [name, prop] : t.props)
-        ctv->props[name] = {clone(prop.type, dest, cloneState), prop.deprecated, {}, prop.location, prop.tags};
+        ctv->props[name] = clone(prop, dest, cloneState);
 
     if (t.parent)
         ctv->parent = clone(*t.parent, dest, cloneState);
@@ -325,7 +360,14 @@ void TypeCloner::operator()(const IntersectionType& t)
 
 void TypeCloner::operator()(const LazyType& t)
 {
-    defaultClone(t);
+    if (TypeId unwrapped = t.unwrapped.load())
+    {
+        seenTypes[typeId] = clone(unwrapped, dest, cloneState);
+    }
+    else
+    {
+        defaultClone(t);
+    }
 }
 
 void TypeCloner::operator()(const UnknownType& t)
@@ -420,88 +462,6 @@ TypeFun clone(const TypeFun& typeFun, TypeArena& dest, CloneState& cloneState)
     result.type = clone(typeFun.type, dest, cloneState);
 
     return result;
-}
-
-TypeId shallowClone(TypeId ty, TypeArena& dest, const TxnLog* log, bool alwaysClone)
-{
-    ty = log->follow(ty);
-
-    TypeId result = ty;
-
-    if (auto pty = log->pending(ty))
-        ty = &pty->pending;
-
-    if (const FunctionType* ftv = get<FunctionType>(ty))
-    {
-        FunctionType clone = FunctionType{ftv->level, ftv->scope, ftv->argTypes, ftv->retTypes, ftv->definition, ftv->hasSelf};
-        clone.generics = ftv->generics;
-        clone.genericPacks = ftv->genericPacks;
-        clone.magicFunction = ftv->magicFunction;
-        clone.dcrMagicFunction = ftv->dcrMagicFunction;
-        clone.dcrMagicRefinement = ftv->dcrMagicRefinement;
-        clone.tags = ftv->tags;
-        clone.argNames = ftv->argNames;
-        result = dest.addType(std::move(clone));
-    }
-    else if (const TableType* ttv = get<TableType>(ty))
-    {
-        LUAU_ASSERT(!ttv->boundTo);
-        TableType clone = TableType{ttv->props, ttv->indexer, ttv->level, ttv->scope, ttv->state};
-        clone.definitionModuleName = ttv->definitionModuleName;
-        clone.definitionLocation = ttv->definitionLocation;
-        clone.name = ttv->name;
-        clone.syntheticName = ttv->syntheticName;
-        clone.instantiatedTypeParams = ttv->instantiatedTypeParams;
-        clone.instantiatedTypePackParams = ttv->instantiatedTypePackParams;
-        clone.tags = ttv->tags;
-        result = dest.addType(std::move(clone));
-    }
-    else if (const MetatableType* mtv = get<MetatableType>(ty))
-    {
-        MetatableType clone = MetatableType{mtv->table, mtv->metatable};
-        clone.syntheticName = mtv->syntheticName;
-        result = dest.addType(std::move(clone));
-    }
-    else if (const UnionType* utv = get<UnionType>(ty))
-    {
-        UnionType clone;
-        clone.options = utv->options;
-        result = dest.addType(std::move(clone));
-    }
-    else if (const IntersectionType* itv = get<IntersectionType>(ty))
-    {
-        IntersectionType clone;
-        clone.parts = itv->parts;
-        result = dest.addType(std::move(clone));
-    }
-    else if (const PendingExpansionType* petv = get<PendingExpansionType>(ty))
-    {
-        PendingExpansionType clone{petv->prefix, petv->name, petv->typeArguments, petv->packArguments};
-        result = dest.addType(std::move(clone));
-    }
-    else if (const ClassType* ctv = get<ClassType>(ty); FFlag::LuauClonePublicInterfaceLess && ctv && alwaysClone)
-    {
-        ClassType clone{ctv->name, ctv->props, ctv->parent, ctv->metatable, ctv->tags, ctv->userData, ctv->definitionModuleName};
-        result = dest.addType(std::move(clone));
-    }
-    else if (FFlag::LuauClonePublicInterfaceLess && alwaysClone)
-    {
-        result = dest.addType(*ty);
-    }
-    else if (const NegationType* ntv = get<NegationType>(ty))
-    {
-        result = dest.addType(NegationType{ntv->ty});
-    }
-    else
-        return result;
-
-    asMutable(result)->documentationSymbol = ty->documentationSymbol;
-    return result;
-}
-
-TypeId shallowClone(TypeId ty, NotNull<TypeArena> dest)
-{
-    return shallowClone(ty, *dest, TxnLog::empty());
 }
 
 } // namespace Luau

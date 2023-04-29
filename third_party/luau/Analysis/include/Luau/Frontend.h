@@ -9,6 +9,7 @@
 #include "Luau/TypeInfer.h"
 #include "Luau/Variant.h"
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <optional>
@@ -35,9 +36,6 @@ struct LoadDefinitionFileResult
     SourceModule sourceModule;
     ModulePtr module;
 };
-
-LoadDefinitionFileResult loadDefinitionFile(TypeChecker& typeChecker, GlobalTypes& globals, ScopePtr targetScope, std::string_view definition,
-    const std::string& packageName, bool captureComments);
 
 std::optional<Mode> parseMode(const std::vector<HotComment>& hotcomments);
 
@@ -69,6 +67,7 @@ struct SourceNode
     }
 
     ModuleName name;
+    std::string humanReadableName;
     std::unordered_set<ModuleName> requireSet;
     std::vector<std::pair<ModuleName, Location>> requireLocations;
     bool dirtySourceModule = true;
@@ -89,14 +88,21 @@ struct FrontendOptions
     // order to get more precise type information)
     bool forAutocomplete = false;
 
+    bool runLintChecks = false;
+
     // If not empty, randomly shuffle the constraint set before attempting to
     // solve.  Use this value to seed the random number generator.
     std::optional<unsigned> randomizeConstraintResolutionSeed;
+
+    std::optional<LintOptions> enabledLintWarnings;
 };
 
 struct CheckResult
 {
     std::vector<TypeError> errors;
+
+    LintResult lintResult;
+
     std::vector<ModuleName> timeoutHits;
 };
 
@@ -109,7 +115,13 @@ struct FrontendModuleResolver : ModuleResolver
     std::optional<ModuleInfo> resolveModuleInfo(const ModuleName& currentModuleName, const AstExpr& pathExpr) override;
     std::string getHumanReadableModuleName(const ModuleName& moduleName) const override;
 
+    void setModule(const ModuleName& moduleName, ModulePtr module);
+    void clearModules();
+
+private:
     Frontend* frontend;
+
+    mutable std::mutex moduleMutex;
     std::unordered_map<ModuleName, ModulePtr> modules;
 };
 
@@ -133,9 +145,6 @@ struct Frontend
 
     CheckResult check(const ModuleName& name, std::optional<FrontendOptions> optionOverride = {}); // new shininess
 
-    LintResult lint(const ModuleName& name, std::optional<LintOptions> enabledLintWarnings = {});
-    LintResult lint(const SourceModule& module, std::optional<LintOptions> enabledLintWarnings = {});
-
     bool isDirty(const ModuleName& name, bool forAutocomplete = false) const;
     void markDirty(const ModuleName& name, std::vector<ModuleName>* markedDirty = nullptr);
 
@@ -156,13 +165,22 @@ struct Frontend
     ScopePtr addEnvironment(const std::string& environmentName);
     ScopePtr getEnvironmentScope(const std::string& environmentName) const;
 
-    void registerBuiltinDefinition(const std::string& name, std::function<void(TypeChecker&, GlobalTypes&, ScopePtr)>);
+    void registerBuiltinDefinition(const std::string& name, std::function<void(Frontend&, GlobalTypes&, ScopePtr)>);
     void applyBuiltinDefinitionToEnvironment(const std::string& environmentName, const std::string& definitionName);
 
-    LoadDefinitionFileResult loadDefinitionFile(std::string_view source, const std::string& packageName, bool captureComments);
+    LoadDefinitionFileResult loadDefinitionFile(GlobalTypes& globals, ScopePtr targetScope, std::string_view source, const std::string& packageName,
+        bool captureComments, bool typeCheckForAutocomplete = false);
 
 private:
-    ModulePtr check(const SourceModule& sourceModule, Mode mode, std::vector<RequireCycle> requireCycles, bool forAutocomplete = false, bool recordJsonLog = false);
+    struct TypeCheckLimits
+    {
+        std::optional<double> finishTime;
+        std::optional<int> instantiationChildLimit;
+        std::optional<int> unifierIterationLimit;
+    };
+
+    ModulePtr check(const SourceModule& sourceModule, Mode mode, std::vector<RequireCycle> requireCycles, std::optional<ScopePtr> environmentScope,
+        bool forAutocomplete, bool recordJsonLog, TypeCheckLimits typeCheckLimits);
 
     std::pair<SourceNode*, SourceModule*> getSourceNode(const ModuleName& name);
     SourceModule parse(const ModuleName& name, std::string_view src, const ParseOptions& parseOptions);
@@ -174,7 +192,7 @@ private:
     ScopePtr getModuleEnvironment(const SourceModule& module, const Config& config, bool forAutocomplete) const;
 
     std::unordered_map<std::string, ScopePtr> environments;
-    std::unordered_map<std::string, std::function<void(TypeChecker&, GlobalTypes&, ScopePtr)>> builtinDefinitions;
+    std::unordered_map<std::string, std::function<void(Frontend&, GlobalTypes&, ScopePtr)>> builtinDefinitions;
 
     BuiltinTypes builtinTypes_;
 
@@ -182,15 +200,17 @@ public:
     const NotNull<BuiltinTypes> builtinTypes;
 
     FileResolver* fileResolver;
+
     FrontendModuleResolver moduleResolver;
     FrontendModuleResolver moduleResolverForAutocomplete;
+
     GlobalTypes globals;
     GlobalTypes globalsForAutocomplete;
-    TypeChecker typeChecker;
-    TypeChecker typeCheckerForAutocomplete;
+
     ConfigResolver* configResolver;
     FrontendOptions options;
     InternalErrorReporter iceHandler;
+    std::function<void(const ModuleName& name, const ScopePtr& scope, bool forAutocomplete)> prepareModuleScope;
 
     std::unordered_map<ModuleName, SourceNode> sourceNodes;
     std::unordered_map<ModuleName, SourceModule> sourceModules;
@@ -201,10 +221,11 @@ public:
 
 ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle>& requireCycles, NotNull<BuiltinTypes> builtinTypes,
     NotNull<InternalErrorReporter> iceHandler, NotNull<ModuleResolver> moduleResolver, NotNull<FileResolver> fileResolver,
-    const ScopePtr& globalScope, FrontendOptions options);
+    const ScopePtr& globalScope, std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope, FrontendOptions options);
 
 ModulePtr check(const SourceModule& sourceModule, const std::vector<RequireCycle>& requireCycles, NotNull<BuiltinTypes> builtinTypes,
     NotNull<InternalErrorReporter> iceHandler, NotNull<ModuleResolver> moduleResolver, NotNull<FileResolver> fileResolver,
-    const ScopePtr& globalScope, FrontendOptions options, bool recordJsonLog);
+    const ScopePtr& globalScope, std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope, FrontendOptions options,
+    bool recordJsonLog);
 
 } // namespace Luau

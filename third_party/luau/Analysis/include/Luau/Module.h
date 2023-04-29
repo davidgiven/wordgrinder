@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Luau/Error.h"
+#include "Luau/Linter.h"
 #include "Luau/FileResolver.h"
 #include "Luau/ParseOptions.h"
 #include "Luau/ParseResult.h"
@@ -27,7 +28,9 @@ class AstTypePack;
 /// Root of the AST of a parsed source file
 struct SourceModule
 {
-    ModuleName name; // DataModel path if possible.  Filename if not.
+    ModuleName name; // Module identifier or a filename
+    std::string humanReadableName;
+
     SourceCode::Type type = SourceCode::None;
     std::optional<std::string> environmentName;
     bool cyclic = false;
@@ -50,6 +53,7 @@ struct SourceModule
 };
 
 bool isWithinComment(const SourceModule& sourceModule, Position pos);
+bool isWithinComment(const ParseResult& result, Position pos);
 
 struct RequireCycle
 {
@@ -60,6 +64,9 @@ struct RequireCycle
 struct Module
 {
     ~Module();
+
+    ModuleName name;
+    std::string humanReadableName;
 
     TypeArena interfaceTypes;
     TypeArena internalTypes;
@@ -88,6 +95,7 @@ struct Module
 
     std::unordered_map<Name, TypeId> declaredGlobals;
     ErrorVec errors;
+    LintResult lintResult;
     Mode mode;
     SourceCode::Type type;
     bool timeout = false;

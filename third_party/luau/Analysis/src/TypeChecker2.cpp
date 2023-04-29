@@ -88,21 +88,22 @@ struct TypeChecker2
 {
     NotNull<BuiltinTypes> builtinTypes;
     DcrLogger* logger;
-    InternalErrorReporter ice; // FIXME accept a pointer from Frontend
+    NotNull<InternalErrorReporter> ice;
     const SourceModule* sourceModule;
     Module* module;
     TypeArena testArena;
 
     std::vector<NotNull<Scope>> stack;
 
-    UnifierSharedState sharedState{&ice};
-    Normalizer normalizer{&testArena, builtinTypes, NotNull{&sharedState}};
+    Normalizer normalizer;
 
-    TypeChecker2(NotNull<BuiltinTypes> builtinTypes, DcrLogger* logger, const SourceModule* sourceModule, Module* module)
+    TypeChecker2(NotNull<BuiltinTypes> builtinTypes, NotNull<UnifierSharedState> unifierState, DcrLogger* logger, const SourceModule* sourceModule, Module* module)
         : builtinTypes(builtinTypes)
         , logger(logger)
+        , ice(unifierState->iceHandler)
         , sourceModule(sourceModule)
         , module(module)
+        , normalizer{&testArena, builtinTypes, unifierState}
     {
     }
 
@@ -170,6 +171,22 @@ struct TypeChecker2
         return follow(*tp);
     }
 
+    TypeId lookupExpectedType(AstExpr* expr)
+    {
+        if (TypeId* ty = module->astExpectedTypes.find(expr))
+            return follow(*ty);
+
+        return builtinTypes->anyType;
+    }
+
+    TypePackId lookupExpectedPack(AstExpr* expr, TypeArena& arena)
+    {
+        if (TypeId* ty = module->astExpectedTypes.find(expr))
+            return arena.addTypePack(TypePack{{follow(*ty)}, std::nullopt});
+
+        return builtinTypes->anyTypePack;
+    }
+
     TypePackId reconstructPack(AstArray<AstExpr*> exprs, TypeArena& arena)
     {
         if (exprs.size == 0)
@@ -206,12 +223,6 @@ struct TypeChecker2
 
         return bestScope;
     }
-
-    enum ValueContext
-    {
-        LValue,
-        RValue
-    };
 
     void visit(AstStat* stat)
     {
@@ -271,7 +282,7 @@ struct TypeChecker2
 
     void visit(AstStatIf* ifStatement)
     {
-        visit(ifStatement->condition, RValue);
+        visit(ifStatement->condition, ValueContext::RValue);
         visit(ifStatement->thenbody);
         if (ifStatement->elsebody)
             visit(ifStatement->elsebody);
@@ -279,14 +290,14 @@ struct TypeChecker2
 
     void visit(AstStatWhile* whileStatement)
     {
-        visit(whileStatement->condition, RValue);
+        visit(whileStatement->condition, ValueContext::RValue);
         visit(whileStatement->body);
     }
 
     void visit(AstStatRepeat* repeatStatement)
     {
         visit(repeatStatement->body);
-        visit(repeatStatement->condition, RValue);
+        visit(repeatStatement->condition, ValueContext::RValue);
     }
 
     void visit(AstStatBreak*) {}
@@ -313,12 +324,12 @@ struct TypeChecker2
         }
 
         for (AstExpr* expr : ret->list)
-            visit(expr, RValue);
+            visit(expr, ValueContext::RValue);
     }
 
     void visit(AstStatExpr* expr)
     {
-        visit(expr->expr, RValue);
+        visit(expr->expr, ValueContext::RValue);
     }
 
     void visit(AstStatLocal* local)
@@ -330,7 +341,7 @@ struct TypeChecker2
             const bool isPack = value && (value->is<AstExprCall>() || value->is<AstExprVarargs>());
 
             if (value)
-                visit(value, RValue);
+                visit(value, ValueContext::RValue);
 
             if (i != local->values.size - 1 || !isPack)
             {
@@ -411,7 +422,7 @@ struct TypeChecker2
             if (!expr)
                 return;
 
-            visit(expr, RValue);
+            visit(expr, ValueContext::RValue);
             reportErrors(tryUnify(scope, expr->location, lookupType(expr), builtinTypes->numberType));
         };
 
@@ -431,7 +442,7 @@ struct TypeChecker2
         }
 
         for (AstExpr* expr : forInStatement->values)
-            visit(expr, RValue);
+            visit(expr, ValueContext::RValue);
 
         visit(forInStatement->body);
 
@@ -568,6 +579,10 @@ struct TypeChecker2
         {
             // nothing
         }
+        else if (isOptional(iteratorTy))
+        {
+            reportError(OptionalValueAccess{iteratorTy}, forInStatement->values.data[0]->location);
+        }
         else if (std::optional<TypeId> iterMmTy =
                      findMetatableEntry(builtinTypes, module->errors, iteratorTy, "__iter", forInStatement->values.data[0]->location))
         {
@@ -638,11 +653,11 @@ struct TypeChecker2
         for (size_t i = 0; i < count; ++i)
         {
             AstExpr* lhs = assign->vars.data[i];
-            visit(lhs, LValue);
+            visit(lhs, ValueContext::LValue);
             TypeId lhsType = lookupType(lhs);
 
             AstExpr* rhs = assign->values.data[i];
-            visit(rhs, RValue);
+            visit(rhs, ValueContext::RValue);
             TypeId rhsType = lookupType(rhs);
 
             if (get<NeverType>(lhsType))
@@ -666,7 +681,7 @@ struct TypeChecker2
 
     void visit(AstStatFunction* stat)
     {
-        visit(stat->name, LValue);
+        visit(stat->name, ValueContext::LValue);
         visit(stat->func);
     }
 
@@ -719,7 +734,7 @@ struct TypeChecker2
     void visit(AstStatError* stat)
     {
         for (AstExpr* expr : stat->expressions)
-            visit(expr, RValue);
+            visit(expr, ValueContext::RValue);
 
         for (AstStat* s : stat->statements)
             visit(s);
@@ -921,7 +936,7 @@ struct TypeChecker2
         TypeArena* arena = &testArena;
         Instantiation instantiation{TxnLog::empty(), arena, TypeLevel{}, stack.back()};
 
-        TypePackId expectedRetType = lookupPack(call);
+        TypePackId expectedRetType = lookupExpectedPack(call, *arena);
         TypeId functionType = lookupType(call->func);
         TypeId testFunctionType = functionType;
         TypePack args;
@@ -973,6 +988,12 @@ struct TypeChecker2
         else if (auto utv = get<UnionType>(functionType))
         {
             // Sometimes it's okay to call a union of functions, but only if all of the functions are the same.
+            // Another scenario we might run into it is if the union has a nil member. In this case, we want to throw an error
+            if (isOptional(functionType))
+            {
+                reportError(OptionalValueAccess{functionType}, call->location);
+                return;
+            }
             std::optional<TypeId> fst;
             for (TypeId ty : utv)
             {
@@ -986,7 +1007,7 @@ struct TypeChecker2
             }
 
             if (!fst)
-                ice.ice("UnionType had no elements, so fst is nullopt?");
+                ice->ice("UnionType had no elements, so fst is nullopt?");
 
             if (std::optional<TypeId> instantiatedFunctionType = instantiation.substitute(*fst))
             {
@@ -1008,7 +1029,7 @@ struct TypeChecker2
         {
             AstExprIndexName* indexExpr = call->func->as<AstExprIndexName>();
             if (!indexExpr)
-                ice.ice("method call expression has no 'self'");
+                ice->ice("method call expression has no 'self'");
 
             args.head.push_back(lookupType(indexExpr->expr));
             argLocs.push_back(indexExpr->expr->location);
@@ -1094,10 +1115,10 @@ struct TypeChecker2
 
     void visit(AstExprCall* call)
     {
-        visit(call->func, RValue);
+        visit(call->func, ValueContext::RValue);
 
         for (AstExpr* arg : call->args)
-            visit(arg, RValue);
+            visit(arg, ValueContext::RValue);
 
         visitCall(call);
     }
@@ -1147,14 +1168,10 @@ struct TypeChecker2
 
     void visitExprName(AstExpr* expr, Location location, const std::string& propName, ValueContext context)
     {
-        visit(expr, RValue);
+        visit(expr, ValueContext::RValue);
 
         TypeId leftType = stripFromNilAndReport(lookupType(expr), location);
-        const NormalizedType* norm = normalizer.normalize(leftType);
-        if (!norm)
-            reportError(NormalizationTooComplex{}, location);
-
-        checkIndexTypeFromType(leftType, *norm, propName, location, context);
+        checkIndexTypeFromType(leftType, propName, location, context);
     }
 
     void visit(AstExprIndexName* indexName, ValueContext context)
@@ -1172,8 +1189,8 @@ struct TypeChecker2
         }
 
         // TODO!
-        visit(indexExpr->expr, LValue);
-        visit(indexExpr->index, RValue);
+        visit(indexExpr->expr, ValueContext::LValue);
+        visit(indexExpr->index, ValueContext::RValue);
 
         NotNull<Scope> scope = stack.back();
 
@@ -1187,6 +1204,8 @@ struct TypeChecker2
             else
                 reportError(CannotExtendTable{exprType, CannotExtendTable::Indexer, "indexer??"}, indexExpr->location);
         }
+        else if (get<UnionType>(exprType) && isOptional(exprType))
+            reportError(OptionalValueAccess{exprType}, indexExpr->location);
     }
 
     void visit(AstExprFunction* fn)
@@ -1233,14 +1252,14 @@ struct TypeChecker2
         for (const AstExprTable::Item& item : expr->items)
         {
             if (item.key)
-                visit(item.key, LValue);
-            visit(item.value, RValue);
+                visit(item.key, ValueContext::LValue);
+            visit(item.value, ValueContext::RValue);
         }
     }
 
     void visit(AstExprUnary* expr)
     {
-        visit(expr->expr, RValue);
+        visit(expr->expr, ValueContext::RValue);
 
         NotNull<Scope> scope = stack.back();
         TypeId operandType = lookupType(expr->expr);
@@ -1297,9 +1316,13 @@ struct TypeChecker2
             DenseHashSet<TypeId> seen{nullptr};
             int recursionCount = 0;
 
+
             if (!hasLength(operandType, seen, &recursionCount))
             {
-                reportError(NotATable{operandType}, expr->location);
+                if (isOptional(operandType))
+                    reportError(OptionalValueAccess{operandType}, expr->location);
+                else
+                    reportError(NotATable{operandType}, expr->location);
             }
         }
         else if (expr->op == AstExprUnary::Op::Minus)
@@ -1317,8 +1340,8 @@ struct TypeChecker2
 
     TypeId visit(AstExprBinary* expr, AstNode* overrideKey = nullptr)
     {
-        visit(expr->left, LValue);
-        visit(expr->right, LValue);
+        visit(expr->left, ValueContext::LValue);
+        visit(expr->right, ValueContext::LValue);
 
         NotNull<Scope> scope = stack.back();
 
@@ -1350,11 +1373,14 @@ struct TypeChecker2
             return leftType;
         }
 
+        bool typesHaveIntersection = normalizer.isIntersectionInhabited(leftType, rightType);
         if (auto it = kBinaryOpMetamethods.find(expr->op); it != kBinaryOpMetamethods.end())
         {
             std::optional<TypeId> leftMt = getMetatable(leftType, builtinTypes);
             std::optional<TypeId> rightMt = getMetatable(rightType, builtinTypes);
             bool matches = leftMt == rightMt;
+
+
             if (isEquality && !matches)
             {
                 auto testUnion = [&matches, builtinTypes = this->builtinTypes](const UnionType* utv, std::optional<TypeId> otherMt) {
@@ -1376,6 +1402,13 @@ struct TypeChecker2
                 if (const UnionType* utv = get<UnionType>(rightType); utv && leftMt && !matches)
                 {
                     testUnion(utv, leftMt);
+                }
+
+                // If either left or right has no metatable (or both), we need to consider if
+                // there are values in common that could possibly inhabit the type (and thus equality could be considered)
+                if (!leftMt.has_value() || !rightMt.has_value())
+                {
+                    matches = matches || typesHaveIntersection;
                 }
             }
 
@@ -1571,7 +1604,7 @@ struct TypeChecker2
 
     void visit(AstExprTypeAssertion* expr)
     {
-        visit(expr->expr, RValue);
+        visit(expr->expr, ValueContext::RValue);
         visit(expr->annotation);
 
         TypeId annotationType = lookupAnnotation(expr->annotation);
@@ -1590,22 +1623,22 @@ struct TypeChecker2
     void visit(AstExprIfElse* expr)
     {
         // TODO!
-        visit(expr->condition, RValue);
-        visit(expr->trueExpr, RValue);
-        visit(expr->falseExpr, RValue);
+        visit(expr->condition, ValueContext::RValue);
+        visit(expr->trueExpr, ValueContext::RValue);
+        visit(expr->falseExpr, ValueContext::RValue);
     }
 
     void visit(AstExprInterpString* interpString)
     {
         for (AstExpr* expr : interpString->expressions)
-            visit(expr, RValue);
+            visit(expr, ValueContext::RValue);
     }
 
     void visit(AstExprError* expr)
     {
         // TODO!
         for (AstExpr* e : expr->expressions)
-            visit(e, RValue);
+            visit(e, ValueContext::RValue);
     }
 
     /** Extract a TypeId for the first type of the provided pack.
@@ -1634,7 +1667,7 @@ struct TypeChecker2
         else if (finite(pack) && size(pack) == 0)
             return builtinTypes->nilType; // `(f())` where `f()` returns no values is coerced into `nil`
         else
-            ice.ice("flattenPack got a weird pack!");
+            ice->ice("flattenPack got a weird pack!");
     }
 
     void visitGenerics(AstArray<AstGenericType> generics, AstArray<AstGenericTypePack> genericPacks)
@@ -1845,7 +1878,7 @@ struct TypeChecker2
 
     void visit(AstTypeTypeof* ty)
     {
-        visit(ty->expr, RValue);
+        visit(ty->expr, ValueContext::RValue);
     }
 
     void visit(AstTypeUnion* ty)
@@ -2000,7 +2033,7 @@ struct TypeChecker2
 
     void reportError(TypeErrorData data, const Location& location)
     {
-        module->errors.emplace_back(location, sourceModule->name, std::move(data));
+        module->errors.emplace_back(location, module->name, std::move(data));
 
         if (logger)
             logger->captureTypeCheckError(module->errors.back());
@@ -2017,8 +2050,16 @@ struct TypeChecker2
             reportError(std::move(e));
     }
 
-    void checkIndexTypeFromType(TypeId tableTy, const NormalizedType& norm, const std::string& prop, const Location& location, ValueContext context)
+    // If the provided type does not have the named property, report an error.
+    void checkIndexTypeFromType(TypeId tableTy, const std::string& prop, const Location& location, ValueContext context)
     {
+        const NormalizedType* norm = normalizer.normalize(tableTy);
+        if (!norm)
+        {
+            reportError(NormalizationTooComplex{}, location);
+            return;
+        }
+
         bool foundOneProp = false;
         std::vector<TypeId> typesMissingTheProp;
 
@@ -2026,49 +2067,50 @@ struct TypeChecker2
             if (!normalizer.isInhabited(ty))
                 return;
 
-            bool found = hasIndexTypeFromType(ty, prop, location);
+            std::unordered_set<TypeId> seen;
+            bool found = hasIndexTypeFromType(ty, prop, location, seen);
             foundOneProp |= found;
             if (!found)
                 typesMissingTheProp.push_back(ty);
         };
 
-        fetch(norm.tops);
-        fetch(norm.booleans);
+        fetch(norm->tops);
+        fetch(norm->booleans);
 
         if (FFlag::LuauNegatedClassTypes)
         {
-            for (const auto& [ty, _negations] : norm.classes.classes)
+            for (const auto& [ty, _negations] : norm->classes.classes)
             {
                 fetch(ty);
             }
         }
         else
         {
-            for (TypeId ty : norm.DEPRECATED_classes)
+            for (TypeId ty : norm->DEPRECATED_classes)
                 fetch(ty);
         }
-        fetch(norm.errors);
-        fetch(norm.nils);
-        fetch(norm.numbers);
-        if (!norm.strings.isNever())
+        fetch(norm->errors);
+        fetch(norm->nils);
+        fetch(norm->numbers);
+        if (!norm->strings.isNever())
             fetch(builtinTypes->stringType);
-        fetch(norm.threads);
-        for (TypeId ty : norm.tables)
+        fetch(norm->threads);
+        for (TypeId ty : norm->tables)
             fetch(ty);
-        if (norm.functions.isTop)
+        if (norm->functions.isTop)
             fetch(builtinTypes->functionType);
-        else if (!norm.functions.isNever())
+        else if (!norm->functions.isNever())
         {
-            if (norm.functions.parts->size() == 1)
-                fetch(norm.functions.parts->front());
+            if (norm->functions.parts.size() == 1)
+                fetch(norm->functions.parts.front());
             else
             {
                 std::vector<TypeId> parts;
-                parts.insert(parts.end(), norm.functions.parts->begin(), norm.functions.parts->end());
+                parts.insert(parts.end(), norm->functions.parts.begin(), norm->functions.parts.end());
                 fetch(testArena.addType(IntersectionType{std::move(parts)}));
             }
         }
-        for (const auto& [tyvar, intersect] : norm.tyvars)
+        for (const auto& [tyvar, intersect] : norm->tyvars)
         {
             if (get<NeverType>(intersect->tops))
             {
@@ -2087,15 +2129,22 @@ struct TypeChecker2
             // because classes come into being with full knowledge of their
             // shape. We instead want to report the unknown property error of
             // the `else` branch.
-            else if (context == LValue && !get<ClassType>(tableTy))
+            else if (context == ValueContext::LValue && !get<ClassType>(tableTy))
                 reportError(CannotExtendTable{tableTy, CannotExtendTable::Property, prop}, location);
             else
                 reportError(UnknownProperty{tableTy, prop}, location);
         }
     }
 
-    bool hasIndexTypeFromType(TypeId ty, const std::string& prop, const Location& location)
+    bool hasIndexTypeFromType(TypeId ty, const std::string& prop, const Location& location, std::unordered_set<TypeId>& seen)
     {
+        // If we have already encountered this type, we must assume that some
+        // other codepath will do the right thing and signal false if the
+        // property is not present.
+        const bool isUnseen = seen.insert(ty).second;
+        if (!isUnseen)
+            return true;
+
         if (get<ErrorType>(ty) || get<AnyType>(ty) || get<NeverType>(ty))
             return true;
 
@@ -2120,19 +2169,21 @@ struct TypeChecker2
         else if (const ClassType* cls = get<ClassType>(ty))
             return bool(lookupClassProp(cls, prop));
         else if (const UnionType* utv = get<UnionType>(ty))
-            ice.ice("getIndexTypeFromTypeHelper cannot take a UnionType");
+            return std::all_of(begin(utv), end(utv), [&](TypeId part) {
+                return hasIndexTypeFromType(part, prop, location, seen);
+            });
         else if (const IntersectionType* itv = get<IntersectionType>(ty))
             return std::any_of(begin(itv), end(itv), [&](TypeId part) {
-                return hasIndexTypeFromType(part, prop, location);
+                return hasIndexTypeFromType(part, prop, location, seen);
             });
         else
             return false;
     }
 };
 
-void check(NotNull<BuiltinTypes> builtinTypes, DcrLogger* logger, const SourceModule& sourceModule, Module* module)
+void check(NotNull<BuiltinTypes> builtinTypes, NotNull<UnifierSharedState> unifierState, DcrLogger* logger, const SourceModule& sourceModule, Module* module)
 {
-    TypeChecker2 typeChecker{builtinTypes, logger, &sourceModule, module};
+    TypeChecker2 typeChecker{builtinTypes, unifierState, logger, &sourceModule, module};
     typeChecker.reduceTypes();
     typeChecker.visit(sourceModule.root);
 

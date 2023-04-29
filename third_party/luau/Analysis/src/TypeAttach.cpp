@@ -35,7 +35,21 @@ using SyntheticNames = std::unordered_map<const void*, char*>;
 namespace Luau
 {
 
-static const char* getName(Allocator* allocator, SyntheticNames* syntheticNames, const Unifiable::Generic& gen)
+static const char* getName(Allocator* allocator, SyntheticNames* syntheticNames, const GenericType& gen)
+{
+    size_t s = syntheticNames->size();
+    char*& n = (*syntheticNames)[&gen];
+    if (!n)
+    {
+        std::string str = gen.explicitName ? gen.name : generateName(s);
+        n = static_cast<char*>(allocator->allocate(str.size() + 1));
+        strcpy(n, str.c_str());
+    }
+
+    return n;
+}
+
+static const char* getName(Allocator* allocator, SyntheticNames* syntheticNames, const GenericTypePack& gen)
 {
     size_t s = syntheticNames->size();
     char*& n = (*syntheticNames)[&gen];
@@ -80,15 +94,15 @@ public:
         switch (ptv.type)
         {
         case PrimitiveType::NilType:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("nil"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("nil"), std::nullopt, Location());
         case PrimitiveType::Boolean:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("boolean"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("boolean"), std::nullopt, Location());
         case PrimitiveType::Number:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("number"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("number"), std::nullopt, Location());
         case PrimitiveType::String:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("string"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("string"), std::nullopt, Location());
         case PrimitiveType::Thread:
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("thread"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("thread"), std::nullopt, Location());
         default:
             return nullptr;
         }
@@ -96,12 +110,12 @@ public:
 
     AstType* operator()(const BlockedType& btv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("*blocked*"));
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("*blocked*"), std::nullopt, Location());
     }
 
     AstType* operator()(const PendingExpansionType& petv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("*pending-expansion*"));
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("*pending-expansion*"), std::nullopt, Location());
     }
 
     AstType* operator()(const SingletonType& stv)
@@ -121,7 +135,7 @@ public:
 
     AstType* operator()(const AnyType&)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("any"));
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("any"), std::nullopt, Location());
     }
     AstType* operator()(const TableType& ttv)
     {
@@ -143,15 +157,16 @@ public:
                 parameters.data[i] = {{}, rehydrate(ttv.instantiatedTypePackParams[i])};
             }
 
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName(ttv.name->c_str()), parameters.size != 0, parameters);
+            return allocator->alloc<AstTypeReference>(
+                Location(), std::nullopt, AstName(ttv.name->c_str()), std::nullopt, Location(), parameters.size != 0, parameters);
         }
 
         if (hasSeen(&ttv))
         {
             if (ttv.name)
-                return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName(ttv.name->c_str()));
+                return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName(ttv.name->c_str()), std::nullopt, Location());
             else
-                return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Cycle>"));
+                return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Cycle>"), std::nullopt, Location());
         }
 
         AstArray<AstTableProp> props;
@@ -165,7 +180,7 @@ public:
             char* name = allocateString(*allocator, propName);
 
             props.data[idx].name = AstName(name);
-            props.data[idx].type = Luau::visit(*this, prop.type->ty);
+            props.data[idx].type = Luau::visit(*this, prop.type()->ty);
             props.data[idx].location = Location();
             idx++;
         }
@@ -194,7 +209,7 @@ public:
         char* name = allocateString(*allocator, ctv.name);
 
         if (!options.expandClassProps || hasSeen(&ctv) || count > 1)
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{name});
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{name}, std::nullopt, Location());
 
         AstArray<AstTableProp> props;
         props.size = ctv.props.size();
@@ -206,7 +221,7 @@ public:
             char* name = allocateString(*allocator, propName);
 
             props.data[idx].name = AstName{name};
-            props.data[idx].type = Luau::visit(*this, prop.type->ty);
+            props.data[idx].type = Luau::visit(*this, prop.type()->ty);
             props.data[idx].location = Location();
             idx++;
         }
@@ -219,7 +234,7 @@ public:
         RecursionCounter counter(&count);
 
         if (hasSeen(&ftv))
-            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Cycle>"));
+            return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Cycle>"), std::nullopt, Location());
 
         AstArray<AstGenericType> generics;
         generics.size = ftv.generics.size();
@@ -237,7 +252,7 @@ public:
         size_t numGenericPacks = 0;
         for (auto it = ftv.genericPacks.begin(); it != ftv.genericPacks.end(); ++it)
         {
-            if (auto gtv = get<GenericType>(*it))
+            if (auto gtv = get<GenericTypePack>(*it))
                 genericPacks.data[numGenericPacks++] = {AstName(gtv->name.c_str()), Location(), nullptr};
         }
 
@@ -290,11 +305,12 @@ public:
     }
     AstType* operator()(const Unifiable::Error&)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("Unifiable<Error>"));
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("Unifiable<Error>"), std::nullopt, Location());
     }
     AstType* operator()(const GenericType& gtv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName(getName(allocator, syntheticNames, gtv)));
+        return allocator->alloc<AstTypeReference>(
+            Location(), std::nullopt, AstName(getName(allocator, syntheticNames, gtv)), std::nullopt, Location());
     }
     AstType* operator()(const Unifiable::Bound<TypeId>& bound)
     {
@@ -302,7 +318,7 @@ public:
     }
     AstType* operator()(const FreeType& ftv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("free"));
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("free"), std::nullopt, Location());
     }
     AstType* operator()(const UnionType& uv)
     {
@@ -328,15 +344,18 @@ public:
     }
     AstType* operator()(const LazyType& ltv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Lazy?>"));
+        if (TypeId unwrapped = ltv.unwrapped.load())
+            return Luau::visit(*this, unwrapped->ty);
+
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName("<Lazy?>"), std::nullopt, Location());
     }
     AstType* operator()(const UnknownType& ttv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{"unknown"});
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{"unknown"}, std::nullopt, Location());
     }
     AstType* operator()(const NeverType& ttv)
     {
-        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{"never"});
+        return allocator->alloc<AstTypeReference>(Location(), std::nullopt, AstName{"never"}, std::nullopt, Location());
     }
     AstType* operator()(const NegationType& ntv)
     {

@@ -2,14 +2,16 @@
 #pragma once
 
 #include "Luau/Ast.h"
-#include "Luau/Refinement.h"
 #include "Luau/Constraint.h"
+#include "Luau/ControlFlow.h"
 #include "Luau/DataFlowGraph.h"
 #include "Luau/Module.h"
 #include "Luau/ModuleResolver.h"
 #include "Luau/NotNull.h"
+#include "Luau/Refinement.h"
 #include "Luau/Symbol.h"
 #include "Luau/Type.h"
+#include "Luau/TypeUtils.h"
 #include "Luau/Variant.h"
 
 #include <memory>
@@ -59,7 +61,6 @@ struct ConstraintGraphBuilder
     // define the scope hierarchy.
     std::vector<std::pair<Location, ScopePtr>> scopes;
 
-    ModuleName moduleName;
     ModulePtr module;
     NotNull<BuiltinTypes> builtinTypes;
     const NotNull<TypeArena> arena;
@@ -91,11 +92,14 @@ struct ConstraintGraphBuilder
     const NotNull<InternalErrorReporter> ice;
 
     ScopePtr globalScope;
+
+    std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope;
+
     DcrLogger* logger;
 
-    ConstraintGraphBuilder(const ModuleName& moduleName, ModulePtr module, TypeArena* arena, NotNull<ModuleResolver> moduleResolver,
-        NotNull<BuiltinTypes> builtinTypes, NotNull<InternalErrorReporter> ice, const ScopePtr& globalScope, DcrLogger* logger,
-        NotNull<DataFlowGraph> dfg);
+    ConstraintGraphBuilder(ModulePtr module, TypeArena* arena, NotNull<ModuleResolver> moduleResolver, NotNull<BuiltinTypes> builtinTypes,
+        NotNull<InternalErrorReporter> ice, const ScopePtr& globalScope, std::function<void(const ModuleName&, const ScopePtr&)> prepareModuleScope,
+        DcrLogger* logger, NotNull<DataFlowGraph> dfg);
 
     /**
      * Fabricates a new free type belonging to a given scope.
@@ -141,26 +145,26 @@ struct ConstraintGraphBuilder
      */
     void visit(AstStatBlock* block);
 
-    void visitBlockWithoutChildScope(const ScopePtr& scope, AstStatBlock* block);
+    ControlFlow visitBlockWithoutChildScope(const ScopePtr& scope, AstStatBlock* block);
 
-    void visit(const ScopePtr& scope, AstStat* stat);
-    void visit(const ScopePtr& scope, AstStatBlock* block);
-    void visit(const ScopePtr& scope, AstStatLocal* local);
-    void visit(const ScopePtr& scope, AstStatFor* for_);
-    void visit(const ScopePtr& scope, AstStatForIn* forIn);
-    void visit(const ScopePtr& scope, AstStatWhile* while_);
-    void visit(const ScopePtr& scope, AstStatRepeat* repeat);
-    void visit(const ScopePtr& scope, AstStatLocalFunction* function);
-    void visit(const ScopePtr& scope, AstStatFunction* function);
-    void visit(const ScopePtr& scope, AstStatReturn* ret);
-    void visit(const ScopePtr& scope, AstStatAssign* assign);
-    void visit(const ScopePtr& scope, AstStatCompoundAssign* assign);
-    void visit(const ScopePtr& scope, AstStatIf* ifStatement);
-    void visit(const ScopePtr& scope, AstStatTypeAlias* alias);
-    void visit(const ScopePtr& scope, AstStatDeclareGlobal* declareGlobal);
-    void visit(const ScopePtr& scope, AstStatDeclareClass* declareClass);
-    void visit(const ScopePtr& scope, AstStatDeclareFunction* declareFunction);
-    void visit(const ScopePtr& scope, AstStatError* error);
+    ControlFlow visit(const ScopePtr& scope, AstStat* stat);
+    ControlFlow visit(const ScopePtr& scope, AstStatBlock* block);
+    ControlFlow visit(const ScopePtr& scope, AstStatLocal* local);
+    ControlFlow visit(const ScopePtr& scope, AstStatFor* for_);
+    ControlFlow visit(const ScopePtr& scope, AstStatForIn* forIn);
+    ControlFlow visit(const ScopePtr& scope, AstStatWhile* while_);
+    ControlFlow visit(const ScopePtr& scope, AstStatRepeat* repeat);
+    ControlFlow visit(const ScopePtr& scope, AstStatLocalFunction* function);
+    ControlFlow visit(const ScopePtr& scope, AstStatFunction* function);
+    ControlFlow visit(const ScopePtr& scope, AstStatReturn* ret);
+    ControlFlow visit(const ScopePtr& scope, AstStatAssign* assign);
+    ControlFlow visit(const ScopePtr& scope, AstStatCompoundAssign* assign);
+    ControlFlow visit(const ScopePtr& scope, AstStatIf* ifStatement);
+    ControlFlow visit(const ScopePtr& scope, AstStatTypeAlias* alias);
+    ControlFlow visit(const ScopePtr& scope, AstStatDeclareGlobal* declareGlobal);
+    ControlFlow visit(const ScopePtr& scope, AstStatDeclareClass* declareClass);
+    ControlFlow visit(const ScopePtr& scope, AstStatDeclareFunction* declareFunction);
+    ControlFlow visit(const ScopePtr& scope, AstStatError* error);
 
     InferencePack checkPack(const ScopePtr& scope, AstArray<AstExpr*> exprs, const std::vector<std::optional<TypeId>>& expectedTypes = {});
     InferencePack checkPack(const ScopePtr& scope, AstExpr* expr, const std::vector<std::optional<TypeId>>& expectedTypes = {});
@@ -175,11 +179,12 @@ struct ConstraintGraphBuilder
      *      surrounding context.  Used to implement bidirectional type checking.
      * @return the type of the expression.
      */
-    Inference check(const ScopePtr& scope, AstExpr* expr, std::optional<TypeId> expectedType = {}, bool forceSingleton = false);
+    Inference check(const ScopePtr& scope, AstExpr* expr, ValueContext context = ValueContext::RValue, std::optional<TypeId> expectedType = {},
+        bool forceSingleton = false);
 
     Inference check(const ScopePtr& scope, AstExprConstantString* string, std::optional<TypeId> expectedType, bool forceSingleton);
     Inference check(const ScopePtr& scope, AstExprConstantBool* bool_, std::optional<TypeId> expectedType, bool forceSingleton);
-    Inference check(const ScopePtr& scope, AstExprLocal* local);
+    Inference check(const ScopePtr& scope, AstExprLocal* local, ValueContext context);
     Inference check(const ScopePtr& scope, AstExprGlobal* global);
     Inference check(const ScopePtr& scope, AstExprIndexName* indexName);
     Inference check(const ScopePtr& scope, AstExprIndexExpr* indexExpr);

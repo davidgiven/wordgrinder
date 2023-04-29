@@ -27,7 +27,6 @@ struct Quantifier final : TypeOnceVisitor
     explicit Quantifier(TypeLevel level)
         : level(level)
     {
-        LUAU_ASSERT(!FFlag::DebugLuauDeferredConstraintResolution);
     }
 
     /// @return true if outer encloses inner
@@ -117,7 +116,7 @@ void quantify(TypeId ty, TypeLevel level)
 
             for (const auto& [_, prop] : ttv->props)
             {
-                auto ftv = getMutable<FunctionType>(follow(prop.type));
+                auto ftv = getMutable<FunctionType>(follow(prop.type()));
                 if (!ftv || !ftv->hasSelf)
                     continue;
 

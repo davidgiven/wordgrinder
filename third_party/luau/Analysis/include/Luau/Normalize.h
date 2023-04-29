@@ -19,6 +19,8 @@ using ModulePtr = std::shared_ptr<Module>;
 
 bool isSubtype(TypeId subTy, TypeId superTy, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter& ice);
 bool isSubtype(TypePackId subTy, TypePackId superTy, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter& ice);
+bool isConsistentSubtype(TypeId subTy, TypeId superTy, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter& ice);
+bool isConsistentSubtype(TypePackId subTy, TypePackId superTy, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter& ice);
 
 class TypeIds
 {
@@ -189,12 +191,8 @@ struct NormalizedClassType
 // this type may contain `error`.
 struct NormalizedFunctionType
 {
-    NormalizedFunctionType();
-
     bool isTop = false;
-    // TODO: Remove this wrapping optional when clipping
-    // FFlagLuauNegatedFunctionTypes.
-    std::optional<TypeIds> parts;
+    TypeIds parts;
 
     void resetToNever();
     void resetToTop();
@@ -203,7 +201,7 @@ struct NormalizedFunctionType
 };
 
 // A normalized generic/free type is a union, where each option is of the form (X & T) where
-// * X is either a free type or a generic
+// * X is either a free type, a generic or a blocked type.
 // * T is a normalized type.
 struct NormalizedType;
 using NormalizedTyvars = std::unordered_map<TypeId, std::unique_ptr<NormalizedType>>;
@@ -214,7 +212,7 @@ bool isInhabited_DEPRECATED(const NormalizedType& norm);
 // * P is a union of primitive types (including singletons, classes and the error type)
 // * T is a union of table types
 // * F is a union of an intersection of function types
-// * G is a union of generic/free normalized types, intersected with a normalized type
+// * G is a union of generic/free/blocked types, intersected with a normalized type
 struct NormalizedType
 {
     // The top part of the type.
@@ -350,10 +348,13 @@ public:
     bool intersectTyvarsWithTy(NormalizedTyvars& here, TypeId there);
     bool intersectNormals(NormalizedType& here, const NormalizedType& there, int ignoreSmallerTyvars = -1);
     bool intersectNormalWithTy(NormalizedType& here, TypeId there);
+    bool normalizeIntersections(const std::vector<TypeId>& intersections, NormalizedType& outType);
 
     // Check for inhabitance
     bool isInhabited(TypeId ty, std::unordered_set<TypeId> seen = {});
     bool isInhabited(const NormalizedType* norm, std::unordered_set<TypeId> seen = {});
+    // Check for intersections being inhabited
+    bool isIntersectionInhabited(TypeId left, TypeId right);
 
     // -------- Convert back from a normalized type to a type
     TypeId typeFromNormal(const NormalizedType& norm);

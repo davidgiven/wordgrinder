@@ -41,6 +41,7 @@ enum class ABIX64
 class AssemblyBuilderX64
 {
 public:
+    explicit AssemblyBuilderX64(bool logText, ABIX64 abi);
     explicit AssemblyBuilderX64(bool logText);
     ~AssemblyBuilderX64();
 
@@ -57,6 +58,8 @@ public:
     void sar(OperandX64 lhs, OperandX64 rhs);
     void shl(OperandX64 lhs, OperandX64 rhs);
     void shr(OperandX64 lhs, OperandX64 rhs);
+    void rol(OperandX64 lhs, OperandX64 rhs);
+    void ror(OperandX64 lhs, OperandX64 rhs);
 
     // Two operand mov instruction has additional specialized encodings
     void mov(OperandX64 lhs, OperandX64 rhs);
@@ -96,6 +99,9 @@ public:
 
     void int3();
 
+    void bsr(RegisterX64 dst, OperandX64 src);
+    void bsf(RegisterX64 dst, OperandX64 src);
+
     // Code alignment
     void nop(uint32_t length = 1);
     void align(uint32_t alignment, AlignmentDataX64 data = AlignmentDataX64::Nop);
@@ -120,6 +126,7 @@ public:
 
     void vcvttsd2si(OperandX64 dst, OperandX64 src);
     void vcvtsi2sd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vcvtsd2ss(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
     void vroundsd(OperandX64 dst, OperandX64 src1, OperandX64 src2, RoundingModeX64 roundingMode); // inexact
 
@@ -147,13 +154,20 @@ public:
 
 
     // Run final checks
-    void finalize();
+    bool finalize();
 
     // Places a label at current location and returns it
     Label setLabel();
 
     // Assigns label position to the current location
     void setLabel(Label& label);
+
+    // Extracts code offset (in bytes) from label
+    uint32_t getLabelOffset(const Label& label)
+    {
+        LUAU_ASSERT(label.location != ~0u);
+        return label.location;
+    }
 
     // Constant allocation (uses rip-relative addressing)
     OperandX64 i64(int64_t value);

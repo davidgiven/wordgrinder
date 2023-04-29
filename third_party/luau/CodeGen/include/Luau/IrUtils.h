@@ -95,14 +95,16 @@ inline bool isBlockTerminator(IrCmd cmd)
     case IrCmd::JUMP_IF_FALSY:
     case IrCmd::JUMP_EQ_TAG:
     case IrCmd::JUMP_EQ_INT:
+    case IrCmd::JUMP_LT_INT:
+    case IrCmd::JUMP_GE_UINT:
     case IrCmd::JUMP_EQ_POINTER:
     case IrCmd::JUMP_CMP_NUM:
     case IrCmd::JUMP_CMP_ANY:
-    case IrCmd::LOP_NAMECALL:
-    case IrCmd::LOP_RETURN:
-    case IrCmd::LOP_FORGLOOP:
-    case IrCmd::LOP_FORGLOOP_FALLBACK:
-    case IrCmd::LOP_FORGPREP_XNEXT_FALLBACK:
+    case IrCmd::JUMP_SLOT_MATCH:
+    case IrCmd::RETURN:
+    case IrCmd::FORGLOOP:
+    case IrCmd::FORGLOOP_FALLBACK:
+    case IrCmd::FORGPREP_XNEXT_FALLBACK:
     case IrCmd::FALLBACK_FORGPREP:
         return true;
     default:
@@ -125,6 +127,7 @@ inline bool hasResult(IrCmd cmd)
     case IrCmd::LOAD_ENV:
     case IrCmd::GET_ARR_ADDR:
     case IrCmd::GET_SLOT_NODE_ADDR:
+    case IrCmd::GET_HASH_NODE_ADDR:
     case IrCmd::ADD_INT:
     case IrCmd::SUB_INT:
     case IrCmd::ADD_NUM:
@@ -132,18 +135,38 @@ inline bool hasResult(IrCmd cmd)
     case IrCmd::MUL_NUM:
     case IrCmd::DIV_NUM:
     case IrCmd::MOD_NUM:
-    case IrCmd::POW_NUM:
     case IrCmd::MIN_NUM:
     case IrCmd::MAX_NUM:
     case IrCmd::UNM_NUM:
+    case IrCmd::FLOOR_NUM:
+    case IrCmd::CEIL_NUM:
+    case IrCmd::ROUND_NUM:
+    case IrCmd::SQRT_NUM:
+    case IrCmd::ABS_NUM:
     case IrCmd::NOT_ANY:
     case IrCmd::TABLE_LEN:
     case IrCmd::NEW_TABLE:
     case IrCmd::DUP_TABLE:
-    case IrCmd::NUM_TO_INDEX:
+    case IrCmd::TRY_NUM_TO_INDEX:
+    case IrCmd::TRY_CALL_FASTGETTM:
     case IrCmd::INT_TO_NUM:
+    case IrCmd::UINT_TO_NUM:
+    case IrCmd::NUM_TO_INT:
+    case IrCmd::NUM_TO_UINT:
     case IrCmd::SUBSTITUTE:
     case IrCmd::INVOKE_FASTCALL:
+    case IrCmd::BITAND_UINT:
+    case IrCmd::BITXOR_UINT:
+    case IrCmd::BITOR_UINT:
+    case IrCmd::BITNOT_UINT:
+    case IrCmd::BITLSHIFT_UINT:
+    case IrCmd::BITRSHIFT_UINT:
+    case IrCmd::BITARSHIFT_UINT:
+    case IrCmd::BITLROTATE_UINT:
+    case IrCmd::BITRROTATE_UINT:
+    case IrCmd::BITCOUNTLZ_UINT:
+    case IrCmd::BITCOUNTRZ_UINT:
+    case IrCmd::INVOKE_LIBM:
         return true;
     default:
         break;
@@ -167,6 +190,8 @@ inline bool isPseudo(IrCmd cmd)
     // Instructions that are used for internal needs and are not a part of final lowering
     return cmd == IrCmd::NOP || cmd == IrCmd::SUBSTITUTE;
 }
+
+IrValueKind getCmdValueKind(IrCmd cmd);
 
 bool isGCO(uint8_t tag);
 
@@ -204,6 +229,8 @@ bool compare(double a, double b, IrCondition cond);
 // For most instructions, successful folding results in a IrCmd::SUBSTITUTE
 // But it can also be successful on conditional control-flow, replacing it with an unconditional IrCmd::JUMP
 void foldConstants(IrBuilder& build, IrFunction& function, IrBlock& block, uint32_t instIdx);
+
+uint32_t getNativeContextOffset(int bfid);
 
 } // namespace CodeGen
 } // namespace Luau

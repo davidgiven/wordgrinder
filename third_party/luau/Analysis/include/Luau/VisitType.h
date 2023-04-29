@@ -9,6 +9,7 @@
 #include "Luau/Type.h"
 
 LUAU_FASTINT(LuauVisitRecursionLimit)
+LUAU_FASTFLAG(LuauBoundLazyTypes2)
 
 namespace Luau
 {
@@ -241,7 +242,7 @@ struct GenericTypeVisitor
                 else
                 {
                     for (auto& [_name, prop] : ttv->props)
-                        traverse(prop.type);
+                        traverse(prop.type());
 
                     if (ttv->indexer)
                     {
@@ -264,7 +265,7 @@ struct GenericTypeVisitor
             if (visit(ty, *ctv))
             {
                 for (const auto& [name, prop] : ctv->props)
-                    traverse(prop.type);
+                    traverse(prop.type());
 
                 if (ctv->parent)
                     traverse(*ctv->parent);
@@ -291,9 +292,14 @@ struct GenericTypeVisitor
                     traverse(partTy);
             }
         }
-        else if (get<LazyType>(ty))
+        else if (auto ltv = get<LazyType>(ty))
         {
-            // Visiting into LazyType may necessarily cause infinite expansion, so we don't do that on purpose.
+            if (FFlag::LuauBoundLazyTypes2)
+            {
+                if (TypeId unwrapped = ltv->unwrapped)
+                    traverse(unwrapped);
+            }
+            // Visiting into LazyType that hasn't been unwrapped may necessarily cause infinite expansion, so we don't do that on purpose.
             // Asserting also makes no sense, because the type _will_ happen here, most likely as a property of some ClassType
             // that doesn't need to be expanded.
         }
@@ -341,10 +347,10 @@ struct GenericTypeVisitor
                 traverse(btv->boundTo);
         }
 
-        else if (auto ftv = get<Unifiable::Free>(tp))
+        else if (auto ftv = get<FreeTypePack>(tp))
             visit(tp, *ftv);
 
-        else if (auto gtv = get<Unifiable::Generic>(tp))
+        else if (auto gtv = get<GenericTypePack>(tp))
             visit(tp, *gtv);
 
         else if (auto etv = get<Unifiable::Error>(tp))

@@ -25,7 +25,9 @@ LUAU_FASTINTVARIABLE(LuauTypeMaximumStringifierLength, 500)
 LUAU_FASTINTVARIABLE(LuauTableTypeMaximumStringifierLength, 0)
 LUAU_FASTINT(LuauTypeInferRecursionLimit)
 LUAU_FASTFLAG(LuauInstantiateInSubtyping)
-LUAU_FASTFLAGVARIABLE(LuauMatchReturnsOptionalString, false);
+LUAU_FASTFLAG(LuauNormalizeBlockedTypes)
+LUAU_FASTFLAG(DebugLuauReadWriteProperties)
+LUAU_FASTFLAGVARIABLE(LuauBoundLazyTypes2, false)
 
 namespace Luau
 {
@@ -56,18 +58,52 @@ TypeId follow(TypeId t)
 TypeId follow(TypeId t, std::function<TypeId(TypeId)> mapper)
 {
     auto advance = [&mapper](TypeId ty) -> std::optional<TypeId> {
-        if (auto btv = get<Unifiable::Bound<TypeId>>(mapper(ty)))
-            return btv->boundTo;
-        else if (auto ttv = get<TableType>(mapper(ty)))
-            return ttv->boundTo;
-        else
+        if (FFlag::LuauBoundLazyTypes2)
+        {
+            TypeId mapped = mapper(ty);
+
+            if (auto btv = get<Unifiable::Bound<TypeId>>(mapped))
+                return btv->boundTo;
+
+            if (auto ttv = get<TableType>(mapped))
+                return ttv->boundTo;
+
+            if (auto ltv = getMutable<LazyType>(mapped))
+            {
+                TypeId unwrapped = ltv->unwrapped.load();
+
+                if (unwrapped)
+                    return unwrapped;
+
+                ltv->unwrap(*ltv);
+                unwrapped = ltv->unwrapped.load();
+
+                if (!unwrapped)
+                    throw InternalCompilerError("Lazy Type didn't fill in unwrapped type field");
+
+                if (get<LazyType>(unwrapped))
+                    throw InternalCompilerError("Lazy Type cannot resolve to another Lazy Type");
+
+                return unwrapped;
+            }
+
             return std::nullopt;
+        }
+        else
+        {
+            if (auto btv = get<Unifiable::Bound<TypeId>>(mapper(ty)))
+                return btv->boundTo;
+            else if (auto ttv = get<TableType>(mapper(ty)))
+                return ttv->boundTo;
+            else
+                return std::nullopt;
+        }
     };
 
     auto force = [&mapper](TypeId ty) {
         if (auto ltv = get_if<LazyType>(&mapper(ty)->ty))
         {
-            TypeId res = ltv->thunk();
+            TypeId res = ltv->thunk_DEPRECATED();
             if (get<LazyType>(res))
                 throw InternalCompilerError("Lazy Type cannot resolve to another Lazy Type");
 
@@ -75,7 +111,8 @@ TypeId follow(TypeId t, std::function<TypeId(TypeId)> mapper)
         }
     };
 
-    force(t);
+    if (!FFlag::LuauBoundLazyTypes2)
+        force(t);
 
     TypeId cycleTester = t; // Null once we've determined that there is no cycle
     if (auto a = advance(cycleTester))
@@ -85,7 +122,9 @@ TypeId follow(TypeId t, std::function<TypeId(TypeId)> mapper)
 
     while (true)
     {
-        force(t);
+        if (!FFlag::LuauBoundLazyTypes2)
+            force(t);
+
         auto a1 = advance(t);
         if (a1)
             t = *a1;
@@ -337,7 +376,16 @@ bool isSubset(const UnionType& super, const UnionType& sub)
 
     return true;
 }
+bool hasPrimitiveTypeInIntersection(TypeId ty, PrimitiveType::Type primTy)
+{
+    TypeId tf = follow(ty);
+    if (isPrim(tf, primTy))
+        return true;
 
+    for (auto t : flattenIntersection(tf))
+        return isPrim(follow(t), primTy);
+    return false;
+}
 // When typechecking an assignment `x = e`, we typecheck `x:T` and `e:U`,
 // then instantiate U if `isGeneric(U)` is true, and `maybeGeneric(T)` is false.
 bool isGeneric(TypeId ty)
@@ -430,12 +478,75 @@ bool hasLength(TypeId ty, DenseHashSet<TypeId>& seen, int* recursionCount)
     return false;
 }
 
-BlockedType::BlockedType()
-    : index(++nextIndex)
+FreeType::FreeType(TypeLevel level)
+    : index(Unifiable::freshIndex())
+    , level(level)
+    , scope(nullptr)
 {
 }
 
-int BlockedType::nextIndex = 0;
+FreeType::FreeType(Scope* scope)
+    : index(Unifiable::freshIndex())
+    , level{}
+    , scope(scope)
+{
+}
+
+FreeType::FreeType(Scope* scope, TypeLevel level)
+    : index(Unifiable::freshIndex())
+    , level(level)
+    , scope(scope)
+{
+}
+
+GenericType::GenericType()
+    : index(Unifiable::freshIndex())
+    , name("g" + std::to_string(index))
+{
+}
+
+GenericType::GenericType(TypeLevel level)
+    : index(Unifiable::freshIndex())
+    , level(level)
+    , name("g" + std::to_string(index))
+{
+}
+
+GenericType::GenericType(const Name& name)
+    : index(Unifiable::freshIndex())
+    , name(name)
+    , explicitName(true)
+{
+}
+
+GenericType::GenericType(Scope* scope)
+    : index(Unifiable::freshIndex())
+    , scope(scope)
+{
+}
+
+GenericType::GenericType(TypeLevel level, const Name& name)
+    : index(Unifiable::freshIndex())
+    , level(level)
+    , name(name)
+    , explicitName(true)
+{
+}
+
+GenericType::GenericType(Scope* scope, const Name& name)
+    : index(Unifiable::freshIndex())
+    , scope(scope)
+    , name(name)
+    , explicitName(true)
+{
+}
+
+BlockedType::BlockedType()
+    : index(FFlag::LuauNormalizeBlockedTypes ? Unifiable::freshIndex() : ++DEPRECATED_nextIndex)
+{
+}
+
+int BlockedType::DEPRECATED_nextIndex = 0;
 
 PendingExpansionType::PendingExpansionType(
     std::optional<AstName> prefix, AstName name, std::vector<TypeId> typeArguments, std::vector<TypePackId> packArguments)
@@ -511,6 +622,92 @@ FunctionType::FunctionType(TypeLevel level, Scope* scope, std::vector<TypeId> ge
     , retTypes(retTypes)
     , hasSelf(hasSelf)
 {
+}
+
+Property::Property() {}
+
+Property::Property(TypeId readTy, bool deprecated, const std::string& deprecatedSuggestion, std::optional<Location> location, const Tags& tags,
+    const std::optional<std::string>& documentationSymbol)
+    : deprecated(deprecated)
+    , deprecatedSuggestion(deprecatedSuggestion)
+    , location(location)
+    , tags(tags)
+    , documentationSymbol(documentationSymbol)
+    , readTy(readTy)
+    , writeTy(readTy)
+{
+    LUAU_ASSERT(!FFlag::DebugLuauReadWriteProperties);
+}
+
+Property Property::readonly(TypeId ty)
+{
+    LUAU_ASSERT(FFlag::DebugLuauReadWriteProperties);
+
+    Property p;
+    p.readTy = ty;
+    return p;
+}
+
+Property Property::writeonly(TypeId ty)
+{
+    LUAU_ASSERT(FFlag::DebugLuauReadWriteProperties);
+
+    Property p;
+    p.writeTy = ty;
+    return p;
+}
+
+Property Property::rw(TypeId ty)
+{
+    return Property::rw(ty, ty);
+}
+
+Property Property::rw(TypeId read, TypeId write)
+{
+    LUAU_ASSERT(FFlag::DebugLuauReadWriteProperties);
+
+    Property p;
+    p.readTy = read;
+    p.writeTy = write;
+    return p;
+}
+
+std::optional<Property> Property::create(std::optional<TypeId> read, std::optional<TypeId> write)
+{
+    if (read && !write)
+        return Property::readonly(*read);
+    else if (!read && write)
+        return Property::writeonly(*write);
+    else if (read && write)
+        return Property::rw(*read, *write);
+    else
+        return std::nullopt;
+}
+
+TypeId Property::type() const
+{
+    LUAU_ASSERT(!FFlag::DebugLuauReadWriteProperties);
+    LUAU_ASSERT(readTy);
+    return *readTy;
+}
+
+void Property::setType(TypeId ty)
+{
+    readTy = ty;
+}
+
+std::optional<TypeId> Property::readType() const
+{
+    LUAU_ASSERT(FFlag::DebugLuauReadWriteProperties);
+    LUAU_ASSERT(!(bool(readTy) && bool(writeTy)));
+    return readTy;
+}
+
+std::optional<TypeId> Property::writeType() const
+{
+    LUAU_ASSERT(FFlag::DebugLuauReadWriteProperties);
+    LUAU_ASSERT(!(bool(readTy) && bool(writeTy)));
+    return writeTy;
 }
 
 TableType::TableType(TableState state, TypeLevel level, Scope* scope)
@@ -600,7 +797,7 @@ bool areEqual(SeenSet& seen, const TableType& lhs, const TableType& rhs)
         if (l->first != r->first)
             return false;
 
-        if (!areEqual(seen, *l->second.type, *r->second.type))
+        if (!areEqual(seen, *l->second.type(), *r->second.type()))
             return false;
         ++l;
         ++r;
@@ -902,7 +1099,7 @@ void persist(TypeId ty)
             LUAU_ASSERT(ttv->state != TableState::Free && ttv->state != TableState::Unsealed);
 
             for (const auto& [_name, prop] : ttv->props)
-                queue.push_back(prop.type);
+                queue.push_back(prop.type());
 
             if (ttv->indexer)
             {
@@ -913,7 +1110,7 @@ void persist(TypeId ty)
         else if (auto ctv = get<ClassType>(t))
         {
             for (const auto& [_name, prop] : ctv->props)
-                queue.push_back(prop.type);
+                queue.push_back(prop.type());
         }
         else if (auto utv = get<UnionType>(t))
         {
@@ -971,7 +1168,7 @@ const TypeLevel* getLevel(TypeId ty)
 {
     ty = follow(ty);
 
-    if (auto ftv = get<Unifiable::Free>(ty))
+    if (auto ftv = get<FreeType>(ty))
         return &ftv->level;
     else if (auto ttv = get<TableType>(ty))
         return &ttv->level;
@@ -990,7 +1187,7 @@ std::optional<TypeLevel> getLevel(TypePackId tp)
 {
     tp = follow(tp);
 
-    if (auto ftv = get<Unifiable::Free>(tp))
+    if (auto ftv = get<FreeTypePack>(tp))
         return ftv->level;
     else
         return std::nullopt;
@@ -1218,12 +1415,12 @@ static std::vector<TypeId> parsePatternString(NotNull<BuiltinTypes> builtinTypes
             if (i + 1 < size && data[i + 1] == ')')
             {
                 i++;
-                result.push_back(FFlag::LuauMatchReturnsOptionalString ? builtinTypes->optionalNumberType : builtinTypes->numberType);
+                result.push_back(builtinTypes->optionalNumberType);
                 continue;
             }
 
             ++depth;
-            result.push_back(FFlag::LuauMatchReturnsOptionalString ? builtinTypes->optionalStringType : builtinTypes->stringType);
+            result.push_back(builtinTypes->optionalStringType);
         }
         else if (data[i] == ')')
         {
@@ -1241,7 +1438,7 @@ static std::vector<TypeId> parsePatternString(NotNull<BuiltinTypes> builtinTypes
         return std::vector<TypeId>();
 
     if (result.empty())
-        result.push_back(FFlag::LuauMatchReturnsOptionalString ? builtinTypes->optionalStringType : builtinTypes->stringType);
+        result.push_back(builtinTypes->optionalStringType);
 
     return result;
 }

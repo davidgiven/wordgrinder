@@ -1,8 +1,6 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #include "Luau/IrBuilder.h"
 
-#include "Luau/Common.h"
-#include "Luau/DenseHash.h"
 #include "Luau/IrAnalysis.h"
 #include "Luau/IrUtils.h"
 
@@ -11,12 +9,19 @@
 
 #include "lapi.h"
 
+#include <string.h>
+
 namespace Luau
 {
 namespace CodeGen
 {
 
 constexpr unsigned kNoAssociatedBlockIndex = ~0u;
+
+IrBuilder::IrBuilder()
+    : constantMap({IrConstKind::Bool, ~0ull})
+{
+}
 
 void IrBuilder::buildFunctionIr(Proto* proto)
 {
@@ -25,7 +30,7 @@ void IrBuilder::buildFunctionIr(Proto* proto)
     // Rebuild original control flow blocks
     rebuildBytecodeBasicBlocks(proto);
 
-    function.bcMapping.resize(proto->sizecode, {~0u, 0});
+    function.bcMapping.resize(proto->sizecode, {~0u, ~0u});
 
     // Translate all instructions to IR inside blocks
     for (int i = 0; i < proto->sizecode;)
@@ -36,7 +41,7 @@ void IrBuilder::buildFunctionIr(Proto* proto)
         int nexti = i + getOpLength(op);
         LUAU_ASSERT(nexti <= proto->sizecode);
 
-        function.bcMapping[i] = {uint32_t(function.instructions.size()), 0};
+        function.bcMapping[i] = {uint32_t(function.instructions.size()), ~0u};
 
         // Begin new block at this instruction if it was in the bytecode or requested during translation
         if (instIndexToBlock[i] != kNoAssociatedBlockIndex)
@@ -127,7 +132,10 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         translateInstSetGlobal(*this, pc, i);
         break;
     case LOP_CALL:
-        inst(IrCmd::LOP_CALL, constUint(i), vmReg(LUAU_INSN_A(*pc)), constInt(LUAU_INSN_B(*pc) - 1), constInt(LUAU_INSN_C(*pc) - 1));
+        inst(IrCmd::INTERRUPT, constUint(i));
+        inst(IrCmd::SET_SAVEDPC, constUint(i + 1));
+
+        inst(IrCmd::CALL, vmReg(LUAU_INSN_A(*pc)), constInt(LUAU_INSN_B(*pc) - 1), constInt(LUAU_INSN_C(*pc) - 1));
 
         if (activeFastcallFallback)
         {
@@ -139,7 +147,9 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         }
         break;
     case LOP_RETURN:
-        inst(IrCmd::LOP_RETURN, constUint(i), vmReg(LUAU_INSN_A(*pc)), constInt(LUAU_INSN_B(*pc) - 1));
+        inst(IrCmd::INTERRUPT, constUint(i));
+
+        inst(IrCmd::RETURN, vmReg(LUAU_INSN_A(*pc)), constInt(LUAU_INSN_B(*pc) - 1));
         break;
     case LOP_GETTABLE:
         translateInstGetTable(*this, pc, i);
@@ -256,7 +266,7 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         translateInstDupTable(*this, pc, i);
         break;
     case LOP_SETLIST:
-        inst(IrCmd::LOP_SETLIST, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), constInt(LUAU_INSN_C(*pc) - 1), constUint(pc[1]));
+        inst(IrCmd::SETLIST, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), constInt(LUAU_INSN_C(*pc) - 1), constUint(pc[1]));
         break;
     case LOP_GETUPVAL:
         translateInstGetUpval(*this, pc, i);
@@ -283,7 +293,7 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         int skip = LUAU_INSN_C(*pc);
         IrOp next = blockAtInst(i + skip + 2);
 
-        translateFastCallN(*this, pc, i, true, 1, constBool(false), next);
+        translateFastCallN(*this, pc, i, true, 1, undef(), next);
 
         activeFastcallFallback = true;
         fastcallFallbackReturn = next;
@@ -337,10 +347,11 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
             inst(IrCmd::INTERRUPT, constUint(i));
             loadAndCheckTag(vmReg(ra), LUA_TNIL, fallback);
 
-            inst(IrCmd::LOP_FORGLOOP, vmReg(ra), constInt(aux), loopRepeat, loopExit);
+            inst(IrCmd::FORGLOOP, vmReg(ra), constInt(aux), loopRepeat, loopExit);
 
             beginBlock(fallback);
-            inst(IrCmd::LOP_FORGLOOP_FALLBACK, constUint(i), vmReg(ra), constInt(aux), loopRepeat, loopExit);
+            inst(IrCmd::SET_SAVEDPC, constUint(i + 1));
+            inst(IrCmd::FORGLOOP_FALLBACK, vmReg(ra), constInt(aux), loopRepeat, loopExit);
 
             beginBlock(loopExit);
         }
@@ -353,19 +364,19 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         translateInstForGPrepInext(*this, pc, i);
         break;
     case LOP_AND:
-        inst(IrCmd::LOP_AND, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), vmReg(LUAU_INSN_C(*pc)));
+        translateInstAndX(*this, pc, i, vmReg(LUAU_INSN_C(*pc)));
         break;
     case LOP_ANDK:
-        inst(IrCmd::LOP_ANDK, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), vmConst(LUAU_INSN_C(*pc)));
+        translateInstAndX(*this, pc, i, vmConst(LUAU_INSN_C(*pc)));
         break;
     case LOP_OR:
-        inst(IrCmd::LOP_OR, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), vmReg(LUAU_INSN_C(*pc)));
+        translateInstOrX(*this, pc, i, vmReg(LUAU_INSN_C(*pc)));
         break;
     case LOP_ORK:
-        inst(IrCmd::LOP_ORK, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), vmConst(LUAU_INSN_C(*pc)));
+        translateInstOrX(*this, pc, i, vmConst(LUAU_INSN_C(*pc)));
         break;
     case LOP_COVERAGE:
-        inst(IrCmd::LOP_COVERAGE, constUint(i));
+        inst(IrCmd::COVERAGE, constUint(i));
         break;
     case LOP_GETIMPORT:
         translateInstGetImport(*this, pc, i);
@@ -377,19 +388,8 @@ void IrBuilder::translateInst(LuauOpcode op, const Instruction* pc, int i)
         translateInstCapture(*this, pc, i);
         break;
     case LOP_NAMECALL:
-    {
-        IrOp next = blockAtInst(i + getOpLength(LOP_NAMECALL));
-        IrOp fallback = block(IrBlockKind::Fallback);
-
-        inst(IrCmd::LOP_NAMECALL, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), next, fallback);
-
-        beginBlock(fallback);
-        inst(IrCmd::FALLBACK_NAMECALL, constUint(i), vmReg(LUAU_INSN_A(*pc)), vmReg(LUAU_INSN_B(*pc)), vmConst(pc[1]));
-        inst(IrCmd::JUMP, next);
-
-        beginBlock(next);
+        translateInstNamecall(*this, pc, i);
         break;
-    }
     case LOP_PREPVARARGS:
         inst(IrCmd::FALLBACK_PREPVARARGS, constUint(i), constInt(LUAU_INSN_A(*pc)));
         break;
@@ -496,12 +496,17 @@ void IrBuilder::clone(const IrBlock& source, bool removeCurrentTerminator)
     }
 }
 
+IrOp IrBuilder::undef()
+{
+    return {IrOpKind::Undef, 0};
+}
+
 IrOp IrBuilder::constBool(bool value)
 {
     IrConst constant;
     constant.kind = IrConstKind::Bool;
     constant.valueBool = value;
-    return constAny(constant);
+    return constAny(constant, uint64_t(value));
 }
 
 IrOp IrBuilder::constInt(int value)
@@ -509,7 +514,7 @@ IrOp IrBuilder::constInt(int value)
     IrConst constant;
     constant.kind = IrConstKind::Int;
     constant.valueInt = value;
-    return constAny(constant);
+    return constAny(constant, uint64_t(value));
 }
 
 IrOp IrBuilder::constUint(unsigned value)
@@ -517,7 +522,7 @@ IrOp IrBuilder::constUint(unsigned value)
     IrConst constant;
     constant.kind = IrConstKind::Uint;
     constant.valueUint = value;
-    return constAny(constant);
+    return constAny(constant, uint64_t(value));
 }
 
 IrOp IrBuilder::constDouble(double value)
@@ -525,7 +530,12 @@ IrOp IrBuilder::constDouble(double value)
     IrConst constant;
     constant.kind = IrConstKind::Double;
     constant.valueDouble = value;
-    return constAny(constant);
+
+    uint64_t asCommonKey;
+    static_assert(sizeof(asCommonKey) == sizeof(value), "Expecting double to be 64-bit");
+    memcpy(&asCommonKey, &value, sizeof(value));
+
+    return constAny(constant, asCommonKey);
 }
 
 IrOp IrBuilder::constTag(uint8_t value)
@@ -533,13 +543,21 @@ IrOp IrBuilder::constTag(uint8_t value)
     IrConst constant;
     constant.kind = IrConstKind::Tag;
     constant.valueTag = value;
-    return constAny(constant);
+    return constAny(constant, uint64_t(value));
 }
 
-IrOp IrBuilder::constAny(IrConst constant)
+IrOp IrBuilder::constAny(IrConst constant, uint64_t asCommonKey)
 {
+    ConstantKey key{constant.kind, asCommonKey};
+
+    if (uint32_t* cache = constantMap.find(key))
+        return {IrOpKind::Constant, *cache};
+
     uint32_t index = uint32_t(function.constants.size());
     function.constants.push_back(constant);
+
+    constantMap[key] = index;
+
     return {IrOpKind::Constant, index};
 }
 

@@ -113,9 +113,13 @@ int main(int argc, char* const* argv)
     LocalFileResolver fileResolver(ss.str());
     LocalConfigResolver configResolver;
     Luau::Frontend frontend(&fileResolver, &configResolver, frontendOptions);
-    Luau::registerBuiltinGlobals(frontend.typeChecker, frontend.globals);
+    Luau::registerBuiltinGlobals(frontend, frontend.globals);
 
-    auto result = frontend.loadDefinitionFile(typedefs, "main", false);
+    auto result = frontend.loadDefinitionFile(frontend.globals,
+        frontend.globals.globalScope,
+        typedefs,
+        "main",
+        false);
     if (!result.success)
     {
         fprintf(stderr, "couldn't load type definition file:\n");

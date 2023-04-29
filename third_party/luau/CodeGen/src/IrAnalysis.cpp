@@ -69,6 +69,9 @@ void updateLastUseLocations(IrFunction& function)
                 instructions[op.index].lastUse = uint32_t(instIdx);
         };
 
+        if (isPseudo(inst.cmd))
+            continue;
+
         checkOp(inst.a);
         checkOp(inst.b);
         checkOp(inst.c);
@@ -76,6 +79,42 @@ void updateLastUseLocations(IrFunction& function)
         checkOp(inst.e);
         checkOp(inst.f);
     }
+}
+
+uint32_t getNextInstUse(IrFunction& function, uint32_t targetInstIdx, uint32_t startInstIdx)
+{
+    LUAU_ASSERT(startInstIdx < function.instructions.size());
+    IrInst& targetInst = function.instructions[targetInstIdx];
+
+    for (uint32_t i = startInstIdx; i <= targetInst.lastUse; i++)
+    {
+        IrInst& inst = function.instructions[i];
+
+        if (isPseudo(inst.cmd))
+            continue;
+
+        if (inst.a.kind == IrOpKind::Inst && inst.a.index == targetInstIdx)
+            return i;
+
+        if (inst.b.kind == IrOpKind::Inst && inst.b.index == targetInstIdx)
+            return i;
+
+        if (inst.c.kind == IrOpKind::Inst && inst.c.index == targetInstIdx)
+            return i;
+
+        if (inst.d.kind == IrOpKind::Inst && inst.d.index == targetInstIdx)
+            return i;
+
+        if (inst.e.kind == IrOpKind::Inst && inst.e.index == targetInstIdx)
+            return i;
+
+        if (inst.f.kind == IrOpKind::Inst && inst.f.index == targetInstIdx)
+            return i;
+    }
+
+    // There must be a next use since there is the last use location
+    LUAU_ASSERT(!"failed to find next use");
+    return targetInst.lastUse;
 }
 
 std::pair<uint32_t, uint32_t> getLiveInOutValueCount(IrFunction& function, IrBlock& block)
@@ -96,6 +135,9 @@ std::pair<uint32_t, uint32_t> getLiveInOutValueCount(IrFunction& function, IrBlo
     for (uint32_t instIdx = block.start; instIdx <= block.finish; instIdx++)
     {
         IrInst& inst = function.instructions[instIdx];
+
+        if (isPseudo(inst.cmd))
+            continue;
 
         liveOuts += inst.useCount;
 
@@ -124,6 +166,10 @@ static void requireVariadicSequence(RegisterSet& sourceRs, const RegisterSet& de
 {
     if (!defRs.varargSeq)
     {
+        // Peel away registers from variadic sequence that we define
+        while (defRs.regs.test(varargStart))
+            varargStart++;
+
         LUAU_ASSERT(!sourceRs.varargSeq || sourceRs.varargStart == varargStart);
 
         sourceRs.varargSeq = true;
@@ -145,26 +191,24 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
     RegisterSet inRs;
 
     auto def = [&](IrOp op, int offset = 0) {
-        LUAU_ASSERT(op.kind == IrOpKind::VmReg);
-        defRs.regs.set(op.index + offset, true);
+        defRs.regs.set(vmRegOp(op) + offset, true);
     };
 
     auto use = [&](IrOp op, int offset = 0) {
-        LUAU_ASSERT(op.kind == IrOpKind::VmReg);
-        if (!defRs.regs.test(op.index + offset))
-            inRs.regs.set(op.index + offset, true);
+        if (!defRs.regs.test(vmRegOp(op) + offset))
+            inRs.regs.set(vmRegOp(op) + offset, true);
     };
 
     auto maybeDef = [&](IrOp op) {
         if (op.kind == IrOpKind::VmReg)
-            defRs.regs.set(op.index, true);
+            defRs.regs.set(vmRegOp(op), true);
     };
 
     auto maybeUse = [&](IrOp op) {
         if (op.kind == IrOpKind::VmReg)
         {
-            if (!defRs.regs.test(op.index))
-                inRs.regs.set(op.index, true);
+            if (!defRs.regs.test(vmRegOp(op)))
+                inRs.regs.set(vmRegOp(op), true);
         }
     };
 
@@ -226,6 +270,7 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
         case IrCmd::STORE_POINTER:
         case IrCmd::STORE_DOUBLE:
         case IrCmd::STORE_INT:
+        case IrCmd::STORE_VECTOR:
         case IrCmd::STORE_TVALUE:
             maybeDef(inst.a); // Argument can also be a pointer value
             break;
@@ -240,11 +285,15 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
             // A <- B, C
         case IrCmd::DO_ARITH:
         case IrCmd::GET_TABLE:
-        case IrCmd::SET_TABLE:
             use(inst.b);
             maybeUse(inst.c); // Argument can also be a VmConst
 
             def(inst.a);
+            break;
+        case IrCmd::SET_TABLE:
+            use(inst.a);
+            use(inst.b);
+            maybeUse(inst.c); // Argument can also be a VmConst
             break;
             // A <- B
         case IrCmd::DO_LEN:
@@ -256,9 +305,9 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
             def(inst.a);
             break;
         case IrCmd::CONCAT:
-            useRange(inst.a.index, function.uintOp(inst.b));
+            useRange(vmRegOp(inst.a), function.uintOp(inst.b));
 
-            defRange(inst.a.index, function.uintOp(inst.b));
+            defRange(vmRegOp(inst.a), function.uintOp(inst.b));
             break;
         case IrCmd::GET_UPVALUE:
             def(inst.a);
@@ -290,35 +339,32 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
             maybeUse(inst.a);
 
             if (function.boolOp(inst.b))
-                capturedRegs.set(inst.a.index, true);
+                capturedRegs.set(vmRegOp(inst.a), true);
             break;
-        case IrCmd::LOP_SETLIST:
+        case IrCmd::SETLIST:
             use(inst.b);
-            useRange(inst.c.index, function.intOp(inst.d));
+            useRange(vmRegOp(inst.c), function.intOp(inst.d));
             break;
-        case IrCmd::LOP_NAMECALL:
-            use(inst.c);
+        case IrCmd::CALL:
+            use(inst.a);
+            useRange(vmRegOp(inst.a) + 1, function.intOp(inst.b));
 
-            defRange(inst.b.index, 2);
+            defRange(vmRegOp(inst.a), function.intOp(inst.c));
             break;
-        case IrCmd::LOP_CALL:
-            use(inst.b);
-            useRange(inst.b.index + 1, function.intOp(inst.c));
+        case IrCmd::RETURN:
+            useRange(vmRegOp(inst.a), function.intOp(inst.b));
+            break;
 
-            defRange(inst.b.index, function.intOp(inst.d));
-            break;
-        case IrCmd::LOP_RETURN:
-            useRange(inst.b.index, function.intOp(inst.c));
-            break;
+            // TODO: FASTCALL is more restrictive than INVOKE_FASTCALL; we should either determine the exact semantics, or rework it
         case IrCmd::FASTCALL:
         case IrCmd::INVOKE_FASTCALL:
             if (int count = function.intOp(inst.e); count != -1)
             {
                 if (count >= 3)
                 {
-                    LUAU_ASSERT(inst.d.kind == IrOpKind::VmReg && inst.d.index == inst.c.index + 1);
+                    LUAU_ASSERT(inst.d.kind == IrOpKind::VmReg && vmRegOp(inst.d) == vmRegOp(inst.c) + 1);
 
-                    useRange(inst.c.index, count);
+                    useRange(vmRegOp(inst.c), count);
                 }
                 else
                 {
@@ -331,42 +377,29 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
             }
             else
             {
-                useVarargs(inst.c.index);
+                useVarargs(vmRegOp(inst.c));
             }
 
-            defRange(inst.b.index, function.intOp(inst.f));
+            // Multiple return sequences (count == -1) are defined by ADJUST_STACK_TO_REG
+            if (int count = function.intOp(inst.f); count != -1)
+                defRange(vmRegOp(inst.b), count);
             break;
-        case IrCmd::LOP_FORGLOOP:
+        case IrCmd::FORGLOOP:
             // First register is not used by instruction, we check that it's still 'nil' with CHECK_TAG
             use(inst.a, 1);
             use(inst.a, 2);
 
             def(inst.a, 2);
-            defRange(inst.a.index + 3, function.intOp(inst.b));
+            defRange(vmRegOp(inst.a) + 3, function.intOp(inst.b));
             break;
-        case IrCmd::LOP_FORGLOOP_FALLBACK:
-            useRange(inst.b.index, 3);
+        case IrCmd::FORGLOOP_FALLBACK:
+            useRange(vmRegOp(inst.a), 3);
 
-            def(inst.b, 2);
-            defRange(inst.b.index + 3, uint8_t(function.intOp(inst.c))); // ignore most significant bit
+            def(inst.a, 2);
+            defRange(vmRegOp(inst.a) + 3, uint8_t(function.intOp(inst.b))); // ignore most significant bit
             break;
-        case IrCmd::LOP_FORGPREP_XNEXT_FALLBACK:
+        case IrCmd::FORGPREP_XNEXT_FALLBACK:
             use(inst.b);
-            break;
-            // B <- C, D
-        case IrCmd::LOP_AND:
-        case IrCmd::LOP_OR:
-            use(inst.c);
-            use(inst.d);
-
-            def(inst.b);
-            break;
-            // B <- C
-        case IrCmd::LOP_ANDK:
-        case IrCmd::LOP_ORK:
-            use(inst.c);
-
-            def(inst.b);
             break;
         case IrCmd::FALLBACK_GETGLOBAL:
             def(inst.b);
@@ -386,13 +419,13 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
         case IrCmd::FALLBACK_NAMECALL:
             use(inst.c);
 
-            defRange(inst.b.index, 2);
+            defRange(vmRegOp(inst.b), 2);
             break;
         case IrCmd::FALLBACK_PREPVARARGS:
             // No effect on explicitly referenced registers
             break;
         case IrCmd::FALLBACK_GETVARARGS:
-            defRange(inst.b.index, function.intOp(inst.c));
+            defRange(vmRegOp(inst.b), function.intOp(inst.c));
             break;
         case IrCmd::FALLBACK_NEWCLOSURE:
             def(inst.b);
@@ -403,14 +436,23 @@ static RegisterSet computeBlockLiveInRegSet(IrFunction& function, const IrBlock&
         case IrCmd::FALLBACK_FORGPREP:
             use(inst.b);
 
-            defRange(inst.b.index, 3);
+            defRange(vmRegOp(inst.b), 3);
             break;
         case IrCmd::ADJUST_STACK_TO_REG:
+            defRange(vmRegOp(inst.a), -1);
+            break;
         case IrCmd::ADJUST_STACK_TO_TOP:
-            // While these can be considered as vararg producers and consumers, it is already handled in fastcall instruction
+            // While this can be considered to be a vararg consumer, it is already handled in fastcall instructions
             break;
 
         default:
+            // All instructions which reference registers have to be handled explicitly
+            LUAU_ASSERT(inst.a.kind != IrOpKind::VmReg);
+            LUAU_ASSERT(inst.b.kind != IrOpKind::VmReg);
+            LUAU_ASSERT(inst.c.kind != IrOpKind::VmReg);
+            LUAU_ASSERT(inst.d.kind != IrOpKind::VmReg);
+            LUAU_ASSERT(inst.e.kind != IrOpKind::VmReg);
+            LUAU_ASSERT(inst.f.kind != IrOpKind::VmReg);
             break;
         }
     }
@@ -430,16 +472,19 @@ static void computeCfgLiveInOutRegSets(IrFunction& function)
 {
     CfgInfo& info = function.cfg;
 
+    // Clear existing data
+    // 'in' and 'captured' data is not cleared because it will be overwritten below
+    info.def.clear();
+    info.out.clear();
+
     // Try to compute Luau VM register use-def info
     info.in.resize(function.blocks.size());
+    info.def.resize(function.blocks.size());
     info.out.resize(function.blocks.size());
 
     // Captured registers are tracked for the whole function
     // It should be possible to have a more precise analysis for them in the future
     std::bitset<256> capturedRegs;
-
-    std::vector<RegisterSet> defRss;
-    defRss.resize(function.blocks.size());
 
     // First we compute live-in set of each block
     for (size_t blockIdx = 0; blockIdx < function.blocks.size(); blockIdx++)
@@ -449,7 +494,7 @@ static void computeCfgLiveInOutRegSets(IrFunction& function)
         if (block.kind == IrBlockKind::Dead)
             continue;
 
-        info.in[blockIdx] = computeBlockLiveInRegSet(function, block, defRss[blockIdx], capturedRegs);
+        info.in[blockIdx] = computeBlockLiveInRegSet(function, block, info.def[blockIdx], capturedRegs);
     }
 
     info.captured.regs = capturedRegs;
@@ -480,11 +525,12 @@ static void computeCfgLiveInOutRegSets(IrFunction& function)
 
         IrBlock& curr = function.blocks[blockIdx];
         RegisterSet& inRs = info.in[blockIdx];
+        RegisterSet& defRs = info.def[blockIdx];
         RegisterSet& outRs = info.out[blockIdx];
-        RegisterSet& defRs = defRss[blockIdx];
 
         // Current block has to provide all registers in successor blocks
-        for (uint32_t succIdx : successors(info, blockIdx))
+        BlockIteratorWrapper successorsIt = successors(info, blockIdx);
+        for (uint32_t succIdx : successorsIt)
         {
             IrBlock& succ = function.blocks[succIdx];
 
@@ -493,7 +539,11 @@ static void computeCfgLiveInOutRegSets(IrFunction& function)
             // This is because fallback blocks define an alternative implementation of the same operations
             // This can cause the current block to define more registers that actually were available at fallback entry
             if (curr.kind != IrBlockKind::Fallback && succ.kind == IrBlockKind::Fallback)
+            {
+                // If this is the only successor, this skip will not be valid
+                LUAU_ASSERT(successorsIt.size() != 1);
                 continue;
+            }
 
             const RegisterSet& succRs = info.in[succIdx];
 
@@ -546,6 +596,10 @@ static void computeCfgLiveInOutRegSets(IrFunction& function)
 static void computeCfgBlockEdges(IrFunction& function)
 {
     CfgInfo& info = function.cfg;
+
+    // Clear existing data
+    info.predecessorsOffsets.clear();
+    info.successorsOffsets.clear();
 
     // Compute predecessors block edges
     info.predecessorsOffsets.reserve(function.blocks.size());
@@ -613,7 +667,7 @@ void computeCfgInfo(IrFunction& function)
     computeCfgLiveInOutRegSets(function);
 }
 
-BlockIteratorWrapper predecessors(CfgInfo& cfg, uint32_t blockIdx)
+BlockIteratorWrapper predecessors(const CfgInfo& cfg, uint32_t blockIdx)
 {
     LUAU_ASSERT(blockIdx < cfg.predecessorsOffsets.size());
 
@@ -623,7 +677,7 @@ BlockIteratorWrapper predecessors(CfgInfo& cfg, uint32_t blockIdx)
     return BlockIteratorWrapper{cfg.predecessors.data() + start, cfg.predecessors.data() + end};
 }
 
-BlockIteratorWrapper successors(CfgInfo& cfg, uint32_t blockIdx)
+BlockIteratorWrapper successors(const CfgInfo& cfg, uint32_t blockIdx)
 {
     LUAU_ASSERT(blockIdx < cfg.successorsOffsets.size());
 

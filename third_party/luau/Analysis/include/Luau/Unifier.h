@@ -58,6 +58,7 @@ struct Unifier
 
     NotNull<Scope> scope; // const Scope maybe
     TxnLog log;
+    bool failure = false;
     ErrorVec errors;
     Location location;
     Variance variance = Covariant;
@@ -93,7 +94,7 @@ private:
 
     // Traverse the two types provided and block on any BlockedTypes we find.
     // Returns true if any types were blocked on.
-    bool blockOnBlockedTypes(TypeId subTy, TypeId superTy);
+    bool DEPRECATED_blockOnBlockedTypes(TypeId subTy, TypeId superTy);
 
     void tryUnifyTypeWithUnion(TypeId subTy, TypeId superTy, const UnionType* uv, bool cacheEnabled, bool isFunctionCall);
     void tryUnifyTypeWithIntersection(TypeId subTy, TypeId superTy, const IntersectionType* uv);
@@ -136,9 +137,9 @@ private:
 
 public:
     // Returns true if the type "needle" already occurs within "haystack" and reports an "infinite type error"
-    bool occursCheck(TypeId needle, TypeId haystack);
+    bool occursCheck(TypeId needle, TypeId haystack, bool reversed);
     bool occursCheck(DenseHashSet<TypeId>& seen, TypeId needle, TypeId haystack);
-    bool occursCheck(TypePackId needle, TypePackId haystack);
+    bool occursCheck(TypePackId needle, TypePackId haystack, bool reversed);
     bool occursCheck(DenseHashSet<TypePackId>& seen, TypePackId needle, TypePackId haystack);
 
     Unifier makeChildUnifier();

@@ -10,6 +10,7 @@
 #include "Luau/Unifiable.h"
 #include "Luau/Variant.h"
 
+#include <atomic>
 #include <deque>
 #include <map>
 #include <memory>
@@ -75,13 +76,44 @@ using TypeId = const Type*;
 using Name = std::string;
 
 // A free type var is one whose exact shape has yet to be fully determined.
-using FreeType = Unifiable::Free;
+struct FreeType
+{
+    explicit FreeType(TypeLevel level);
+    explicit FreeType(Scope* scope);
+    FreeType(Scope* scope, TypeLevel level);
 
-// When a free type var is unified with any other, it is then "bound"
-// to that type var, indicating that the two types are actually the same type.
+    int index;
+    TypeLevel level;
+    Scope* scope = nullptr;
+
+    // True if this free type variable is part of a mutually
+    // recursive type alias whose definitions haven't been
+    // resolved yet.
+    bool forwardedTypeAlias = false;
+};
+
+struct GenericType
+{
+    // By default, generics are global, with a synthetic name
+    GenericType();
+
+    explicit GenericType(TypeLevel level);
+    explicit GenericType(const Name& name);
+    explicit GenericType(Scope* scope);
+
+    GenericType(TypeLevel level, const Name& name);
+    GenericType(Scope* scope, const Name& name);
+
+    int index;
+    TypeLevel level;
+    Scope* scope = nullptr;
+    Name name;
+    bool explicitName = false;
+};
+
+// When an equality constraint is found, it is then "bound" to that type,
+// indicating that the two types are actually the same type.
 using BoundType = Unifiable::Bound<TypeId>;
-
-using GenericType = Unifiable::Generic;
 
 using Tags = std::vector<std::string>;
 
@@ -102,7 +134,7 @@ struct BlockedType
     BlockedType();
     int index;
 
-    static int nextIndex;
+    static int DEPRECATED_nextIndex;
 };
 
 struct PrimitiveType
@@ -269,7 +301,7 @@ struct MagicFunctionCallContext
     TypePackId result;
 };
 
-using DcrMagicFunction = bool (*)(MagicFunctionCallContext);
+using DcrMagicFunction = std::function<bool(MagicFunctionCallContext)>;
 
 struct MagicRefinementContext
 {
@@ -347,12 +379,39 @@ struct TableIndexer
 
 struct Property
 {
-    TypeId type;
+    static Property readonly(TypeId ty);
+    static Property writeonly(TypeId ty);
+    static Property rw(TypeId ty);                 // Shared read-write type.
+    static Property rw(TypeId read, TypeId write); // Separate read-write type.
+    static std::optional<Property> create(std::optional<TypeId> read, std::optional<TypeId> write);
+
     bool deprecated = false;
     std::string deprecatedSuggestion;
     std::optional<Location> location = std::nullopt;
     Tags tags;
     std::optional<std::string> documentationSymbol;
+
+    // DEPRECATED
+    // TODO: Kill all constructors in favor of `Property::rw(TypeId read, TypeId write)` and friends.
+    Property();
+    Property(TypeId readTy, bool deprecated = false, const std::string& deprecatedSuggestion = "", std::optional<Location> location = std::nullopt,
+        const Tags& tags = {}, const std::optional<std::string>& documentationSymbol = std::nullopt);
+
+    // DEPRECATED: Should only be called in non-RWP! We assert that the `readTy` is not nullopt.
+    // TODO: Kill once we don't have non-RWP.
+    TypeId type() const;
+    void setType(TypeId ty);
+
+    // Should only be called in RWP!
+    // We do not assert that `readTy` nor `writeTy` are nullopt or not.
+    // The invariant is that at least one of them mustn't be nullopt, which we do assert here.
+    // TODO: Kill this in favor of exposing `readTy`/`writeTy` directly? If we do, we'll lose the asserts which will be useful while debugging.
+    std::optional<TypeId> readType() const;
+    std::optional<TypeId> writeType() const;
+
+private:
+    std::optional<TypeId> readTy;
+    std::optional<TypeId> writeTy;
 };
 
 struct TableType
@@ -395,9 +454,11 @@ struct TableType
 // Represents a metatable attached to a table type. Somewhat analogous to a bound type.
 struct MetatableType
 {
-    // Always points to a TableType.
+    // Should always be a TableType.
     TypeId table;
-    // Always points to either a TableType or a MetatableType.
+    // Should almost always either be a TableType or another MetatableType,
+    // though it is possible for other types (like AnyType and ErrorType) to
+    // find their way here sometimes.
     TypeId metatable;
 
     std::optional<std::string> syntheticName;
@@ -517,7 +578,50 @@ struct IntersectionType
 
 struct LazyType
 {
-    std::function<TypeId()> thunk;
+    LazyType() = default;
+    LazyType(std::function<TypeId()> thunk_DEPRECATED, std::function<void(LazyType&)> unwrap)
+        : thunk_DEPRECATED(thunk_DEPRECATED)
+        , unwrap(unwrap)
+    {
+    }
+
+    // std::atomic is sad and requires a manual copy
+    LazyType(const LazyType& rhs)
+        : thunk_DEPRECATED(rhs.thunk_DEPRECATED)
+        , unwrap(rhs.unwrap)
+        , unwrapped(rhs.unwrapped.load())
+    {
+    }
+
+    LazyType(LazyType&& rhs) noexcept
+        : thunk_DEPRECATED(std::move(rhs.thunk_DEPRECATED))
+        , unwrap(std::move(rhs.unwrap))
+        , unwrapped(rhs.unwrapped.load())
+    {
+    }
+
+    LazyType& operator=(const LazyType& rhs)
+    {
+        thunk_DEPRECATED = rhs.thunk_DEPRECATED;
+        unwrap = rhs.unwrap;
+        unwrapped = rhs.unwrapped.load();
+
+        return *this;
+    }
+
+    LazyType& operator=(LazyType&& rhs) noexcept
+    {
+        thunk_DEPRECATED = std::move(rhs.thunk_DEPRECATED);
+        unwrap = std::move(rhs.unwrap);
+        unwrapped = rhs.unwrapped.load();
+
+        return *this;
+    }
+
+    std::function<TypeId()> thunk_DEPRECATED;
+
+    std::function<void(LazyType&)> unwrap;
+    std::atomic<TypeId> unwrapped = nullptr;
 };
 
 struct UnknownType
@@ -536,8 +640,8 @@ struct NegationType
 
 using ErrorType = Unifiable::Error;
 
-using TypeVariant = Unifiable::Variant<TypeId, PrimitiveType, BlockedType, PendingExpansionType, SingletonType, FunctionType, TableType,
-    MetatableType, ClassType, AnyType, UnionType, IntersectionType, LazyType, UnknownType, NeverType, NegationType>;
+using TypeVariant = Unifiable::Variant<TypeId, FreeType, GenericType, PrimitiveType, BlockedType, PendingExpansionType, SingletonType, FunctionType,
+    TableType, MetatableType, ClassType, AnyType, UnionType, IntersectionType, LazyType, UnknownType, NeverType, NegationType>;
 
 struct Type final
 {
@@ -705,6 +809,7 @@ const T* get(TypeId tv)
     return get_if<T>(&tv->ty);
 }
 
+
 template<typename T>
 T* getMutable(TypeId tv)
 {
@@ -764,7 +869,7 @@ struct TypeIterator
     TypeIterator<T> operator++(int)
     {
         TypeIterator<T> copy = *this;
-        ++copy;
+        ++*this;
         return copy;
     }
 
@@ -864,6 +969,19 @@ bool hasTag(TypeId ty, const std::string& tagName);
 bool hasTag(const Property& prop, const std::string& tagName);
 bool hasTag(const Tags& tags, const std::string& tagName); // Do not use in new work.
 
+template<typename T>
+bool hasTypeInIntersection(TypeId ty)
+{
+    TypeId tf = follow(ty);
+    if (get<T>(tf))
+        return true;
+    for (auto t : flattenIntersection(tf))
+        if (get<T>(follow(t)))
+            return true;
+    return false;
+}
+
+bool hasPrimitiveTypeInIntersection(TypeId ty, PrimitiveType::Type primTy);
 /*
  * Use this to change the kind of a particular type.
  *

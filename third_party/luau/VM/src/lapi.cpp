@@ -538,6 +538,8 @@ const void* lua_topointer(lua_State* L, int idx)
     StkId o = index2addr(L, idx);
     switch (ttype(o))
     {
+    case LUA_TSTRING:
+        return tsvalue(o);
     case LUA_TTABLE:
         return hvalue(o);
     case LUA_TFUNCTION:
@@ -1378,10 +1380,16 @@ void lua_setuserdatatag(lua_State* L, int idx, int tag)
     uvalue(o)->tag = uint8_t(tag);
 }
 
-void lua_setuserdatadtor(lua_State* L, int tag, void (*dtor)(lua_State*, void*))
+void lua_setuserdatadtor(lua_State* L, int tag, lua_Destructor dtor)
 {
     api_check(L, unsigned(tag) < LUA_UTAG_LIMIT);
     L->global->udatagc[tag] = dtor;
+}
+
+lua_Destructor lua_getuserdatadtor(lua_State* L, int tag)
+{
+    api_check(L, unsigned(tag) < LUA_UTAG_LIMIT);
+    return L->global->udatagc[tag];
 }
 
 void lua_clonefunction(lua_State* L, int idx)

@@ -25,8 +25,7 @@ LUAU_FASTINTVARIABLE(LuauCompileInlineThreshold, 25)
 LUAU_FASTINTVARIABLE(LuauCompileInlineThresholdMaxBoost, 300)
 LUAU_FASTINTVARIABLE(LuauCompileInlineDepth, 5)
 
-LUAU_FASTFLAGVARIABLE(LuauCompileTerminateBC, false)
-LUAU_FASTFLAGVARIABLE(LuauCompileBuiltinArity, false)
+LUAU_FASTFLAGVARIABLE(LuauCompileLimitInsns, false)
 
 namespace Luau
 {
@@ -36,6 +35,7 @@ using namespace Luau::Compile;
 static const uint32_t kMaxRegisterCount = 255;
 static const uint32_t kMaxUpvalueCount = 200;
 static const uint32_t kMaxLocalCount = 200;
+static const uint32_t kMaxInstructionCount = 1'000'000'000;
 
 static const uint8_t kInvalidReg = 255;
 
@@ -143,7 +143,7 @@ struct Compiler
             return stat->body.size > 0 && alwaysTerminates(stat->body.data[stat->body.size - 1]);
         else if (node->is<AstStatReturn>())
             return true;
-        else if (FFlag::LuauCompileTerminateBC && (node->is<AstStatBreak>() || node->is<AstStatContinue>()))
+        else if (node->is<AstStatBreak>() || node->is<AstStatContinue>())
             return true;
         else if (AstStatIf* stat = node->as<AstStatIf>())
             return stat->elsebody && alwaysTerminates(stat->thenbody) && alwaysTerminates(stat->elsebody);
@@ -250,6 +250,9 @@ struct Compiler
 
         popLocals(0);
 
+        if (FFlag::LuauCompileLimitInsns && bytecode.getInstructionCount() > kMaxInstructionCount)
+            CompileError::raise(func->location, "Exceeded function instruction limit; split the function into parts to compile");
+
         bytecode.endFunction(uint8_t(stackSize), uint8_t(upvals.size()));
 
         Function& f = functions[func];
@@ -296,7 +299,7 @@ struct Compiler
 
         // handles builtin calls that can't be constant-folded but are known to return one value
         // note: optimizationLevel check is technically redundant but it's important that we never optimize based on builtins in O1
-        if (FFlag::LuauCompileBuiltinArity && options.optimizationLevel >= 2)
+        if (options.optimizationLevel >= 2)
             if (int* bfid = builtins.find(expr))
                 return getBuiltinInfo(*bfid).results != 1;
 
@@ -767,7 +770,7 @@ struct Compiler
         {
             if (!isExprMultRet(expr->args.data[expr->args.size - 1]))
                 return compileExprFastcallN(expr, target, targetCount, targetTop, multRet, regs, bfid);
-            else if (FFlag::LuauCompileBuiltinArity && options.optimizationLevel >= 2 && int(expr->args.size) == getBuiltinInfo(bfid).params)
+            else if (options.optimizationLevel >= 2 && int(expr->args.size) == getBuiltinInfo(bfid).params)
                 return compileExprFastcallN(expr, target, targetCount, targetTop, multRet, regs, bfid);
         }
 
@@ -3361,11 +3364,6 @@ struct Compiler
         {
             // do nothing
         }
-		else if (node->is<AstStatDeclareGlobal>() || node->is<AstStatDeclareClass>()
-			|| node->is<AstStatDeclareFunction>())
-		{
-			/* do nothing */
-		}
         else
         {
             LUAU_ASSERT(!"Unknown statement type");
