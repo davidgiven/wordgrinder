@@ -1,6 +1,5 @@
 #include "globals.h"
 #include "gui.h"
-#include "stb_ds.h"
 #include "stb_rect_pack.h"
 #include "stb_truetype.h"
 
@@ -13,11 +12,39 @@ extern const FileDescriptor font_table[];
 #define PAGE_WIDTH 256
 #define PAGE_HEIGHT 256
 
-struct Font
+class Font
 {
+public:
+    virtual ~Font(){};
+
+public:
     uint8_t* data;
-    bool needsFreeing;
     stbtt_fontinfo info;
+};
+
+class StaticFont : public Font
+{
+public:
+    ~StaticFont() {}
+};
+
+class DynamicFont : public Font
+{
+public:
+	DynamicFont(FILE* fp)
+	{
+        (void)fseek(fp, 0, SEEK_END);
+        unsigned len = ftell(fp);
+        (void)fseek(fp, 0, SEEK_SET);
+
+        data = new uint8_t[len];
+        fread(data, 1, len, fp);
+	}
+
+    ~DynamicFont()
+    {
+        delete[] data;
+    }
 };
 
 struct Page
@@ -40,38 +67,28 @@ static int fontSize;
 static int fontAscent;
 static int fontXOffset;
 static float fontScale;
-static Font* fonts[8];
-static Page** pages = NULL;
-static CharData* chardata = NULL;
+static std::map<int, std::unique_ptr<Font>> fonts;
+static std::vector<Page> pages;
+static std::map<uint32_t, CharData> chardata;
 
 static void freeFont(Font* font)
 {
-    if (font->needsFreeing)
-        delete[] font->data;
     delete font;
 }
 
-static Font* loadFont(const char* filename, int defaultfont)
+static std::unique_ptr<Font> loadFont(const char* filename, int defaultfont)
 {
-    Font* font = NULL;
+    std::unique_ptr<Font> font;
     FILE* fp = fopen(filename, "rb");
     if (fp)
     {
-        (void)fseek(fp, 0, SEEK_END);
-        unsigned len = ftell(fp);
-        (void)fseek(fp, 0, SEEK_SET);
-
-        font = new Font;
-        font->data = new uint8_t[len];
-        font->needsFreeing = true;
-        fread(font->data, 1, len, fp);
+        font = std::make_unique<DynamicFont>(fp);
         fclose(fp);
     }
     else
     {
-        font = new Font;
+        font = std::make_unique<StaticFont>();
         font->data = (uint8_t*)&font_table[defaultfont].data[0];
-        font->needsFreeing = false;
     }
 
     stbtt_InitFont(&font->info, font->data, 0);
@@ -86,7 +103,7 @@ void loadFonts()
     fonts[BOLD] = loadFont(get_svar("font_bold"), 2);
     fonts[BOLD | ITALIC] = loadFont(get_svar("font_bolditalic"), 3);
 
-    Font* font = fonts[REGULAR];
+    auto& font = fonts[REGULAR];
 
     fontScale = stbtt_ScaleForPixelHeight(&font->info, fontSize);
     int ascent, descent, lineGap;
@@ -102,14 +119,7 @@ void loadFonts()
 
 void unloadFonts()
 {
-    for (int i = 0; i < sizeof(fonts) / sizeof(*fonts); i++)
-    {
-        if (fonts[i])
-        {
-            delete fonts[i];
-            fonts[i] = NULL;
-        }
-    }
+	fonts.clear();
 }
 
 static Page* newPage()
@@ -138,39 +148,37 @@ static void freePage(Page* page)
     delete page;
 }
 
-static Page* addPage()
+static Page& addPage()
 {
-    Page* page = newPage();
-    arrput(pages, page);
-    return page;
+	pages.push_back({});
+	return pages.back();
 }
 
 void flushFontCache()
 {
-    while (arrlen(pages) > 0)
-        freePage(arrpop(pages));
-    hmfree(chardata);
+	pages.clear();
+	chardata.clear();
 }
 
-static int rawRender(Font* font, Page* page, CharData* cd, uni_t c)
+static int rawRender(Font& font, Page* page, CharData& cd, uni_t c)
 {
     stbtt_pack_range range;
     range.first_unicode_codepoint_in_range = c;
     range.array_of_unicode_codepoints = NULL;
     range.num_chars = 1;
     range.font_size = STBTT_POINT_SIZE(fontSize);
-    range.chardata_for_range = &cd->packData;
+    range.chardata_for_range = &cd.packData;
     range.chardata_for_range->x0 = range.chardata_for_range->y0 =
         range.chardata_for_range->x1 = range.chardata_for_range->y1 = 0;
 
     stbrp_rect rect;
 
     int n = stbtt_PackFontRangesGatherRects(
-        &page->ctx, &font->info, &range, 1, &rect);
+        &page->ctx, &font.info, &range, 1, &rect);
     stbtt_PackFontRangesPackRects(&page->ctx, &rect, n);
 
     return stbtt_PackFontRangesRenderIntoRects(
-        &page->ctx, &font->info, &range, 1, &rect);
+        &page->ctx, &font.info, &range, 1, &rect);
 }
 
 static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
@@ -182,37 +190,32 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         style |= ITALIC;
 
     uint32_t key = c | (style << 24);
-    CharData* cd = hmgetp_null(chardata, key);
-    if (!cd)
+	auto [it, found] = chardata.emplace(key, CharData{});
+	auto cd = it->second;
+    if (!found)
     {
-        Page* page;
-        if (arrlen(pages) == 0)
-            page = addPage();
-        else
-            page = pages[arrlen(pages) - 1];
+        Page* page = pages.empty() ? &addPage() : &pages.back();
 
-        Font* font = fonts[style];
+        auto& font = fonts[style];
         if (!font)
             return;
 
-        CharData cds = {.key = key};
-        hmputs(chardata, cds);
-        cd = hmgetp_null(chardata, key);
+		cd.key = key;
 
         /* First try rendering into the current page. If that fails, the
          * page is full and we need a new one. */
 
-        if (!rawRender(font, page, cd, c))
+        if (!rawRender(*font, page, cd, c))
         {
-            page = addPage();
-            if (!rawRender(font, page, cd, c))
+            page = &addPage();
+            if (!rawRender(*font, page, cd, c))
             {
                 printf("Unrenderable codepoint %d\n", c);
-                freePage(arrpop(pages));
+				pages.pop_back();
                 return;
             }
         }
-        cd->page = page;
+        cd.page = page;
 
         /* Now we have a valid rendered glyph, but we need to update the
          * texture. */
@@ -231,10 +234,10 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
 
     stbtt_aligned_quad q;
     stbtt_GetPackedQuad(
-        &cd->packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
+        &cd.packData, PAGE_WIDTH, PAGE_HEIGHT, 0, &x, &y, &q, true);
 
     glEnable(GL_BLEND);
-    glBindTexture(GL_TEXTURE_2D, cd->page->texture);
+    glBindTexture(GL_TEXTURE_2D, cd.page->texture);
     glBegin(GL_QUADS);
     glTexCoord2f(q.s0, q.t0);
     glVertex2f(q.x0, q.y0);

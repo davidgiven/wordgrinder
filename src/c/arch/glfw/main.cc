@@ -2,7 +2,6 @@
 #include "gui.h"
 #include <GLFW/glfw3.h>
 #include "stb_ds.h"
-#include <fmt/format.h>
 
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
@@ -340,7 +339,7 @@ void dpy_sync(void)
     int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
-        delete[] screen;
+        delete [] screen;
         screenWidth = sw;
         screenHeight = sh;
         screen = new cell_t[screenWidth * screenHeight];
@@ -472,6 +471,7 @@ uni_t dpy_getchar(double timeout)
 
 std::string dpy_getkeyname(uni_t k)
 {
+    static char buffer[32];
     switch (-k)
     {
         case KEY_RESIZE:
@@ -492,8 +492,10 @@ std::string dpy_getkeyname(uni_t k)
     int key = (-k & 0xfff0ffff);
 
     if (mods & VKM_CTRLASCII)
-        return fmt::format(
-            "KEY_{}^{:c}", (mods & VKM_SHIFT) ? "S" : "", key + 64);
+    {
+        sprintf(buffer, "KEY_%s^%c", (mods & VKM_SHIFT) ? "S" : "", key + 64);
+        return buffer;
+    }
 
     const char* t = NULL;
     switch (key)
@@ -517,18 +519,27 @@ std::string dpy_getkeyname(uni_t k)
     }
 
     if (t)
-        return fmt::format("KEY_{}{}{}",
+    {
+        sprintf(buffer,
+            "KEY_%s%s%s",
             (mods & VKM_SHIFT) ? "S" : "",
             (mods & VKM_CTRL) ? "^" : "",
             t);
+        return buffer;
+    }
 
     if ((key >= GLFW_KEY_F1) && (key <= (GLFW_KEY_F25)))
-        return fmt::format("KEY_{}{}F{}",
+    {
+        sprintf(buffer,
+            "KEY_%s%sF%d",
             (mods & VKM_SHIFT) ? "S" : "",
             (mods & VKM_CTRL) ? "^" : "",
             key - GLFW_KEY_F1 + 1);
+        return buffer;
+    }
 
-    return fmt::format("KEY_UNKNOWN_{}", -k);
+    sprintf(buffer, "KEY_UNKNOWN_%d", -k);
+    return buffer;
 }
 
 // vim: sw=4 ts=4 et

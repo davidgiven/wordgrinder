@@ -28,6 +28,9 @@
 #include <errno.h>
 #include <wctype.h>
 #include <string>
+#include <map>
+#include <memory>
+#include <vector>
 
 /* --- Platform detection ------------------------------------------------ */
 
