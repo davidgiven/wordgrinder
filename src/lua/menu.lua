@@ -15,7 +15,7 @@ local SetNormal = wg.setnormal
 local GetStringWidth = wg.getstringwidth
 
 local menu_tab = {}
-local key_tab = {}
+local key_tab: {[string]: number} = {}
 local menu_stack: {StackedMenu} = {}
 
 local UseUnicode = wg.useunicode
@@ -670,9 +670,9 @@ function RebuildDocumentsMenu(documents)
 		end
 
 		m[#m+1] = {"D"..id, shortcut, document.name, ak,
-			function()
+			{ function()
 				Cmd.ChangeDocument(document.name)
-			end}
+			end }}
 	end
 
 	-- Hook it.

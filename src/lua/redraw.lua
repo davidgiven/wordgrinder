@@ -69,6 +69,7 @@ function ResizeScreen()
 	end
 	w = ScreenWidth - papermargin*2
 	Document:wrap(w)
+	return true
 end
 
 local function drawmargin(y, pn, p)
