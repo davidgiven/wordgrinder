@@ -57,8 +57,8 @@ static bool update_buffer_info(void)
         screenWidth = newscreenWidth;
         screenHeight = newscreenHeight;
 
-        free(buffer);
-        buffer = calloc(sizeof(*buffer), screenWidth * screenHeight);
+        delete [] buffer;
+        buffer = new CHAR_INFO[screenWidth * screenHeight];
 
         return true;
     }
@@ -108,7 +108,7 @@ void dpy_getscreensize(int* x, int* y)
 void dpy_getmouse(uni_t key, int* x, int* y, bool* p)
 {
     x = y = 0;
-    p = false;
+    *p = false;
 }
 
 void dpy_sync(void)

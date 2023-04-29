@@ -32,6 +32,7 @@ clibrary(
     deps=[
         "+fmt",
         "third_party/luau",
+        "third_party/wcwidth",
         "src/c/luau-em",
         "third_party/minizip",
     ],
@@ -62,6 +63,16 @@ make_wordgrinder(
     "src/c/arch/ncurses",
     "clip_none",
     vars={"+cxxflags": ["-DFRONTEND=ncurses"]},
+)
+
+make_wordgrinder(
+    "wordgrinder-wincon",
+    "src/c/arch/win32/console",
+    "clip_none",
+    vars={
+        "+cxxflags": ["-DFRONTEND=wincon"],
+        "+ldflags": ["-mconsole", "-lole32", "-lshlwapi", "-lwindowscodecs", "-lrpcrt4"],
+    },
 )
 
 make_wordgrinder(

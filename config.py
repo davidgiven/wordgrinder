@@ -1,7 +1,11 @@
 import subprocess
 import os
+import platform
 
 FILEFORMAT = 8
 VERSION = "0.9"
 
-TEST_BINARY = "src/c+wordgrinder-ncurses"
+if platform.system() == "Windows":
+    TEST_BINARY = "src/c+wordgrinder-wincon"
+else:
+    TEST_BINARY = "src/c+wordgrinder-ncurses"

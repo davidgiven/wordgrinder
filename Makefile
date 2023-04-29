@@ -22,7 +22,7 @@ clean:
 	@echo CLEAN
 	@rm -rf $(OBJ) bin
 
-build-files = $(shell find . -name 'build.py') build/*.py
+build-files = $(shell find . -name 'build.py') build/*.py config.py
 $(OBJ)/build.mk: Makefile $(build-files)
 	@echo ACKBUILDER
 	@mkdir -p $(OBJ)
