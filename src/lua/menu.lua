@@ -62,7 +62,7 @@ function CreateMenu(n: string, m: {{any}}, replaces: Menu?): Menu
 
 	for _, data in ipairs(m) do
 		if data[1] == "-" then
-			menu[#menu+1] = {label = "-"}
+			menu[#menu+1] = {label="-"}
 		else
 			local item = {
 				id = data[1],
@@ -343,7 +343,7 @@ MenuClass = {
 			local ak = self.accelerators[item.id]
 			local yy = y+i-top+1
 
-			if (item == "-") then
+			if (item.label == "-") then
 				if (i == n) then
 					SetReverse()
 				end
