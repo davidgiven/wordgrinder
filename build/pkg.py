@@ -10,9 +10,10 @@ _package_ldflags = {}
 def has_package(name):
     global _package_present
     if name not in _package_present:
-        r = os.system(f"$PKG_CONFIG --exists {name}")
-        r = True if r == 0 else False
-        _package_present[name] = r
+        r = subprocess.run(
+            f"$PKG_CONFIG --exists {name}", shell=True, capture_output=True
+        )
+        _package_present[name] = True if r.returncode == 0 else False
     return _package_present[name]
 
 
