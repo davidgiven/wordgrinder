@@ -151,13 +151,9 @@ function WordProcessor(filename)
         FireEvent(Event.DocumentLoaded)
     end
 
-    local masterkeymap = {
-        ["KEY_RESIZE"] = function() -- resize
-            ResizeScreen()
-            RedrawScreen()
-        end,
-
-        ["KEY_REDRAW"] = RedrawScreen,
+    local masterkeymap: {[string]: MenuCallback} = {
+        ["KEY_RESIZE"] = { ResizeScreen, RedrawScreen },
+        ["KEY_REDRAW"] = { RedrawScreen },
 
         [" "] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentWord },
@@ -165,7 +161,7 @@ function WordProcessor(filename)
             Cmd.SplitCurrentParagraph },
         ["KEY_ESCAPE"] = Cmd.ActivateMenu,
         ["KEY_MENU"] = Cmd.ActivateMenu,
-        ["KEY_QUIT"] = Cmd.TerminateProgram,
+        ["KEY_QUIT"] = { Cmd.TerminateProgram },
     }
 
     local function handle_key_event(c)
