@@ -3,6 +3,8 @@ from build.pkg import has_package
 from config import TEST_BINARY
 import platform
 
+osx = platform.system() == "Darwin"
+
 export(
     name="all",
     items={
@@ -10,12 +12,12 @@ export(
     }
     | (
         {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
-        if has_package("xcb")
+        if has_package("xcb") and not osx
         else {}
     )
     | (
         {"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"}
-        if platform.system() == "Darwin"
+        if osx
         else {}
     ),
     deps=["tests", "src/lua+typecheck"],
