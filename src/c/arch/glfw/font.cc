@@ -52,6 +52,28 @@ struct Page
     uint8_t textureData[PAGE_WIDTH * PAGE_HEIGHT];
     stbtt_pack_context ctx;
     GLuint texture;
+
+	Page()
+	{
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbtt_PackBegin(&ctx,
+			&textureData[0],
+			PAGE_WIDTH,
+			PAGE_HEIGHT,
+			PAGE_WIDTH,
+			1,
+			NULL);
+	}
+
+	~Page()
+	{
+		stbtt_PackEnd(&ctx);
+		glDeleteTextures(1, &texture);
+	}
 };
 
 struct CharData
@@ -68,13 +90,8 @@ static int fontAscent;
 static int fontXOffset;
 static float fontScale;
 static std::map<int, std::unique_ptr<Font>> fonts;
-static std::vector<Page> pages;
+static std::vector<std::unique_ptr<Page>> pages;
 static std::map<uint32_t, CharData> chardata;
-
-static void freeFont(Font* font)
-{
-    delete font;
-}
 
 static std::unique_ptr<Font> loadFont(const char* filename, int defaultfont)
 {
@@ -122,36 +139,10 @@ void unloadFonts()
 	fonts.clear();
 }
 
-static Page* newPage()
+static Page* addPage()
 {
-    Page* page = new Page;
-    glGenTextures(1, &page->texture);
-    glBindTexture(GL_TEXTURE_2D, page->texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    stbtt_PackBegin(&page->ctx,
-        &page->textureData[0],
-        PAGE_WIDTH,
-        PAGE_HEIGHT,
-        PAGE_WIDTH,
-        1,
-        NULL);
-
-    return page;
-}
-
-static void freePage(Page* page)
-{
-    stbtt_PackEnd(&page->ctx);
-    glDeleteTextures(1, &page->texture);
-    delete page;
-}
-
-static Page& addPage()
-{
-	pages.push_back({});
-	return pages.back();
+	pages.push_back(std::make_unique<Page>());
+	return pages.back().get();
 }
 
 void flushFontCache()
@@ -190,11 +181,11 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         style |= ITALIC;
 
     uint32_t key = c | (style << 24);
-	auto [it, found] = chardata.emplace(key, CharData{});
-	auto cd = it->second;
-    if (!found)
+	auto [it, inserted] = chardata.emplace(key, CharData{});
+	auto& cd = it->second;
+    if (inserted)
     {
-        Page* page = pages.empty() ? &addPage() : &pages.back();
+        Page* page = pages.empty() ? addPage() : pages.back().get();
 
         auto& font = fonts[style];
         if (!font)
@@ -207,7 +198,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
 
         if (!rawRender(*font, page, cd, c))
         {
-            page = &addPage();
+            page = addPage();
             if (!rawRender(*font, page, cd, c))
             {
                 printf("Unrenderable codepoint %d\n", c);
