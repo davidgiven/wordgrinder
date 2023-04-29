@@ -3,6 +3,7 @@
 
 int get_ivar(const char* name)
 {
+	lua_checkstack(L, 10);
     lua_getglobal(L, "GlobalSettings");
     lua_getfield(L, -1, "gui");
     lua_getfield(L, -1, name);
@@ -11,6 +12,7 @@ int get_ivar(const char* name)
 
 const char* get_svar(const char* name)
 {
+	lua_checkstack(L, 10);
     lua_getglobal(L, "GlobalSettings");
     lua_getfield(L, -1, "gui");
     lua_getfield(L, -1, name);
