@@ -13,6 +13,11 @@
 #include <string>
 #include <filesystem>
 
+#ifdef WIN32
+#include <windows.h>
+#include <Rpc.h>
+#endif
+
 static int pusherrno(lua_State* L)
 {
     lua_pushnil(L);
@@ -21,15 +26,28 @@ static int pusherrno(lua_State* L)
     return 3;
 }
 
+#ifdef WIN32
+static std::string createUuid()
+{
+    UUID uuid;
+    UuidCreate(&uuid);
+
+    unsigned char* s;
+    UuidToStringA(&uuid, &s);
+    std::string ss((char*) s);
+    RpcStringFreeA(&s);
+
+    return ss;
+}
+#endif
+
 static int chdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-#if defined WIN32
-    if (_wchdir(utf8_to_wide(L, filename)) != 0)
-#else
-    if (chdir(filename) != 0)
-#endif
+    std::error_code ec;
+    std::filesystem::current_path(filename, ec);
+    if (ec)
         return pusherrno(L);
 
     lua_pushboolean(L, true);
@@ -40,11 +58,7 @@ static int mkdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-#if defined WIN32
-    if (_wmkdir(utf8_to_wide(L, filename)) != 0)
-#else
-    if (mkdir(filename, 0755) != 0)
-#endif
+    if (!std::filesystem::create_directory(filename))
         return pusherrno(L);
 
     lua_pushboolean(L, true);
@@ -89,47 +103,15 @@ static int readdir_cb(lua_State* L)
 
     lua_newtable(L);
 
-#if defined WIN32
-    wchar_t* wide = utf8_to_wide(L, filename);
-    _WDIR* dp = _wopendir(wide);
-    lua_pop(L, 1);
-    if (!dp)
-        return pusherrno(L);
-
     int index = 1;
-    for (;;)
+    for (auto const& de : std::filesystem::directory_iterator(filename))
     {
-        struct _wdirent* de = _wreaddir(dp);
-        if (!de)
-            break;
-
         lua_pushinteger(L, index);
-        lua_pushwstring(L, de->d_name);
+        lua_pushstring(L, de.path().filename().string().c_str());
         lua_settable(L, -3);
         index++;
     }
 
-    _wclosedir(dp);
-#else
-    DIR* dp = opendir(filename);
-    if (!dp)
-        return pusherrno(L);
-
-    int index = 1;
-    for (;;)
-    {
-        struct dirent* de = readdir(dp);
-        if (!de)
-            break;
-
-        lua_pushinteger(L, index);
-        lua_pushstring(L, de->d_name);
-        lua_settable(L, -3);
-        index++;
-    }
-
-    closedir(dp);
-#endif
     return 1;
 }
 
@@ -137,24 +119,21 @@ static int stat_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-#if defined WIN32
-    struct _stat st;
-    if (_wstat(utf8_to_wide(L, filename), &st) != 0)
+    std::error_code ec;
+    auto status = std::filesystem::status(filename);
+    if (ec)
         return pusherrno(L);
-#else
-    struct stat st;
-    if (stat(filename, &st) != 0)
-        return pusherrno(L);
-#endif
 
     lua_newtable(L);
 
     lua_pushstring(L, "size");
-    lua_pushinteger(L, st.st_size);
+    lua_pushinteger(L, std::filesystem::file_size(filename));
     lua_settable(L, -3);
 
     lua_pushstring(L, "mode");
-    lua_pushstring(L, S_ISDIR(st.st_mode) ? "directory" : "file");
+    lua_pushstring(L,
+        (status.type() == std::filesystem::file_type::directory) ? "directory"
+                                                                 : "file");
     lua_settable(L, -3);
 
     return 1;
@@ -166,7 +145,10 @@ static int access_cb(lua_State* L)
     int mode = forceinteger(L, 2);
 
 #if defined WIN32
-    if (_waccess(utf8_to_wide(L, filename), mode) != 0)
+    wchar_t widepath[strlen(filename) + 1];
+    MultiByteToWideChar(CP_UTF8, 0, filename, -1, widepath, strlen(filename) + 1);
+
+    if (_waccess(widepath, mode) != 0)
         return pusherrno(L);
 #else
     if (access(filename, mode) != 0)
@@ -213,7 +195,18 @@ static int printout_cb(lua_State* L)
 
 static int mkdtemp_cb(lua_State* L)
 {
-    std::string path = std::filesystem::temp_directory_path();
+    std::string path = std::filesystem::temp_directory_path().string();
+
+#ifdef WIN32
+    path = path + "/" + createUuid();
+    if (!std::filesystem::create_directory(path))
+    {
+        lua_pushstring(L, path.c_str());
+        return 1;
+    }
+    else
+        return pusherrno(L);
+#else
     path += "/XXXXXX";
     if (mkdtemp(&path[0]))
     {
@@ -222,6 +215,7 @@ static int mkdtemp_cb(lua_State* L)
     }
     else
         return pusherrno(L);
+#endif
 }
 
 static int readfile_cb(lua_State* L)
@@ -318,3 +312,5 @@ void filesystem_init(void)
     luaL_register(L, NULL, funcs);
     luaL_setconstants(L, consts, sizeof(consts) / sizeof(*consts));
 }
+
+// vim: sw=4 ts=4 et

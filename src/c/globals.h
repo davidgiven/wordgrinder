@@ -6,7 +6,7 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#if !defined WIN32
+#if !defined _WIN32
 #if !defined _XOPEN_SOURCE
 #define _XOPEN_SOURCE
 #endif
@@ -36,6 +36,11 @@
 
 #if defined(__APPLE__) && defined(__MACH__)
 #define OSX
+#endif
+
+#if defined _WIN32
+#define WIN32
+#define EMULATED_WCWIDTH
 #endif
 
 /* --- Emulation issues -------------------------------------------------- */
