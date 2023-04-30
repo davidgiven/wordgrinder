@@ -105,3 +105,12 @@ make_wordgrinder(
                      "-lwindowscodecs", "-lrpcrt4", "-lopengl32", "-lgdi32"],
     },
 )
+
+make_wordgrinder(
+    "wordgrinder-glfw-haiku",
+    ["src/c/arch/glfw"],
+    "clip_none",
+    vars={
+        "+cxxflags": ["-DFRONTEND=glfw"],
+    },
+)

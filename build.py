@@ -5,6 +5,7 @@ import platform
 
 osx = platform.system() == "Darwin"
 windows = platform.system() == "Windows"
+haiku = platform.system() == "Haiku"
 
 export(
     name="all",
@@ -24,6 +25,11 @@ export(
     | (
         {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
         if windows
+        else {}
+    )
+    | (
+        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-haiku"}
+        if haiku
         else {}
     ),
     deps=["tests", "src/lua+typecheck"],
