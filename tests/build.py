@@ -83,7 +83,7 @@ def test(self, name, exe: Target = None):
         ins=["./" + self.localname + ".lua", exe],
         outs=["log"],
         commands=[
-            "{ins[1]} --lua {ins[0]} >{outs} || (cat {outs} && rm -f {outs} && false)"
+            "{ins[1]} --lua {ins[0]} >{outs} 2>&1 || (cat {outs} && rm -f {outs} && false)"
         ],
         label="TEST",
     )

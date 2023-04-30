@@ -3,7 +3,7 @@ loadfile("tests/testsuite.lua")()
 
 local dir = wg.mkdtemp()
 
-local t, _, errno = Mkdirs(dir.."/foo/bar/baz")
+local t, _, errno = wg.mkdirs(dir.."/foo/bar/baz")
 AssertEquals(nil, errno)
 
 local t, _, errno = wg.readdir(dir.."/foo/bar")

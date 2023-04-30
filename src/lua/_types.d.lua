@@ -44,6 +44,7 @@ declare wg: {
 	initscreen: () -> never,
 	insertintoword: (string, string, number, number) -> (string, number?, number?),
 	mkdir: (string) -> (boolean, string?, number?),
+	mkdirs: (string) -> (boolean, string?, number?),
 	nextcharinword: (string, number) -> number?,
 	parseword: (string, number, (number, string) -> never) -> never,
 	prevcharinword: (string, number) -> number?,

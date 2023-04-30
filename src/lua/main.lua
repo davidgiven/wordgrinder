@@ -5,6 +5,7 @@
 
 local int = math.floor
 local table_remove = table.remove
+local Mkdirs = wg.mkdirs
 local Write = wg.write
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold

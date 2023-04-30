@@ -59,8 +59,18 @@ static int mkdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-    fmt::print(stderr, "mkdir({})\n", filename);
     if (!std::filesystem::create_directory(filename))
+        return pusherrno(L);
+
+    lua_pushboolean(L, true);
+    return 1;
+}
+
+static int mkdirs_cb(lua_State* L)
+{
+    const char* filename = luaL_checklstring(L, 1, NULL);
+
+    if (!std::filesystem::create_directories(filename))
         return pusherrno(L);
 
     lua_pushboolean(L, true);
@@ -317,6 +327,7 @@ void filesystem_init(void)
         {"getcwd",    getcwd_cb   },
         {"getenv",    getenv_cb   },
         {"mkdir",     mkdir_cb    },
+        {"mkdirs",    mkdirs_cb    },
         {"mkdtemp",   mkdtemp_cb  },
         {"printerr",  printerr_cb },
         {"printout",  printout_cb },

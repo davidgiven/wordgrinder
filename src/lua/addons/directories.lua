@@ -7,6 +7,7 @@ local Chdir = wg.chdir
 local GetCwd = wg.getcwd
 local Stat = wg.stat
 local Access = wg.access
+local Mkdirs = wg.mkdirs
 local string_format = string.format
 local ENOENT = wg.ENOENT
 local W_OK = wg.W_OK

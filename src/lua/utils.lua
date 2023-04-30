@@ -275,35 +275,6 @@ function ArrayToMap(array: any): any
 	return map
 end
 
--- Make a directory and all necessary parents.
-
-function Mkdirs(dir)
-	local i = 1
-	while i ~= nil do
-		local newi = dir:find("/", i)
-		local d
-		if not newi then
-			d = dir
-			i = nil
-		else
-			d = dir:sub(1, newi-1)
-			i = newi + 1
-		end
-		if (d == "") then
-			-- Root directory?
-			d = "/"
-		end
-
-		local r, e, errno = Mkdir(d)
-		if (not r) and (errno ~= EEXIST) and (errno ~= EACCES)
-			and (errno ~= EISDIR)
-		then
-			return r, e, errno
-		end
-	end
-	return true
-end
-
 -- Argument parser.
 
 FILENAME_ARG = {}
