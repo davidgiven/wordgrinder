@@ -203,7 +203,7 @@ static int mkdtemp_cb(lua_State* L)
 
 #ifdef WIN32
     path = path + "/" + createUuid();
-    if (!std::filesystem::create_directory(path))
+    if (std::filesystem::create_directory(path))
     {
         lua_pushstring(L, path.c_str());
         return 1;
