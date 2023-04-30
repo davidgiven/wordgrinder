@@ -6,7 +6,6 @@ _package_present = {}
 _package_cflags = {}
 _package_ldflags = {}
 _pkgconfig = os.getenv("PKG_CONFIG")
-print(_pkgconfig)
 
 
 def has_package(name):
