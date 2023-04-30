@@ -23,6 +23,7 @@ clibrary(
     + {
         "+cxxflags": [
             f"-DFILEFORMAT={FILEFORMAT}",
+            "-DCMARK_STATIC_DEFINE",
             "-I.",
         ]
     },
@@ -99,7 +100,8 @@ make_wordgrinder(
     "clip_win",
     vars={
         "+cxxflags": ["-DFRONTEND=glfw"],
-        "+ldflags": ["-mconsole", "-lole32", "-lshlwapi", "-lwindowscodecs",
-                     "-lrpcrt4", "-lopengl32", "-lgdi32"],
+        "+ldflags": ["-static", "-static-libgcc", "-static-libstdc++", "-lssp", "-mwindows",
+                     "-lole32", "-lshlwapi",
+                     "-lwindowscodecs", "-lrpcrt4", "-lopengl32", "-lgdi32"],
     },
 )
