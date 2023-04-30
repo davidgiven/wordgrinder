@@ -37,6 +37,11 @@ static time_t timegm(struct tm* timep)
 {
     return mktime(timep);
 }
+#elif defined(__HAIKU__)
+static time_t timegm(struct tm* timep)
+{
+    return mktime(timep);
+}
 #endif
 
 static int os_clock(lua_State* L)
