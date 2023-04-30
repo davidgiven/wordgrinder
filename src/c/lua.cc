@@ -74,9 +74,10 @@ static int loadstring_cb(lua_State* L)
 {
     size_t len;
     const char* s = luaL_checklstring(L, 1, &len);
+    const char* name = luaL_optlstring(L, 2, nullptr, nullptr);
 
     lua_setsafeenv(L, LUA_ENVIRONINDEX, false);
-    if (luaL_loadstring(L, s, nullptr) == 0)
+    if (luaL_loadstring(L, s, name) == 0)
         return 1;
 
     lua_pushnil(L);
