@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include <string>
 #include <filesystem>
+#include <fmt/format.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -34,7 +35,7 @@ static std::string createUuid()
 
     unsigned char* s;
     UuidToStringA(&uuid, &s);
-    std::string ss((char*) s);
+    std::string ss((char*)s);
     RpcStringFreeA(&s);
 
     return ss;
@@ -104,7 +105,8 @@ static int readdir_cb(lua_State* L)
     lua_newtable(L);
 
     int index = 1;
-    auto addItem = [&](std::string filename) {
+    auto addItem = [&](std::string filename)
+    {
         lua_pushinteger(L, index);
         lua_pushstring(L, filename.c_str());
         lua_settable(L, -3);
@@ -128,19 +130,38 @@ static int stat_cb(lua_State* L)
     if (ec)
         return pusherrno(L);
 
-    lua_newtable(L);
+    switch (status.type())
+    {
+        case std::filesystem::file_type::not_found:
+            lua_pushnil(L);
+            lua_pushstring(L, strerror(errno));
+            lua_pushinteger(L, errno);
+            return 3;
 
-    lua_pushstring(L, "size");
-    lua_pushinteger(L, std::filesystem::file_size(filename));
-    lua_settable(L, -3);
+        case std::filesystem::file_type::directory:
+            lua_newtable(L);
 
-    lua_pushstring(L, "mode");
-    lua_pushstring(L,
-        (status.type() == std::filesystem::file_type::directory) ? "directory"
-                                                                 : "file");
-    lua_settable(L, -3);
+            lua_pushstring(L, "size");
+            lua_pushinteger(L, 0);
+            lua_settable(L, -3);
 
-    return 1;
+            lua_pushstring(L, "mode");
+            lua_pushstring(L, "directory");
+            lua_settable(L, -3);
+            return 1;
+
+        default:
+            lua_newtable(L);
+
+            lua_pushstring(L, "size");
+            lua_pushinteger(L, std::filesystem::file_size(filename));
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "mode");
+            lua_pushstring(L, "file");
+            lua_settable(L, -3);
+            return 1;
+    }
 }
 
 static int access_cb(lua_State* L)
@@ -150,7 +171,8 @@ static int access_cb(lua_State* L)
 
 #if defined WIN32
     wchar_t widepath[strlen(filename) + 1];
-    MultiByteToWideChar(CP_UTF8, 0, filename, -1, widepath, strlen(filename) + 1);
+    MultiByteToWideChar(
+        CP_UTF8, 0, filename, -1, widepath, strlen(filename) + 1);
 
     if (_waccess(widepath, mode) != 0)
         return pusherrno(L);
