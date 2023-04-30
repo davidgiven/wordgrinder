@@ -104,13 +104,17 @@ static int readdir_cb(lua_State* L)
     lua_newtable(L);
 
     int index = 1;
-    for (auto const& de : std::filesystem::directory_iterator(filename))
-    {
+    auto addItem = [&](std::string filename) {
         lua_pushinteger(L, index);
-        lua_pushstring(L, de.path().filename().string().c_str());
+        lua_pushstring(L, filename.c_str());
         lua_settable(L, -3);
         index++;
-    }
+    };
+
+    addItem(".");
+    addItem("..");
+    for (auto const& de : std::filesystem::directory_iterator(filename))
+        addItem(de.path().filename().string());
 
     return 1;
 }
