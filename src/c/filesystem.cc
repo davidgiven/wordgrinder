@@ -222,6 +222,7 @@ static int printout_cb(lua_State* L)
 static int mkdtemp_cb(lua_State* L)
 {
     std::string path = std::filesystem::temp_directory_path().string();
+    fmt::print(stderr, "temp directory={}\n", path);
 
 #ifdef WIN32
     path = path + "/" + createUuid();
