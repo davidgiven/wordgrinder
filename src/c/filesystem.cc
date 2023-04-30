@@ -59,6 +59,7 @@ static int mkdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
+    fmt::print(stderr, "mkdir({})\n", filename);
     if (!std::filesystem::create_directory(filename))
         return pusherrno(L);
 
