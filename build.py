@@ -8,7 +8,7 @@ windows = platform.system() == "Windows"
 haiku = platform.system() == "Haiku"
 
 export(
-    name="all",
+    name="binaries",
     items={
         "bin/wordgrinder": TEST_BINARY,
     }
@@ -23,10 +23,7 @@ export(
         else {}
     )
     | (
-        {
-            "bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows",
-            f"bin/WordGrinder-{VERSION}-setup.exe": "src/c/arch/win32+installer"
-        }
+        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
         if windows
         else {}
     )
@@ -35,5 +32,16 @@ export(
         if haiku
         else {}
     ),
-    deps=["tests", "src/lua+typecheck"],
+)
+
+export(
+    name="all",
+    items=(
+        {
+            f"bin/WordGrinder-{VERSION}-setup.exe": "src/c/arch/win32+installer"
+        }
+        if windows
+        else {}
+    ),
+    deps=["tests", "src/lua+typecheck", "+binaries"],
 )

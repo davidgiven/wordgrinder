@@ -24,8 +24,8 @@ makensis(
     name="installer",
     srcs=["extras/windows-installer.nsi"],
     deps=[
-        "bin/wordgrinder.exe",
-        "bin/wordgrinder-windows.exe"
+        "bin/wordgrinder",
+        "bin/wordgrinder-windows"
     ],
     defs={
         "VERSION": VERSION
