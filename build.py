@@ -1,6 +1,6 @@
 from build.ab2 import export
 from build.pkg import has_package
-from config import TEST_BINARY
+from config import TEST_BINARY, VERSION
 import platform
 
 osx = platform.system() == "Darwin"
@@ -23,12 +23,15 @@ export(
         else {}
     )
     | (
-        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
+        {
+            "bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows",
+            f"bin/WordGrinder-{VERSION}-setup.exe": "src/c/arch/win32+installer"
+        }
         if windows
         else {}
     )
     | (
-        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-haiku"}
+        {"bin/wordgrinder-haiku": "src/c+wordgrinder-glfw-haiku"}
         if haiku
         else {}
     ),

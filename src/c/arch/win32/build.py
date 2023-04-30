@@ -1,6 +1,7 @@
 from build.ab2 import DefaultVars
 from build.c import clibrary
-from build.windows import windres
+from build.windows import windres, makensis
+from config import VERSION
 
 windres(
     name="rc",
@@ -17,4 +18,16 @@ clibrary(
     srcs=[
         "+rc"
     ],
+)
+
+makensis(
+    name="installer",
+    srcs=["extras/windows-installer.nsi"],
+    deps=[
+        "bin/wordgrinder.exe",
+        "bin/wordgrinder-windows.exe"
+    ],
+    defs={
+        "VERSION": VERSION
+    }
 )
