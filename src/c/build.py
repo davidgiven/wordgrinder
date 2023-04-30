@@ -68,7 +68,7 @@ make_wordgrinder(
 
 make_wordgrinder(
     "wordgrinder-wincon",
-    "src/c/arch/win32/console",
+    ["src/c/arch/win32", "src/c/arch/win32/console"],
     "clip_none",
     vars={
         "+cxxflags": ["-DFRONTEND=wincon"],
@@ -96,7 +96,7 @@ make_wordgrinder(
 
 make_wordgrinder(
     "wordgrinder-glfw-windows",
-    "src/c/arch/glfw",
+    ["src/c/arch/win32", "src/c/arch/glfw"],
     "clip_win",
     vars={
         "+cxxflags": ["-DFRONTEND=glfw"],

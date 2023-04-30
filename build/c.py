@@ -97,6 +97,9 @@ def findsources(name, srcs, deps, vars):
                     vars=vars,
                 )
             ]
+    for f in filenamesof(srcs):
+        if f.endswith(".o"):
+            ins += [f]
     return ins
 
 

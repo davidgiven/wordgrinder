@@ -3,6 +3,7 @@ export LUA = lua
 export CC = gcc
 export CXX = g++
 export AR = ar
+export WINDRES = windres
 export PKG_CONFIG = pkg-config
 
 export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
@@ -32,7 +33,7 @@ $(OBJ)/build.ninja: Makefile $(build-files)
 	@echo ACKBUILDER
 	@mkdir -p $(OBJ)
 	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m ninja -t +all -o $@ \
-		-v OBJ,CC,CXX,AR \
+		-v OBJ,CC,CXX,AR,WINDRES \
 		build.py
 
 .DELETE_ON_ERROR:
