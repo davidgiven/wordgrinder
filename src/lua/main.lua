@@ -123,7 +123,7 @@ function WordProcessor(filename)
     -- Which config file are we loading?
 
     do
-        local data, errno, e = ReadFile(configfile)
+        local data, e, errno = ReadFile(configfile)
         if data then
             f, e = loadstring(data, configfile)
             if f then

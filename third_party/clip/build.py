@@ -24,3 +24,10 @@ clibrary(
     hdrs=["./clip.h"],
     deps=["+clip_common"],
 )
+
+clibrary(
+    name="clip_win",
+    srcs=["./clip_win.cpp"],
+    hdrs=["./clip.h"],
+    deps=["+clip_common"],
+)
