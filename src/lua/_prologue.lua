@@ -1,4 +1,4 @@
---!nonstrict
+--!strict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -35,10 +35,11 @@ DocumentStyles = nil
 EngageCLI = nil
 GetThemes = nil
 GetMaximumAllowedWidth = nil
+GlobalSettings = nil :: table
 LAlignInField = nil
 MenuClass = nil
 ModalMessage = nil
-Palette = nil
+Palette = nil :: ColourMap
 RAlignInField = nil
 RebuildDocumentsMenu = nil
 RebuildParagraphStylesMenu = nil

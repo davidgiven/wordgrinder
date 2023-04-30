@@ -17,9 +17,18 @@ local string_find = string.find
 local string_sub = string.sub
 local table_concat = table.concat
 
+type Importer = {
+	reset: (Importer) -> (),
+	style_on: (Importer, string) -> (),
+	style_off: (Importer, string) -> (),
+	text: (Importer, string) -> (),
+	flushword: (Importer, boolean) -> (),
+	flushparagraph: (Importer, string) -> (),
+}
+
 -- Import helper functions. These functions build styled words and paragraphs.
 
-function CreateImporter(document)
+function CreateImporter(document): Importer
 	local pbuffer
 	local wbuffer
 	local oldattr

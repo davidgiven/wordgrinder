@@ -99,7 +99,7 @@ local function get_user_dictionary_document()
 	return d
 end
 
-function GetUserDictionary()
+function GetUserDictionary(): {[string]: string}
 	if not user_dictionary_cache then
 		local d = get_user_dictionary_document()
 
@@ -112,10 +112,11 @@ function GetUserDictionary()
 		end
 		user_dictionary_cache = c
 	end
+	assert(user_dictionary_cache)
 	return user_dictionary_cache
 end
 
-function GetSystemDictionary()
+function GetSystemDictionary(): {[string]: string}
 	local settings = GlobalSettings.systemdictionary or {}
 	if not system_dictionary_cache then
 		local c = {}
@@ -136,6 +137,7 @@ function GetSystemDictionary()
 			QueueRedraw()
 		end
 	end
+	assert(system_dictionary_cache)
 	return system_dictionary_cache
 end
 
@@ -152,8 +154,14 @@ function IsWordMisspelt(word, firstword)
 	local settings = DocumentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
-		local systemdict = settings.usesystemdictionary and GetSystemDictionary() or {}
-		local userdict = settings.useuserdictionary and GetUserDictionary() or {}
+		local systemdict = {}
+		if settings.usesystemdictionary then
+			systemdict = GetSystemDictionary()
+		end
+		local userdict = {}
+		if settings.useuserdictionary then
+			userdict = GetUserDictionary()
+		end
 		local scs = GetWordSimpleText(word)
 		local sci = scs:lower()
 		if (sci == "")

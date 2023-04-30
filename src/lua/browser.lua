@@ -23,6 +23,12 @@ local ReadDir = wg.readdir
 local Stat = wg.stat
 local UseUnicode = wg.useunicode
 
+type BrowserItem = {
+	data: string,
+	label: string,
+	key: string?
+}
+
 local function compare_filenames(f1, f2)
 	if (ARCH == "windows") then
 		return f1:lower() == f2:lower()
@@ -31,7 +37,8 @@ local function compare_filenames(f1, f2)
 	end
 end
 
-function FileBrowser(title: string, message: string, saving: boolean, default: string?): string?
+function FileBrowser(title: string, message: string, saving: boolean,
+		default: string?): string?
 	local files = {}
 	for _, filename in ipairs(ReadDir(".")) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
@@ -52,7 +59,7 @@ function FileBrowser(title: string, message: string, saving: boolean, default: s
 		return false
 	end)
 	
-	local labels = {}
+	local labels: {BrowserItem} = {}
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
@@ -175,7 +182,7 @@ function Autocomplete(filename, x1, x2, y)
 	return filename
 end
 
-function Browser(title, topmessage, bottommessage, data)
+function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 	local dialogue: any
 
 	local browser = Form.Browser {

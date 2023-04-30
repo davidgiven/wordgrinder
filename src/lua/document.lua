@@ -589,7 +589,7 @@ function GetOffsetFromWidth(s, x)
 		return len + 1
 end
 
-function GetWordSimpleText(s)
+function GetWordSimpleText(s: string): string
 	s = GetWordText(s)
 	s = UnSmartquotify(s)
 	s = s:gsub('[~#&^$"<>]+', "")
@@ -598,7 +598,7 @@ function GetWordSimpleText(s)
 	return s
 end
 
-function OnlyFirstCharIsUppercase(s)
+function OnlyFirstCharIsUppercase(s: string): boolean
     -- Return true if only first character is uppercase
     local first_char = s:sub(0, 1)
     if first_char:upper() == first_char then

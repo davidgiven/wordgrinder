@@ -49,7 +49,7 @@ function Cmd.Goto()
 	ImmediateMessage("Scanning document...")
 
 	local data = {}
-	local levelcount = {0, 0, 0, 0}
+	local levelcount: {number} = {0, 0, 0, 0}
 	local currentheading = 1
 	for paran, para in ipairs(Document) do
 		local _, _, level = para.style:find("^H(%d)$")

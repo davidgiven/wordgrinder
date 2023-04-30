@@ -19,6 +19,7 @@ function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 	if not filename then
 		return false
 	end
+	assert(filename)
 	if filename:find("/[^.]*$") then
 		filename = filename .. ".wg"
 	end

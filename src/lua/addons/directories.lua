@@ -52,7 +52,7 @@ local function check_dir(dir)
 		return false
 	end
 
-	st, e, errno = Stat(dir)
+	local st, e, errno = Stat(dir)
 	if st and (st.mode ~= "directory") then
 		ModalMessage("File system error",
 			string_format("'%s' exists but is not a directory", dir))

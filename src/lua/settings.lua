@@ -7,7 +7,7 @@ GlobalSettings = {}
 
 local filename = CONFIGDIR.."/settings.dat"
 
-function LoadGlobalSettings(f)
+function LoadGlobalSettings(f: string?)
 	if not f then
 		f = filename
 	end
@@ -25,7 +25,7 @@ function LoadGlobalSettings(f)
 	end
 end
 
-function SaveGlobalSettings(f)
+function SaveGlobalSettings(f: string?)
 	if not f then
 		f = filename
 	end

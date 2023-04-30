@@ -7,7 +7,7 @@ type InputEvent = {x: number, y: number, b: boolean} | string
 
 type Stat = {
 	size: number,
-	mode: number
+	mode: string
 }
 
 type Markdown = any
@@ -134,4 +134,17 @@ declare CMARK_NODE_EMPH: number
 declare CMARK_NODE_STRONG: number
 declare CMARK_NODE_LINK: number
 declare CMARK_NODE_IMAGE: number
+
+declare class Document
+	cp: number
+	co: number
+	cw: number
+end
+declare Document: Document
+
+declare class Palette
+	ControlFG: Colour
+	ControlBG: Colour
+end
+declare Palette: Palette
 

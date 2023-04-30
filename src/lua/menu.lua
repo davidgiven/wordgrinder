@@ -15,7 +15,7 @@ local SetNormal = wg.setnormal
 local GetStringWidth = wg.getstringwidth
 
 local menu_tab = {}
-local key_tab: {[string]: number} = {}
+local key_tab: {[string]: string} = {}
 local menu_stack: {StackedMenu} = {}
 
 local UseUnicode = wg.useunicode
@@ -604,7 +604,7 @@ MenuClass = {
 }
 
 function CreateMenuBindings()
-	local my_key_tab = {}
+	local my_key_tab: {[string|boolean]: string|boolean} = {}
 	for ak, id in pairs(key_tab) do
 		my_key_tab[ak] = id
 		my_key_tab[id] = ak

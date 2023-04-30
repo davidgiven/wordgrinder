@@ -602,15 +602,15 @@ local function loaddocument(filename)
 	return d
 end
 
-function Cmd.LoadDocumentSet(filename)
+function Cmd.LoadDocumentSet(filename): (boolean, string?)
 	if not ConfirmDocumentErasure() then
-		return false
+		return false, "Cancelled"
 	end
 
 	if not filename then
 		filename = FileBrowser("Load Document Set", "Load file:", false)
 		if not filename then
-			return false
+			return false, "Cancelled"
 		end
 	end
 
@@ -622,7 +622,7 @@ function Cmd.LoadDocumentSet(filename)
 		end
 		ModalMessage("Load failed", e)
 		QueueRedraw()
-		return false
+		return false, e
 	end
 
 	-- Downgrading documents is not supported.
@@ -631,7 +631,7 @@ function Cmd.LoadDocumentSet(filename)
 		ModalMessage("Cannot load document", "This document belongs to a newer version of " ..
 			"WordGrinder and cannot be loaded. Sorry.")
 		QueueRedraw()
-		return false
+		return false, "Incompatible version"
 	end
 
 	DocumentSet = d

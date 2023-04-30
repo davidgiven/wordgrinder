@@ -60,7 +60,8 @@ function RAlignInField(x, y, w, s)
 	Write(x+xo, y, s)
 end
 
-function DrawTitledBox(x, y, w, h, title, subtitle)
+function DrawTitledBox(x: number, y: number, w: number, h: number,
+		title: string, subtitle: string?)
 	SetBright()
 	DrawBox(x, y, w, h)
 	CentreInField(x+1, y, w, title)

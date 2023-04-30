@@ -69,7 +69,11 @@ function CliConvert(file1: string, file2: string)
 		if not root or not extension then
 			CLIError("unable to parse filename '", f, "'")
 		end
-			
+
+		assert(root)
+		assert(extension)
+		assert(hassubdoc)
+		assert(subdoc)
 		return root, extension, hassubdoc, subdoc
 	end
 	

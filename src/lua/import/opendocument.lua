@@ -157,7 +157,7 @@ local function add_text(styles, importer, xml)
 	end
 end
 
-local function import_paragraphs(styles, importer, xml, defaultstyle)
+local function import_paragraphs(styles, importer: Importer, xml, defaultstyle)
 	local PARAGRAPH = TEXT_NS .. " p"
 	local HEADER = TEXT_NS .. " h"
 	local LIST = TEXT_NS .. " list"
@@ -203,6 +203,7 @@ function Cmd.ImportODTFile(filename)
 			return false
 		end
 	end
+	assert(filename)
 	
 	ImmediateMessage("Importing...")	
 
