@@ -47,12 +47,16 @@ type StackedMenu = {
 
 function CreateMenu(n: string, m: {{any}}, replaces: Menu?): Menu
 	local w = n:len()
-	local menu = replaces or {
+	local menu: Menu = {
 		label = "",
 		maxwidth = 0,
 		realwidth = 0,
 		mks = {}
 	}
+	if replaces then
+		menu = replaces
+	end
+
 	menu.label = n
 	menu.mks = {}
 

@@ -3,7 +3,7 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local function maketimestamp(pattern, name)
+local function maketimestamp(pattern: string, name: string?): string
 	name = name or Document.name
 	name = name:gsub("%%", "%%%%")
 	

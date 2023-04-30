@@ -766,7 +766,7 @@ function Cmd.Cut()
 	return Cmd.Copy(true) and Cmd.Delete()
 end
 
-function Cmd.Copy(keepselection)
+function Cmd.Copy(keepselection: boolean?)
 	if not Document.mp then
 		return false
 	end

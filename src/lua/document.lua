@@ -36,8 +36,70 @@ type DocumentStyle = {
 }
 
 type DocumentStyles = {[number | string]: DocumentStyle}
-
 DocumentStyles = {} :: DocumentStyles
+
+type DocumentClass = {
+	cursor: (Document) -> (number, number, number),
+	appendParagraph: (Document, Paragraph) -> (),
+	insertParagraphBefore: (Document, Paragraph, number) -> (),
+	deleteParagraphAt: (Document, number) -> (),
+	wrap: (Document, width) -> (),
+	getMarks: (Document) -> (number, number, number, number, number, number),
+	purge: (Document) -> (),
+	spaceAbove: (Document, number) -> number,
+	spaceBelow: (Document, number) -> number,
+	touch: (Document) -> (),
+	renumber: (Document) -> (),
+
+	[number]: Paragraph,
+
+	cp: number,
+	cw: number,
+	co: number,
+
+	mp: number,
+	mw: number,
+	mo: number,
+}
+
+type Document = typeof(setmetatable({}, {} :: DocumentClass))
+Document = {} :: Document
+
+type DocumentSetClass = {
+	purge: (DocumentSet) -> (),
+	touch: (DocumentSet) -> (),
+	clean: (DocumentSet) -> (),
+	getDocumentList: (DocumentSet) -> {Document},
+	_findDocument: (DocumentSet, string) -> Document?,
+	findDocument: (DocumentSet, string) -> Document?,
+	moveDocumentIndexTo: (DocumentSet, string, number) -> (),
+	deleteDocument: (DocumentSet, string) -> boolean,
+	setCurrent: (DocumentSet, string) -> (),
+	renameDocument: (DocumentSet, string, string) -> boolean,
+}
+
+type DocumentSet = typeof(setmetatable({}, {} :: DocumentSetClass))
+DocumentSet = {} :: DocumentSet
+
+type ParagraphClass = {
+	[number]: string,
+
+	copy: (self: Paragraph) -> Paragraph,
+	touch: (self: Paragraph) -> (),
+	wrap: (self: Paragraph, width: number) -> (),
+	renderLine: (self: Paragraph, line: {{string}}, x: number, y: number) -> (),
+	renderMarkedLine: (self: Paragraph, line: {{string}},
+			x: number, y: number, width: number, pn: number) -> (),
+	getLineOfWord: (self: Paragraph, wn: number) ->
+			(number, number),
+	getIndentOfLine: (self: Paragraph, ln: number) -> number,
+	getWordOfLine: (self: Paragraph, ln: number) -> number,
+	getXOffsetOfWord: (self: Paragraph, wn: number) ->
+			(number, number, number),
+	sub: (self: Paragraph, start: number, count: number) -> {string},
+	asString: (Paragraph) -> string
+}
+type Paragraph = typeof(setmetatable({}, {} :: ParagraphClass))
 
 local stylemarkup =
 {
@@ -316,7 +378,7 @@ DocumentClass =
 
 ParagraphClass =
 {
-	copy = function(self)
+	copy = function(self: Paragraph): Paragraph
 		local words = {}
 		for _, w in ipairs(self) do
 			words[#words+1] = w
@@ -325,14 +387,14 @@ ParagraphClass =
 		return CreateParagraph(self.style, words)
 	end,
 
-	touch = function(self)
+	touch = function(self: Paragraph)
 		self.lines = nil
 		self.wrapwidth = nil
 		self.xs = nil
 		self.sentences = nil
 	end,
 
-	wrap = function(self, width)
+	wrap = function(self: Paragraph, width: number): ()
 		local sentences = self.sentences
 		if (sentences == nil) then
 			local issentence = true
@@ -396,7 +458,8 @@ ParagraphClass =
 		return self.lines
 	end,
 
-	renderLine = function(self, line, x, y)
+	renderLine = function(self: Paragraph,
+			line, x: number, y: number)
 		local cstyle = stylemarkup[self.style] or 0
 		local ostyle = 0
 		local xs = self.xs
@@ -417,7 +480,7 @@ ParagraphClass =
 		end
 	end,
 
-	renderMarkedLine = function(self, line, x, y, width, pn)
+	renderMarkedLine = function(self: Paragraph, line, x, y, width, pn)
 		width = width or (ScreenWidth - x)
 
 		local lwn = line.wn
@@ -477,7 +540,8 @@ ParagraphClass =
 	end,
 
 	-- returns: line number, word number in line
-	getLineOfWord = function(self, wn)
+	getLineOfWord = function(self: Paragraph, wn):
+			(number, number)
 		local lines = self:wrap()
 		for ln, l in ipairs(lines) do
 			if (wn <= #l) then
@@ -491,7 +555,7 @@ ParagraphClass =
 	end,
 
 	-- returns: number of characters
-	getIndentOfLine = function(self, ln)
+	getIndentOfLine = function(self: Paragraph, ln): number
 		local indent
 		if (ln == 1) then
 			indent = DocumentStyles[self.style].firstindent
@@ -501,20 +565,21 @@ ParagraphClass =
 	end,
 
 	-- returns: word number
-	getWordOfLine = function(self, ln)
+	getWordOfLine = function(self: Paragraph, ln): number
 		local lines = self:wrap()
 		return lines[ln].wn
 	end,
 
 	-- returns: X offset, line number, word number in line
-	getXOffsetOfWord = function(self, wn)
+	getXOffsetOfWord = function(self: Paragraph, wn):
+			(number, number, number)
 		local lines = self:wrap()
 		local x = self.xs[wn]
 		local ln, wn = self:getLineOfWord(wn)
 		return x, ln, wn
 	end,
 
-	sub = function(self, start, count)
+	sub = function(self: Paragraph, start, count): {string}
 		if not count then
 			count = #self - start + 1
 		else
@@ -529,7 +594,7 @@ ParagraphClass =
 	end,
 
 	-- return an unstyled string containing the contents of the paragraph.
-	asString = function(self)
+	asString = function(self: Paragraph): string
 		local s = {}
 		for _, w in ipairs(self) do
 			s[#s+1] = GetWordText(w)
@@ -539,7 +604,7 @@ ParagraphClass =
 	end
 }
 
-function CreateParagraph(style, ...)
+function CreateParagraph(style, ...): Paragraph
 	words = {}
 
 	for _, t in ipairs({...}) do
@@ -614,7 +679,7 @@ function UpdateDocumentStyles()
 	local plaintext =
 	{
 		desc = "Plain text",
-		name = "P"
+		name = "P",
 	}
 
 	if WantDenseParagraphLayout() then
@@ -627,7 +692,7 @@ function UpdateDocumentStyles()
 		plaintext.firstindent = 0
 	end
 
-	local styles =
+	local styles: {[number|string]: DocumentStyle} =
 	{
 		plaintext,
 		{
@@ -731,7 +796,7 @@ function CreateDocumentSet()
 	return ds
 end
 
-function CreateDocument()
+function CreateDocument(): Document
 	local d =
 	{
 		wrapwidth = nil,

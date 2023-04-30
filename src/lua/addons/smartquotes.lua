@@ -105,7 +105,7 @@ local function convert_clipboard()
 			local newwords = {}
 			for _, w in ipairs(para) do
 				w = w:gsub('()(["\'])',
-					function(pos, s)
+					function(pos: number, s: string)
 						local prefix = w:sub(1, pos-1)
 						local first = start_of_word_pattern(prefix) ~= nil
 						if first then
