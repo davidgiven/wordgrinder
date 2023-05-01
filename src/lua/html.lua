@@ -6,7 +6,7 @@
 local WriteU8 = wg.writeu8
 local string_find = string.find
 
-HTMLEntities =
+local HTMLEntities =
 {
 		["&amp;"] = "&",
 		["&gt;"] = ">",
@@ -263,7 +263,7 @@ HTMLEntities =
 		["&loz;"] = "◊"
 }
 
-function DecodeHTMLEntity(s)
+function DecodeHTMLEntity(s): string?
 	local e = HTMLEntities[s]
 	if e then
 		return e
@@ -272,12 +272,12 @@ function DecodeHTMLEntity(s)
 	local _, _, e = string_find(s, "^&#(%w*);")
 	if not e then
 		return nil
+	else
+		local n = tonumber("0"..e)
+		if not n then
+			return nil
+		else
+			return WriteU8(n)
+		end
 	end
-	
-	e = tonumber("0"..e)
-	if not e then
-		return nil
-	end
-	
-	return WriteU8(e)
 end

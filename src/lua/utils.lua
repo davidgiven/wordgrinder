@@ -91,8 +91,8 @@ function SplitString(str: string, delim: string): {string}
 
     local result = {}
     local pat = "(.-)" .. delim .. "()"
-    local lastPos
-    for part, pos in str:gmatch(pat) do
+    local lastPos: number
+    for part, pos: any in str:gmatch(pat) do
 		result[#result+1] = part
 		lastPos = pos
     end
@@ -112,7 +112,7 @@ function TableToString(t: any): string
 		elseif (type(n) == "number") then
 			return tostring(n)
 		elseif (n == nil) then
-			return nil
+			return "nil"
 		elseif (type(n) == "boolean") then
 			return tostring(n)
 		elseif (type(n) == "function") then
@@ -279,7 +279,7 @@ end
 
 FILENAME_ARG = {}
 UNKNOWN_ARG = {}
-function ParseArguments(argv, callbacks)
+function ParseArguments(argv: {string}, callbacks: {[any]: any})
 	local function popn(n)
 		if (n == nil) then
 			return
@@ -372,12 +372,12 @@ end
 
 -- As for LargestCommonPrefix, but case insensitive.
 
-function LargestCommonPrefixCaseInsensitive(array)
+function LargestCommonPrefixCaseInsensitive(array: {string}): string?
 	if (#array == 0) then
 		return nil
 	end
 
-	local function all_strings_contain(p1, p2, s)
+	local function all_strings_contain(p1: number, p2: number, s: string)
 		s = s:sub(p1, p2):lower()
 		for _, ss in ipairs(array) do
 			if (ss:sub(p1, p2):lower() ~= s) then

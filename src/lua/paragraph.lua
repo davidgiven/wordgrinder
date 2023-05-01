@@ -33,6 +33,7 @@ type Paragraph = {
 	[number]: string,
 	__iter: (self: Paragraph) -> (any, any, number),
 
+	number: number,
 	style: string,
 	wrapwidth: number?,
 	sentences: {[number]: boolean}?,

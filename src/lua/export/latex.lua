@@ -23,7 +23,7 @@ local function untex(s)
 	return s
 end
 
-local style_tab =
+local style_tab: {[string]: {string}} =
 {
 	["H1"] = {'\\section{',            '}'},
 	["H2"] = {'\\subsection{',         '}'},
@@ -39,7 +39,7 @@ local style_tab =
 	["PRE"] = {'\\begin{verbatim}\n',  '\n\\end{verbatim}'}
 }
 
-local function callback(writer, document)
+local function callback(writer: (...string) -> (), document: Document)
 	return ExportFileUsingCallbacks(document,
 	{
 		prologue = function()
@@ -63,7 +63,7 @@ local function callback(writer, document)
 			writer(untex(s))
 		end,
 		
-		notext = function(s)
+		notext = function()
 			writer('\\paragraph{}')
 		end,
 		
@@ -91,11 +91,11 @@ local function callback(writer, document)
 			writer('}')
 		end,
 		
-		list_start = function()
+		list_start = function(n)
 			writer('\\begin{enumerate}\n')
 		end,
 		
-		list_end = function()
+		list_end = function(n)
 			writer('\\end{enumerate}\n')
 		end,
 		

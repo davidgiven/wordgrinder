@@ -11,7 +11,7 @@ local function unmarkdown(s)
 	return s
 end
 
-local style_tab =
+local style_tab: {[string]: {any}} =
 {
 	["H1"] = {false, '# ', '\n'},
 	["H2"] = {false, '## ', '\n'},

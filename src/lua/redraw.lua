@@ -73,7 +73,7 @@ function ResizeScreen()
 end
 
 local function drawmargin(y, pn, p)
-	local controller = MarginControllers[currentDocument.viewmode]
+	local controller = marginControllers[currentDocument.viewmode]
 	if controller.getcontent then
 		local s = controller:getcontent(pn, p)
 

@@ -36,32 +36,32 @@ function Cmd.ImportHTMLString(data)
 	
 	-- Helper function for reading tokens from the HTML stream.
 	
-	local pos = 1
+	local pos: number = 1
 	local len = data:len()
-	local function tokens()
+	local function tokens(): string?
 		if (pos >= len) then
 			return nil
 		end
 		
 		local s, e, t
-		s, e, t = string_find(data, "^([ \n])", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^([ \n])", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		if string_find(data, "^%c") then
+		if string.find(data, "^%c") then
 			pos = pos + 1
 			return tokens()
 		end
 		
-		s, e, t = string_find(data, "^(<[^>]*>)", pos)
-		if s then pos = e+1 return t:lower() end
+		s, e, t = string.find(data, "^(<[^>]*>)", pos)
+		if s then pos = assert(e)+1 return assert(t):lower() end
 		
-		s, e, t = string_find(data, "^(&[^;]-;)", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^(&[^;]-;)", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		s, e, t = string_find(data, "^([^ <&\n]+)", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^([^ <&\n]+)", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		t = string_sub(data, pos, pos+1)
+		t = string.sub(data, pos, pos+1)
 		pos = pos + 1
 		return t
 	end

@@ -10,7 +10,7 @@ local string_char = string.char
 local string_format = string.format
 local string_gsub = string.gsub
 
-local style_tab =
+local style_tab: {[string]: string} =
 {
 	["H1"] = '.NH 1',
 	["H2"] = '.NH 2',
@@ -54,10 +54,10 @@ local function callback(writer, document)
 
 		s = string_gsub(s, '\\', '\\\\')
 		
-		local o = 1
+		local o: number? = 1
 		local n = string_len(s)
 		
-		while (o <= n) do
+		while o and (o <= n) do
 			local c = ReadU8(s, o)
 			o = NextCharInWord(s, o)
 			if (c < 127) then
@@ -119,7 +119,7 @@ local function callback(writer, document)
 			writer(s)
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()
@@ -159,7 +159,7 @@ local function callback(writer, document)
 					writer(".DE\n")
 				end
 				if (style == "LN") then
-					writer(string_format(".IP %d. 3", para.number))
+					writer(string.format(".IP %d. 3", para.number))
 				else
 					writer(style_tab[style] or ".LP")
 				end

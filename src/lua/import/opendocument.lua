@@ -26,10 +26,10 @@ local TEXT_NS = "urn:oasis:names:tc:opendocument:xmlns:text:1.0"
 
 type ODStyle = {
 	parent: string,
-	italic: boolean,
-	bold: boolean,
-	underline: boolean,
-	indented: boolean
+	italic: boolean?,
+	bold: boolean?,
+	underline: boolean?,
+	indented: boolean?
 }
 
 type ODStyleMap = {
@@ -61,11 +61,7 @@ local function parse_style(styles: ODStyleMap, xml)
 			style.italic = element[FONT_STYLE] == "italic"
 			style.bold = element[FONT_WEIGHT] == "bold"
 			style.underline = element[UNDERLINE_STYLE] == "solid"
-			style.indented = false
 		elseif (element._name == PARAGRAPH_PROPERTIES) then
-			style.italic = false
-			style.bold = false
-			style.underline = false
 			style.indented = element[MARGIN_LEFT]
 		end
 	end
@@ -82,7 +78,7 @@ local function resolve_parent_styles(styles: ODStyleMap)
 		if style.parent then
 			return recursively_fetch(style.parent, attr)
 		end
-		return nil
+		return false
 	end
 
 	for k, v in styles do
@@ -109,13 +105,13 @@ local function collect_styles(styles, xml)
 	end
 end
 
-local function add_text(styles, importer, xml)
+local function add_text(styles: ODStyleMap, importer, xml)
 	local SPACE = TEXT_NS .. " s"
 	local SPACECOUNT = TEXT_NS .. " c"
 	local SPAN = TEXT_NS .. " span"
 	local STYLENAME = TEXT_NS .. " style-name"
 	
-	for _, element in ipairs(xml) do
+	for _, element: any in ipairs(xml) do
 		if (type(element) == "string") then
 			local needsflush = false
 			if string_find(element, "^ ") then
@@ -138,7 +134,7 @@ local function add_text(styles, importer, xml)
 			end
 		elseif (element._name == SPAN) then
 			local stylename = element[STYLENAME] or ""
-			local style = styles[stylename] or {}
+			local style = styles[stylename] or {}::ODStyle
 			
 			if style.italic then
 				importer:style_on(ITALIC)
@@ -177,7 +173,7 @@ local function import_paragraphs(
 	for _, element in ipairs(xml) do
 		if (element._name == PARAGRAPH) then
 			local stylename = element[STYLENAME] or ""
-			local style = styles[stylename] or {}
+			local style = styles[stylename] or {}::ODStyle
 			local wgstyle = defaultstyle
 			
 			if style.indented then
@@ -187,8 +183,8 @@ local function import_paragraphs(
 			add_text(styles, importer, element)
 			importer:flushparagraph(wgstyle)
 		elseif (element._name == HEADER) then
-			local level = tonumber(element[OUTLINELEVEL] or 1)
-			if (level > 4) then
+			local level = assert(tonumber(element[OUTLINELEVEL] or 1))
+			if level > 4 then
 				level = 4
 			end
 			

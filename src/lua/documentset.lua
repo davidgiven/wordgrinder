@@ -65,7 +65,7 @@ function CreateDocumentSet(): DocumentSet
 		addons = {},
 	}
 
-	return setmetatable(ds, DocumentSet)
+	return (setmetatable(ds, DocumentSet)::any)::DocumentSet
 end
 
 -- remove any cached data prior to saving

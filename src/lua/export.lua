@@ -19,8 +19,8 @@ type Exporter = {
 	prologue: () -> (),
 	epilogue: () -> (),
 
-	paragraph_start: (string) -> (),
-	paragraph_end: (string) -> (),
+	paragraph_start: (Paragraph) -> (),
+	paragraph_end: (Paragraph) -> (),
 
 	list_start: (string) -> (),
 	list_end: (string) -> (),
@@ -39,11 +39,11 @@ type Exporter = {
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
 
-function ExportFileUsingCallbacks(document, cb: Exporter)
+function ExportFileUsingCallbacks(document: Document, cb: Exporter)
 	document:renumber()
 	cb.prologue()
 
-	local listmode = false
+	local listmode: string? = nil
 	local rawmode = false
 	local italic, underline, bold
 	local olditalic, oldunderline, oldbold
@@ -105,11 +105,11 @@ function ExportFileUsingCallbacks(document, cb: Exporter)
 
 		if listmode and not style.list then
 			cb.list_end(listmode)
-			listmode = false
+			listmode = nil
 		end
 		if not listmode and style.list then
 			cb.list_start(name)
-			listmode = true
+			listmode = name
 		end
 
 		rawmode = (name == "RAW")
@@ -156,7 +156,7 @@ function ExportFileUsingCallbacks(document, cb: Exporter)
 		cb.paragraph_end(paragraph)
 	end
 	if listmode then
-		cb.list_end()
+		cb.list_end(listmode)
 	end
 	cb.epilogue()
 end

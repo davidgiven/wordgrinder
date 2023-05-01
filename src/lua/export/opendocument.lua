@@ -42,7 +42,7 @@ local function list()
 	end
 end
 
-local style_tab =
+local style_tab: {[string]: {any}} =
 {
 	["H1"] = {false, header(), emit('</text:h>') },
 	["H2"] = {false, header(), emit('</text:h>') },
@@ -114,7 +114,7 @@ local function callback(writer, document)
 			writer(unhtml(s))
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()

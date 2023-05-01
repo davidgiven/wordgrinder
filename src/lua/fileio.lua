@@ -126,7 +126,7 @@ function SaveToString(object)
 	return table.concat(ss)
 end
 
-function SaveToFile(filename, object)
+function SaveToFile(filename: string, object: any): (boolean, string?)
 	-- Write the file to a *different* filename (so that crashes during
 	-- writing doesn't corrupt the file).
 
@@ -135,7 +135,7 @@ function SaveToFile(filename, object)
 	local new_filename = filename..".new"
 	local _, e = WriteFile(new_filename, s)
 	if e then
-		return nil, e
+		return false, e
 	end
 
 	-- At this point, we know the new file has been written correctly.
@@ -144,7 +144,7 @@ function SaveToFile(filename, object)
 	-- os.rename, but Windows doesn't support clobbering renames.
 
 	wg.remove(filename)
-	r, e = wg.rename(new_filename, filename)
+	local r, e = wg.rename(new_filename, filename)
 	if e then
 		-- Yikes! The old file has gone, but we couldn't rename the new
 		-- one...
@@ -206,7 +206,7 @@ local function loadfromstream(fp): DocumentSet
 	local load
 
 	local function populate_table(t)
-		local n = tonumber(fp:read("*l"))
+		local n = assert(tonumber(fp:read("*l")))
 		for i = 1, n do
 			t[i] = load()
 		end

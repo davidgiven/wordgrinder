@@ -247,15 +247,15 @@ function Cmd.ConfigureSmartQuotes()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		single_checkbox,
-		double_checkbox,
-		leftsingle_textfield,
-		rightsingle_textfield,
-		leftdouble_textfield,
-		rightdouble_textfield,
-		notinraw_checkbox,
-
 		widgets = {
+			single_checkbox,
+			double_checkbox,
+			leftsingle_textfield,
+			rightsingle_textfield,
+			leftdouble_textfield,
+			rightdouble_textfield,
+			notinraw_checkbox,
+
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 32, y2 = 5,

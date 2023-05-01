@@ -17,7 +17,7 @@ local function callback(writer, document)
 			writer(s)
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()

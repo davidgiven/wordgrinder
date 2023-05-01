@@ -32,6 +32,7 @@ type DocumentStyle = {
 	bullet: string?,
 	list: boolean?,
 	firstindent: number?,
+	numbered: boolean?,
 }
 
 type DocumentStyles = {[number | string]: DocumentStyle}
@@ -47,6 +48,17 @@ type Document = {
 
 	name: string,
 	wordcount: number,
+	wrapwidth: number?,
+	topp: number?,
+	topw: number?,
+	botp: number?,
+	botw: number?,
+	
+	-- These should no longer exist; this dates from a previous attempt
+	-- at undo with file version 6. We're not storing the undo buffer
+	-- in files any more.
+	undostack: nil,
+	redostack: nil,
 
 	cp: number,
 	cw: number,
@@ -141,7 +153,7 @@ function Document.purge(self: Document)
 end
 
 -- calculate space above this paragraph
-function Document.spaceAbove(self, pn)
+function Document.spaceAbove(self: Document, pn: number)
 	local paragraph = self[pn]
 	local paragraphabove = self[pn - 1]
 
@@ -159,7 +171,7 @@ function Document.spaceAbove(self, pn)
 end
 
 -- calculate space below this paragraph
-function Document.spaceBelow(self, pn)
+function Document.spaceBelow(self: Document, pn: number)
 	local paragraph = self[pn]
 	local paragraphbelow = self[pn + 1]
 
@@ -176,11 +188,11 @@ function Document.spaceBelow(self, pn)
 	end
 end
 
-function Document.touch(self)
+function Document.touch(self: Document)
 	FireEvent(Event.DocumentModified, self)
 end
 
-function Document.renumber(self)
+function Document.renumber(self: Document)
 	local wc = 0
 	local pn = 1
 
@@ -200,7 +212,7 @@ function Document.renumber(self)
 end
 
 -- Returns how many screen spaces a portion of a string takes up.
-function GetWidthFromOffset(s, o)
+function GetWidthFromOffset(s: string, o: number)
 	return GetStringWidth(s:sub(1, o-1))
 end
 
@@ -348,7 +360,7 @@ function UpdateDocumentStyles()
 		}
 	}
 
-	for _, s in ipairs(styles) do
+	for _, s in styles do
 		styles[s.name] = s
 	end
 
@@ -366,10 +378,10 @@ function CreateDocument(): Document
 		co = 1,
 	}
 
-	setmetatable(d, Document)
+	local dd = (setmetatable(d, Document)::any) :: Document
 
 	local p = CreateParagraph("P", {""})
-	d:appendParagraph(p)
-	return d
+	dd:appendParagraph(p)
+	return dd
 end
 

@@ -35,7 +35,7 @@ type BrowserFileData = {
 	name: string
 }
 	
-local function compare_filenames(f1, f2)
+local function compare_filenames(f1: string, f2: string)
 	if (ARCH == "windows") then
 		return f1:lower() == f2:lower()
 	else
@@ -140,7 +140,7 @@ function FileBrowser(title: string, message: string, saving: boolean,
 	end
 end
 
-function Autocomplete(filename, x1, x2, y)
+function Autocomplete(filename: string, x1: number, x2: number, y: number)
 	local dirname = Dirname(filename)
 	local leafname = Leafname(filename)
 
@@ -152,13 +152,14 @@ function Autocomplete(filename, x1, x2, y)
 	if not files then
 		return filename
 	end
+	assert(files)
 
 	if (dirname == "./") then
 		dirname = ""
 	end
 
 	local candidates = {}
-	for _, f in ipairs(files) do
+	for _, f in files do
 		if (compare_filenames(f:sub(1, #leafname), leafname)) then
 			local st = Stat(dirname.."/"..f)
 			if st and (st.mode == "directory") then
@@ -174,9 +175,9 @@ function Autocomplete(filename, x1, x2, y)
 	end
 
 	-- Does the LCP advance the filename? If so, return it.
-	local prefix = (ARCH == "windows")
-		and LargestCommonPrefixCaseInsensitive(candidates)
-		or LargestCommonPrefix(candidates)
+	local prefix = if (ARCH == "windows")
+		then LargestCommonPrefixCaseInsensitive(candidates)
+		else LargestCommonPrefix(candidates)
 	if (prefix == nil) then
 		return filename
 	elseif prefix ~= leafname then

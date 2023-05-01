@@ -18,14 +18,14 @@ local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetBoundedString = wg.getboundedstring
 local UseUnicode = wg.useunicode
 
-function DrawStatusLine(s)
+function DrawStatusLine(s: string)
 	SetReverse()
 	ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 	Write(0, ScreenHeight-1, s)
 	SetNormal()
 end
 
-function DrawBox(x, y, w, h)
+function DrawBox(x: number, y: number, w: number, h: number)
 	local border = string.rep(UseUnicode() and "─" or "-", w)
 	local space = string.rep(" ", w)
 	Write(x-1,   y,     UseUnicode() and " ┌" or " +")
@@ -43,18 +43,18 @@ function DrawBox(x, y, w, h)
 	end
 end
 
-function CentreInField(x, y, w, s)
+function CentreInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	local xo = int((w - GetStringWidth(s)) / 2)
 	Write(x+xo, y, s)
 end
 
-function LAlignInField(x, y, w, s)
+function LAlignInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	Write(x, y, s)
 end
 
-function RAlignInField(x, y, w, s)
+function RAlignInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	local xo = w - GetStringWidth(s)
 	Write(x+xo, y, s)

@@ -3,10 +3,13 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local listeners = {}
-local batched = {}
+type Event = {number}
+type EventToken = {Event}
 
-Event = {}
+local listeners = {} :: {[Event]: {[EventToken]: (Event, EventToken, ...any) -> ()}}
+local batched = {} :: {[Event]: boolean}
+
+Event = {} :: {[string]: Event}
 Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
 Event.Changed = {}           --- the document's been changed
 Event.DocumentCreated = {}   --- a new documentset has just been created
@@ -34,7 +37,7 @@ Event.ScreenInitialised = {} --- the screen has just been set up
 -- @param callback           the callback to register
 -- @return                   the callback token
 
-function AddEventListener(event, callback)
+function AddEventListener(event: Event, callback)
 	-- Ensure there's a listener table for this event.
 	
 	if not listeners[event] then
@@ -73,7 +76,7 @@ function FireEvent(event, ...)
 		return
 	end
 	
-	for token, callback in pairs(l) do
+	for token, callback in l do
 		callback(event, token, ...)
 	end
 end
@@ -100,8 +103,9 @@ function FlushAsyncEvents()
 		if not e then
 			break
 		end
-		batched[e] = nil
+		assert(e)
 
+		batched[e] = nil
 		FireEvent(e)
 	end
 end

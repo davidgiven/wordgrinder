@@ -43,12 +43,12 @@ local style_tab =
 		on='<pre>', off='</pre>'}
 }
 
-local function callback(writer, document)
+local function callback(writer: (...string) -> (), document)
 	local settings = documentSet.addons.htmlexport
 	local currentstylename = nil
 	local islist = false
 	
-	function changepara(para)
+	function changepara(para: Paragraph?)
 		local newstylename = para and para.style
 		local currentstyle = style_tab[currentstylename]
 		local newstyle = style_tab[newstylename]
@@ -73,6 +73,7 @@ local function callback(writer, document)
 			end
 
 			if newstyle then
+				assert(para)
 				if newstylename == "LN" then
 					writer(string.format('<li style="list-style-type: decimal;" value=%d>', para.number))
 				else
@@ -103,7 +104,7 @@ local function callback(writer, document)
 			writer(unhtml(s))
 		end,
 		
-		notext = function(s)
+		notext = function()
 			if (currentstylename ~= "PRE") then
 				writer('<br/>')
 			end
@@ -133,10 +134,10 @@ local function callback(writer, document)
 			writer(settings.bold_off)
 		end,
 		
-		list_start = function()
+		list_start = function(name)
 		end,
 		
-		list_end = function()
+		list_end = function(name)
 		end,
 		
 		paragraph_start = function(para)

@@ -8,6 +8,8 @@ local coroutine_wrap = coroutine.wrap
 local writeu8 = wg.writeu8
 local string_find = string.find
 
+type XML = any
+
 local function cowcopy(t)
 	return setmetatable({},
 		{
@@ -203,7 +205,7 @@ function TokeniseXML(xml)
 	end
 	
 	parse_tag = function(scope)
-		local _, e, s1, s2, s3, s4, s5 = string_find(xml, OPENTAG, offset)
+		local _, e, s1, s2, s3, s4, s5 = string.find(xml, OPENTAG, offset)
 		local newscope = cowcopy(scope)
 
 		local tag = {
@@ -220,6 +222,7 @@ function TokeniseXML(xml)
 		end
 		
 		coroutine_yield(tag)
+		assert(e)
 		offset = e + 1
 
 		if (s5 == "") then
@@ -247,7 +250,7 @@ end
 -- @param xml                   XML string to parse
 -- @return                      tree
 
-function ParseXML(xml): any
+function ParseXML(xml): XML
 	local nextToken = TokeniseXML(xml)
 
 	local function parse_tag(token)

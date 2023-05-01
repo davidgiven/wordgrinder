@@ -44,7 +44,7 @@ Form.Large = {}
 
 type Widget = any
 
-local function min(a, b)
+local function min<T>(a: T, b: T): T
 	if (a < b) then
 		return a
 	else
@@ -52,7 +52,7 @@ local function min(a, b)
 	end
 end
 
-local function max(a, b)
+local function max<T>(a: T, b: T): T
 	if (a > b) then
 		return a
 	else
@@ -70,14 +70,14 @@ end
 
 Form.Divider = makewidgetclass
 {
-	draw = function(self)
+	draw = function(self: Widget)
 		Write(self.realx1, self.realy1, string_rep("─", self.realwidth))
 	end
 }
 
 Form.WrappedLabel = makewidgetclass
 {
-	draw = function(self)
+	draw = function(self: Widget)
 		local words = ParseStringIntoWords(self.value)
 		local paragraph = CreateParagraph("P", words)
 		local lines = paragraph:wrap(self.realwidth)
@@ -89,7 +89,7 @@ Form.WrappedLabel = makewidgetclass
 		SpellcheckerRestore(s)
 	end,
 
-	calculate_height = function(self)
+	calculate_height = function(self: Widget)
 		local words = ParseStringIntoWords(self.value)
 		local paragraph = CreateParagraph("P", words)
 		local lines = paragraph:wrap(self.realwidth)
@@ -100,7 +100,7 @@ Form.WrappedLabel = makewidgetclass
 Form.Label = makewidgetclass {
 	align = Form.Centre,
 
-	draw = function(self)
+	draw = function(self: Widget)
 		local xo
 		if (self.align == Form.Centre) then
 			xo = int((self.realwidth - GetStringWidth(self.value)) / 2)
@@ -126,7 +126,7 @@ Form.Checkbox = makewidgetclass {
 	label = "Checkbox",
 	focusable = true,
 
-	draw = function(self)
+	draw = function(self: Widget)
 		local s
 		if self.value then
 			s = "> YES"
@@ -145,7 +145,7 @@ Form.Checkbox = makewidgetclass {
 		end
 	end,
 		
-	changed = function(self) end,
+	changed = function(self: Widget) end,
 
 	[" "] = checkbox_toggle
 }
@@ -156,7 +156,7 @@ Form.Toggle = makewidgetclass {
 	label = "Toggle",
 	focusable = true,
 
-	draw = function(self)
+	draw = function(self: Widget)
 		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
 		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 
@@ -181,9 +181,9 @@ Form.Toggle = makewidgetclass {
 		end
 	end,
 
-	changed = function(self) end,
+	changed = function(self: Widget) end,
 
-	["KEY_LEFT"] = function(self, key)
+	["KEY_LEFT"] = function(self: Widget, key)
 		if self.value ~= 1 then
 			self.value = self.value - 1
 			self:draw()
@@ -191,7 +191,7 @@ Form.Toggle = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_RIGHT"] = function(self, key)
+	["KEY_RIGHT"] = function(self: Widget, key)
 		if self.value ~= #self.values then
 			self.value = self.value + 1
 			self:draw()
@@ -199,7 +199,7 @@ Form.Toggle = makewidgetclass {
 		return "nop"
 	end,
 
-	[" "] = function(self, key)
+	[" "] = function(self: Widget, key)
 		self.value = self.value + 1
 		if self.value > #self.values then
 			self.value = 1
@@ -225,12 +225,12 @@ Form.TextField = makewidgetclass {
 	focusable = true,
 	transient = false,
 
-	init = function(self)
+	init = function(self: Widget)
 		self.cursor = self.cursor or (self.value:len() + 1)
 		self.offset = self.offset or 1
 	end,
 
-	draw = function(self)
+	draw = function(self: Widget)
 		SetBright()
 		Write(self.realx1, self.realy1 + 1, string_rep(
 			UseUnicode() and "▔" or " ", self.realwidth))
@@ -272,9 +272,9 @@ Form.TextField = makewidgetclass {
 		end
 	end,
 
-	changed = function(self) end,
+	changed = function(self: Widget) end,
 
-	["KEY_LEFT"] = function(self, key)
+	["KEY_LEFT"] = function(self: Widget, key)
 		keep_transient_textfield(self)
 		if (self.cursor > 1) then
 			while true do
@@ -289,7 +289,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_RIGHT"] = function(self, key)
+	["KEY_RIGHT"] = function(self: Widget, key)
 		keep_transient_textfield(self)
 		if (self.cursor <= self.value:len()) then
 			self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
@@ -299,7 +299,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_HOME"] = function(self, key)
+	["KEY_HOME"] = function(self: Widget, key)
 		keep_transient_textfield(self)
 		self.cursor = 1
 		self:draw()
@@ -307,7 +307,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_END"] = function(self, key)
+	["KEY_END"] = function(self: Widget, key)
 		keep_transient_textfield(self)
 		self.cursor = self.value:len() + 1
 		self:draw()
@@ -315,7 +315,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_BACKSPACE"] = function(self, key)
+	["KEY_BACKSPACE"] = function(self: Widget, key)
 		discard_transient_textfield(self)
 		if (self.cursor > 1) then
 			local w
@@ -336,7 +336,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_DELETE"] = function(self, key)
+	["KEY_DELETE"] = function(self: Widget, key)
 		discard_transient_textfield(self)
 		local v = self.value:byte(self.cursor)
 		if v then
@@ -350,7 +350,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_^U"] = function(self, key)
+	["KEY_^U"] = function(self: Widget, key)
 		discard_transient_textfield(self)
 		self.cursor = 1
 		self.offset = 1
@@ -361,36 +361,36 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	click = function(self, m)
+	click = function(self: Widget, m: InputEvent)
 		local c = m.x - self.realx1 + self.offset
 		if (c >= 1) and (c <= #self.value) then
 			self.cursor = c
 			return "redraw"
 		end
+		return "nop"
 	end,
 
-	key = function(self, key)
+	key = function(self: Widget, key)
 		if not key:match("^KEY_") then
 			discard_transient_textfield(self)
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
 			self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
 			self:changed()
 			self:draw()
-
-			return "nop"
 		end
+		return "nop"
 	end,
 }
 
 Form.Browser = makewidgetclass {
 	focusable = true,
 
-	init = function(self)
+	init = function(self: Widget)
 		self.cursor = self.cursor or 1
 		self.offset = self.offset or 0
 	end,
 
-	_adjustOffset = function(self)
+	_adjustOffset = function(self: Widget)
 		local h = self.realheight
 
 		if (self.offset == 0) then
@@ -403,11 +403,11 @@ Form.Browser = makewidgetclass {
 		self.offset = max(self.offset, 1)
 	end,
 
-	changed = function(self)
+	changed = function(self: Widget)
 		return "nop"
 	end,
 
-	draw = function(self)
+	draw = function(self: Widget)
 		local x = self.realx1
 		local y = self.realy1
 		local w = self.realwidth
@@ -468,7 +468,7 @@ Form.Browser = makewidgetclass {
 		SetNormal()
 	end,
 
-	["KEY_UP"] = function(self, key)
+	["KEY_UP"] = function(self: Widget, key)
 		if (self.cursor > 1) then
 			self.cursor = self.cursor - 1
 			self:draw()
@@ -478,7 +478,7 @@ Form.Browser = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_DOWN"] = function(self, key)
+	["KEY_DOWN"] = function(self: Widget, key)
 		if (self.cursor < #self.data) then
 			self.cursor = self.cursor + 1
 			self:draw()
@@ -488,7 +488,7 @@ Form.Browser = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_PGUP"] = function(self, key)
+	["KEY_PGUP"] = function(self: Widget, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor - int(self.realheight/2)
 		if (self.cursor < 1) then
@@ -502,7 +502,7 @@ Form.Browser = makewidgetclass {
 		return "nop"
 	end,
 
-	["KEY_PGDN"] = function(self, key)
+	["KEY_PGDN"] = function(self: Widget, key)
 		local oldcursor = self.cursor
 		self.cursor = oldcursor + int(self.realheight/2)
 		if (self.cursor > #self.data) then
@@ -519,7 +519,7 @@ Form.Browser = makewidgetclass {
 
 local standard_actions =
 {
-	["KEY_UP"] = function(dialogue, key)
+	["KEY_UP"] = function(dialogue: Form, key)
 		if dialogue.focus then
 			local f = dialogue.focus - 1
 			while (f ~= dialogue.focus) do
@@ -540,7 +540,7 @@ local standard_actions =
 		return "nop"
 	end,
 
-	["KEY_DOWN"] = function(dialogue, key)
+	["KEY_DOWN"] = function(dialogue: Form, key)
 		if dialogue.focus then
 			local f = dialogue.focus + 1
 			while (f ~= dialogue.focus) do
