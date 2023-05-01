@@ -1,4 +1,3 @@
---!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -38,20 +37,10 @@ type DocumentStyle = {
 type DocumentStyles = {[number | string]: DocumentStyle}
 DocumentStyles = {} :: DocumentStyles
 
-type DocumentClass = {
-	cursor: (Document) -> (number, number, number),
-	appendParagraph: (Document, Paragraph) -> (),
-	insertParagraphBefore: (Document, Paragraph, number) -> (),
-	deleteParagraphAt: (Document, number) -> (),
-	wrap: (Document, width) -> (),
-	getMarks: (Document) -> (number, number, number, number, number, number),
-	purge: (Document) -> (),
-	spaceAbove: (Document, number) -> number,
-	spaceBelow: (Document, number) -> number,
-	touch: (Document) -> (),
-	renumber: (Document) -> (),
-
+type DocumentClassFields = {
 	[number]: Paragraph,
+
+	name: string,
 
 	cp: number,
 	cw: number,
@@ -62,44 +51,9 @@ type DocumentClass = {
 	mo: number,
 }
 
-type Document = typeof(setmetatable({}, {} :: DocumentClass))
-Document = {} :: Document
-
-type DocumentSetClass = {
-	purge: (DocumentSet) -> (),
-	touch: (DocumentSet) -> (),
-	clean: (DocumentSet) -> (),
-	getDocumentList: (DocumentSet) -> {Document},
-	_findDocument: (DocumentSet, string) -> Document?,
-	findDocument: (DocumentSet, string) -> Document?,
-	moveDocumentIndexTo: (DocumentSet, string, number) -> (),
-	deleteDocument: (DocumentSet, string) -> boolean,
-	setCurrent: (DocumentSet, string) -> (),
-	renameDocument: (DocumentSet, string, string) -> boolean,
+type DocumentSetClassFields = {
+	menu: Menu,
 }
-
-type DocumentSet = typeof(setmetatable({}, {} :: DocumentSetClass))
-DocumentSet = {} :: DocumentSet
-
-type ParagraphClass = {
-	[number]: string,
-
-	copy: (self: Paragraph) -> Paragraph,
-	touch: (self: Paragraph) -> (),
-	wrap: (self: Paragraph, width: number) -> (),
-	renderLine: (self: Paragraph, line: {{string}}, x: number, y: number) -> (),
-	renderMarkedLine: (self: Paragraph, line: {{string}},
-			x: number, y: number, width: number, pn: number) -> (),
-	getLineOfWord: (self: Paragraph, wn: number) ->
-			(number, number),
-	getIndentOfLine: (self: Paragraph, ln: number) -> number,
-	getWordOfLine: (self: Paragraph, ln: number) -> number,
-	getXOffsetOfWord: (self: Paragraph, wn: number) ->
-			(number, number, number),
-	sub: (self: Paragraph, start: number, count: number) -> {string},
-	asString: (Paragraph) -> string
-}
-type Paragraph = typeof(setmetatable({}, {} :: ParagraphClass))
 
 local stylemarkup =
 {
@@ -253,29 +207,32 @@ DocumentSetClass =
 	end,
 }
 
+type DocumentSet = typeof(setmetatable(
+		{} :: DocumentSetClassFields, {__index = DocumentSetClass}))
+
 DocumentClass =
 {
-	cursor = function(self)
+	cursor = function(self: Document)
 		return { self.cp, self.cw, self.co }
 	end,
 
-	appendParagraph = function(self, p)
+	appendParagraph = function(self: Document, p)
 		self[#self+1] = p
 	end,
 
-	insertParagraphBefore = function(self, paragraph, pn)
+	insertParagraphBefore = function(self: Document, paragraph, pn)
 		table.insert(self, pn, paragraph)
 	end,
 
-	deleteParagraphAt = function(self, pn)
+	deleteParagraphAt = function(self: Document, pn)
 		table.remove(self, pn)
 	end,
 
-	wrap = function(self, width)
+	wrap = function(self: Document, width)
 		self.wrapwidth = width
 	end,
 
-	getMarks = function(self)
+	getMarks = function(self: Document)
 		if not self.mp then
 			return
 		end
@@ -298,7 +255,7 @@ DocumentClass =
 	end,
 
 	-- remove any cached data prior to saving
-	purge = function(self)
+	purge = function(self: Document)
 		for _, paragraph in ipairs(self) do
 			paragraph:touch()
 		end
@@ -376,255 +333,9 @@ DocumentClass =
 	end
 }
 
-ParagraphClass =
-{
-	copy = function(self: Paragraph): Paragraph
-		local words = {}
-		for _, w in ipairs(self) do
-			words[#words+1] = w
-		end
-
-		return CreateParagraph(self.style, words)
-	end,
-
-	touch = function(self: Paragraph)
-		self.lines = nil
-		self.wrapwidth = nil
-		self.xs = nil
-		self.sentences = nil
-	end,
-
-	wrap = function(self: Paragraph, width: number): ()
-		local sentences = self.sentences
-		if (sentences == nil) then
-			local issentence = true
-			sentences = {}
-			for wn, word in ipairs(self) do
-				if issentence then
-					sentences[wn] = true
-					issentence = false
-				end
-
-				if word:find("[^%a]$") then
-					issentence = true
-				end
-			end
-			sentences[#self] = true
-			self.sentences = sentences
-		end
-
-		width = width or Document.wrapwidth
-		if (self.wrapwidth ~= width) then
-			local lines = {}
-			local line = {wn = 1}
-			local w = 0
-			local xs = {}
-			local fullstopspaces = WantFullStopSpaces()
-			self.xs = xs
-
-			width = width - self:getIndentOfLine(1)
-
-			for wn, word in ipairs(self) do
-				-- get width of word (including space)
-				local ww = GetStringWidth(word) + 1
-
-				-- add an extra space if the user asked for it
-				if fullstopspaces and word:find("%.$") then
-					ww = ww + 1
-				end
-
-				xs[wn] = w
-				w = w + ww
-				if (w >= width) then
-					lines[#lines+1] = line
-					if #lines == 1 then
-						width = width + self:getIndentOfLine(1) - self:getIndentOfLine(2)
-					end
-					line = {wn = wn}
-					w = ww
-					xs[wn] = 0
-				end
-
-				line[#line+1] = wn
-			end
-
-			if (#line > 0) then
-				lines[#lines+1] = line
-			end
-
-			self.lines = lines
-		end
-
-		return self.lines
-	end,
-
-	renderLine = function(self: Paragraph,
-			line, x: number, y: number)
-		local cstyle = stylemarkup[self.style] or 0
-		local ostyle = 0
-		local xs = self.xs
-
-		for _, wn in ipairs(line) do
-			local w = self[wn]
-
-			local payload = {
-				word = w,
-				ostyle = ostyle,
-				cstyle = cstyle,
-				firstword = self.sentences[wn]
-			}
-			FireEvent(Event.DrawWord, payload)
-
-			ostyle = WriteStyled(x+xs[wn], y, payload.word,
-				payload.ostyle, nil, nil, payload.cstyle)
-		end
-	end,
-
-	renderMarkedLine = function(self: Paragraph, line, x, y, width, pn)
-		width = width or (ScreenWidth - x)
-
-		local lwn = line.wn
-		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
-
-		local cstyle = stylemarkup[self.style] or 0
-		local ostyle = 0
-		for wn, w in ipairs(line) do
-			local s, e
-
-			wn = lwn + wn - 1
-
-			if (pn < mp1) or (pn > mp2) then
-				s = nil
-			elseif (pn > mp1) and (pn < mp2) then
-				s = 1
-			else
-				if (pn == mp1) and (pn == mp2) then
-					if (wn == mw1) and (wn == mw2) then
-						s = mo1
-						e = mo2
-					elseif (wn == mw1) then
-						s = mo1
-					elseif (wn == mw2) then
-						s = 1
-						e = mo2
-					elseif (wn > mw1) and (wn < mw2) then
-						s = 1
-					end
-				elseif (pn == mp1) then
-					if (wn > mw1) then
-						s = 1
-					elseif (wn == mw1) then
-						s = mo1
-					end
-				else
-					s = 1
-					if (wn > mw2) then
-						s = nil
-					elseif (wn == mw2) then
-						e = mo2
-					end
-				end
-			end
-
-			local payload = {
-				word = self[w],
-				ostyle = ostyle,
-				cstyle = cstyle,
-				firstword = self.sentences[wn]
-			}
-			FireEvent(Event.DrawWord, payload)
-
-			ostyle = WriteStyled(x+self.xs[w], y, payload.word,
-				payload.ostyle, s, e, payload.cstyle)
-		end
-	end,
-
-	-- returns: line number, word number in line
-	getLineOfWord = function(self: Paragraph, wn):
-			(number, number)
-		local lines = self:wrap()
-		for ln, l in ipairs(lines) do
-			if (wn <= #l) then
-				return ln, wn
-			end
-
-			wn = wn - #l
-		end
-
-		return nil, nil
-	end,
-
-	-- returns: number of characters
-	getIndentOfLine = function(self: Paragraph, ln): number
-		local indent
-		if (ln == 1) then
-			indent = DocumentStyles[self.style].firstindent
-		end
-		indent = indent or DocumentStyles[self.style].indent or 0
-		return indent
-	end,
-
-	-- returns: word number
-	getWordOfLine = function(self: Paragraph, ln): number
-		local lines = self:wrap()
-		return lines[ln].wn
-	end,
-
-	-- returns: X offset, line number, word number in line
-	getXOffsetOfWord = function(self: Paragraph, wn):
-			(number, number, number)
-		local lines = self:wrap()
-		local x = self.xs[wn]
-		local ln, wn = self:getLineOfWord(wn)
-		return x, ln, wn
-	end,
-
-	sub = function(self: Paragraph, start, count): {string}
-		if not count then
-			count = #self - start + 1
-		else
-			count = min(count, #self - start + 1)
-		end
-
-		local t = {}
-		for i = start, start+count-1 do
-			t[#t+1] = self[i]
-		end
-		return t
-	end,
-
-	-- return an unstyled string containing the contents of the paragraph.
-	asString = function(self: Paragraph): string
-		local s = {}
-		for _, w in ipairs(self) do
-			s[#s+1] = GetWordText(w)
-		end
-
-		return table_concat(s, " ")
-	end
-}
-
-function CreateParagraph(style, ...): Paragraph
-	words = {}
-
-	for _, t in ipairs({...}) do
-		if (type(t) == "table") then
-			for _, w in ipairs(t) do
-				words[#words+1] = w
-			end
-		else
-			words[#words+1] = t
-		end
-	end
-
-	if type(style) ~= "string" then
-		error("paragraph style is not a string")
-	end
-	words.style = style
-
-	setmetatable(words, {__index = ParagraphClass})
-	return words
-end
+type Document = typeof(setmetatable(
+		{} :: DocumentClassFields, {__index = DocumentClass}))
+Document = {} :: Document
 
 -- Returns how many screen spaces a portion of a string takes up.
 function GetWidthFromOffset(s, o)

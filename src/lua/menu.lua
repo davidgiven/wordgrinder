@@ -45,6 +45,8 @@ type StackedMenu = {
 	top: number
 }
 
+type MenuTree = typeof(setmetatable({}, {__index = MenuTreeClass}))
+
 function CreateMenu(n: string, m: {{any}}, replaces: Menu?): Menu
 	local w = n:len()
 	local menu: Menu = {
@@ -301,7 +303,7 @@ end
 
 --- MENU DRIVER CLASS ---
 
-MenuClass = {
+MenuTreeClass = {
 	activate = function(self, menu)
 		menu = menu or MainMenu
 		self:runmenu(0, 0, menu)
@@ -607,7 +609,7 @@ MenuClass = {
 	end,
 }
 
-function CreateMenuBindings()
+function CreateMenuTree(): MenuTree
 	local my_key_tab: {[string|boolean]: string|boolean} = {}
 	for ak, id in pairs(key_tab) do
 		my_key_tab[ak] = id
@@ -617,7 +619,7 @@ function CreateMenuBindings()
 	local m = {
 		accelerators = my_key_tab
 	}
-	setmetatable(m, {__index = MenuClass})
+	setmetatable(m, {__index = MenuTreeClass})
 	return m
 end
 

@@ -50,7 +50,7 @@ local function writetostreamt(object, write)
 	local function save(key: string, t: any)
 		if (type(t) == "table") then
 			local m = GetClass(t)
-			if (m ~= ParagraphClass) and (key ~= ".current") then
+			if (m ~= Paragraph) and (key ~= ".current") then
 				for k, i in ipairs(t) do
 					save(key.."."..k, i)
 				end
@@ -237,7 +237,7 @@ local function loadfromstream(fp)
 
 		["P"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = ParagraphClass})
+			setmetatable(t, {__index = Paragraph})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -261,7 +261,7 @@ local function loadfromstream(fp)
 
 		["M"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = MenuClass})
+			setmetatable(t, {__index = MenuTreeClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -365,7 +365,7 @@ local function loadfromstreamz(fp)
 
 		[PARAGRAPHCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = ParagraphClass})
+			setmetatable(t, {__index = Paragraph})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -397,7 +397,7 @@ local function loadfromstreamz(fp)
 
 		[MENUCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = MenuClass})
+			setmetatable(t, {__index = MenuTreeClass})
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -464,7 +464,7 @@ end
 
 local function loadfromstreamt(fp)
 	local data = CreateDocumentSet()
-	data.menu = CreateMenuBindings()
+	data.menu = CreateMenuTree()
 	data.documents = {}
 
 	local function readl()
@@ -642,7 +642,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
 
 		DocumentSet.fileformat = FILEFORMAT
-		DocumentSet.menu = CreateMenuBindings()
+		DocumentSet.menu = CreateMenuTree()
 	end
 	FireEvent(Event.RegisterAddons)
 	DocumentSet:touch()

@@ -11,6 +11,7 @@ SRCS = [
     "src/lua/redraw.lua",
     "src/lua/settings.lua",
     "src/lua/document.lua",
+    "src/lua/paragraph.lua",
     "src/lua/forms.lua",
     "src/lua/ui.lua",
     "src/lua/browser.lua",
