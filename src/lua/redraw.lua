@@ -131,7 +131,7 @@ local function redrawstatus()
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
 
 		local ss = {}
-		FireEvent(Event.BuildStatusBar, ss)
+		FireEvent("BuildStatusBar", ss)
 		table.sort(ss, function(x, y) return x.priority < y.priority end)
 
 		local s = {" "}
@@ -442,7 +442,7 @@ function RedrawScreen()
 
 	redrawstatus()
 
-	FireEvent(Event.Redraw)
+	FireEvent("Redraw")
 end
 
 function GetPositionOfLine(y)
@@ -489,5 +489,5 @@ do
 		currentDocument:renumber()
 	end
 
-	AddEventListener(Event.Changed, cb)
+	AddEventListener("Changed", cb)
 end

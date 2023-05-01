@@ -43,7 +43,7 @@ do
 		end
 	end
 
-	AddEventListener(Event.KeyTyped, cb)
+	AddEventListener("KeyTyped", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -62,7 +62,7 @@ do
 		}
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------

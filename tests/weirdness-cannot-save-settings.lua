@@ -9,7 +9,7 @@ GlobalSettings = {
 	floatValue = 1.0,
 	tableValue = { 1, 2, 3, foo="bar" }
 }
-FireEvent(Event.RegisterAddons)
+FireEvent("RegisterAddons")
 
 SaveGlobalSettings(filename)
 

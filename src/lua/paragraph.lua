@@ -185,7 +185,7 @@ function Paragraph.renderLine(self: Paragraph, line, x: number, y: number): ()
 			cstyle = cstyle,
 			firstword = assert(self.sentences)[wn]
 		}
-		FireEvent(Event.DrawWord, payload)
+		FireEvent("DrawWord", payload)
 
 		ostyle = WriteStyled(
 			x+assert(xs)[wn], y,
@@ -246,7 +246,7 @@ function Paragraph.renderMarkedLine(self: Paragraph, line, x, y, width, pn): ()
 			cstyle = cstyle,
 			firstword = assert(self.sentences)[wn]
 		}
-		FireEvent(Event.DrawWord, payload)
+		FireEvent("DrawWord", payload)
 
 		ostyle = WriteStyled(x+assert(self.xs)[w], y, payload.word,
 			payload.ostyle, s, e, payload.cstyle)

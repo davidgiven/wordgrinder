@@ -52,7 +52,7 @@ function QueueRedraw()
             oldcp = currentDocument.cp
             oldcw = currentDocument.cw
             oldco = currentDocument.co
-            FireEvent(Event.Moved)
+            FireEvent("Moved")
         end
 
         if not currentDocument.wrapwidth then
@@ -72,8 +72,8 @@ function ResetDocumentSet()
     documentSet:purge()
     documentSet:clean()
 
-    FireEvent(Event.DocumentCreated)
-    FireEvent(Event.RegisterAddons)
+    FireEvent("DocumentCreated")
+    FireEvent("RegisterAddons")
 end
 
 do
@@ -84,8 +84,8 @@ do
         SetCurrentStyleHint(0, 0)
     end
 
-    AddEventListener(Event.DocumentLoaded, cb)
-    AddEventListener(Event.DocumentCreated, cb)
+    AddEventListener("DocumentLoaded", cb)
+    AddEventListener("DocumentCreated", cb)
 end
 
 -- This function contains the word processor proper, including the main event
@@ -138,7 +138,7 @@ function WordProcessor(filename)
     end
 
     wg.initscreen()
-	FireEvent(Event.ScreenInitialised)
+	FireEvent("ScreenInitialised")
     ResizeScreen()
     RedrawScreen()
 
@@ -149,7 +149,7 @@ function WordProcessor(filename)
             documentSet.name = filename
         end
     else
-        FireEvent(Event.DocumentLoaded)
+        FireEvent("DocumentLoaded")
     end
 
     local masterkeymap: {[string]: MenuCallback} = {
@@ -179,7 +179,7 @@ function WordProcessor(filename)
                 Cmd.TypeWhileSelected()
 
                 local payload = { value = c }
-                FireEvent(Event.KeyTyped, payload)
+                FireEvent("KeyTyped", payload)
 
                 Cmd.InsertStringIntoWord(payload.value)
             else
@@ -215,12 +215,12 @@ function WordProcessor(filename)
         local nl = string.char(13)
         while true do
             if documentSet.justchanged then
-                FireEvent(Event.Changed)
+                FireEvent("Changed")
                 documentSet.justchanged = false
             end
 
             FlushAsyncEvents()
-            FireEvent(Event.WaitingForUser)
+            FireEvent("WaitingForUser")
             local c = "KEY_TIMEOUT"
             while (c == "KEY_TIMEOUT") do
                 if redrawpending then
@@ -230,7 +230,7 @@ function WordProcessor(filename)
 
                 c = GetCharWithBlinkingCursor(IDLE_TIME)
                 if (c == "KEY_TIMEOUT") then
-                    FireEvent(Event.Idle)
+                    FireEvent("Idle")
                 end
             end
             if c ~= "KEY_RESIZE" then

@@ -37,7 +37,7 @@ type Menu = {
 	mks: {[string]: MenuItem}
 }
 
-type MenuCallback = {() -> (boolean | Menu, any?)}
+type MenuCallback = () -> (boolean | Menu, any?)
 
 type StackedMenu = {
 	menu: Menu,

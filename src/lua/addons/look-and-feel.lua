@@ -73,12 +73,13 @@ do
 				denseparagraphs = false,
 				palette = "Light",
 				scrollmode = "Fixed",
+				fullstopspaces = false,
 			}
 		)
 		SetTheme(GlobalSettings.lookandfeel.palette)
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------

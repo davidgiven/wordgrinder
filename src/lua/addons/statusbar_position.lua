@@ -20,6 +20,6 @@ do
 			}
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 

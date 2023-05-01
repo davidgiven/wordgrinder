@@ -62,7 +62,7 @@ local paragraph_number_controller =
 			end
 		end
 
-		self.token = AddEventListener(Event.Changed, cb)
+		self.token = AddEventListener("Changed", cb)
 		cb()
 		NonmodalMessage("Margin now displays paragraph numbers.")
 	end,

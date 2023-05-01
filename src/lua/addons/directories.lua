@@ -25,13 +25,14 @@ do
 		)
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 local function check_dir(dir)
+	local _
 	local st, e, errno = Access(dir, W_OK)
 	if (errno == ENOENT) then
 		if PromptForYesNo("Directory does not exist",

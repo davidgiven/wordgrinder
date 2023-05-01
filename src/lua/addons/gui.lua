@@ -25,7 +25,7 @@ do
 		end
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 --
 -----------------------------------------------------------------------------
@@ -204,7 +204,7 @@ function Cmd.ConfigureGui()
 
 	wg.deinitscreen()
 	wg.initscreen()
-	FireEvent(Event.ScreenInitialised)
+	FireEvent("ScreenInitialised")
 	SaveGlobalSettings()
 
 	return true

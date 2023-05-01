@@ -21,7 +21,7 @@ AssertTableEquals({"fnord"}, unset(GetUserDictionary()))
 
 documentSet.addons.spellchecker.enabled = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
@@ -29,17 +29,17 @@ documentSet.addons.spellchecker.enabled = true
 documentSet.addons.spellchecker.useuserdictionary = true
 documentSet.addons.spellchecker.usesystemdictionary = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
 local payload = { word="fnord.", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord.", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
 local payload = { word="notfound", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"notfound", wg.DIM, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
@@ -62,7 +62,7 @@ AssertEquals(false, IsWordMisspelt("UPPER", false))
 documentSet.addons.spellchecker.useuserdictionary = true
 documentSet.addons.spellchecker.usesystemdictionary = true
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 

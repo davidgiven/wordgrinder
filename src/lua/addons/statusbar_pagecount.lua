@@ -19,7 +19,7 @@ do
 		end
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ do
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------

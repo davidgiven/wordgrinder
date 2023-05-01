@@ -14,10 +14,10 @@ local NUMBER_OF_RECENTS = 10
 
 do
 	local function cb()
-		GlobalSettings.recents = (GlobalSettings.recents or {}) :: {string}
+		GlobalSettings.recents = GlobalSettings.recents or ({} :: {string})
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -45,7 +45,7 @@ do
 		SaveGlobalSettings()
 	end
 
-	AddEventListener(Event.DocumentLoaded, cb)
+	AddEventListener("DocumentLoaded", cb)
 end
 
 -----------------------------------------------------------------------------

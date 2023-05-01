@@ -578,6 +578,7 @@ end
 function LoadFromFile(filename): (DocumentSet?, string?)
 	local data, _, e = wg.readfile(filename);
 	if not data then
+		assert(e)
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
 	assert(data)
@@ -653,16 +654,16 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 
 	if (fileformat < FILEFORMAT) then
 		UpgradeDocument(fileformat)
-		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
+		FireEvent("DocumentUpgrade", fileformat, FILEFORMAT)
 
 		documentSet.fileformat = FILEFORMAT
 		documentSet.menu = CreateMenuTree()
 	end
-	FireEvent(Event.RegisterAddons)
+	FireEvent("RegisterAddons")
 	documentSet:touch()
 
 	ResizeScreen()
-	FireEvent(Event.DocumentLoaded)
+	FireEvent("DocumentLoaded")
 
 	UpdateDocumentStyles()
 	RebuildDocumentsMenu(documentSet.documents)

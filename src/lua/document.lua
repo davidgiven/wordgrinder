@@ -189,7 +189,7 @@ function Document.spaceBelow(self: Document, pn: number)
 end
 
 function Document.touch(self: Document)
-	FireEvent(Event.DocumentModified, self)
+	FireEvent("DocumentModified", self)
 end
 
 function Document.renumber(self: Document)

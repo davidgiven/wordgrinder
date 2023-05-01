@@ -162,7 +162,7 @@ end
 -- @param new                new table
 -- @return                   modified new table
 
-function MergeTables(old: any, new: any): any
+function MergeTables<T>(old: T, new: T): T
 	if old then
 		for k, v in pairs(old) do
 			new[k] = v

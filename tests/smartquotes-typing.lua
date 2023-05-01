@@ -9,7 +9,7 @@ documentSet.addons.smartquotes.notinraw = true
 local function typestring(s)
 	for c in s:gmatch(".") do
 		local payload = { value = c }
-		FireEvent(Event.KeyTyped, payload)
+		FireEvent("KeyTyped", payload)
 
 		local c = payload.value
 		if (c == " ") then

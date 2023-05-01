@@ -30,11 +30,12 @@ function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 	documentSet:clean()
 	local r, e = SaveDocumentSetRaw(filename)
 	if not r then
-			ModalMessage("Save failed", "The document could not be saved: "..e)
-			return false, e
+		assert(e)
+		ModalMessage("Save failed", "The document could not be saved: "..e)
+		return false, e
 	else
-			NonmodalMessage("Save succeeded.")
-			return true
+		NonmodalMessage("Save succeeded.")
+		return true
 	end
 end
 

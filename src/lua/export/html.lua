@@ -181,7 +181,7 @@ do
 		s.bold_off = s.bold_off or "</b>"
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------

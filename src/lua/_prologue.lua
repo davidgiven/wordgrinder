@@ -21,33 +21,3 @@ function loadfile(filename: string)
 	return nil, e
 end
 
--- Global declarations.
-
-CLIError = nil
-CliConvert = nil
-CreateDocument = nil
-CreateParagraph = nil
-EngageCLI = nil
-GetMaximumAllowedWidth = nil
-GetThemes = nil
-GlobalSettings = nil :: table
-LAlignInField = nil
-MenuTreeClass = {}
-ModalMessage = nil
-Palette = nil :: ColourMap
-RAlignInField = nil
-RebuildDocumentsMenu = nil
-RebuildParagraphStylesMenu = nil
-ResizeScreen = nil
-RunMenuAction = nil
-ScreenHeight = 0
-ScreenWidth = 0
-SetColour = nil
-SetCurrentStyleHint = nil
-SetTheme = nil
-SpellcheckerOff = nil
-SpellcheckerRestore = nil
-UpdateDocumentStyles = nil
-WantFullStopSpaces = nil
-
-

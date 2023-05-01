@@ -13,7 +13,7 @@ GlobalSettings = {
 	stringWithQuotationMarks = 'one"two"three',
 	stringWithSpecialBytes = "one\001two\002three",
 }
-FireEvent(Event.RegisterAddons)
+FireEvent("RegisterAddons")
 
 SaveGlobalSettings(filename)
 

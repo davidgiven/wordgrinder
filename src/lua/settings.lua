@@ -21,7 +21,7 @@ function LoadGlobalSettings(f: string?)
 			GlobalSettings = s
 		end
 
-		FireEvent(Event.RegisterAddons)
+		FireEvent("RegisterAddons")
 	end
 end
 

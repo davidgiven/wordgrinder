@@ -10,16 +10,6 @@ local ReadFile = wg.readfile
 
 local USER_DICTIONARY_NAME = "User dictionary"
 
-type SpellcheckerSettings = {
-	enabled: boolean,
-	usesystemdictionary: boolean,
-	useuserdictionary: boolean
-}
-
-type GlobalSpellcheckerSettings = {
-	filename: string
-}
-
 -----------------------------------------------------------------------------
 -- Addon registration. Create the default settings in the documentSet.
 
@@ -37,14 +27,14 @@ do
 			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
-		} :: SpellcheckerSettings
+		}
 
 		GlobalSettings.systemdictionary = GlobalSettings.systemdictionary or {
 			filename = find_default_dictionary()
-		} :: GlobalSpellcheckerSettings
+		}
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -88,7 +78,7 @@ local function get_user_dictionary_document()
 						.. "considered valid in your document.", "%s")
 			)
 
-		AddEventListener(Event.DocumentModified,
+		AddEventListener("DocumentModified",
 			function(self, token, document)
 				if (document == d) then
 					user_dictionary_document_modified(d)
@@ -117,7 +107,7 @@ function GetUserDictionary(): {[string]: string}
 end
 
 function GetSystemDictionary(): {[string]: string}
-	local settings = GlobalSettings.systemdictionary or {}
+	local settings = GlobalSettings.systemdictionary
 	if not system_dictionary_cache then
 		local c = {}
 		system_dictionary_cache = c
@@ -217,7 +207,7 @@ do
 		end
 	end
 
-	AddEventListener(Event.DrawWord, cb)
+	AddEventListener("DrawWord", cb)
 end
 
 -----------------------------------------------------------------------------

@@ -2,16 +2,16 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-type Colour = {number}
-type InputEvent = {x: number, y: number, b: boolean} | string
+export type Colour = {number}
+export type InputEvent = {x: number, y: number, b: boolean} | string
 
-type Stat = {
+export type Stat = {
 	size: number,
 	mode: string
 }
 
-type Markdown = any
-type MarkdownIterator = any
+export type Markdown = any
+export type MarkdownIterator = any
 
 declare wg: {
 	access: (string, number) -> (boolean, string?, number?),
@@ -98,6 +98,9 @@ declare DEBUG: boolean
 declare VERSION: string
 declare FILEFORMAT: number
 declare ARCH: string
+declare HOME: string
+declare CONFIGDIR: string
+declare WINDOWS_INSTALL_DIR: string?
 
 declare function CMarkParse(data: string): Markdown
 declare function CMarkIterate(node: Markdown): MarkdownIterator
@@ -135,9 +138,11 @@ declare CMARK_NODE_STRONG: number
 declare CMARK_NODE_LINK: number
 declare CMARK_NODE_IMAGE: number
 
-declare class Palette
-	ControlFG: Colour
-	ControlBG: Colour
-end
-declare Palette: Palette
+declare function CreateMenu()
+declare function CreateMenuBindings()
+declare function CreateMenuTree()
+declare function LoadFromFile()
+declare function ModalMessage(title: string?, message: string)
+declare function SaveToFile()
+declare function SetTheme(theme: string)
 

@@ -173,7 +173,7 @@ DocumentSet.setCurrent = function(self, name)
 	-- Ensure any housekeeping on the current document gets done.
 
 	if currentDocument.changed then
-		FireEvent(Event.Changed)
+		FireEvent("Changed")
 	end
 
 	currentDocument = self.documents[name]

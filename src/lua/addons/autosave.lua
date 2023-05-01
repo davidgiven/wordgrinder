@@ -50,7 +50,7 @@ do
 			ImmediateMessage("Autosaving...")
 			
 			local filename = makefilename(settings.pattern)
-			local r, e = SavedocumentSetRaw(filename)
+			local r, e = SaveDocumentSetRaw(filename)
 			
 			if not r then
 				ModalMessage("Autosave failed", "The document could not be autosaved: "..e)
@@ -63,7 +63,7 @@ do
 		end
 	end
 	
-	AddEventListener(Event.Idle, cb)
+	AddEventListener("Idle", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ do
 		announce()
 	end
 	
-	AddEventListener(Event.DocumentLoaded, cb)
+	AddEventListener("DocumentLoaded", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -91,7 +91,7 @@ do
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------

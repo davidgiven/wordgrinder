@@ -24,7 +24,7 @@ do
 			}
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -35,7 +35,7 @@ do
 		style = GetStyleToLeftOfCursor()
 	end
 
-	AddEventListener(Event.Moved, cb)
+	AddEventListener("Moved", cb)
 end
 
 -----------------------------------------------------------------------------

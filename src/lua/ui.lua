@@ -82,7 +82,7 @@ function ImmediateMessage(text)
 	wg.sync()
 end
 
-function ModalMessage(title, message)
+function ModalMessage(title: string?, message: string)
 	local dialogue =
 	{
 		title = title or "Message",
