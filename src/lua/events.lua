@@ -45,7 +45,7 @@ function AddEventListener(event: Event, callback)
 	
 	-- Register the callback.
 	
-	local token = {event}
+	local token: EventToken = {event}
 	listeners[event][token] = callback
 	return token
 end
@@ -56,8 +56,8 @@ end
 --
 -- @param token              a token returned by AddEventListener
 
-function RemoveEventListener(token)
-	local event = token[1]
+function RemoveEventListener(token: EventToken)
+	local event: Event = token[1]
 	listeners[event][token] = nil
 end
 

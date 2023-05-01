@@ -145,7 +145,14 @@ declare function LoadFromFile()
 declare function ModalMessage(title: string?, message: string)
 declare function SaveToFile()
 declare function SetTheme(theme: string)
-declare function SpellcheckerOff()
-declare function SpellcheckerRestore()
+declare function SpellcheckerOff(): boolean
+declare function SpellcheckerRestore(state: boolean)
 declare function UnSmartquotify()
+declare function CLIError(...: string)
+declare function SetColour(fg: Colour, bg: Colour)
+
+declare ScreenWidth: number
+declare ScreenHeight: number
+declare MenuTree: any
+declare GlobalSettings: {[string]: any}
 

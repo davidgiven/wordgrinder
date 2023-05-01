@@ -264,7 +264,7 @@ local function loadfromstream(fp): DocumentSet
 
 		["M"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = MenuTreeClass})
+			setmetatable(t, MenuTree)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -400,7 +400,7 @@ local function loadfromstreamz(fp): DocumentSet
 
 		[MENUCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = MenuTreeClass})
+			setmetatable(t, MenuTree)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -634,6 +634,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		if not e then
 			e = "The load failed, probably because the file could not be opened."
 		end
+		assert(e)
 		ModalMessage("Load failed", e)
 		QueueRedraw()
 		return false, e

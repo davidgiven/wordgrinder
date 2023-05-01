@@ -45,7 +45,10 @@ type StackedMenu = {
 	top: number
 }
 
-type MenuTree = typeof(setmetatable({}, {__index = MenuTreeClass}))
+local MenuTree = {}
+MenuTree.__index = MenuTree
+type MenuTree = {
+}
 
 function CreateMenu(n: string, m: {MenuItem}, replaces: Menu?): Menu
 	local w = n:len()
@@ -113,10 +116,8 @@ local ParagraphStylesMenu = CreateMenu("Paragraph Styles", {})
 
 local cp = Cmd.Checkpoint
 
-local function E(id: string, mk: string?, label: string, ak: string?,
-		...: MenuCallback): MenuItem
-	local fns = {...}
-	local fn: MenuCallback = function()
+function GroupCallback(fns: {MenuCallback})
+	return function()
 		for _, f in fns do
 			local result, e = f()
 			if type(result) == "table" then
@@ -128,13 +129,16 @@ local function E(id: string, mk: string?, label: string, ak: string?,
 		end
 		return true, nil
 	end
-		
+end
+
+local function E(id: string, mk: string?, label: string, ak: string?,
+		...: MenuCallback): MenuItem
 	return {
 		id = id,
 		mk = mk,
 		label = label,
 		ak = ak,
-		fn = fn
+		fn = GroupCallback({...})
 	}
 end
 
@@ -318,311 +322,309 @@ local MainMenu = CreateMenu("Main Menu",
 
 --- MENU DRIVER CLASS ---
 
-MenuTreeClass = {
-	activate = function(self, menu)
-		menu = menu or MainMenu
-		self:runmenu(0, 0, menu)
-		QueueRedraw()
-		SetNormal()
-	end,
+function MenuTree.activate(self, menu)
+	menu = menu or MainMenu
+	self:runmenu(0, 0, menu)
+	QueueRedraw()
+	SetNormal()
+end
 
-	drawmenu = function(self, x: number, y: number, menu: Menu, n: number, top: number)
-		local akw = 0
-		for _, item in ipairs(menu) do
-			local ak = self.accelerators[item.id]
+function MenuTree.drawmenu(self, x: number, y: number, menu: Menu, n: number, top: number)
+	local akw = 0
+	for _, item in ipairs(menu) do
+		local ak = self.accelerators[item.id]
+		if ak then
+			local l = GetStringWidth(ak)
+			if (akw < l) then
+				akw = l
+			end
+		end
+	end
+	if (akw > 0) then
+		akw = akw + 1
+	end
+
+	local w = menu.maxwidth + 4 + akw
+	menu.realwidth = w
+	local visiblelen = min(#menu, ScreenHeight-y-3)
+	top = max(1, min(#menu - visiblelen + 1, top))
+	SetColour(Palette.ControlFG, Palette.ControlBG)
+	DrawTitledBox(x, y, w, visiblelen, menu.label)
+
+	if (visiblelen < #menu) then
+		local f1 = (top - 1) / #menu
+		local f2 = (top + visiblelen - 1) / #menu
+		local y1 = f1 * visiblelen + y + 1
+		local y2 = f2 * visiblelen + y + 1
+		SetBright()
+		for yy = y1, y2 do
+			Write(x+w+1, yy, UseUnicode() and "║" or "#")
+		end
+	end
+
+	for i = top, top+visiblelen-1 do
+		local item = menu[i]
+		local ak = self.accelerators[item.id]
+		local yy = y+i-top+1
+
+		if (item.label == "-") then
+			if (i == n) then
+				SetReverse()
+			end
+			SetBright()
+			Write(x+1, yy, string.rep(UseUnicode() and "─" or "-", w))
+		else
+			SetNormal()
+			if (i == n) then
+				SetReverse()
+				Write(x+1, yy, string.rep(" ", w))
+			end
+
+			Write(x+4, yy, item.label)
+
+			SetBold()
+			SetBright()
 			if ak then
 				local l = GetStringWidth(ak)
-				if (akw < l) then
-					akw = l
-				end
+				Write(x+w-l, yy, ak)
 			end
-		end
-		if (akw > 0) then
-			akw = akw + 1
-		end
 
-		local w = menu.maxwidth + 4 + akw
-		menu.realwidth = w
-		local visiblelen = min(#menu, ScreenHeight-y-3)
-		top = max(1, min(#menu - visiblelen + 1, top))
-		SetColour(Palette.ControlFG, Palette.ControlBG)
-		DrawTitledBox(x, y, w, visiblelen, menu.label)
-
-		if (visiblelen < #menu) then
-			local f1 = (top - 1) / #menu
-			local f2 = (top + visiblelen - 1) / #menu
-			local y1 = f1 * visiblelen + y + 1
-			local y2 = f2 * visiblelen + y + 1
-			SetBright()
-			for yy = y1, y2 do
-				Write(x+w+1, yy, UseUnicode() and "║" or "#")
+			if item.mk then
+				Write(x+2, yy, item.mk)
 			end
 		end
 
-		for i = top, top+visiblelen-1 do
-			local item = menu[i]
-			local ak = self.accelerators[item.id]
-			local yy = y+i-top+1
+		SetNormal()
+	end
+	GotoXY(ScreenWidth-1, ScreenHeight-1)
 
-			if (item.label == "-") then
-				if (i == n) then
-					SetReverse()
-				end
-				SetBright()
-				Write(x+1, yy, string.rep(UseUnicode() and "─" or "-", w))
-			else
-				SetNormal()
-				if (i == n) then
-					SetReverse()
-					Write(x+1, yy, string.rep(" ", w))
-				end
+	DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
+end
 
-				Write(x+4, yy, item.label)
+function MenuTree.drawmenustack(self)
+	local osb = documentSet.statusbar
+	documentSet.statusbar = true
+	RedrawScreen()
+	documentSet.statusbar = osb
 
-				SetBold()
-				SetBright()
-				if ak then
-					local l = GetStringWidth(ak)
-					Write(x+w-l, yy, ak)
-				end
+	local o = 0
+	for _, m in ipairs(menu_stack) do
+		self:drawmenu(o*4, o*2, m.menu, m.n, m.top)
+		o = o + 1
+	end
+end
 
-				if item.mk then
-					Write(x+2, yy, item.mk)
-				end
+function MenuTree.runmenu(self, x: number, y: number, menu: Menu): boolean?
+	local n = 1
+	local top = 1
+
+	local function stackmenu(newmenu)
+		return nil
+	end
+
+	while true do
+		local item
+
+		while not Quitting do
+			local visiblelen = min(#menu, ScreenHeight-y-3)
+			if (n < top) then
+				top = n
+			end
+			if (n > (top+visiblelen-1)) then
+				top = n - visiblelen + 1
 			end
 
-			SetNormal()
-		end
-		GotoXY(ScreenWidth-1, ScreenHeight-1)
+			self:drawmenu(x, y, menu, n, top)
 
-		DrawStatusLine("^V rebinds a menu item; ^X unbinds it; ^R resets all bindings to default.")
-	end,
-
-	drawmenustack = function(self)
-		local osb = documentSet.statusbar
-		documentSet.statusbar = true
-		RedrawScreen()
-		documentSet.statusbar = osb
-
-		local o = 0
-		for _, m in ipairs(menu_stack) do
-			self:drawmenu(o*4, o*2, m.menu, m.n, m.top)
-			o = o + 1
-		end
-	end,
-
-	runmenu = function(self, x: number, y: number, menu: Menu): boolean?
-		local n = 1
-		local top = 1
-
-		local function stackmenu(newmenu)
-			return nil
-		end
-
-		while true do
-			local item
-
-			while not Quitting do
-				local visiblelen = min(#menu, ScreenHeight-y-3)
-				if (n < top) then
-					top = n
-				end
-				if (n > (top+visiblelen-1)) then
-					top = n - visiblelen + 1
-				end
-
-				self:drawmenu(x, y, menu, n, top)
-
-				local c = GetChar()
-				if typeof(c) == "table" then
-					if c.b then
-						-- Mouse event.
-						if c.x < x then
-							-- Go to the previous menu.
+			local c = GetChar()
+			if typeof(c) == "table" then
+				if c.b then
+					-- Mouse event.
+					if c.x < x then
+						-- Go to the previous menu.
+						return nil
+					elseif c.x > (x + menu.realwidth) then
+						-- Close all menus.
+						return false
+					else
+						local row = top + c.y - y - 1
+						if row < 1 then
 							return nil
-						elseif c.x > (x + menu.realwidth) then
-							-- Close all menus.
+						elseif row > visiblelen then
 							return false
 						else
-							local row = top + c.y - y - 1
-							if row < 1 then
-								return nil
-							elseif row > visiblelen then
-								return false
-							else
-								item = menu[row]
-								if (typeof(item) ~= "string") and item.id then
-									n = row
-									self:drawmenu(x, y, menu, n, top)
-									break
-								end
+							item = menu[row]
+							if (typeof(item) ~= "string") and item.id then
+								n = row
+								self:drawmenu(x, y, menu, n, top)
+								break
 							end
 						end
 					end
-				else
-					-- Keyboard event.
-					c = c:upper()
-					if (c == "KEY_RESIZE") then
-						ResizeScreen()
-						RedrawScreen()
-						self:drawmenustack()
-					elseif (c == "KEY_QUIT") then
-						QuitForcedBySystem()
-						return false
-					elseif (c == "KEY_UP") and (n > 1) then
+				end
+			else
+				-- Keyboard event.
+				c = c:upper()
+				if (c == "KEY_RESIZE") then
+					ResizeScreen()
+					RedrawScreen()
+					self:drawmenustack()
+				elseif (c == "KEY_QUIT") then
+					QuitForcedBySystem()
+					return false
+				elseif (c == "KEY_UP") and (n > 1) then
+					n = n - 1
+				elseif (c == "KEY_DOWN") and (n < #menu) then
+					n = n + 1
+				elseif (c == "KEY_SCROLLUP") and (top > 1) then
+					top = top - 1
+					if (n > (top+visiblelen-1)) then
 						n = n - 1
-					elseif (c == "KEY_DOWN") and (n < #menu) then
+					end
+				elseif (c == "KEY_SCROLLDOWN") and (top < (#menu - visiblelen)) then
+					top = top + 1
+					if (n < top) then
 						n = n + 1
-					elseif (c == "KEY_SCROLLUP") and (top > 1) then
-						top = top - 1
-						if (n > (top+visiblelen-1)) then
-							n = n - 1
+					end
+				elseif (c == "KEY_PGDN") then
+					n = int(min(n + visiblelen/2, #menu))
+				elseif (c == "KEY_PGUP") then
+					n = int(max(n - visiblelen/2, 1))
+				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
+					if (typeof(menu[n]) ~= "string") then
+						item = menu[n]
+						break
+					end
+				elseif (c == "KEY_LEFT") then
+					return nil
+				elseif (c == "KEY_ESCAPE") then
+					return false
+				elseif (c == "KEY_MENU") then
+					return false
+				elseif (c == "KEY_^C") then
+					return false
+				elseif (c == "KEY_^X") then
+					local item = menu[n]
+					if (typeof(item) ~= "string") and item.id then
+						local ak = self.accelerators[item.id]
+						if ak then
+							self.accelerators[ak] = nil
+							self.accelerators[item.id] = nil
+							self:drawmenustack()
 						end
-					elseif (c == "KEY_SCROLLDOWN") and (top < (#menu - visiblelen)) then
-						top = top + 1
-						if (n < top) then
-							n = n + 1
-						end
-					elseif (c == "KEY_PGDN") then
-						n = int(min(n + visiblelen/2, #menu))
-					elseif (c == "KEY_PGUP") then
-						n = int(max(n - visiblelen/2, 1))
-					elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
-						if (typeof(menu[n]) ~= "string") then
-							item = menu[n]
-							break
-						end
-					elseif (c == "KEY_LEFT") then
-						return nil
-					elseif (c == "KEY_ESCAPE") then
-						return false
-					elseif (c == "KEY_MENU") then
-						return false
-					elseif (c == "KEY_^C") then
-						return false
-					elseif (c == "KEY_^X") then
-						local item = menu[n]
-						if (typeof(item) ~= "string") and item.id then
-							local ak = self.accelerators[item.id]
-							if ak then
-								self.accelerators[ak] = nil
-								self.accelerators[item.id] = nil
+					end
+				elseif (c == "KEY_^V") then
+					local item = menu[n]
+					if (typeof(item) ~= "string") and item.id then
+						DrawStatusLine("Press new accelerator key for menu item.")
+
+						local oak = self.accelerators[item.id]
+						local ak = GetChar()
+						if (typeof(ak) == "string") then
+							ak = ak:upper()
+							if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
+								ak = ak:gsub("^KEY_", "")
+								if self.accelerators[ak] then
+									NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
+								elseif (ak == "ESCAPE") or (ak == "RESIZE") then
+									NonmodalMessage("You can't bind that key.")
+								else
+									if oak then
+										self.accelerators[oak] = nil
+									end
+
+									self.accelerators[ak] = item.id
+									self.accelerators[item.id] = ak
+								end
 								self:drawmenustack()
 							end
 						end
-					elseif (c == "KEY_^V") then
-						local item = menu[n]
-						if (typeof(item) ~= "string") and item.id then
-							DrawStatusLine("Press new accelerator key for menu item.")
-
-							local oak = self.accelerators[item.id]
-							local ak = GetChar()
-							if (typeof(ak) == "string") then
-								ak = ak:upper()
-								if (ak ~= "KEY_QUIT") and ak:match("^KEY_") then
-									ak = ak:gsub("^KEY_", "")
-									if self.accelerators[ak] then
-										NonmodalMessage("Sorry, "..ak.." is already bound elsewhere.")
-									elseif (ak == "ESCAPE") or (ak == "RESIZE") then
-										NonmodalMessage("You can't bind that key.")
-									else
-										if oak then
-											self.accelerators[oak] = nil
-										end
-
-										self.accelerators[ak] = item.id
-										self.accelerators[item.id] = ak
-									end
-									self:drawmenustack()
-								end
-							end
-						end
-					elseif (c == "KEY_^R") then
-						if PromptForYesNo("Reset menu keybindings?",
-							"Are you sure you want to reset all the menu "..
-							"keybindings back to their defaults?") then
-							documentSet.menu = CreateMenuBindings()
-							documentSet:touch()
-							NonmodalMessage("All keybindings have been reset to their default settings.")
-							menu_stack = {}
-							return false
-						end
-						self:drawmenustack()
-					elseif menu.mks[c] then
-						item = menu.mks[c]
-						break
 					end
+				elseif (c == "KEY_^R") then
+					if PromptForYesNo("Reset menu keybindings?",
+						"Are you sure you want to reset all the menu "..
+						"keybindings back to their defaults?") then
+						documentSet.menu = CreateMenuBindings()
+						documentSet:touch()
+						NonmodalMessage("All keybindings have been reset to their default settings.")
+						menu_stack = {}
+						return false
+					end
+					self:drawmenustack()
+				elseif menu.mks[c] then
+					item = menu.mks[c]
+					break
 				end
 			end
-			if Quitting then
+		end
+		if Quitting then
+			return false
+		end
+
+		local newmenu = item.menu
+		if item.fn then
+			local f, msg = item.fn()
+			if typeof(f) == "table" then
+				newmenu = f
+			else
+				if msg then
+					NonmodalMessage(msg)
+				end
+				menu_stack = {}
+				return true
+			end
+		end
+
+		if newmenu then
+			menu_stack[#menu_stack+1] = {
+				menu = menu,
+				n = n,
+				top = top
+			}
+
+			local r = self:runmenu(x+4, y+2, newmenu)
+			menu_stack[#menu_stack] = nil
+
+			if (r == true) then
+				return true
+			elseif (r == false) then
 				return false
 			end
 
-			local newmenu = item.menu
-			if item.fn then
-				local f, msg = item.fn()
-				if typeof(f) == "table" then
-					newmenu = f
-				else
-					if msg then
-						NonmodalMessage(msg)
-					end
-					menu_stack = {}
-					return true
-				end
-			end
-
-			if newmenu then
-				menu_stack[#menu_stack+1] = {
-					menu = menu,
-					n = n,
-					top = top
-				}
-
-				local r = self:runmenu(x+4, y+2, newmenu)
-				menu_stack[#menu_stack] = nil
-
-				if (r == true) then
-					return true
-				elseif (r == false) then
-					return false
-				end
-
-				self:drawmenustack()
-			end
+			self:drawmenustack()
 		end
-	end,
+	end
+end
 
-	lookupAccelerator = function(self, c)
-		c = c:gsub("^KEY_", ""):upper()
+function MenuTree.lookupAccelerator(self, c)
+	c = c:gsub("^KEY_", ""):upper()
 
-		-- Check the overrides table and only then the documentset keymap.
+	-- Check the overrides table and only then the documentset keymap.
 
-		local id = CheckOverrideTable(c) or self.accelerators[c]
-		if not id then
-			return nil
-		end
+	local id = CheckOverrideTable(c) or self.accelerators[c]
+	if not id then
+		return nil
+	end
 
-		-- Found something? Find out what function the menu ID corresponds to.
-		-- (Or maybe it's a raw function.)
+	-- Found something? Find out what function the menu ID corresponds to.
+	-- (Or maybe it's a raw function.)
 
-		local f: any
-		if (typeof(id) == "function") then
-			f = id
+	local f: any
+	if (typeof(id) == "function") then
+		f = id
+	else
+		local item = menu_tab[id]
+		if not item then
+			f = function()
+				NonmodalMessage("Menu item with ID "..id.." not found.")
+			end
 		else
-			local item = menu_tab[id]
-			if not item then
-				f = function()
-					NonmodalMessage("Menu item with ID "..id.." not found.")
-				end
-			else
-				f = item.fn
-			end
+			f = item.fn
 		end
+	end
 
-		return f
-	end,
-}
+	return f
+end
 
 function CreateMenuTree(): MenuTree
 	local my_key_tab: {[string|boolean]: string|boolean} = {}
@@ -634,8 +636,7 @@ function CreateMenuTree(): MenuTree
 	local m = {
 		accelerators = my_key_tab
 	}
-	setmetatable(m, {__index = MenuTreeClass})
-	return m
+	return (setmetatable(m, MenuTree)::any)::MenuTree
 end
 
 function RebuildParagraphStylesMenu(styles: DocumentStyles)

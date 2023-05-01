@@ -85,12 +85,13 @@ end
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
-local function find(list, value)
+local function find(list, value): number?
 	for i, k in ipairs(list) do
 		if value == k then
 			return i
 		end
 	end
+	return nil
 end
 
 function Cmd.ConfigureLookAndFeel()

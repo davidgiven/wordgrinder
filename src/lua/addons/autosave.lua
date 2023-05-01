@@ -53,6 +53,7 @@ do
 			local r, e = SaveDocumentSetRaw(filename)
 			
 			if not r then
+				assert(e)
 				ModalMessage("Autosave failed", "The document could not be autosaved: "..e)
 			else
 				NonmodalMessage("Autosaved as "..filename) 

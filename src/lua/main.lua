@@ -153,16 +153,16 @@ function WordProcessor(filename)
     end
 
     local masterkeymap: {[string]: MenuCallback} = {
-        ["KEY_RESIZE"] = { ResizeScreen, RedrawScreen },
-        ["KEY_REDRAW"] = { RedrawScreen },
+        ["KEY_RESIZE"] = GroupCallback{ResizeScreen, RedrawScreen},
+        ["KEY_REDRAW"] = RedrawScreen,
 
-        [" "] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+        [" "] = GroupCallback{ Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentWord },
-        ["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+        ["KEY_RETURN"] = GroupCallback{ Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentParagraph },
-        ["KEY_ESCAPE"] = { Cmd.ActivateMenu },
-        ["KEY_MENU"] = { Cmd.ActivateMenu },
-        ["KEY_QUIT"] = { Cmd.TerminateProgram },
+        ["KEY_ESCAPE"] = GroupCallback{ Cmd.ActivateMenu },
+        ["KEY_MENU"] = GroupCallback{ Cmd.ActivateMenu },
+        ["KEY_QUIT"] = GroupCallback{ Cmd.TerminateProgram },
     }
 
     local function handle_key_event(c)
@@ -329,6 +329,7 @@ the program starts up (but after any --lua files). It defaults to:
             if e then
                 CLIError("user script compilation error: "..e)
             end
+            assert(f)
 
             EngageCLI()
             f(...)
@@ -344,6 +345,7 @@ the program starts up (but after any --lua files). It defaults to:
             if e then
                 CLIError("user script compilation error: "..e)
             end
+            assert(f)
 
             f(...)
             wg.exit(0)

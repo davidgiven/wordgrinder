@@ -27,8 +27,6 @@ type Form = {
 	widgets: {Widget}
 }
 
-type Widget = {}
-
 Form = {}
 
 -- Atoms.

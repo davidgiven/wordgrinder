@@ -53,14 +53,16 @@ end
 
 function Cmd.LoadRecentDocument()
 	local recents = GlobalSettings.recents
-	local m: {{any}} = {}
+	local m: {MenuItem} = {}
 	for i, v in pairs(recents) do
-		m[#m+1] = { nil, string_char(48 + i), Leafname(v), nil,
-			{
-				function()
-					return Cmd.LoadDocumentSet(v)
-				end
-			}
+		m[#m+1] = {
+			id = nil,
+			mk = string_char(48 + i),
+			label = Leafname(v),
+			ak = nil,
+			fn = function()
+				return Cmd.LoadDocumentSet(v)
+			end
 		}
 	end
 

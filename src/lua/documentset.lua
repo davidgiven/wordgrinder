@@ -69,28 +69,28 @@ function CreateDocumentSet(): DocumentSet
 end
 
 -- remove any cached data prior to saving
-DocumentSet.purge = function(self)
-	for _, l in ipairs(self.documents) do
+DocumentSet.purge = function(self: DocumentSet)
+	for _, l in self.documents do
 		l:purge()
 	end
 end
 
-DocumentSet.touch = function(self)
+DocumentSet.touch = function(self: DocumentSet)
 	self.changed = true
 	self.justchanged = true
 	currentDocument:touch()
 end
 
-DocumentSet.clean = function(self)
+DocumentSet.clean = function(self: DocumentSet)
 	self.changed = nil
 	self.justchanged = nil
 end
 
-DocumentSet.getDocumentList = function(self)
+DocumentSet.getDocumentList = function(self: DocumentSet)
 	return self.documents
 end
 
-DocumentSet._findDocument = function(self, name)
+DocumentSet._findDocument = function(self: DocumentSet, name)
 	for i, d in ipairs(self.documents) do
 		if (d.name == name) then
 			return i
@@ -99,7 +99,7 @@ DocumentSet._findDocument = function(self, name)
 	return nil
 end
 
-DocumentSet.findDocument = function(self, name)
+DocumentSet.findDocument = function(self: DocumentSet, name: string)
 	local document = self.documents[name]
 	if not document then
 		document = self.documents[self:_findDocument(name)]
