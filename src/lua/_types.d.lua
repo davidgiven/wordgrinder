@@ -145,4 +145,7 @@ declare function LoadFromFile()
 declare function ModalMessage(title: string?, message: string)
 declare function SaveToFile()
 declare function SetTheme(theme: string)
+declare function SpellcheckerOff()
+declare function SpellcheckerRestore()
+declare function UnSmartquotify()
 

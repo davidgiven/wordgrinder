@@ -169,7 +169,7 @@ function WordProcessor(filename)
         -- Anything in masterkeymap overrides everything else.
         local f = masterkeymap[c]
         if f then
-            RunMenuAction(f)
+            f()
         else
             -- It's not in masterkeymap. If it's printable, insert it; if it's
             -- not, look it up in the menu hierarchy.
@@ -185,7 +185,7 @@ function WordProcessor(filename)
             else
                 f = documentSet.menu:lookupAccelerator(c)
                 if f then
-                    RunMenuAction(f)
+                    f()
                 else
                     NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
                 end
