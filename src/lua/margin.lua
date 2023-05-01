@@ -105,7 +105,7 @@ function SetMarginMode(mode)
 		controller:attach()
 	end
 
-	DocumentSet:touch()
+	documentSet:touch()
 	ResizeScreen()
 end
 

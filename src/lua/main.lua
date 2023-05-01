@@ -63,14 +63,14 @@ end
 
 function ResetDocumentSet()
     UpdateDocumentStyles()
-    DocumentSet = CreateDocumentSet()
-    DocumentSet.menu = CreateMenuTree()
+    documentSet = CreateDocumentSet()
+    documentSet.menu = CreateMenuTree()
     Document = CreateDocument()
-    DocumentSet:addDocument(CreateDocument(), "main")
+    documentSet:addDocument(CreateDocument(), "main")
     RebuildParagraphStylesMenu(DocumentStyles)
-    RebuildDocumentsMenu(DocumentSet.documents)
-    DocumentSet:purge()
-    DocumentSet:clean()
+    RebuildDocumentsMenu(documentSet.documents)
+    documentSet:purge()
+    documentSet:clean()
 
     FireEvent(Event.DocumentCreated)
     FireEvent(Event.RegisterAddons)
@@ -146,7 +146,7 @@ function WordProcessor(filename)
         if not Cmd.LoadDocumentSet(filename) then
             -- As a special case, if we tried to load a document from the command line and it
             -- doesn't exist, then we prime the document name so that saving the file is easy.
-            DocumentSet.name = filename
+            documentSet.name = filename
         end
     else
         FireEvent(Event.DocumentLoaded)
@@ -183,7 +183,7 @@ function WordProcessor(filename)
 
                 Cmd.InsertStringIntoWord(payload.value)
             else
-                f = DocumentSet.menu:lookupAccelerator(c)
+                f = documentSet.menu:lookupAccelerator(c)
                 if f then
                     RunMenuAction(f)
                 else
@@ -214,9 +214,9 @@ function WordProcessor(filename)
     local function eventloop()
         local nl = string.char(13)
         while true do
-            if DocumentSet.justchanged then
+            if documentSet.justchanged then
                 FireEvent(Event.Changed)
-                DocumentSet.justchanged = false
+                documentSet.justchanged = false
             end
 
             FlushAsyncEvents()

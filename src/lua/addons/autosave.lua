@@ -6,7 +6,7 @@
 local Stat = wg.stat
 
 local function announce()
-	local settings = DocumentSet.addons.autosave
+	local settings = documentSet.addons.autosave
 
 	if settings.enabled then
 		NonmodalMessage("Autosave is enabled. Next save in "..settings.period..
@@ -18,8 +18,8 @@ local function announce()
 end
 
 local function makefilename(pattern)
-	local leafname = Leafname(DocumentSet.name)
-	local dirname = GlobalSettings.directories.autosaves or Dirname(DocumentSet.name)
+	local leafname = Leafname(documentSet.name)
+	local dirname = GlobalSettings.directories.autosaves or Dirname(documentSet.name)
 	leafname = leafname:gsub("%.wg$", "")
 	leafname = leafname:gsub("%%", "%%%%")
 	
@@ -37,8 +37,8 @@ end
 
 do
 	local function cb()
-		local settings = DocumentSet.addons.autosave
-		if not settings.enabled or not DocumentSet.changed then
+		local settings = documentSet.addons.autosave
+		if not settings.enabled or not documentSet.changed then
 			return
 		end
 		
@@ -50,7 +50,7 @@ do
 			ImmediateMessage("Autosaving...")
 			
 			local filename = makefilename(settings.pattern)
-			local r, e = SaveDocumentSetRaw(filename)
+			local r, e = SavedocumentSetRaw(filename)
 			
 			if not r then
 				ModalMessage("Autosave failed", "The document could not be autosaved: "..e)
@@ -71,8 +71,8 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {}
-		DocumentSet.addons.autosave.lastsaved = nil
+		documentSet.addons.autosave = documentSet.addons.autosave or {}
+		documentSet.addons.autosave.lastsaved = nil
 		announce()
 	end
 	
@@ -80,11 +80,11 @@ do
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {
+		documentSet.addons.autosave = documentSet.addons.autosave or {
 			enabled = false,
 			period = 10,
 			pattern = "%F.autosave.%T.wg",
@@ -98,9 +98,9 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureAutosave()
-	local settings = DocumentSet.addons.autosave
+	local settings = documentSet.addons.autosave
 
-	if not DocumentSet.name then
+	if not documentSet.name then
 		ModalMessage("Autosave not available", "You cannot use autosave "..
 			"until you have manually saved your document at least once, "..
 			"so that Autosave knows what base filename to use.")
@@ -202,7 +202,7 @@ function Cmd.ConfigureAutosave()
 			settings.period = period
 			settings.pattern = pattern
 			settings.lastsaved = nil
-			DocumentSet:touch()
+			documentSet:touch()
 
 			announce()			
 			return true

@@ -190,7 +190,7 @@ function Cmd.InsertStringIntoWord(c)
 		paragraph:sub(cw+1))
 	Document.co = co
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -253,7 +253,7 @@ function Cmd.SplitCurrentWord()
 	Document.cw = cw + 1
 	Document.co = 1 + styleprimelen -- yes, this means that co has a minimum of 2
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -269,7 +269,7 @@ function Cmd.JoinWithNextParagraph()
 		Document[cp+1])
 	Document:deleteParagraphAt(cp+1)
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -292,7 +292,7 @@ function Cmd.JoinWithNextWord()
 		word,
 		paragraph:sub(cw+2))
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -323,7 +323,7 @@ function Cmd.DeleteNextChar()
 		DeleteFromWord(word, co, nextco),
 		paragraph:sub(cw+1))
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -349,7 +349,7 @@ function Cmd.DeleteWordLeftOfCursor()
 		paragraph:sub(cw+1))
 	Document.co = 1
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -380,7 +380,7 @@ function Cmd.SplitCurrentParagraph()
 		-- Otherwise, only split if we're not at the beginning of a word.
 		Cmd.SplitCurrentWord()
 	else
-		DocumentSet:touch()
+		documentSet:touch()
 		QueueRedraw()
 	end
 
@@ -579,7 +579,7 @@ function Cmd.ApplyStyleToSelection(s)
 	end
 
 	Cmd.UnsetMark()
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return true
 end
@@ -620,7 +620,7 @@ function GetStyleToLeftOfCursor()
 end
 
 function Cmd.ActivateMenu(menu)
-	DocumentSet.menu:activate(menu)
+	documentSet.menu:activate(menu)
 	ResizeScreen()
 	QueueRedraw()
 	return true
@@ -633,7 +633,7 @@ end
 -- @return                   true if it's all right to go ahead, false to cancel
 
 function ConfirmDocumentErasure()
-	if DocumentSet.changed then
+	if documentSet.changed then
 		if not PromptForYesNo("Document set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
 			return false
 		end
@@ -678,7 +678,7 @@ function Cmd.ChangeParagraphStyle(style)
 		Document[p] = CreateParagraph(style, Document[p])
 	end
 
-	DocumentSet:touch()
+	documentSet:touch()
 	QueueRedraw()
 	return Cmd.UnsetMark()
 end
@@ -753,11 +753,11 @@ function Cmd.SelectWord()
 end
 
 function Cmd.ChangeDocument(name)
-	if not DocumentSet:findDocument(name) then
+	if not documentSet:findDocument(name) then
 		return false
 	end
 
-	DocumentSet:setCurrent(name)
+	documentSet:setCurrent(name)
 	QueueRedraw()
 	return true
 end
@@ -958,16 +958,16 @@ function Cmd.Find(findtext, replacetext)
 		end
 	end
 
-	DocumentSet.findtext = findtext
-	DocumentSet._findpatterns = nil
-	DocumentSet.replacetext = replacetext
+	documentSet.findtext = findtext
+	documentSet._findpatterns = nil
+	documentSet.replacetext = replacetext
 	return Cmd.FindNext()
 end
 
 local function compile_patterns(text)
 	patterns = {}
 	local words = SplitString(text, "%s")
-	local smartquotes = DocumentSet.addons.smartquotes or {}
+	local smartquotes = documentSet.addons.smartquotes or {}
 
 	for _, w in ipairs(words) do
 		-- w is a word from the pattern. We need to perform the following
@@ -1023,7 +1023,7 @@ local function compile_patterns(text)
 end
 
 function Cmd.FindNext()
-	if not DocumentSet.findtext then
+	if not documentSet.findtext then
 		return false
 	end
 
@@ -1031,10 +1031,10 @@ function Cmd.FindNext()
 
 	-- Get the compiled pattern for the text we're searching for.
 
-	if not DocumentSet._findpatterns then
-		DocumentSet._findpatterns = compile_patterns(DocumentSet.findtext)
+	if not documentSet._findpatterns then
+		documentSet._findpatterns = compile_patterns(documentSet.findtext)
 	end
-	local patterns = DocumentSet._findpatterns
+	local patterns = documentSet._findpatterns
 
 	-- Start at the current cursor position.
 
@@ -1131,7 +1131,7 @@ function Cmd.ReplaceThenFind()
 		end
 
 		e = true
-		local words = SplitString(DocumentSet.replacetext, "%s")
+		local words = SplitString(documentSet.replacetext, "%s")
 		for i, w in ipairs(words) do
 			if (i > 1) then
 				i = Cmd.SplitCurrentWord()
@@ -1150,11 +1150,11 @@ function Cmd.ReplaceThenFind()
 end
 
 function Cmd.ToggleStatusBar()
-	if DocumentSet.statusbar then
-		DocumentSet.statusbar = false
+	if documentSet.statusbar then
+		documentSet.statusbar = false
 		NonmodalMessage("Status bar disabled.")
 	else
-		DocumentSet.statusbar = true
+		documentSet.statusbar = true
 		NonmodalMessage("Status bar enabled.")
 	end
 

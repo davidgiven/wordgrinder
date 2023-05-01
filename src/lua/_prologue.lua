@@ -27,7 +27,6 @@ end
 CLIError = nil
 CliConvert = nil
 CreateDocument = nil
-CreateDocumentSet = nil
 CreateMenuBindings = nil
 CreateParagraph = nil
 Document = nil :: Document

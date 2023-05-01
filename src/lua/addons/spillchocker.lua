@@ -21,7 +21,7 @@ type GlobalSpellcheckerSettings = {
 }
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function find_default_dictionary()
@@ -33,7 +33,7 @@ do
 	end
 
 	local function cb()
-		DocumentSet.addons.spellchecker = DocumentSet.addons.spellchecker or {
+		documentSet.addons.spellchecker = documentSet.addons.spellchecker or {
 			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
@@ -52,14 +52,14 @@ end
 -- spellchecking dialogue boxes, etc).
 
 function SpellcheckerOff()
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	local state = settings.enabled
 	settings.enabled = false
 	return state
 end
 
 function SpellcheckerRestore(s)
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	settings.enabled = s
 end
 
@@ -74,10 +74,10 @@ local function user_dictionary_document_modified(s: string)
 end
 
 local function get_user_dictionary_document()
-	local d = DocumentSet:findDocument(USER_DICTIONARY_NAME)
+	local d = documentSet:findDocument(USER_DICTIONARY_NAME)
 	if not d then
 		d = CreateDocument()
-		DocumentSet:addDocument(d, USER_DICTIONARY_NAME)
+		documentSet:addDocument(d, USER_DICTIONARY_NAME)
 		NonmodalMessage("Creating dictionary in document '"
 				..USER_DICTIONARY_NAME.."'.")
 
@@ -151,7 +151,7 @@ function SetSystemDictionaryForTesting(array)
 end
 
 function IsWordMisspelt(word, firstword)
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
 		local systemdict = {}
@@ -198,7 +198,7 @@ function Cmd.AddToUserDictionary()
 			NonmodalMessage("Word '"..word.."' already in user dictionary")
 		end
 
-		DocumentSet:touch()
+		documentSet:touch()
 		QueueRedraw()
 	end
 
@@ -290,7 +290,7 @@ end
 -- Per-document set configuration user interface.
 
 function Cmd.ConfigureSpellchecker()
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 
 	local highlight_checkbox =
 		Form.Checkbox {
@@ -361,7 +361,7 @@ function Cmd.ConfigureSpellchecker()
 	settings.enabled = highlight_checkbox.value
 	settings.usesystemdictionary = systemdictionary_checkbox.value
 	settings.useuserdictionary = userdictionary_checkbox.value
-	DocumentSet:touch()
+	documentSet:touch()
 	return true
 end
 

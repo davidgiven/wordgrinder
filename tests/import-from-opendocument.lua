@@ -35,7 +35,7 @@ normal text
 ]]
 expected = expected:gsub("@@@", VERSION)
 
-DocumentSet:setCurrent("testdoc.odt")
+documentSet:setCurrent("testdoc.odt")
 local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 

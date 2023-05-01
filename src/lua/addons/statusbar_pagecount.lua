@@ -8,7 +8,7 @@
 
 do
 	local function cb(event, token, terms)
-		local settings = DocumentSet.addons.pagecount or {}
+		local settings = documentSet.addons.pagecount or {}
 		if settings.enabled then
 			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
 			terms[#terms+1] = {
@@ -23,11 +23,11 @@ do
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.pagecount = DocumentSet.addons.pagecount or {
+		documentSet.addons.pagecount = documentSet.addons.pagecount or {
 			enabled = false,
 			wordsperpage = 250,
 		}
@@ -40,7 +40,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigurePageCount()
-	local settings = DocumentSet.addons.pagecount
+	local settings = documentSet.addons.pagecount
 
 	local enabled_checkbox =
 		Form.Checkbox {
@@ -93,7 +93,7 @@ function Cmd.ConfigurePageCount()
 		else
 			settings.enabled = enabled
 			settings.wordsperpage = wordsperpage
-			DocumentSet:touch()
+			documentSet:touch()
 
 			return true
 		end

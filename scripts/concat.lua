@@ -30,19 +30,19 @@ local function main(inputfile, outputfile)
         os.exit(1)
     end
 
-	if DocumentSet:findDocument("all") then
+	if documentSet:findDocument("all") then
 		print("The input file already has a subdocument called 'all'.")
 		os.exit(1)
 	end
 
-	local docs = { unpack(DocumentSet:getDocumentList()) }
-	local allDoc = DocumentSet:addDocument(CreateDocument(), "all")
+	local docs = { unpack(documentSet:getDocumentList()) }
+	local allDoc = documentSet:addDocument(CreateDocument(), "all")
     for _, doc in ipairs(docs) do
 		for _, p in ipairs(doc) do
 			allDoc[#allDoc+1] = p
 		end
 
-		DocumentSet:deleteDocument(doc.name)
+		documentSet:deleteDocument(doc.name)
     end
 
 	print("Writing "..outputfile)

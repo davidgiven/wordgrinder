@@ -32,16 +32,16 @@ This is 4 (3 was blank).
 ]]
 expected = expected:gsub("@@@", VERSION)
 
-DocumentSet:addDocument(document, "imported")
-DocumentSet:setCurrent("imported")
+documentSet:addDocument(document, "imported")
+documentSet:setCurrent("imported")
 local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 
 
 document = Cmd.ImportTextString(9)
 document = Cmd.ImportTextString("no trailing newline")
-DocumentSet:addDocument(document, "imported")
-DocumentSet:setCurrent("imported")
+documentSet:addDocument(document, "imported")
+documentSet:setCurrent("imported")
 AssertTableEquals({"no", "trailing", "newline"}, Document[1])
 
 

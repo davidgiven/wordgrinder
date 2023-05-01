@@ -45,7 +45,7 @@ local function main(inputfile, template)
         os.exit(1)
     end
 
-    for i, doc in ipairs(DocumentSet:getDocumentList()) do
+    for i, doc in ipairs(documentSet:getDocumentList()) do
         local outputfile = template:gsub("%.(%w+)$", "."..i.."."..doc.name..".%1")
         Document = doc
         if not exporter(outputfile) then

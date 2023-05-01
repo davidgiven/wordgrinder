@@ -59,7 +59,7 @@ local style_tab =
 }
 
 local function callback(writer, document)
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 	local currentstylename = nil
 	
 	function changepara(para)

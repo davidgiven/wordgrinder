@@ -51,10 +51,6 @@ type DocumentClassFields = {
 	mo: number,
 }
 
-type DocumentSetClassFields = {
-	menu: Menu,
-}
-
 local stylemarkup =
 {
 	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,
@@ -62,153 +58,6 @@ local stylemarkup =
 	["H3"] = ITALIC + BRIGHT + BOLD,
 	["H4"] = BRIGHT + BOLD
 }
-
-DocumentSetClass =
-{
-	-- remove any cached data prior to saving
-	purge = function(self)
-		for _, l in ipairs(self.documents) do
-			l:purge()
-		end
-	end,
-
-	touch = function(self)
-		self.changed = true
-		self.justchanged = true
-		Document:touch()
-	end,
-
-	clean = function(self)
-		self.changed = nil
-		self.justchanged = nil
-	end,
-
-	getDocumentList = function(self)
-		return self.documents
-	end,
-
-	_findDocument = function(self, name)
-		for i, d in ipairs(self.documents) do
-			if (d.name == name) then
-				return i
-			end
-		end
-		return nil
-	end,
-
-	findDocument = function(self, name)
-		local document = self.documents[name]
-		if not document then
-			document = self.documents[self:_findDocument(name)]
-			if document then
-				ModalMessage("Document index inconsistency corrected",
-					"Something freaky happened to '"..name.."'.")
-				self.documents[name] = document
-			end
-		end
-		return document
-	end,
-
-	addDocument = function(self, document, name, index)
-		document.name = name
-
-		local n = self:_findDocument(name) or (#self.documents + 1)
-		self.documents[n] = document
-		self.documents[name] = document
-		if not self.current or (self.current.name == name) then
-			self:setCurrent(name)
-		end
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-		return document
-	end,
-
-	moveDocumentIndexTo = function(self, name, targetIndex)
-		local n = self:_findDocument(name)
-		if not n then
-			return
-		end
-		local document = self.documents[n]
-
-		table_remove(self.documents, n)
-		table_insert(self.documents, targetIndex, document)
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-	end,
-
-	deleteDocument = function(self, name)
-		if (#self.documents == 1) then
-			return false
-		end
-
-		local n = self:_findDocument(name)
-		if not n then
-			return
-		end
-		local document = self.documents[n]
-
-		table_remove(self.documents, n)
-		self.documents[name] = nil
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-
-		if (Document == document) then
-			document = self.documents[n]
-			if not document then
-				document = self.documents[#self.documents]
-			end
-
-			self:setCurrent(document.name)
-		end
-
-		return true
-	end,
-
-	setCurrent = function(self, name)
-		-- Ensure any housekeeping on the current document gets done.
-
-		if Document.changed then
-			FireEvent(Event.Changed)
-		end
-
-		Document = self.documents[name]
-		if not Document then
-			Document = self.documents[1]
-		end
-
-		self.current = Document
-		Document:renumber()
-		ResizeScreen()
-	end,
-
-	renameDocument = function(self, oldname, newname)
-		if self.documents[newname] then
-			return false
-		end
-
-		local d = self.documents[oldname]
-		self.documents[oldname] = nil
-		self.documents[newname] = d
-		d.name = newname
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-		return true
-	end,
-
-	setClipboard = function(self, clipboard)
-		self.clipboard = clipboard
-	end,
-
-	getClipboard = function(self)
-		return self.clipboard
-	end,
-}
-
-type DocumentSet = typeof(setmetatable(
-		{} :: DocumentSetClassFields, {__index = DocumentSetClass}))
 
 DocumentClass =
 {
@@ -491,20 +340,6 @@ function UpdateDocumentStyles()
 	end
 
 	DocumentStyles = styles
-end
-
-function CreateDocumentSet()
-	UpdateDocumentStyles()
-	local ds =
-	{
-		fileformat = FILEFORMAT,
-		statusbar = true,
-		documents = {},
-		addons = {},
-	}
-
-	setmetatable(ds, {__index = DocumentSetClass})
-	return ds
 end
 
 function CreateDocument(): Document

@@ -1,9 +1,9 @@
 --!nonstrict
 loadfile("tests/testsuite.lua")()
 
-DocumentSet.addons.smartquotes.singlequotes = true
-DocumentSet.addons.smartquotes.doublequotes = true
-DocumentSet.addons.smartquotes.notinraw = true
+documentSet.addons.smartquotes.singlequotes = true
+documentSet.addons.smartquotes.doublequotes = true
+documentSet.addons.smartquotes.notinraw = true
 
 -- Fake typing on the keyboard.
 local function typestring(s)
@@ -51,13 +51,13 @@ typestring("fnord'")
 AssertTableEquals({"\17‘\25fnord’"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
 
-DocumentSet.addons.smartquotes.rightsingle = "%"
+documentSet.addons.smartquotes.rightsingle = "%"
 Cmd.ChangeParagraphStyle("P")
 typestring("blorb's")
 AssertTableEquals({"blorb%s"}, Document[Document.cp])
 Cmd.SplitCurrentParagraph()
 
-DocumentSet.addons.smartquotes.rightsingle = "’"
+documentSet.addons.smartquotes.rightsingle = "’"
 typestring([["Once upon a time," said K'trx'frn, "there was an aardvark called Albert."]])
 AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
 	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[Document.cp])

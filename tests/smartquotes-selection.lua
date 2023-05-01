@@ -1,9 +1,9 @@
 --!nonstrict
 loadfile("tests/testsuite.lua")()
 
-DocumentSet.addons.smartquotes.singlequotes = false
-DocumentSet.addons.smartquotes.doublequotes = false
-DocumentSet.addons.smartquotes.notinraw = true
+documentSet.addons.smartquotes.singlequotes = false
+documentSet.addons.smartquotes.doublequotes = false
+documentSet.addons.smartquotes.notinraw = true
 
 Cmd.InsertStringIntoParagraph("'Hello, world!'")
 Cmd.SplitCurrentParagraph()
@@ -41,8 +41,8 @@ Cmd.SplitCurrentParagraph()
 Cmd.GotoBeginningOfDocument()
 Cmd.SetMark()
 Cmd.GotoEndOfDocument()
-DocumentSet.addons.smartquotes.singlequotes = true
-DocumentSet.addons.smartquotes.doublequotes = true
+documentSet.addons.smartquotes.singlequotes = true
+documentSet.addons.smartquotes.doublequotes = true
 Cmd.Smartquotify()
 
 AssertTableEquals({"‘Hello,", "world!’"}, Document[1])

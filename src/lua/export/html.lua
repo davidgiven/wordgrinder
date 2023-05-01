@@ -44,7 +44,7 @@ local style_tab =
 }
 
 local function callback(writer, document)
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 	local currentstylename = nil
 	local islist = false
 	
@@ -168,14 +168,14 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.htmlexport = DocumentSet.addons.htmlexport or {
+		documentSet.addons.htmlexport = documentSet.addons.htmlexport or {
 			underline_on = "<u>",
 			underline_off = "</u>",
 			italic_on = "<i>",
 			italic_off = "</i>"
 		}
 
-		local s = DocumentSet.addons.htmlexport
+		local s = documentSet.addons.htmlexport
 		s.bold_on = s.bold_on or "<b>"
 		s.bold_off = s.bold_off or "</b>"
 	end
@@ -187,7 +187,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureHTMLExport()
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 
 	local underline_on_textfield =
 		Form.TextField {

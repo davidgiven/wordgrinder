@@ -115,13 +115,13 @@ local changed_tab =
 local function redrawstatus()
 	local y = ScreenHeight - 1
 
-	if DocumentSet.statusbar then
+	if documentSet.statusbar then
 		local s = {
-			Leafname(DocumentSet.name or "(unnamed)"),
+			Leafname(documentSet.name or "(unnamed)"),
 			"[",
 			Document.name or "",
 			"] ",
-			changed_tab[DocumentSet.changed] or "",
+			changed_tab[documentSet.changed] or "",
 		}
 
 		-- Reversed due to SetReverse later.

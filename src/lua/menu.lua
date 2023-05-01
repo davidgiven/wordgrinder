@@ -384,10 +384,10 @@ MenuTreeClass = {
 	end,
 
 	drawmenustack = function(self)
-		local osb = DocumentSet.statusbar
-		DocumentSet.statusbar = true
+		local osb = documentSet.statusbar
+		documentSet.statusbar = true
 		RedrawScreen()
-		DocumentSet.statusbar = osb
+		documentSet.statusbar = osb
 
 		local o = 0
 		for _, m in ipairs(menu_stack) do
@@ -526,8 +526,8 @@ MenuTreeClass = {
 						if PromptForYesNo("Reset menu keybindings?",
 							"Are you sure you want to reset all the menu "..
 							"keybindings back to their defaults?") then
-							DocumentSet.menu = CreateMenuBindings()
-							DocumentSet:touch()
+							documentSet.menu = CreateMenuBindings()
+							documentSet:touch()
 							NonmodalMessage("All keybindings have been reset to their default settings.")
 							menu_stack = {}
 							return false
@@ -656,7 +656,7 @@ function RebuildDocumentsMenu(documents)
 
 	local ak_tab: {[string]: string} = {}
 	for _, item in ipairs(DocumentsMenu) do
-		local ak = DocumentSet.menu.accelerators[item.id]
+		local ak = documentSet.menu.accelerators[item.id]
 		if ak and item.label then
 			ak_tab[item.label] = ak
 		end

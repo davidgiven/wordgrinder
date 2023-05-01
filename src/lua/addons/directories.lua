@@ -13,7 +13,7 @@ local ENOENT = wg.ENOENT
 local W_OK = wg.W_OK
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()

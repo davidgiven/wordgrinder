@@ -11,13 +11,13 @@ function Cmd.AddBlankDocument(name)
 		end
 	end
 
-	if DocumentSet.documents[name] then
+	if documentSet.documents[name] then
 		ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
 		return false
 	end
 
-	DocumentSet:addDocument(CreateDocument(), name)
-	DocumentSet:setCurrent(name)
+	documentSet:addDocument(CreateDocument(), name)
+	documentSet:setCurrent(name)
 	QueueRedraw()
 	return true
 end
@@ -38,7 +38,7 @@ function Cmd.ManageDocumentsUI()
 	local function up_cb()
 		if (browser.cursor > 1) then
 			local document = browser.data[browser.cursor].document
-			DocumentSet:moveDocumentIndexTo(document.name, browser.cursor - 1)
+			documentSet:moveDocumentIndexTo(document.name, browser.cursor - 1)
 			browser.cursor = browser.cursor - 1
 			return "confirm"
 		end
@@ -47,7 +47,7 @@ function Cmd.ManageDocumentsUI()
 		
 	local function down_cb()
 		if (browser.cursor < #browser.data) then
-			DocumentSet:moveDocumentIndexTo(Document.name, browser.cursor + 1)
+			documentSet:moveDocumentIndexTo(Document.name, browser.cursor + 1)
 			browser.cursor = browser.cursor + 1
 			return "confirm"
 		end
@@ -60,7 +60,7 @@ function Cmd.ManageDocumentsUI()
 			return "confirm"
 		end
 		
-		if not DocumentSet:renameDocument(Document.name, name) then
+		if not documentSet:renameDocument(Document.name, name) then
 			ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
 			return "confirm"
 		end
@@ -79,7 +79,7 @@ function Cmd.ManageDocumentsUI()
 			return false
 		end
 		
-		if not DocumentSet:deleteDocument(Document.name) then
+		if not documentSet:deleteDocument(Document.name) then
 			ModalMessage("Unable to delete document", "You can't delete that document.")
 			return "confirm"
 		end
@@ -147,7 +147,7 @@ function Cmd.ManageDocumentsUI()
 	while true do
 		local data = {}
 		local current = nil
-		for dn, d in ipairs(DocumentSet:getDocumentList()) do
+		for dn, d in ipairs(documentSet:getDocumentList()) do
 			data[dn] =
 			{
 				document = d,

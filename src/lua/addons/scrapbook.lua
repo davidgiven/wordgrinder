@@ -41,21 +41,21 @@ function Cmd.CopyToScrapbook()
 end
 
 function Cmd.PasteToScrapbook()
-	local buffer = DocumentSet:getClipboard()
+	local buffer = documentSet:getClipboard()
 	if not buffer then
 		NonmodalMessage("There's nothing on the clipboard.")
 		return false
 	end
 	
-	local settings = DocumentSet.addons.scrapbook
+	local settings = documentSet.addons.scrapbook
 	
 	local currentdocument = Document.name
 	
-	if not DocumentSet:findDocument(settings.document) then
-		DocumentSet:addDocument(CreateDocument(), settings.document)
+	if not documentSet:findDocument(settings.document) then
+		documentSet:addDocument(CreateDocument(), settings.document)
 		NonmodalMessage("Creating scrapbook in document '"..settings.document.."'.")
 	end
-	DocumentSet:setCurrent(settings.document)
+	documentSet:setCurrent(settings.document)
 
 	Cmd.GotoEndOfDocument()
 	Cmd.UnsetMark()
@@ -68,18 +68,18 @@ function Cmd.PasteToScrapbook()
 	Cmd.ChangeParagraphStyle("P")
 	Cmd.Paste()
 	
-	DocumentSet:setCurrent(currentdocument)
+	documentSet:setCurrent(currentdocument)
 	NonmodalMessage("Fragment added to scrapbook.")
 	
 	return false
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.scrapbook = DocumentSet.addons.scrapbook or {
+		documentSet.addons.scrapbook = documentSet.addons.scrapbook or {
 			document = "Scrapbook",
 			timestamp = true,
 			pattern = "Item from '%N' at %T:" 
@@ -93,7 +93,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureScrapbook()
-	local settings = DocumentSet.addons.scrapbook
+	local settings = documentSet.addons.scrapbook
 
 	local document_textfield =
 		Form.TextField {
@@ -183,7 +183,7 @@ function Cmd.ConfigureScrapbook()
 			settings.document = document
 			settings.timestamp = timestamp
 			settings.pattern = pattern
-			DocumentSet:touch()
+			documentSet:touch()
 
 			return true
 		end

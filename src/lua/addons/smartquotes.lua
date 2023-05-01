@@ -15,7 +15,7 @@ end
 
 do
 	local function cb(event, token, payload)
-		local settings = DocumentSet.addons.smartquotes or {}
+		local settings = documentSet.addons.smartquotes or {}
 		local start_of_word_pattern =
 			(P("^") *
 			 (P("[\"']") +
@@ -47,11 +47,11 @@ do
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.smartquotes = DocumentSet.addons.smartquotes or {
+		documentSet.addons.smartquotes = documentSet.addons.smartquotes or {
 			doublequotes = false,
 			singlequotes = false,
 			notinraw = true,
@@ -69,7 +69,7 @@ end
 -- Undo any smart quotes.
 
 function UnSmartquotify(s)
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	s = s:gsub(escape(settings.leftdouble), '"')
 	s = s:gsub(escape(settings.rightdouble), '"')
 	s = s:gsub(escape(settings.leftsingle), "'")
@@ -81,7 +81,7 @@ end
 -- Process the selection.
 
 local function convert_clipboard()
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	local doc = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
@@ -136,7 +136,7 @@ local function convert_clipboard()
 end
 
 local function unconvert_clipboard()
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	local clipboard = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
@@ -183,7 +183,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureSmartQuotes()
-	local settings = DocumentSet.addons.smartquotes
+	local settings = documentSet.addons.smartquotes
 
 	local single_checkbox =
 		Form.Checkbox {
@@ -318,7 +318,7 @@ function Cmd.ConfigureSmartQuotes()
 	settings.leftdouble = leftdouble_textfield.value
 	settings.rightdouble = rightdouble_textfield.value
 	settings.notinrawquotes = notinraw_checkbox.value
-	DocumentSet:touch()
+	documentSet:touch()
 
 	return true
 end

@@ -136,8 +136,8 @@ Stuff here.</pre>
 ]]
 expected = expected:gsub("@@@", VERSION)
 
-DocumentSet:addDocument(document, "imported")
-DocumentSet:setCurrent("imported")
+documentSet:addDocument(document, "imported")
+documentSet:setCurrent("imported")
 local output = Cmd.ExportToHTMLString()
 AssertEquals(expected, output)
 

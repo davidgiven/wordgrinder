@@ -105,7 +105,7 @@ local function writetostreamt(object, write)
 	save("", object)
 
 	local class = GetClass(object)
-	if class == DocumentSetClass then
+	if class == DocumentSet then
 		if object.current then
 			save(".current", object:_findDocument(object.current.name))
 		end
@@ -154,8 +154,8 @@ function SaveToFile(filename, object)
 end
 
 function SaveDocumentSetRaw(filename)
-	DocumentSet:purge()
-	return SaveToFile(filename, DocumentSet)
+	documentSet:purge()
+	return SaveToFile(filename, documentSet)
 end
 
 function Cmd.SaveCurrentDocumentAs(filename)
@@ -168,11 +168,11 @@ function Cmd.SaveCurrentDocumentAs(filename)
 			filename = filename .. ".wg"
 		end
 	end
-	DocumentSet.name = filename
+	documentSet.name = filename
 
 	ImmediateMessage("Saving...")
-	DocumentSet:clean()
-	local r, e = SaveDocumentSetRaw(DocumentSet.name)
+	documentSet:clean()
+	local r, e = SaveDocumentSetRaw(documentSet.name)
 	if not r then
 		ModalMessage("Save failed", "The document could not be saved: "..e)
 	else
@@ -182,7 +182,7 @@ function Cmd.SaveCurrentDocumentAs(filename)
 end
 
 function Cmd.SaveCurrentDocument()
-	local name = DocumentSet.name
+	local name = documentSet.name
 	if not name then
 		name = FileBrowser("Save Document Set", "Save as:", true)
 		if not name then
@@ -191,7 +191,7 @@ function Cmd.SaveCurrentDocument()
 		if name:find("/[^.]*$") then
 			name = name .. ".wg"
 		end
-		DocumentSet.name = name
+		documentSet.name = name
 	end
 
 	return Cmd.SaveCurrentDocumentAs(name)
@@ -223,7 +223,7 @@ local function loadfromstream(fp)
 	local load_cb = {
 		["DS"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = DocumentSetClass})
+			setmetatable(t, DocumentSet)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -351,7 +351,7 @@ local function loadfromstreamz(fp)
 
 		[DOCUMENTSETCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = DocumentSetClass})
+			setmetatable(t, DocumentSet)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -641,17 +641,17 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		UpgradeDocument(fileformat)
 		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
 
-		DocumentSet.fileformat = FILEFORMAT
-		DocumentSet.menu = CreateMenuTree()
+		documentSet.fileformat = FILEFORMAT
+		documentSet.menu = CreateMenuTree()
 	end
 	FireEvent(Event.RegisterAddons)
-	DocumentSet:touch()
+	documentSet:touch()
 
 	ResizeScreen()
 	FireEvent(Event.DocumentLoaded)
 
 	UpdateDocumentStyles()
-	RebuildDocumentsMenu(DocumentSet.documents)
+	RebuildDocumentsMenu(documentSet.documents)
 	QueueRedraw()
 
 	if (fileformat < FILEFORMAT) then
@@ -665,20 +665,20 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 
 	-- The document is NOT dirty immediately after a load.
 	
-	DocumentSet.changed = false
+	documentSet.changed = false
 
 	return true
 end
 
 function UpgradeDocument(oldversion)
-	DocumentSet.addons = DocumentSet.addons or {}
+	documentSet.addons = documentSet.addons or {}
 
 	-- Upgrade version 1 to 2.
 
 	if (oldversion < 2) then
 		-- Update wordcount.
 
-		for _, document in ipairs(DocumentSet.documents) do
+		for _, document in ipairs(documentSet.documents) do
 			local wc = 0
 
 			for _, p in ipairs(document) do
@@ -690,7 +690,7 @@ function UpgradeDocument(oldversion)
 
 		-- Status bar defaults to on.
 
-		DocumentSet.statusbar = true
+		documentSet.statusbar = true
 	end
 
 	-- Upgrade version 2 to 3.
@@ -698,7 +698,7 @@ function UpgradeDocument(oldversion)
 	if (oldversion < 3) then
 		-- Idle time defaults to 3.
 
-		DocumentSet.idletime = 3
+		documentSet.idletime = 3
 	end
 
 	-- Upgrade version 5 to 6.
@@ -712,7 +712,7 @@ function UpgradeDocument(oldversion)
 	-- Upgrade version 6 to 7.
 
 	if (oldversion < 7) then
-		-- This is the version where DocumentSet.styles vanished. Each paragraph.style
+		-- This is the version where documentSet.styles vanished. Each paragraph.style
 		-- is now a string containing the name of the style; styles are looked up on
 		-- demand.
 
@@ -724,10 +724,10 @@ function UpgradeDocument(oldversion)
             end
         end
 
-		for _, document in ipairs(DocumentSet.documents) do
+		for _, document in ipairs(documentSet.documents) do
             convertStyles(document)
         end
-		DocumentSet.styles = nil
+		documentSet.styles = nil
 	end
 
 	-- Upgrade version 7 to 8.
@@ -739,8 +739,8 @@ function UpgradeDocument(oldversion)
 		-- A bug on 0.7.2 meant that the styles were still exported in
 		-- WordGrinder files, even though they were never used.
 
-		DocumentSet.styles = nil
-		DocumentSet.idletime = nil
+		documentSet.styles = nil
+		documentSet.idletime = nil
 	end
 end
 

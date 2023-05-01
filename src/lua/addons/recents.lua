@@ -26,7 +26,7 @@ end
 do
 	local function cb()
 		local recents = GlobalSettings.recents
-		local name = DocumentSet.name
+		local name = documentSet.name
 		if not name then
 			return
 		end

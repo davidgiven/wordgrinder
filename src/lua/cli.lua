@@ -117,17 +117,17 @@ function CliConvert(file1: string, file2: string)
 			-- If the user specified a document name, and we loaded a wg file,
 			-- then select the specified document.
 			
-			local dl = DocumentSet:getDocumentList()
+			local dl = documentSet:getDocumentList()
 			if not dl[f1s] then
 				CLIError("no such document '", f1s, "'")
 			end
-			DocumentSet:setCurrent(f1s)
+			documentSet:setCurrent(f1s)
 		else
 			-- Otherwise, rename the document we just imported to the name
 			-- that the user specified.
 			
 			local name = Document.name
-			DocumentSet:renameDocument(name, f1s)
+			documentSet:renameDocument(name, f1s)
 		end
 	end
 	

@@ -257,19 +257,19 @@ function Cmd.ImportODTFile(filename)
 	
 	local docname = Leafname(filename)
 
-	if DocumentSet.documents[docname] then
+	if documentSet.documents[docname] then
 		local id = 1
 		while true do
 			local f = docname.."-"..id
-			if not DocumentSet.documents[f] then
+			if not documentSet.documents[f] then
 				docname = f
 				break
 			end
 		end
 	end
 	
-	DocumentSet:addDocument(document, docname)
-	DocumentSet:setCurrent(docname)
+	documentSet:addDocument(document, docname)
+	documentSet:setCurrent(docname)
 
 	QueueRedraw()
 	return true

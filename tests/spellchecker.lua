@@ -19,15 +19,15 @@ Cmd.DeleteWord()
 Cmd.AddToUserDictionary()
 AssertTableEquals({"fnord"}, unset(GetUserDictionary()))
 
-DocumentSet.addons.spellchecker.enabled = false
+documentSet.addons.spellchecker.enabled = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
 FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
-DocumentSet.addons.spellchecker.enabled = true
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = false
+documentSet.addons.spellchecker.enabled = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
 FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"fnord", 0, 0},
@@ -43,9 +43,9 @@ FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"notfound", wg.DIM, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
-DocumentSet.addons.spellchecker.enabled = true
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = true
+documentSet.addons.spellchecker.enabled = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = true
 AssertEquals(false, IsWordMisspelt("lower", true))
 AssertEquals(false, IsWordMisspelt("Lower", true))
 AssertEquals(false, IsWordMisspelt("lower", false))
@@ -59,8 +59,8 @@ AssertEquals(true, IsWordMisspelt("Upper", false))
 AssertEquals(false, IsWordMisspelt("UPPER", true))
 AssertEquals(false, IsWordMisspelt("UPPER", false))
 
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = true
 local payload = { word="fnord", cstyle=0, ostyle=0 }
 FireEvent(Event.DrawWord, payload)
 AssertTableEquals({"fnord", 0, 0},

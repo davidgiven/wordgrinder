@@ -55,8 +55,8 @@ normal text again
 ]]
 expected = expected:gsub("@@@", VERSION)
 
-DocumentSet:addDocument(document, "imported")
-DocumentSet:setCurrent("imported")
+documentSet:addDocument(document, "imported")
+documentSet:setCurrent("imported")
 local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 
