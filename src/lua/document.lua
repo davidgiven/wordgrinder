@@ -46,6 +46,7 @@ type Document = {
 	[number]: Paragraph,
 
 	name: string,
+	wordcount: number,
 
 	cp: number,
 	cw: number,
@@ -54,8 +55,6 @@ type Document = {
 	mp: number,
 	mw: number,
 	mo: number,
-
-	wordcount: number,
 
 	cursor: (self: Document) -> {number},
 	appendParagraph: (self: Document, p: Paragraph) -> (),

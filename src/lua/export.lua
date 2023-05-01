@@ -15,10 +15,31 @@ local string_lower = string.lower
 local time = wg.time
 local WriteFile = wg.writefile
 
+type Exporter = {
+	prologue: () -> (),
+	epilogue: () -> (),
+
+	paragraph_start: (string) -> (),
+	paragraph_end: (string) -> (),
+
+	list_start: (string) -> (),
+	list_end: (string) -> (),
+
+	text: (string) -> (),
+	rawtext: (string) -> (),
+	notext: () -> (),
+	italic_on: () -> (),
+	italic_off: () -> (),
+	bold_on: () -> (),
+	bold_off: () -> (),
+	underline_on: () -> (),
+	underline_off: () -> (),
+}
+
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
 
-function ExportFileUsingCallbacks(document, cb)
+function ExportFileUsingCallbacks(document, cb: Exporter)
 	document:renumber()
 	cb.prologue()
 
@@ -169,8 +190,8 @@ function ExportFileWithUI(filename, title, extension, callback)
 	ImmediateMessage("Exporting "..filename.."...")
 
 	local data: {string} = {}
-	local writer = function(...: string)
-		for s in {...} do
+	local writer = function(...: {string})
+		for _, s in ipairs(...) do
 			data[#data+1] = s
 		end
 	end

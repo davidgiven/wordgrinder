@@ -28,7 +28,9 @@ DocumentSet.__index = DocumentSet
 _G.DocumentSet = DocumentSet
 
 type DocumentSet = {
-	menu: Menu,
+	fileformat: number,
+	menu: MenuTree,
+	current: Document,
 	changed: boolean,
 	justchanged: boolean,
 	documents: {Document},

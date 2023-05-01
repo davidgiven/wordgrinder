@@ -187,7 +187,6 @@ local function export_odt_with_ui(filename, title, extension)
 		content[#content+1] = s
 	end
 	callback(writer, currentDocument)
-	content = table_concat(content)
 	
 	local xml =
 	{
@@ -359,7 +358,7 @@ local function export_odt_with_ui(filename, title, extension)
 				xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>
 		]],
 		
-		["content.xml"] = content
+		["content.xml"] = table.concat(content)
 	}
 	
 	if not writezip(filename, xml) then

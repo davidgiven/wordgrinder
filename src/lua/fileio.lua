@@ -153,32 +153,35 @@ function SaveToFile(filename, object)
 	return r, e
 end
 
-function SaveDocumentSetRaw(filename)
+function SaveDocumentSetRaw(filename): (boolean?, string?)
 	documentSet:purge()
 	return SaveToFile(filename, documentSet)
 end
 
-function Cmd.SaveCurrentDocumentAs(filename)
+function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
 	if not filename then
 		filename = FileBrowser("Save Document Set", "Save as:", true)
 		if not filename then
 			return false
 		end
+		assert(filename)
 		if filename:find("/[^.]*$") then
 			filename = filename .. ".wg"
 		end
 	end
+	assert(filename)
 	documentSet.name = filename
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
 	local r, e = SaveDocumentSetRaw(documentSet.name)
 	if not r then
+		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
 	else
 		NonmodalMessage("Save succeeded.")
 	end
-	return r
+	return assert(r)
 end
 
 function Cmd.SaveCurrentDocument()
@@ -467,7 +470,7 @@ local function loadfromstreamt(fp)
 	data.menu = CreateMenuTree()
 	data.documents = {}
 
-	local function readl()
+	local function readl(): string?
 		local s = fp:read("*l")
 		if s then
 			return s:gsub("\r", "")
@@ -480,15 +483,23 @@ local function loadfromstreamt(fp)
 		if not line then
 			break
 		end
+		assert(line)
 
 		if line:find("^%.") then
-			local _, _, k, p, v = line:find("^(.*)%.([^.:]+): (.*)$")
+			local s, _, k, p, v = line:find("^(.*)%.([^.:]+): (.*)$")
+			if not s then
+				error(
+					string.format("malformed line when reading file: '%s'", line))
+			end
+			assert(k)
+			assert(p)
+			assert(v)
 
 			-- This is setting a property value.
 			local o = data
-			for e in k:gmatch("[^.]+") do
+			for e: (string|number) in k:gmatch("[^.]+") do
 				if e:find('^[0-9]+') then
-					e = tonumber(e)
+					e = assert(tonumber(e))
 				end
 				if not o[e] then
 					if (o == data.documents) then
@@ -588,14 +599,15 @@ function LoadFromFile(filename)
 	return loader(fp)
 end
 
-local function loaddocument(filename)
-	local d, e = LoadFromFile(filename)
+local function loaddocument(filename): (DocumentSet?, string?)
+	local d: DocumentSet?, e = LoadFromFile(filename)
 	if e then
 		return nil, e
 	end
 
 	-- Even if the changed flag was set in the document on disk, remove it.
 
+	assert(d)
 	d:clean()
 
 	d.name = filename
@@ -614,6 +626,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		end
 	end
 
+	assert(filename)
 	ImmediateMessage("Loading "..filename.."...")
 	local d, e = loaddocument(filename)
 	if not d then
@@ -624,6 +637,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		QueueRedraw()
 		return false, e
 	end
+	assert(d)
 
 	-- Downgrading documents is not supported.
 	local fileformat = d.fileformat or 1
@@ -634,7 +648,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 		return false, "Incompatible version"
 	end
 
-	DocumentSet = d
+	documentSet = d
 	currentDocument = d.current
 
 	if (fileformat < FILEFORMAT) then

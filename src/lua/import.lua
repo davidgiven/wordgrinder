@@ -28,7 +28,7 @@ type Importer = {
 
 -- Import helper functions. These functions build styled words and paragraphs.
 
-function CreateImporter(document): Importer
+function CreateImporter(document: Document): Importer
 	local pbuffer
 	local wbuffer
 	local oldattr
@@ -88,13 +88,14 @@ end
 
 -- Does the standard selector-box-and-progress UI for each importer.
 
-function ImportFileWithUI(filename, title, callback)
+function ImportFileWithUI(filename, title, callback: (string) -> Document?): boolean
 	if not filename then
 		filename = FileBrowser(title, "Import from:", false)
 		if not filename then
 			return false
 		end
 	end
+	assert(filename)
 
 	ImmediateMessage("Importing...")
 
@@ -102,9 +103,10 @@ function ImportFileWithUI(filename, title, callback)
 
 	local data, e = ReadFile(filename)
 	if not data then
-		return nil
+		return false
 	end
 
+	assert(data)
 	local document = callback(data)
 	if not document then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")

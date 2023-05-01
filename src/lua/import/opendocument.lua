@@ -24,10 +24,22 @@ local STYLE_NS = "urn:oasis:names:tc:opendocument:xmlns:style:1.0"
 local FO_NS = "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
 local TEXT_NS = "urn:oasis:names:tc:opendocument:xmlns:text:1.0"
 
+type ODStyle = {
+	parent: string,
+	italic: boolean,
+	bold: boolean,
+	underline: boolean,
+	indented: boolean
+}
+
+type ODStyleMap = {
+	[string]: ODStyle
+}
+
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-local function parse_style(styles, xml)
+local function parse_style(styles: ODStyleMap, xml)
 	local NAME = STYLE_NS .. " name"
 	local FAMILY = STYLE_NS .. " family"
 	local PARENT_NAME = STYLE_NS .. " parent-name"
@@ -46,26 +58,22 @@ local function parse_style(styles, xml)
 
 	for _, element in ipairs(xml) do
 		if (element._name == TEXT_PROPERTIES) then
-			if (element[FONT_STYLE] == "italic") then
-				style.italic = true
-			end
-			if (element[FONT_WEIGHT] == "bold") then
-				style.bold = true
-			end
-			if (element[UNDERLINE_STYLE] == "solid") then
-				style.underline = true
-			end
+			style.italic = element[FONT_STYLE] == "italic"
+			style.bold = element[FONT_WEIGHT] == "bold"
+			style.underline = element[UNDERLINE_STYLE] == "solid"
+			style.indented = false
 		elseif (element._name == PARAGRAPH_PROPERTIES) then
-			if element[MARGIN_LEFT] then
-				style.indented = true
-			end
+			style.italic = false
+			style.bold = false
+			style.underline = false
+			style.indented = element[MARGIN_LEFT]
 		end
 	end
 
 	styles[name] = style
 end
 
-local function resolve_parent_styles(styles)
+local function resolve_parent_styles(styles: ODStyleMap)
 	local function recursively_fetch(name, attr)
 		local style = styles[name]
 		if style[attr] then
@@ -77,7 +85,7 @@ local function resolve_parent_styles(styles)
 		return nil
 	end
 
-	for k, v in pairs(styles) do
+	for k, v in styles do
 		v.italic = recursively_fetch(k, "italic")
 		v.bold = recursively_fetch(k, "bold")
 		v.underline = recursively_fetch(k, "underline")
@@ -157,7 +165,8 @@ local function add_text(styles, importer, xml)
 	end
 end
 
-local function import_paragraphs(styles, importer: Importer, xml, defaultstyle)
+local function import_paragraphs(
+		styles: ODStyleMap, importer: Importer, xml, defaultstyle)
 	local PARAGRAPH = TEXT_NS .. " p"
 	local HEADER = TEXT_NS .. " h"
 	local LIST = TEXT_NS .. " list"
@@ -209,8 +218,8 @@ function Cmd.ImportODTFile(filename)
 
 	-- Load the styles and content subdocuments.
 	
-	local stylesxml = ReadFromZip(filename, "styles.xml")
-	local contentxml = ReadFromZip(filename, "content.xml")
+	local stylesxml: any = ReadFromZip(filename, "styles.xml")
+	local contentxml: any = ReadFromZip(filename, "content.xml")
 	if not stylesxml or not contentxml then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")
 		QueueRedraw()
@@ -223,7 +232,7 @@ function Cmd.ImportODTFile(filename)
 	-- Find out what text styles the document creates (so we can identify
 	-- italic and underlined text).
 	
-	local styles = {}
+	local styles: ODStyleMap = {}
 	collect_styles(styles, stylesxml)
 	collect_styles(styles, contentxml)
 	resolve_parent_styles(styles)

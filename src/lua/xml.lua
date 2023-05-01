@@ -247,7 +247,7 @@ end
 -- @param xml                   XML string to parse
 -- @return                      tree
 
-function ParseXML(xml)
+function ParseXML(xml): any
 	local nextToken = TokeniseXML(xml)
 
 	local function parse_tag(token)
