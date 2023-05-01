@@ -32,6 +32,8 @@ type DocumentSet = {
 	changed: boolean,
 	justchanged: boolean,
 	documents: {Document},
+	clipboard: Document?,
+	statusbar: boolean,
 
 	purge: (self: DocumentSet) -> (),
 	touch: (self: DocumentSet) -> (),
@@ -41,6 +43,13 @@ type DocumentSet = {
 	findDocument: (self: DocumentSet, name: string) -> Document?,
 	addDocument: (self: DocumentSet, name: string, index: number)
 		-> currentDocument,
+	moveDocumentIndexTo: (self: DocumentSet, name: string, targetIndex: number)
+		-> (),
+	deleteDocument: (self: DocumentSet, name: string) -> boolean,
+	setCurrent: (self: DocumentSet, name: string) -> (),
+	renameDocument: (self: DocumentSet, oldname: string, newname: string) -> (),
+	setClipboard: (self: DocumentSet, clipboard: Document) -> (),
+	getClipboard: (self: DocumentSet) -> Document?,
 }
 
 function CreateDocumentSet(): DocumentSet
@@ -135,7 +144,7 @@ DocumentSet.deleteDocument = function(self, name)
 
 	local n = self:_findDocument(name)
 	if not n then
-		return
+		return false
 	end
 	local document = self.documents[n]
 

@@ -29,7 +29,6 @@ CliConvert = nil
 CreateDocument = nil
 CreateMenuBindings = nil
 CreateParagraph = nil
-currentDocument = nil :: Document
 DocumentStyles = nil
 EngageCLI = nil
 GetMaximumAllowedWidth = nil

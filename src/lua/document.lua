@@ -37,7 +37,12 @@ type DocumentStyle = {
 type DocumentStyles = {[number | string]: DocumentStyle}
 DocumentStyles = {} :: DocumentStyles
 
-type DocumentClassFields = {
+local Document = {}
+Document.__index = Document
+_G.Document = Document
+currentDocument = (nil::any) :: Document
+
+type Document = {
 	[number]: Paragraph,
 
 	name: string,
@@ -49,6 +54,22 @@ type DocumentClassFields = {
 	mp: number,
 	mw: number,
 	mo: number,
+
+	wordcount: number,
+
+	cursor: (self: Document) -> {number},
+	appendParagraph: (self: Document, p: Paragraph) -> (),
+	insertParagraphBefore: (self: Document, paragraph: Paragraph, pn: number)
+		-> (),
+	deleteParagraphAt: (self: Document, pn: number) -> (),
+	wrap: (self: Document, width: number) -> (),
+	getMarks: (self: Document)
+		-> (number, number, number, number, number, number),
+	purge: (self: Document) -> (),
+	spaceAbove: (self: Document, pn: number) -> number,
+	spaceBelow: (self: Document, pn: number) -> number,
+	touch: (self: Document) -> (),
+	renumber: (self: Document) -> (),
 }
 
 local stylemarkup =
@@ -59,132 +80,125 @@ local stylemarkup =
 	["H4"] = BRIGHT + BOLD
 }
 
-DocumentClass =
-{
-	cursor = function(self: Document)
-		return { self.cp, self.cw, self.co }
-	end,
+function Document.cursor(self: Document)
+	return { self.cp, self.cw, self.co }
+end
 
-	appendParagraph = function(self: Document, p)
-		self[#self+1] = p
-	end,
+function Document.appendParagraph(self: Document, p)
+	self[#self+1] = p
+end
 
-	insertParagraphBefore = function(self: Document, paragraph, pn)
-		table.insert(self, pn, paragraph)
-	end,
+function Document.insertParagraphBefore(self: Document, paragraph, pn)
+	table.insert(self, pn, paragraph)
+end
 
-	deleteParagraphAt = function(self: Document, pn)
-		table.remove(self, pn)
-	end,
+function Document.deleteParagraphAt(self: Document, pn)
+	table.remove(self, pn)
+end
 
-	wrap = function(self: Document, width)
-		self.wrapwidth = width
-	end,
+function Document.wrap(self: Document, width)
+	self.wrapwidth = width
+end
 
-	getMarks = function(self: Document)
-		if not self.mp then
-			return
-		end
-
-		local mp1 = self.mp
-		local mw1 = self.mw
-		local mo1 = self.mo
-		local mp2 = self.cp
-		local mw2 = self.cw
-		local mo2 = self.co
-
-		if (mp1 > mp2) or
-		   ((mp1 == mp2) and
-		       ((mw1 > mw2) or ((mw1 == mw2) and (mo1 > mo2)))
-		   ) then
-			return mp2, mw2, mo2, mp1, mw1, mo1
-		end
-
-		return mp1, mw1, mo1, mp2, mw2, mo2
-	end,
-
-	-- remove any cached data prior to saving
-	purge = function(self: Document)
-		for _, paragraph in ipairs(self) do
-			paragraph:touch()
-		end
-
-		self.topp = nil
-		self.topw = nil
-		self.botp = nil
-		self.botw = nil
-		self.wrapwidth = nil
-
-		-- These should no longer exist; this dates from a previous attempt
-		-- at undo with file version 6. We're not storing the undo buffer
-		-- in files any more.
-		self.undostack = nil
-		self.redostack = nil
-	end,
-
-	-- calculate space above this paragraph
-	spaceAbove = function(self, pn)
-		local paragraph = self[pn]
-		local paragraphabove = self[pn - 1]
-
-		local sa = DocumentStyles[paragraph.style].above or 0 -- FIXME
-		local sb = 0
-		if paragraphabove then
-			sb = DocumentStyles[paragraphabove.style].below or 0 -- FIXME
-		end
-
-		if (sa > sb) then
-			return sa
-		else
-			return sb
-		end
-	end,
-
-	-- calculate space below this paragraph
-	spaceBelow = function(self, pn)
-		local paragraph = self[pn]
-		local paragraphbelow = self[pn + 1]
-
-		local sb = DocumentStyles[paragraph.style].below or 0 -- FIXME
-		local sa = 0
-		if paragraphbelow then
-			sa = DocumentStyles[paragraphbelow.style].above or 0 -- FIXME
-		end
-
-		if (sa > sb) then
-			return sa
-		else
-			return sb
-		end
-	end,
-
-	touch = function(self)
-		FireEvent(Event.DocumentModified, self)
-	end,
-
-	renumber = function(self)
-		local wc = 0
-		local pn = 1
-
-		for _, p in ipairs(self) do
-			wc = wc + #p
-
-			local style = DocumentStyles[p.style]
-			if style.numbered then
-				p.number = pn
-				pn = pn + 1
-			elseif not style.list then
-				pn = 1
-			end
-		end
-
-		self.wordcount = wc
+function Document.getMarks(self: Document)
+	if not self.mp then
+		return
 	end
-}
 
-type Document = typeof(setmetatable(
-		{} :: DocumentClassFields, {__index = DocumentClass}))
-Document = {} :: Document
+	local mp1 = self.mp
+	local mw1 = self.mw
+	local mo1 = self.mo
+	local mp2 = self.cp
+	local mw2 = self.cw
+	local mo2 = self.co
+
+	if (mp1 > mp2) or
+	   ((mp1 == mp2) and
+		   ((mw1 > mw2) or ((mw1 == mw2) and (mo1 > mo2)))
+	   ) then
+		return mp2, mw2, mo2, mp1, mw1, mo1
+	end
+
+	return mp1, mw1, mo1, mp2, mw2, mo2
+end
+
+-- remove any cached data prior to saving
+function Document.purge(self: Document)
+	for _, paragraph in ipairs(self) do
+		paragraph:touch()
+	end
+
+	self.topp = nil
+	self.topw = nil
+	self.botp = nil
+	self.botw = nil
+	self.wrapwidth = nil
+
+	-- These should no longer exist; this dates from a previous attempt
+	-- at undo with file version 6. We're not storing the undo buffer
+	-- in files any more.
+	self.undostack = nil
+	self.redostack = nil
+end
+
+-- calculate space above this paragraph
+function Document.spaceAbove(self, pn)
+	local paragraph = self[pn]
+	local paragraphabove = self[pn - 1]
+
+	local sa = DocumentStyles[paragraph.style].above or 0 -- FIXME
+	local sb = 0
+	if paragraphabove then
+		sb = DocumentStyles[paragraphabove.style].below or 0 -- FIXME
+	end
+
+	if (sa > sb) then
+		return sa
+	else
+		return sb
+	end
+end
+
+-- calculate space below this paragraph
+function Document.spaceBelow(self, pn)
+	local paragraph = self[pn]
+	local paragraphbelow = self[pn + 1]
+
+	local sb = DocumentStyles[paragraph.style].below or 0 -- FIXME
+	local sa = 0
+	if paragraphbelow then
+		sa = DocumentStyles[paragraphbelow.style].above or 0 -- FIXME
+	end
+
+	if (sa > sb) then
+		return sa
+	else
+		return sb
+	end
+end
+
+function Document.touch(self)
+	FireEvent(Event.DocumentModified, self)
+end
+
+function Document.renumber(self)
+	local wc = 0
+	local pn = 1
+
+	for _, p in ipairs(self) do
+		wc = wc + #p
+
+		local style = DocumentStyles[p.style]
+		if style.numbered then
+			p.number = pn
+			pn = pn + 1
+		elseif not style.list then
+			pn = 1
+		end
+	end
+
+	self.wordcount = wc
+end
 
 -- Returns how many screen spaces a portion of a string takes up.
 function GetWidthFromOffset(s, o)
@@ -353,7 +367,7 @@ function CreateDocument(): Document
 		co = 1,
 	}
 
-	setmetatable(d, {__index = DocumentClass})
+	setmetatable(d, Document)
 
 	local p = CreateParagraph("P", {""})
 	d:appendParagraph(p)

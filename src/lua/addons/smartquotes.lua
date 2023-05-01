@@ -121,7 +121,7 @@ local function convert_clipboard()
 								return rd
 							end
 						end
-					end)
+					end::any)
 
 				newwords[#newwords+1] = w
 			end

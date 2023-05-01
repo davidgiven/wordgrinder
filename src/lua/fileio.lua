@@ -230,14 +230,14 @@ local function loadfromstream(fp)
 
 		["D"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = DocumentClass})
+			setmetatable(t, Document)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["P"] = function()
 			local t: any = {}
-			setmetatable(t, {__index = Paragraph})
+			setmetatable(t, Paragraph)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -358,14 +358,14 @@ local function loadfromstreamz(fp)
 
 		[DOCUMENTCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = DocumentClass})
+			setmetatable(t, Document)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[PARAGRAPHCLASS] = function()
 			local t: any = {}
-			setmetatable(t, {__index = Paragraph})
+			setmetatable(t, Paragraph)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,

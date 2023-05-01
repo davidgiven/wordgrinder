@@ -596,7 +596,7 @@ local function findmouseaction(dialogue, m)
 	return nil
 end
 
-function Form.Run(dialogue, redraw, helptext)
+function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 	local function redraw_dialogue()
 		-- Ensure the screen is properly sized.
 

@@ -49,7 +49,7 @@ type Paragraph = {
 	getIndentOfLine: (self: Paragraph, ln: number) -> number,
 	getWordOfLine: (self: Paragraph, ln:number ) -> number,
 	getXOffsetOfWord: (self: Paragraph, wn: number) -> number,
-	sub: (self: Paragraph, start: number, count: number) -> {string},
+	sub: (self: Paragraph, start: number, count: number?) -> {string},
 	asString: (self: Paragraph) -> string,
 }
 
@@ -66,7 +66,7 @@ function Paragraph.__iter(self: Paragraph)
 	return iter, self, 0
 end
 
-function CreateParagraph(style: string, ...: {string}): Paragraph
+function CreateParagraph(style: string, ...: ({string}|string)): Paragraph
 	if type(style) ~= "string" then
 		error("paragraph style is not a string")
 	end
@@ -291,12 +291,13 @@ function Paragraph.getXOffsetOfWord(self: Paragraph, wn: number):
 	return x, assert(ln), assert(wn)
 end
 
-function Paragraph.sub(self: Paragraph, start: number, count: number): {string}
+function Paragraph.sub(self: Paragraph, start: number, count: number?): {string}
 	if not count then
 		count = #self - start + 1
 	else
 		count = min(count, #self - start + 1)
 	end
+	assert(count)
 
 	local t = {}
 	for i = start, start+count-1 do

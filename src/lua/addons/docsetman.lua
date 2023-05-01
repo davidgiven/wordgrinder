@@ -76,7 +76,7 @@ function Cmd.ManageDocumentsUI()
 		
 		if not PromptForYesNo("Delete this document?", "Are you sure you want to delete the document '"
 			.. currentDocument.name .."'? It will be removed from the current document set, and will be gone forever.") then
-			return false
+			return "cancel"
 		end
 		
 		if not documentSet:deleteDocument(currentDocument.name) then

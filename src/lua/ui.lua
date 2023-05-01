@@ -140,10 +140,11 @@ function PromptForYesNo(title, message)
 	return result
 end
 
-function PromptForString(title, message, default)
+function PromptForString(title: string, message: string, default: string?)
 	if not default then
 		default = ""
 	end
+	assert(default)
 
 	local textfield =
 	Form.TextField {
@@ -181,9 +182,11 @@ function PromptForString(title, message, default)
 	end
 end
 
-function FindAndReplaceDialogue(defaultfind, defaultreplace)
+function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 	defaultfind = defaultfind or ""
 	defaultreplace = defaultreplace or ""
+	assert(defaultfind)
+	assert(defaultreplace)
 
 	local findfield = Form.TextField {
 		value = defaultfind,

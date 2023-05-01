@@ -368,6 +368,7 @@ function Cmd.DeleteWord()
 	if currentDocument.cw ~= 1 then
 		Cmd.DeletePreviousChar()
 	end
+	return true
 end
 
 function Cmd.SplitCurrentParagraph()
@@ -810,7 +811,7 @@ function Cmd.Copy(keepselection: boolean?)
 	-- Remove any characters in the trailing word that weren't copied.
 
 	paragraph = buffer[#buffer]
-	word = paragraph[#paragraph]
+	local word = paragraph[#paragraph]
 	if word then
 		buffer[#buffer] = CreateParagraph(paragraph.style,
 			paragraph:sub(1, #paragraph-1),
@@ -1134,7 +1135,7 @@ function Cmd.ReplaceThenFind()
 		local words = SplitString(documentSet.replacetext, "%s")
 		for i, w in ipairs(words) do
 			if (i > 1) then
-				i = Cmd.SplitCurrentWord()
+				Cmd.SplitCurrentWord()
 			end
 
 			e = e and Cmd.InsertStringIntoWord(w)
