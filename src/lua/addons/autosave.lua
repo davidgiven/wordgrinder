@@ -17,13 +17,13 @@ local function announce()
 	end	
 end
 
-local function makefilename(pattern)
+local function makefilename(pattern: string)
 	local leafname = Leafname(documentSet.name)
 	local dirname = GlobalSettings.directories.autosaves or Dirname(documentSet.name)
 	leafname = leafname:gsub("%.wg$", "")
 	leafname = leafname:gsub("%%", "%%%%")
 	
-	local timestamp = os.date("%Y-%m-%d.%H%M")
+	local timestamp = os.date("%Y-%m-%d.%H%M")::string
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
 	pattern = pattern:gsub("%%[fF]", leafname)
@@ -158,25 +158,27 @@ function Cmd.ConfigureAutosave()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
-		enabled_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Period between saves (minutes):"
-		},
-		period_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Autosave filename pattern:"
-		},
-		pattern_textfield,
+		widgets = {
+			enabled_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = Form.Left,
+				value = "Period between saves (minutes):"
+			},
+			period_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = Form.Left,
+				value = "Autosave filename pattern:"
+			},
+			pattern_textfield,
 
-		example_label,
+			example_label,
+		}
 	}
 	
 	while true do

@@ -200,7 +200,7 @@ function Cmd.SaveCurrentDocument()
 	return Cmd.SaveCurrentDocumentAs(name)
 end
 
-local function loadfromstream(fp)
+local function loadfromstream(fp): DocumentSet
 	type Value = {[number]: any, text: string?}
 	local cache: {any} = {}
 	local load
@@ -320,7 +320,7 @@ local function loadfromstream(fp)
 	return load()
 end
 
-local function loadfromstreamz(fp)
+local function loadfromstreamz(fp): DocumentSet
 	local cache: {any} = {}
 	local load
 	local data = decompress(fp:read("*a"))
@@ -465,7 +465,7 @@ local function loadfromstreamz(fp)
 	return load()
 end
 
-local function loadfromstreamt(fp)
+local function loadfromstreamt(fp): DocumentSet
 	local data = CreateDocumentSet()
 	data.menu = CreateMenuTree()
 	data.documents = {}
@@ -486,29 +486,28 @@ local function loadfromstreamt(fp)
 		assert(line)
 
 		if line:find("^%.") then
-			local s, _, k, p, v = line:find("^(.*)%.([^.:]+): (.*)$")
+			local s, _, k: any, p: any, v: any
+				= line:find("^(.*)%.([^.:]+): (.*)$")
 			if not s then
 				error(
 					string.format("malformed line when reading file: '%s'", line))
 			end
-			assert(k)
-			assert(p)
-			assert(v)
 
 			-- This is setting a property value.
-			local o = data
-			for e: (string|number) in k:gmatch("[^.]+") do
+			local o: any = data
+			for e in k:gmatch("[^.]+") do
+				local en = e
 				if e:find('^[0-9]+') then
-					e = assert(tonumber(e))
+					en = assert(tonumber(e))
 				end
-				if not o[e] then
+				if not o[en] then
 					if (o == data.documents) then
-						o[e] = CreateDocument()
+						o[en] = CreateDocument()
 					else
-						o[e] = {}
+						o[en] = {}
 					end
 				end
-				o = o[e]
+				o = o[en]
 			end
 
 			if v:find('^-?[0-9][0-9.e+-]*$') then
@@ -532,11 +531,11 @@ local function loadfromstreamt(fp)
 			o[p] = v
 		elseif line:find("^#") then
 			local id = line:sub(2)
-			local doc
+			local doc: Document
 			if id == "clipboard" then
-				doc = data.clipboard
+				doc = assert(data.clipboard)
 			else
-				doc = data.documents[tonumber(id)]
+				doc = data.documents[assert(tonumber(id))]
 			end
 
 			local index = 1
@@ -561,10 +560,10 @@ local function loadfromstreamt(fp)
 	end
 
 	-- Patch up document names.
-	for i, d in ipairs(data.documents) do
+	for i, d in data.documents do
 		data.documents[d.name] = d
 	end
-	data.current = data.documents[data.current]
+	data.current = data.documents[data.current :: any]
 
 	-- Remove any clipboard (unused).
 	data.clipboard = nil
@@ -576,11 +575,12 @@ function LoadFromString(s)
 	return loadfromstreamt(CreateIStream(s))
 end
 
-function LoadFromFile(filename)
+function LoadFromFile(filename): (DocumentSet?, string?)
 	local data, _, e = wg.readfile(filename);
 	if not data then
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
+	assert(data)
 	local fp = CreateIStream(data)
 
 	local loader = nil

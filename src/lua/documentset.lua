@@ -29,11 +29,12 @@ _G.DocumentSet = DocumentSet
 
 type DocumentSet = {
 	fileformat: number,
+	name: string,
 	menu: MenuTree,
 	current: Document,
 	changed: boolean,
 	justchanged: boolean,
-	documents: {Document},
+	documents: {[string|number]: Document},
 	clipboard: Document?,
 	statusbar: boolean,
 

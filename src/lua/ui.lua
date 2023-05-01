@@ -92,10 +92,12 @@ function ModalMessage(title, message)
 
 		[" "] = "confirm",
 
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
-		},
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+			},
+		}
 	}
 
 	Form.Run(dialogue, RedrawScreen,
@@ -128,10 +130,12 @@ function PromptForYesNo(title, message)
 		["y"] = rtrue,
 		["Y"] = rtrue,
 
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
-		},
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+			},
+		}
 	}
 
 	Form.Run(dialogue, RedrawScreen,
@@ -163,12 +167,14 @@ function PromptForString(title: string, message: string, default: string?)
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -6,
-		},
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -6,
+			},
 
-		textfield,
+			textfield,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -209,20 +215,22 @@ function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		Form.Label {
-			value = "Find:",
-			x1 = 1, y1 = 1, x2 = 10, y2 = 1,
-			align = Form.Left,
-		},
+		widgets = {
+			Form.Label {
+				value = "Find:",
+				x1 = 1, y1 = 1, x2 = 10, y2 = 1,
+				align = Form.Left,
+			},
 
-		Form.Label {
-			value = "Replace:",
-			x1 = 1, y1 = 3, x2 = 10, y2 = 3,
-			align = Form.Left,
-		},
+			Form.Label {
+				value = "Replace:",
+				x1 = 1, y1 = 3, x2 = 10, y2 = 3,
+				align = Form.Left,
+			},
 
-		findfield,
-		replacefield,
+			findfield,
+			replacefield,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -247,47 +255,49 @@ function AboutDialogue()
 		["KEY_ENTER"] = "confirm",
 		[" "] = "confirm",
 
-		Form.Label {
-			value = "WordGrinder "..VERSION,
-			x1 = 1, y1 = 1, x2 = -1, y2 = 1,
-			align = Form.Centre,
-		},
+		widgets = {
+			Form.Label {
+				value = "WordGrinder "..VERSION,
+				x1 = 1, y1 = 1, x2 = -1, y2 = 1,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
-			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
+				x1 = 1, y1 = 2, x2 = -1, y2 = 2,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = "File format version "..FILEFORMAT,
-			x1 = 1, y1 = 4, x2 = -1, y2 = 4,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "File format version "..FILEFORMAT,
+				x1 = 1, y1 = 4, x2 = -1, y2 = 4,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = "Cat vacuuming (n): pointless or otherwise inefficient",
-			x1 = 1, y1 = 6, x2 = -1, y2 = 6,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "Cat vacuuming (n): pointless or otherwise inefficient",
+				x1 = 1, y1 = 6, x2 = -1, y2 = 6,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = "    displacement activity to avoid having to settle  ",
-			x1 = 1, y1 = 7, x2 = -1, y2 = 7,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "    displacement activity to avoid having to settle  ",
+				x1 = 1, y1 = 7, x2 = -1, y2 = 7,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = "    down and do some real writing.                   ",
-			x1 = 1, y1 = 8, x2 = -1, y2 = 8,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "    down and do some real writing.                   ",
+				x1 = 1, y1 = 8, x2 = -1, y2 = 8,
+				align = Form.Centre,
+			},
 
-		Form.Label {
-			value = "For more information, see http://cowlark.com/wordgrinder.",
-			x1 = 1, y1 = 10, x2 = -1, y2 = 10,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "For more information, see http://cowlark.com/wordgrinder.",
+				x1 = 1, y1 = 10, x2 = -1, y2 = 10,
+				align = Form.Centre,
+			},
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,

@@ -255,53 +255,55 @@ function Cmd.ConfigureSmartQuotes()
 		rightdouble_textfield,
 		notinraw_checkbox,
 
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Text used for single quotes:"
-		},
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = Form.Left,
+				value = "Text used for single quotes:"
+			},
 
-		Form.Label {
-			x1 = -19, y1 = 5,
-			x2 = -17, y2 = 5,
-			align = Form.Left,
-			value = "L:"
-		},
+			Form.Label {
+				x1 = -19, y1 = 5,
+				x2 = -17, y2 = 5,
+				align = Form.Left,
+				value = "L:"
+			},
 
-		Form.Label {
-			x1 = -9, y1 = 5,
-			x2 = -7, y2 = 5,
-			align = Form.Left,
-			value = "R:"
-		},
+			Form.Label {
+				x1 = -9, y1 = 5,
+				x2 = -7, y2 = 5,
+				align = Form.Left,
+				value = "R:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = 32, y2 = 7,
-			align = Form.Left,
-			value = "Text used for double quotes:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = 32, y2 = 7,
+				align = Form.Left,
+				value = "Text used for double quotes:"
+			},
 
-		Form.Label {
-			x1 = -19, y1 = 7,
-			x2 = -17, y2 = 7,
-			align = Form.Left,
-			value = "L:"
-		},
+			Form.Label {
+				x1 = -19, y1 = 7,
+				x2 = -17, y2 = 7,
+				align = Form.Left,
+				value = "L:"
+			},
 
-		Form.Label {
-			x1 = -9, y1 = 7,
-			x2 = -7, y2 = 7,
-			align = Form.Left,
-			value = "R:"
-		},
+			Form.Label {
+				x1 = -9, y1 = 7,
+				x2 = -7, y2 = 7,
+				align = Form.Left,
+				value = "R:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = -1, y2 = 11,
-			align = Form.Centre,
-			value = "To apply to existing text, copy and then paste it."
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = -1, y2 = 11,
+				align = Form.Centre,
+				value = "To apply to existing text, copy and then paste it."
+			}
 		}
 	}
 

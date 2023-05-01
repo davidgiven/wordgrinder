@@ -88,27 +88,29 @@ function Cmd.ConfigureDirectories()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 20, y2 = 1,
-			align = Form.Left,
-			value = "Template directory:"
-		},
-		templates_textfield,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 20, y2 = 1,
+				align = Form.Left,
+				value = "Template directory:"
+			},
+			templates_textfield,
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 20, y2 = 3,
-			align = Form.Left,
-			value = "Autosave directory:"
-		},
-		Form.Label {
-			x1 = 1, y1 = 4,
-			x2 = 20, y2 = 4,
-			align = Form.Left,
-			value = "(leave blank for default)"
-		},
-		autosaves_textfield,
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 20, y2 = 3,
+				align = Form.Left,
+				value = "Autosave directory:"
+			},
+			Form.Label {
+				x1 = 1, y1 = 4,
+				x2 = 20, y2 = 4,
+				align = Form.Left,
+				value = "(leave blank for default)"
+			},
+			autosaves_textfield,
+		}
 	}
 	
 	while true do

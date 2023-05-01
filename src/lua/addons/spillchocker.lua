@@ -26,7 +26,7 @@ type GlobalSpellcheckerSettings = {
 do
 	local function find_default_dictionary()
 		if (ARCH == "windows") then
-			return WINDOWS_INSTALL_DIR .. "/Dictionaries/"
+			return assert(WINDOWS_INSTALL_DIR) .. "/Dictionaries/"
 		else
 			return "/etc/dictionaries-common/words"
 		end
@@ -127,12 +127,13 @@ function GetSystemDictionary(): {[string]: string}
 				.. settings.filename .. "'")
 			local data, e = ReadFile(settings.filename)
 			if data then
-				fp = CreateIStream(data)
+				local fp = CreateIStream(data)
 				for s in fp:lines() do
 					c[s:lower()] = s
 				end
 			else
-				NonmodalMessage("Failed to load system dictionary: " .. e)
+				NonmodalMessage("Failed to load system dictionary: "
+					.. assert(e))
 			end
 			QueueRedraw()
 		end
@@ -326,30 +327,32 @@ function Cmd.ConfigureSpellchecker()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		highlight_checkbox,
-		systemdictionary_checkbox,
-		userdictionary_checkbox,
+		widgets = {
+			highlight_checkbox,
+			systemdictionary_checkbox,
+			userdictionary_checkbox,
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 32, y2 = 1,
-			align = Form.Left,
-			value = "Display misspelt words:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 32, y2 = 1,
+				align = Form.Left,
+				value = "Display misspelt words:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Use system dictionary:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = Form.Left,
+				value = "Use system dictionary:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Use user dictionary:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = Form.Left,
+				value = "Use user dictionary:"
+			},
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,

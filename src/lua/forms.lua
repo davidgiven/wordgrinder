@@ -21,6 +21,14 @@ local string_rep = string.rep
 
 ESCAPE_KEY = (FRONTEND == "ncurses") and "CTRL+C" or "ESCAPE"
 
+type Form = {
+	[string]: any,
+
+	widgets: {Widget}
+}
+
+type Widget = {}
+
 Form = {}
 
 -- Atoms.
@@ -52,8 +60,8 @@ local function max(a, b)
 	end
 end
 
-local function makewidgetclass(class): Widget
-	return function(table)
+local function makewidgetclass(class): ((any) -> Widget)
+	return function(table): Widget
 		setmetatable(table, {__index = class})
 		table.class = class
 		return table
@@ -562,7 +570,7 @@ local function resolvesize(size, bound)
 	end
 end
 
-local function findaction(table, object, key)
+local function findaction(table: {[string]: any}, object, key)
 	local action = table[key]
 	if action and (type(action) == "function") then
 		action = action(object, key)
@@ -576,12 +584,12 @@ end
 local function findmouseaction(dialogue, m)
 	local x = m.x
 	local y = m.y
-	for i, widget in ipairs(dialogue) do
+	for i, widget in dialogue.widgets do
 		if (x >= widget.realx1) and (x <= widget.realx2)
 			and (y >= widget.realy1) and (y <= widget.realy2)
 		then
 			local action = nil
-			if m.clicked and widget.focusable then
+			if m.b and widget.focusable then
 				dialogue.focus = i
 				if widget.click then
 					action = widget:click(m)
@@ -596,7 +604,7 @@ local function findmouseaction(dialogue, m)
 	return nil
 end
 
-function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
+function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 	local function redraw_dialogue()
 		-- Ensure the screen is properly sized.
 
@@ -605,7 +613,7 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 		-- Find a widget to give the focus to.
 
 		if not dialogue.focus then
-			for i, widget in ipairs(dialogue) do
+			for i, widget in dialogue.widgets do
 				if widget.focusable then
 					dialogue.focus = i
 					break
@@ -615,7 +623,7 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 
 		-- Initialise any widgets that need it.
 
-		for _, widget in ipairs(dialogue) do
+		for _, widget in dialogue.widgets do
 			if widget.init then
 				widget:init()
 			end
@@ -646,7 +654,7 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 		if dialogue.stretchy then
 			-- Automatically scale the height depending on a 'stretchy' widget.
 
-			for _, widget in ipairs(dialogue) do
+			for _, widget in dialogue.widgets do
 				if (widget.y1 > 0) and (widget.y2 < 0) then
 					widget.realx1 = resolvesize(widget.x1, dialogue.realwidth)
 					widget.realx2 = resolvesize(widget.x2, dialogue.realwidth)
@@ -670,7 +678,7 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 
 		-- Place all widgets in the dialogue.
 
-		for _, widget in ipairs(dialogue) do
+		for _, widget in dialogue.widgets do
 			widget.realx1 = resolvesize(widget.x1, dialogue.realwidth) + dialogue.realx
 			widget.realy1 = resolvesize(widget.y1, dialogue.realheight) + dialogue.realy
 			widget.realx2 = resolvesize(widget.x2, dialogue.realwidth) + dialogue.realx
@@ -700,7 +708,7 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 		-- Draw the widgets.
 
 		GotoXY(ScreenWidth-1, ScreenHeight-1)
-		for i, widget in ipairs(dialogue) do
+		for i, widget in dialogue.widgets do
 			widget.focus = (i == dialogue.focus)
 			widget:draw()
 		end
@@ -712,12 +720,9 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 
 	redraw_dialogue()
 	while not Quitting do
-		local getchar = GetChar
-		if dialogue.focus then
-			getchar = GetCharWithBlinkingCursor
-		end
 		HideCursor()
-		local key = getchar()
+		local key = if dialogue.focus then
+			GetCharWithBlinkingCursor() else GetChar()
 
 		if dialogue.transient then
 			redraw_dialogue()
@@ -761,10 +766,4 @@ function Form.Run(dialogue, redraw: (() -> ())?, helptext: string?)
 		end
 	end
 	return false
-end
-
--- Test code
-
-function Form.Test()
-	FileBrowser("Title", "Load file:", false)
 end

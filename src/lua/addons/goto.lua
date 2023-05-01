@@ -26,13 +26,15 @@ local function gotobrowser(data, index)
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			value = "Select heading to jump to:"
-		},
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				value = "Select heading to jump to:"
+			},
 
-		browser,
+			browser,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,

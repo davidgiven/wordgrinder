@@ -84,7 +84,7 @@ local function drawmargin(y, pn, p)
 		end
 	end
 
-	local style = DocumentStyles[p.style]
+	local style = documentStyles[p.style]
 	local function drawbullet(n)
 		local w = GetStringWidth(n) + 1
 		local i = style.indent
@@ -453,10 +453,12 @@ function GetPositionOfLine(y)
 	return r
 end
 
-function GetCharWithBlinkingCursor(timeout)
+function GetCharWithBlinkingCursor(timeout: number?)
 	ShowCursor()
 
 	timeout = timeout or 1E10
+	assert(timeout)
+
 	local shown = true
 	while timeout > 0 do
 		local t = shown and BLINK_ON_TIME or BLINK_OFF_TIME

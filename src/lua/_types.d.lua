@@ -30,7 +30,7 @@ declare wg: {
 	escape: (string) -> string,
 	exit: (number) -> never,
 	getboundedstring: (string, number) -> string,
-	getbytesofcharacter: (string) -> {number},
+	getbytesofcharacter: (string) -> number,
 	getchar: (number?) -> InputEvent,
 	getcwd: () -> string,
 	getenv: (string) -> string?,
@@ -50,7 +50,7 @@ declare wg: {
 	prevcharinword: (string, number) -> number?,
 	printerr: (...string) -> never,
 	printout: (...string) -> never,
-	readdir: (string) -> (boolean, string?, number?),
+	readdir: (string) -> ({string}?, string?, number?),
 	readfile: (string) -> (string?, string?, number?),
 	readfromzip: (string, string) -> string?,
 	readu8: (string, number) -> (number, number),
@@ -101,7 +101,7 @@ declare ARCH: string
 
 declare function CMarkParse(data: string): Markdown
 declare function CMarkIterate(node: Markdown): MarkdownIterator
-declare function CMarkNext(iter: MarkdownIterator): (number, number, string?)
+declare function CMarkNext(iter: MarkdownIterator): (number, number, Markdown, string?)
 declare function CMarkGetHeading(node: Markdown): number
 declare function CMarkGetList(node: Markdown): number
 

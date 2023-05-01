@@ -317,6 +317,7 @@ function Cmd.DeleteNextChar()
 	if not nextco then
 		return Cmd.JoinWithNextWord()
 	end
+	assert(nextco)
 
 	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
@@ -399,7 +400,7 @@ function Cmd.SplitCurrentParagraph()
 	return true
 end
 
-function Cmd.GotoXPosition(pos)
+function Cmd.GotoXPosition(pos: number)
 	local paragraph = currentDocument[currentDocument.cp]
 	local lines = paragraph:wrap(currentDocument.wrapwidth)
 	local ln = paragraph:getLineOfWord(currentDocument.cw)
@@ -426,7 +427,7 @@ function Cmd.GotoXPosition(pos)
 	local wn = line[wordofline]
 	local word = paragraph[wn]
 	local wordx = paragraph.xs[wn]
-	wo = GetOffsetFromWidth(word, pos - wordx)
+	local wo = GetOffsetFromWidth(word, pos - wordx)
 
 	currentDocument.cw = paragraph:getWordOfLine(ln) + wordofline - 1
 	currentDocument.co = wo
@@ -435,7 +436,7 @@ function Cmd.GotoXPosition(pos)
 	return false
 end
 
-function Cmd.GotoXYPosition(x, y)
+function Cmd.GotoXYPosition(x: number, y: number)
 	local r = GetPositionOfLine(y)
 	if r then
 		currentDocument.cp = r.p
@@ -661,7 +662,7 @@ function Cmd.CreateBlankDocumentSet()
 end
 
 function Cmd.ChangeParagraphStyle(style)
-	if not DocumentStyles[style] then
+	if not documentStyles[style] then
 		ModalMessage("Unknown paragraph style", "Sorry! I don't recognise that style. (This user interface will be improved.)")
 		return false
 	end
@@ -684,15 +685,14 @@ function Cmd.ChangeParagraphStyle(style)
 	return Cmd.UnsetMark()
 end
 
-local function rewind_past_style_bytes(p, w, o)
+local function rewind_past_style_bytes(p: number, w: number, o: number)
 	local word = currentDocument[p][w]
-	o = PrevCharInWord(word, o)
-	if o then
-		o = NextCharInWord(word, o)
+	local no = PrevCharInWord(word, o)
+	if no then
+		return NextCharInWord(word, no)
 	else
-		o = 1
+		return 1
 	end
-	return o
 end
 
 
@@ -966,7 +966,7 @@ function Cmd.Find(findtext, replacetext)
 end
 
 local function compile_patterns(text)
-	patterns = {}
+	local patterns = {}
 	local words = SplitString(text, "%s")
 	local smartquotes = documentSet.addons.smartquotes or {}
 
@@ -985,8 +985,8 @@ local function compile_patterns(text)
 		local i = 1
 		local len = w:len()
 		while (i <= len) do
-			local c = WriteU8(ReadU8(w, i))
-			i = i + GetBytesOfCharacter(w:byte(i))
+			local c: any = WriteU8((ReadU8(w, i)))
+			i = i + GetBytesOfCharacter(c)
 
 			if ((c >= "A") and (c <= "Z")) or
 			    ((c >= "a") and (c <= "z")) then
@@ -1053,6 +1053,7 @@ function Cmd.FindNext()
 	while true do
 		local word = currentDocument[cp][cw]
 		local s, e = pattern(word, co)
+		local _
 
 		if s then
 			-- We got a match! First, though, check to see if the remaining

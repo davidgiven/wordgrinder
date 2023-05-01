@@ -241,53 +241,55 @@ function Cmd.ConfigureHTMLExport()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 14, y2 = 1,
-			align = Form.Left,
-			value = "Underline on:"
-		},
-		underline_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 14, y2 = 3,
-			align = Form.Left,
-			value = "Underline off:"
-		},
-		underline_off_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 14, y2 = 5,
-			align = Form.Left,
-			value = "Italics on:"
-		},
-		italic_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = 14, y2 = 7,
-			align = Form.Left,
-			value = "Italics off:"
-		},
-		italic_off_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 9,
-			x2 = 14, y2 = 9,
-			align = Form.Left,
-			value = "Bold on:"
-		},
-		bold_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = 14, y2 = 11,
-			align = Form.Left,
-			value = "Bold off:"
-		},
-		bold_off_textfield,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 14, y2 = 1,
+				align = Form.Left,
+				value = "Underline on:"
+			},
+			underline_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 14, y2 = 3,
+				align = Form.Left,
+				value = "Underline off:"
+			},
+			underline_off_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 14, y2 = 5,
+				align = Form.Left,
+				value = "Italics on:"
+			},
+			italic_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = 14, y2 = 7,
+				align = Form.Left,
+				value = "Italics off:"
+			},
+			italic_off_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 9,
+				x2 = 14, y2 = 9,
+				align = Form.Left,
+				value = "Bold on:"
+			},
+			bold_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = 14, y2 = 11,
+				align = Form.Left,
+				value = "Bold off:"
+			},
+			bold_off_textfield,
+		}
 	}
 	
 	while true do

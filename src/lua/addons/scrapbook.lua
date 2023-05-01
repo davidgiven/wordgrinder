@@ -5,9 +5,10 @@
 
 local function maketimestamp(pattern: string, name: string?): string
 	name = name or currentDocument.name
+	assert(name)
 	name = name:gsub("%%", "%%%%")
 	
-	local timestamp = os.date("%Y-%m-%d.%H%M")
+	local timestamp = os.date("%Y-%m-%d.%H%M")::string
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
 	pattern = pattern:gsub("%%[nN]", name)
@@ -140,25 +141,27 @@ function Cmd.ConfigureScrapbook()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 32, y2 = 1,
-			align = Form.Left,
-			value = "Name of scrapbook document:"
-		},
-		document_textfield,
-		
-		timestamp_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Timestamp pattern:"
-		},
-		pattern_textfield,
-		
-		example_label,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 32, y2 = 1,
+				align = Form.Left,
+				value = "Name of scrapbook document:"
+			},
+			document_textfield,
+			
+			timestamp_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = Form.Left,
+				value = "Timestamp pattern:"
+			},
+			pattern_textfield,
+			
+			example_label,
+		}
 	}
 	
 	while true do

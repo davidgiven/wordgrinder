@@ -35,7 +35,7 @@ type DocumentStyle = {
 }
 
 type DocumentStyles = {[number | string]: DocumentStyle}
-DocumentStyles = {} :: DocumentStyles
+documentStyles = {} :: DocumentStyles
 
 local Document = {}
 Document.__index = Document
@@ -145,10 +145,10 @@ function Document.spaceAbove(self, pn)
 	local paragraph = self[pn]
 	local paragraphabove = self[pn - 1]
 
-	local sa = DocumentStyles[paragraph.style].above or 0 -- FIXME
+	local sa = documentStyles[paragraph.style].above or 0 -- FIXME
 	local sb = 0
 	if paragraphabove then
-		sb = DocumentStyles[paragraphabove.style].below or 0 -- FIXME
+		sb = documentStyles[paragraphabove.style].below or 0 -- FIXME
 	end
 
 	if (sa > sb) then
@@ -163,10 +163,10 @@ function Document.spaceBelow(self, pn)
 	local paragraph = self[pn]
 	local paragraphbelow = self[pn + 1]
 
-	local sb = DocumentStyles[paragraph.style].below or 0 -- FIXME
+	local sb = documentStyles[paragraph.style].below or 0 -- FIXME
 	local sa = 0
 	if paragraphbelow then
-		sa = DocumentStyles[paragraphbelow.style].above or 0 -- FIXME
+		sa = documentStyles[paragraphbelow.style].above or 0 -- FIXME
 	end
 
 	if (sa > sb) then
@@ -187,7 +187,7 @@ function Document.renumber(self)
 	for _, p in ipairs(self) do
 		wc = wc + #p
 
-		local style = DocumentStyles[p.style]
+		local style = documentStyles[p.style]
 		if style.numbered then
 			p.number = pn
 			pn = pn + 1
@@ -352,7 +352,7 @@ function UpdateDocumentStyles()
 		styles[s.name] = s
 	end
 
-	DocumentStyles = styles
+	documentStyles = styles
 end
 
 function CreateDocument(): Document

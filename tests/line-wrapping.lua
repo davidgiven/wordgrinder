@@ -3,8 +3,8 @@ loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("The quick brown fox jumps over the lazy dog.")
 
-DocumentStyles["P"].indent = 0
-DocumentStyles["P"].firstindent = nil
+documentStyles["P"].indent = 0
+documentStyles["P"].firstindent = nil
 
 local para = currentDocument[1]
 local lines = para:wrap(20)
@@ -16,8 +16,8 @@ AssertTableEquals({8, 9}, lines[3])
 
 AssertTableEquals({0, 4, 10, 0, 4, 10, 15, 0, 5}, para.xs)
 
-DocumentStyles["P"].indent = 4
-DocumentStyles["P"].firstindent = nil
+documentStyles["P"].indent = 4
+documentStyles["P"].firstindent = nil
 
 local para = currentDocument[1]
 local lines = para:wrap(20)
@@ -30,8 +30,8 @@ AssertTableEquals({8, 9}, lines[4])
 
 AssertTableEquals({0, 4, 0, 6, 0, 6, 11, 0, 5}, para.xs)
 
-DocumentStyles["P"].indent = 0
-DocumentStyles["P"].firstindent = 15
+documentStyles["P"].indent = 0
+documentStyles["P"].firstindent = 15
 
 local para = currentDocument[1]
 local lines = para:wrap(20)

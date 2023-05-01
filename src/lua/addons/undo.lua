@@ -5,6 +5,14 @@
 
 local STACKSIZE = 500
 
+type ShadowDocument = {
+	[number]: Paragraph,
+
+	cp: number,
+	cw: number,
+	co: number
+}
+
 local function shallowequals(t1, t2)
 	if (#t1 ~= #t2) then
 		return false
@@ -19,21 +27,20 @@ local function shallowequals(t1, t2)
 	return true
 end
 
-local function shallowcopy(t1)
-	local t2 = {}
+local function shallowcopy(t1: Document): ShadowDocument
+	local t2  = {}
 	for k, v in ipairs(t1) do
 		t2[k] = v
 	end
+	t2.cp, t2.cw, t2.co = t1.cp, t1.cw, t1.co
 	return t2
 end
 
-local function savedocument()
-	local copy = shallowcopy(currentDocument)
-	copy.cp, copy.cw, copy.co = currentDocument.cp, currentDocument.cw, currentDocument.co
-	return copy
+local function savedocument(): ShadowDocument
+	return shallowcopy(currentDocument)
 end
 
-local function loaddocument(copy)
+local function loaddocument(copy: Document)
 	local oldlen = #currentDocument
 	for i = 1, #copy do
 		currentDocument[i] = copy[i]

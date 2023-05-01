@@ -270,9 +270,9 @@ end
 function Paragraph.getIndentOfLine(self: Paragraph, ln: number): number
 	local indent
 	if (ln == 1) then
-		indent = DocumentStyles[self.style].firstindent
+		indent = documentStyles[self.style].firstindent
 	end
-	indent = indent or DocumentStyles[self.style].indent or 0
+	indent = indent or documentStyles[self.style].indent or 0
 	return indent
 end
 

@@ -101,7 +101,7 @@ function ExportFileUsingCallbacks(document, cb: Exporter)
 
 	for _, paragraph in ipairs(document) do
 		local name = paragraph.style
-		local style = DocumentStyles[name]
+		local style = documentStyles[name]
 
 		if listmode and not style.list then
 			cb.list_end(listmode)

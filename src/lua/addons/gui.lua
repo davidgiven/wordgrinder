@@ -106,70 +106,72 @@ function Cmd.ConfigureGui()
 			return "redraw"
 		end,
 
-		windowwidth_textfield,
-		windowheight_textfield,
-		fontsize_textfield,
-		fontregular_textfield,
-		fontitalic_textfield,
-		fontbold_textfield,
-		fontbolditalic_textfield,
+		widgets = {
+			windowwidth_textfield,
+			windowheight_textfield,
+			fontsize_textfield,
+			fontregular_textfield,
+			fontitalic_textfield,
+			fontbold_textfield,
+			fontbolditalic_textfield,
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = L-1, y2 = 1,
-			align = Form.Left,
-			value = "Default window width:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = L-1, y2 = 1,
+				align = Form.Left,
+				value = "Default window width:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = L-1, y2 = 3,
-			align = Form.Left,
-			value = "Default window height:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = L-1, y2 = 3,
+				align = Form.Left,
+				value = "Default window height:"
+			},
 
 
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = L-1, y2 = 5,
-			align = Form.Left,
-			value = "Font size:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = L-1, y2 = 5,
+				align = Form.Left,
+				value = "Font size:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = L-1, y2 = 7,
-			align = Form.Left,
-			value = "Normal font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = L-1, y2 = 7,
+				align = Form.Left,
+				value = "Normal font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 9,
-			x2 = L-1, y2 = 9,
-			align = Form.Left,
-			value = "Italic font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 9,
+				x2 = L-1, y2 = 9,
+				align = Form.Left,
+				value = "Italic font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = L-1, y2 = 11,
-			align = Form.Left,
-			value = "Bold font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = L-1, y2 = 11,
+				align = Form.Left,
+				value = "Bold font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 13,
-			x2 = L-1, y2 = 13,
-			align = Form.Left,
-			value = "Bold/italic font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 13,
+				x2 = L-1, y2 = 13,
+				align = Form.Left,
+				value = "Bold/italic font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = -1,
-			x2 = -1, y2 = -1,
-			align = Form.Centre,
-			value = "<^R to reset to default>"
-		},
+			Form.Label {
+				x1 = 1, y1 = -1,
+				x2 = -1, y2 = -1,
+				align = Form.Centre,
+				value = "<^R to reset to default>"
+			},
+		}
 	}
 
 	while true do

@@ -94,16 +94,18 @@ function Cmd.ConfigureDebug()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
-		memory_checkbox,
-		location_checkbox,
-		currentword_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			align = Form.Centre,
-			value = "None of these options are of any interest to normal users."
-		},
+		widgets = {
+			memory_checkbox,
+			location_checkbox,
+			currentword_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				align = Form.Centre,
+				value = "None of these options are of any interest to normal users."
+			},
+		}
 	}
 	
 	local result = Form.Run(dialogue, RedrawScreen,

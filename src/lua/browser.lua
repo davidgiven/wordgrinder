@@ -29,6 +29,12 @@ type BrowserItem = {
 	key: string?
 }
 
+type BrowserFileData = {
+	size: number,
+	mode: string,
+	name: string
+}
+	
 local function compare_filenames(f1, f2)
 	if (ARCH == "windows") then
 		return f1:lower() == f2:lower()
@@ -40,9 +46,16 @@ end
 function FileBrowser(title: string, message: string, saving: boolean,
 		default: string?): string?
 	local files = {}
-	for _, filename in ipairs(ReadDir(".")) do
+	local f, e, errno = ReadDir(".")
+	if e then
+		ModalMessage("Directory inaccessible",
+			"The current directory could not be accessed: "..e)
+		return nil
+	end
+
+	for _, filename in assert(f) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
-			local attr = Stat(filename)
+			local attr = Stat(filename) :: BrowserFileData?
 			if attr then
 				attr.name = filename
 				files[#files+1] = attr
@@ -183,7 +196,7 @@ function Autocomplete(filename, x1, x2, y)
 end
 
 function Browser(title, topmessage, bottommessage, data: {BrowserItem})
-	local dialogue: any
+	local dialogue: Form
 
 	local browser = Form.Browser {
 		focusable = false,
@@ -268,25 +281,27 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 		["KEY_TAB"] = autocomplete,
 		["KEY_^I"] = autocomplete,
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			value = topmessage
-		},
-		
-		textfield,
-		browser,
-		
-		Form.Label {
-			x1 = 1, y1 = -3,
-			x2 = GetStringWidth(bottommessage) + 1, y2 = -3,
-			value = bottommessage
-		},
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				value = topmessage
+			},
+			
+			textfield,
+			browser,
+			
+			Form.Label {
+				x1 = 1, y1 = -3,
+				x2 = GetStringWidth(bottommessage) + 1, y2 = -3,
+				value = bottommessage
+			},
 
-		Form.Label {
-			x1 = 1, y1 = -1,
-			x2 = -1, y2 = -1,
-			value = helptext
+			Form.Label {
+				x1 = 1, y1 = -1,
+				x2 = -1, y2 = -1,
+				value = helptext
+			}
 		}
 	}
 	

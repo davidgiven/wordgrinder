@@ -27,7 +27,7 @@ local style_name_controller =
 	attach = function(self)
 		local m = 0
 
-		for _, style in pairs(DocumentStyles) do
+		for _, style in pairs(documentStyles) do
 			local mm = GetStringWidth(style.name)
 			if (mm > m) then
 				m = mm

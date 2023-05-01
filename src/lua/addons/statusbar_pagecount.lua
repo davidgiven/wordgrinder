@@ -67,15 +67,17 @@ function Cmd.ConfigurePageCount()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 		
-		enabled_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Number of words per page:"
-		},
-		count_textfield,
+		widgets = {
+			enabled_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = Form.Left,
+				value = "Number of words per page:"
+			},
+			count_textfield,
+		}
 	}
 	
 	while true do

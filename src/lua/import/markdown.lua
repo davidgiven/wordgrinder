@@ -26,18 +26,13 @@ function Cmd.ImportMarkdownString(data: string)
 	local document = CreateDocument()
 	local importer = CreateImporter(document)
 
-	-- The Lunamark parser model expects to produce a string, but what we want
-	-- is a parse tree.  This means there's some degree of semantic mismatch.
-	-- What we do instead is to have Lunamark return a tree of parse operations
-	-- gets flattened after parsing is complete.
-	
 	local metadata = {}
     local current_style = "P"
 
-    local function nop(s) end
-    local function style_on(s) return function() importer:style_on(s) end end
-    local function style_off(s) return function() importer:style_off(s) end end
-    local function flushparagraph(s) return function() importer:flushparagraph(s) end end
+    local function nop(s: string) end
+    local function style_on(s: number) return function() importer:style_on(s) end end
+    local function style_off(s: number) return function() importer:style_off(s) end end
+    local function flushparagraph(s: string) return function() importer:flushparagraph(s) end end
 
     local htmltags = {
         ["<b>"] = style_on(BOLD),
@@ -52,7 +47,7 @@ function Cmd.ImportMarkdownString(data: string)
         ["</u>"] = style_off(UNDERLINE),
     }
 
-	local enter: {[number]: (string, Markdown) -> never} = {
+	local enter: {[number]: (any, Markdown) -> ()} = {
         [CMARK_NODE_DOCUMENT] = nop,
         [CMARK_NODE_BLOCK_QUOTE] = function() current_style = "Q" end,
         [CMARK_NODE_LIST] = function(s, node)
@@ -64,7 +59,7 @@ function Cmd.ImportMarkdownString(data: string)
             end
         end,
         [CMARK_NODE_ITEM] = nop,
-        [CMARK_NODE_CODE_BLOCK] = function(s)
+        [CMARK_NODE_CODE_BLOCK] = function(s: string)
             s = s:gsub("[\n\r]+$", "")
             local lines = SplitString(s, "[\n\r]")
             for _, line in lines do
@@ -72,7 +67,7 @@ function Cmd.ImportMarkdownString(data: string)
                 importer:flushparagraph("PRE")
             end
         end,
-        [CMARK_NODE_HTML_BLOCK] = function(s)
+        [CMARK_NODE_HTML_BLOCK] = function(s: string)
             importer:text(s)
             importer:flushparagraph("RAW")
         end,
@@ -84,15 +79,15 @@ function Cmd.ImportMarkdownString(data: string)
             importer:text("")
             importer:flushparagraph("P")
         end,
-        [CMARK_NODE_TEXT] = function(s) importer:text(s) end,
+        [CMARK_NODE_TEXT] = function(s: string) importer:text(s) end,
         [CMARK_NODE_SOFTBREAK] = function() importer:flushword() end,
         [CMARK_NODE_LINEBREAK] = nop,
-        [CMARK_NODE_CODE] = function(s)
+        [CMARK_NODE_CODE] = function(s: string)
             importer:style_on(UNDERLINE)
             importer:text(s)
             importer:style_off(UNDERLINE)
         end,
-        [CMARK_NODE_HTML_INLINE] = function(s)
+        [CMARK_NODE_HTML_INLINE] = function(s: string)
             local fn = htmltags[s:lower()]
             if fn then
                 fn()
@@ -105,7 +100,7 @@ function Cmd.ImportMarkdownString(data: string)
         [CMARK_NODE_IMAGE] = nop,
     }
 
-    local exit: {[number]: (string, Markdown) -> never} = {
+    local exit: {[number]: (any, Markdown) -> ()} = {
         [CMARK_NODE_DOCUMENT] = nop,
         [CMARK_NODE_BLOCK_QUOTE] = function(s) current_style = "P" end,
         [CMARK_NODE_LIST] = function() current_style = "P" end,

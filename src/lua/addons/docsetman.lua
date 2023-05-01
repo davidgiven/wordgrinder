@@ -117,31 +117,33 @@ function Cmd.ManageDocumentsUI()
 		["n"] = new_cb,
 		["N"] = new_cb,
 		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			value = "Select document:"
-		},
-		
-		Form.Label {
-			x1 = 1, y1 = -3,
-			x2 = -1, y2 = -3,
-			value = "U: Move document up              R: Rename document"
-		},
-		
-		Form.Label {
-			x1 = 1, y1 = -2,
-			x2 = -1, y2 = -2,
-			value = "D: Move document down            X: Delete document"
-		},
-		
-		Form.Label {
-			x1 = 1, y1 = -1,
-			x2 = -1, y2 = -1,
-			value = "N: Create blank document     RETURN, ^C: Close dialogue"
-		},
-		
-		browser,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				value = "Select document:"
+			},
+			
+			Form.Label {
+				x1 = 1, y1 = -3,
+				x2 = -1, y2 = -3,
+				value = "U: Move document up              R: Rename document"
+			},
+			
+			Form.Label {
+				x1 = 1, y1 = -2,
+				x2 = -1, y2 = -2,
+				value = "D: Move document down            X: Delete document"
+			},
+			
+			Form.Label {
+				x1 = 1, y1 = -1,
+				x2 = -1, y2 = -1,
+				value = "N: Create blank document     RETURN, ^C: Close dialogue"
+			},
+			
+			browser,
+		}
 	}
 
 	while true do

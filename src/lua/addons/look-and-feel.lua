@@ -163,21 +163,23 @@ function Cmd.ConfigureLookAndFeel()
 		["KEY_RETURN"] = "confirm",
 		["KEY_ENTER"] = "confirm",
 
-		enabled_checkbox,
+		widgets = {
+			enabled_checkbox,
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = -12, y2 = 3,
-			align = Form.Left,
-			value = "Maximum allowed width",
-		},
-		maxwidth_textfield,
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = -12, y2 = 3,
+				align = Form.Left,
+				value = "Maximum allowed width",
+			},
+			maxwidth_textfield,
 
-		terminators_checkbox,
-		denseparagraphs_checkbox,
-		fullstopspaces_checkbox,
-		palette_toggle,
-		scrollmode_toggle,
+			terminators_checkbox,
+			denseparagraphs_checkbox,
+			fullstopspaces_checkbox,
+			palette_toggle,
+			scrollmode_toggle,
+		}
 	}
 
 	while true do

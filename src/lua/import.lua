@@ -19,10 +19,10 @@ local table_concat = table.concat
 
 type Importer = {
 	reset: (Importer) -> (),
-	style_on: (Importer, string) -> (),
-	style_off: (Importer, string) -> (),
+	style_on: (Importer, number) -> (),
+	style_off: (Importer, number) -> (),
 	text: (Importer, string) -> (),
-	flushword: (Importer, boolean) -> (),
+	flushword: (Importer, boolean?) -> (),
 	flushparagraph: (Importer, string) -> (),
 }
 
