@@ -51,7 +51,7 @@ function Cmd.Goto()
 	local data = {}
 	local levelcount: {number} = {0, 0, 0, 0}
 	local currentheading = 1
-	for paran, para in ipairs(Document) do
+	for paran, para in ipairs(currentDocument) do
 		local _, _, level = para.style:find("^H(%d)$")
 		if level then
 			level = tonumber(level)
@@ -77,7 +77,7 @@ function Cmd.Goto()
 				paran = paran
 			}
 
-			if (paran <= Document.cp) then
+			if (paran <= currentDocument.cp) then
 				currentheading = #data
 			end
 		end
@@ -92,9 +92,9 @@ function Cmd.Goto()
 	QueueRedraw()
 
 	if result then
-		Document.cp = data[result].paran
-		Document.cw = 1
-		Document.co = 1
+		currentDocument.cp = data[result].paran
+		currentDocument.cw = 1
+		currentDocument.co = 1
 		return true
 	end
 

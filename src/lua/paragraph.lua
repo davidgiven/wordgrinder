@@ -124,7 +124,7 @@ function Paragraph.wrap(self: Paragraph, width: number?): ()
 		self.sentences = sentences
 	end
 
-	width = width or Document.wrapwidth
+	width = width or currentDocument.wrapwidth
 	assert(width)
 	if (self.wrapwidth ~= width) then
 		local lines = {}
@@ -197,7 +197,7 @@ function Paragraph.renderMarkedLine(self: Paragraph, line, x, y, width, pn): ()
 	width = width or (ScreenWidth - x)
 
 	local lwn: number = line.wn
-	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
+	local mp1, mw1, mo1, mp2, mw2, mo2 = currentDocument:getMarks()
 
 	local cstyle = stylemarkup[self.style] or 0
 	local ostyle = 0

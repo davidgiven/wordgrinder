@@ -50,7 +50,7 @@ local function callback(writer, document)
 			writer('\\sloppy\n')
 			writer('\\onehalfspacing\n')
 			writer('\\begin{document}\n')
-			writer('\\title{', untex(Document.name), '}\n')
+			writer('\\title{', untex(currentDocument.name), '}\n')
 			writer('\\author{(no author)}\n')
 			writer('\\maketitle\n')
 		end,
@@ -120,6 +120,6 @@ function Cmd.ExportLatexFile(filename)
 end
 
 function Cmd.ExportToLatexString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

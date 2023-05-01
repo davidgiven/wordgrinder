@@ -126,7 +126,7 @@ function CliConvert(file1: string, file2: string)
 			-- Otherwise, rename the document we just imported to the name
 			-- that the user specified.
 			
-			local name = Document.name
+			local name = currentDocument.name
 			documentSet:renameDocument(name, f1s)
 		end
 	end

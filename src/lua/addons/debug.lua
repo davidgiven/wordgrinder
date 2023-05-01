@@ -25,14 +25,14 @@ do
 				{
 					priority=50,
 					value=string_format("%d.%d.%d",
-						Document.cp, Document.cw, Document.co)
+						currentDocument.cp, currentDocument.cw, currentDocument.co)
 				}
 		end
 		if settings.currentword then
 			terms[#terms+1] = 
 				{
 					priority=50,
-					value=Format(Document[Document.cp][Document.cw])
+					value=Format(currentDocument[currentDocument.cp][currentDocument.cw])
 				}
 		end
 	end

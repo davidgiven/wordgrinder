@@ -4,21 +4,21 @@ loadfile("tests/testsuite.lua")()
 Cmd.SetMark()
 Cmd.InsertStringIntoParagraph("foo bar baz")
 
-AssertTableEquals({"foo", "bar", "baz"}, Document[1])
+AssertTableEquals({"foo", "bar", "baz"}, currentDocument[1])
 
 Cmd.DeleteWordLeftOfCursor()
-AssertTableEquals({"foo", "bar", ""}, Document[1])
+AssertTableEquals({"foo", "bar", ""}, currentDocument[1])
 
 Cmd.DeletePreviousChar()
-AssertTableEquals({"foo", "bar"}, Document[1])
+AssertTableEquals({"foo", "bar"}, currentDocument[1])
 
 Cmd.GotoPreviousCharW()
 Cmd.DeleteWordLeftOfCursor()
-AssertTableEquals({"foo", "r"}, Document[1])
+AssertTableEquals({"foo", "r"}, currentDocument[1])
 
 Cmd.DeletePreviousChar()
-AssertTableEquals({"foor"}, Document[1])
+AssertTableEquals({"foor"}, currentDocument[1])
 
 Cmd.DeleteWord()
-AssertTableEquals({""}, Document[1])
+AssertTableEquals({""}, currentDocument[1])
 

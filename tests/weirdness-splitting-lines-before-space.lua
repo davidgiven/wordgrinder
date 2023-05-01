@@ -12,7 +12,7 @@ Cmd.SplitCurrentParagraph()
 Cmd.GotoNextCharW()
 Cmd.DeletePreviousChar()
 
-AssertTableEquals({"foo"}, Document[1])
-AssertTableEquals({"bar"}, Document[2])
-AssertTableEquals({2, 1, 1}, {Document.cp, Document.cw, Document.co})
+AssertTableEquals({"foo"}, currentDocument[1])
+AssertTableEquals({"bar"}, currentDocument[2])
+AssertTableEquals({2, 1, 1}, {currentDocument.cp, currentDocument.cw, currentDocument.co})
 

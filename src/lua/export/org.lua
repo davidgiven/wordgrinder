@@ -118,6 +118,6 @@ function Cmd.ExportOrgFile(filename)
 end
 
 function Cmd.ExportToOrgString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

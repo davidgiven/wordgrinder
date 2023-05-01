@@ -160,7 +160,7 @@ function Cmd.ExportHTMLFile(filename)
 end
 
 function Cmd.ExportToHTMLString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 
 -----------------------------------------------------------------------------

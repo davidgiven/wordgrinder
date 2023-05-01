@@ -47,7 +47,7 @@ function Cmd.ManageDocumentsUI()
 		
 	local function down_cb()
 		if (browser.cursor < #browser.data) then
-			documentSet:moveDocumentIndexTo(Document.name, browser.cursor + 1)
+			documentSet:moveDocumentIndexTo(currentDocument.name, browser.cursor + 1)
 			browser.cursor = browser.cursor + 1
 			return "confirm"
 		end
@@ -55,12 +55,12 @@ function Cmd.ManageDocumentsUI()
 	end
 		
 	local function rename_cb()
-		local name = PromptForString("Change name of current document", "Please enter the new document name:", Document.name)
-		if not name or (name == Document.name) then
+		local name = PromptForString("Change name of current document", "Please enter the new document name:", currentDocument.name)
+		if not name or (name == currentDocument.name) then
 			return "confirm"
 		end
 		
-		if not documentSet:renameDocument(Document.name, name) then
+		if not documentSet:renameDocument(currentDocument.name, name) then
 			ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
 			return "confirm"
 		end
@@ -75,11 +75,11 @@ function Cmd.ManageDocumentsUI()
 		end
 		
 		if not PromptForYesNo("Delete this document?", "Are you sure you want to delete the document '"
-			.. Document.name .."'? It will be removed from the current document set, and will be gone forever.") then
+			.. currentDocument.name .."'? It will be removed from the current document set, and will be gone forever.") then
 			return false
 		end
 		
-		if not documentSet:deleteDocument(Document.name) then
+		if not documentSet:deleteDocument(currentDocument.name) then
 			ModalMessage("Unable to delete document", "You can't delete that document.")
 			return "confirm"
 		end
@@ -153,7 +153,7 @@ function Cmd.ManageDocumentsUI()
 				document = d,
 				label = d.name or "(unnamed)"
 			}
-			if (d == Document) then
+			if (d == currentDocument) then
 				current = dn
 			end 
 		end

@@ -13,8 +13,8 @@ do
 		terms[#terms+1] = 
 			{
 				priority=90,
-				value=string_format("%d %s", Document.wordcount or 0,
-					Pluralise(Document.wordcount or 0, "word", "words"))
+				value=string_format("%d %s", currentDocument.wordcount or 0,
+					Pluralise(currentDocument.wordcount or 0, "word", "words"))
 			}
 	end
 	

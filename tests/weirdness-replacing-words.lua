@@ -9,5 +9,5 @@ Cmd.SetMark()
 Cmd.GotoEndOfWord()
 Cmd.Delete()
 
-AssertTableEquals({"foo", "", "baz"}, Document[1])
+AssertTableEquals({"foo", "", "baz"}, currentDocument[1])
 

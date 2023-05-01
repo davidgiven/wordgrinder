@@ -159,7 +159,7 @@ end
 
 local function export_odt_with_ui(filename, title, extension)
 	if not filename then
-		filename = Document.name
+		filename = currentDocument.name
 		if filename then
 			if not filename:find("%..-$") then
 				filename = filename .. extension
@@ -186,7 +186,7 @@ local function export_odt_with_ui(filename, title, extension)
 	local writer = function(s)
 		content[#content+1] = s
 	end
-	callback(writer, Document)
+	callback(writer, currentDocument)
 	content = table_concat(content)
 	
 	local xml =
@@ -378,6 +378,6 @@ end
 
 -- Note: just the content.xml.
 function Cmd.ExportToODTString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

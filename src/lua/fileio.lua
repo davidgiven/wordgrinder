@@ -635,7 +635,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 	end
 
 	DocumentSet = d
-	Document = d.current
+	currentDocument = d.current
 
 	if (fileformat < FILEFORMAT) then
 		UpgradeDocument(fileformat)

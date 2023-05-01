@@ -2,13 +2,13 @@
 loadfile("tests/testsuite.lua")()
 
 ScreenWidth = 80
-Document:wrap(ScreenWidth)
+currentDocument:wrap(ScreenWidth)
 
 Cmd.InsertStringIntoParagraph("foo bar baz")
 
-AssertEquals(1, #Document)
+AssertEquals(1, #currentDocument)
 
 Cmd.GotoEndOfLine()
 Cmd.GotoPreviousWord()
 
-AssertTableEquals({Document.cp, Document.cw, Document.co}, {1, 3, 1})
+AssertTableEquals({currentDocument.cp, currentDocument.cw, currentDocument.co}, {1, 3, 1})

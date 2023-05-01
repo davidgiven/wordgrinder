@@ -40,7 +40,7 @@ type DocumentSet = {
 	_findDocument: (self: DocumentSet, name: string) -> Document?,
 	findDocument: (self: DocumentSet, name: string) -> Document?,
 	addDocument: (self: DocumentSet, name: string, index: number)
-		-> Document,
+		-> currentDocument,
 }
 
 function CreateDocumentSet(): DocumentSet
@@ -66,7 +66,7 @@ end
 DocumentSet.touch = function(self)
 	self.changed = true
 	self.justchanged = true
-	Document:touch()
+	currentDocument:touch()
 end
 
 DocumentSet.clean = function(self)
@@ -145,7 +145,7 @@ DocumentSet.deleteDocument = function(self, name)
 	self:touch()
 	RebuildDocumentsMenu(self.documents)
 
-	if (Document == document) then
+	if (currentDocument == document) then
 		document = self.documents[n]
 		if not document then
 			document = self.documents[#self.documents]
@@ -160,17 +160,17 @@ end
 DocumentSet.setCurrent = function(self, name)
 	-- Ensure any housekeeping on the current document gets done.
 
-	if Document.changed then
+	if currentDocument.changed then
 		FireEvent(Event.Changed)
 	end
 
-	Document = self.documents[name]
-	if not Document then
-		Document = self.documents[1]
+	currentDocument = self.documents[name]
+	if not currentDocument then
+		currentDocument = self.documents[1]
 	end
 
-	self.current = Document
-	Document:renumber()
+	self.current = currentDocument
+	currentDocument:renumber()
 	ResizeScreen()
 end
 

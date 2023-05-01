@@ -121,7 +121,7 @@ end
 
 local hidemessages =
 {
-	["Document upgraded"] = true
+	["currentDocument upgraded"] = true
 }
 
 function AddAllowedMessage(m)

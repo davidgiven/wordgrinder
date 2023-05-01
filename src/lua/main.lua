@@ -46,16 +46,16 @@ end
 local oldcp, oldcw, oldco
 function QueueRedraw()
     redrawpending = true
-    if Document then
-        if (oldcp ~= Document.cp) or (oldcw ~= Document.cw) or
-                (oldco ~= Document.co) then
-            oldcp = Document.cp
-            oldcw = Document.cw
-            oldco = Document.co
+    if currentDocument then
+        if (oldcp ~= currentDocument.cp) or (oldcw ~= currentDocument.cw) or
+                (oldco ~= currentDocument.co) then
+            oldcp = currentDocument.cp
+            oldcw = currentDocument.cw
+            oldco = currentDocument.co
             FireEvent(Event.Moved)
         end
 
-        if not Document.wrapwidth then
+        if not currentDocument.wrapwidth then
             ResizeScreen()
         end
     end
@@ -65,7 +65,7 @@ function ResetDocumentSet()
     UpdateDocumentStyles()
     documentSet = CreateDocumentSet()
     documentSet.menu = CreateMenuTree()
-    Document = CreateDocument()
+    currentDocument = CreateDocument()
     documentSet:addDocument(CreateDocument(), "main")
     RebuildParagraphStylesMenu(DocumentStyles)
     RebuildDocumentsMenu(documentSet.documents)

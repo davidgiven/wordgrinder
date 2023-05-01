@@ -13,7 +13,7 @@ local GetStringWidth = wg.getstringwidth
 local no_margin_controller =
 {
 	attach = function(self)
-		Document.margin = 0
+		currentDocument.margin = 0
 		NonmodalMessage("Hiding margin.")
 	end,
 
@@ -34,7 +34,7 @@ local style_name_controller =
 			end
 		end
 
-		Document.margin = m
+		currentDocument.margin = m
 		NonmodalMessage("Margin now displays paragraph styles.")
 	end,
 
@@ -47,9 +47,9 @@ local paragraph_number_controller =
 {
 	attach = function(self)
 		local cb = function()
-			local nm = int(math.log10(#Document)) + 1
-			if nm ~= Document.margin then
-				Document.margin = nm
+			local nm = int(math.log10(#currentDocument)) + 1
+			if nm ~= currentDocument.margin then
+				currentDocument.margin = nm
 				ResizeScreen()
 			end
 		end
@@ -72,7 +72,7 @@ local paragraph_number_controller =
 local word_count_controller =
 {
 	attach = function(self)
-		Document.margin = 3
+		currentDocument.margin = 3
 		NonmodalMessage("Margin now displays word counts.")
 	end,
 
@@ -94,13 +94,13 @@ MarginControllers =
 -- @param mode               the new margin mode
 
 function SetMarginMode(mode)
-	local controller = MarginControllers[Document.viewmode]
+	local controller = MarginControllers[currentDocument.viewmode]
 	if controller.detach then
 		controller:detach()
 	end
 
-	Document.viewmode = mode
-	controller = MarginControllers[Document.viewmode]
+	currentDocument.viewmode = mode
+	controller = MarginControllers[currentDocument.viewmode]
 	if controller.attach then
 		controller:attach()
 	end

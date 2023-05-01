@@ -6,7 +6,7 @@ Cmd.InsertStringIntoParagraph("The quick brown fox jumps over the lazy dog.")
 DocumentStyles["P"].indent = 0
 DocumentStyles["P"].firstindent = nil
 
-local para = Document[1]
+local para = currentDocument[1]
 local lines = para:wrap(20)
 AssertEquals(3, #lines)
 
@@ -19,7 +19,7 @@ AssertTableEquals({0, 4, 10, 0, 4, 10, 15, 0, 5}, para.xs)
 DocumentStyles["P"].indent = 4
 DocumentStyles["P"].firstindent = nil
 
-local para = Document[1]
+local para = currentDocument[1]
 local lines = para:wrap(20)
 AssertEquals(4, #lines)
 
@@ -33,7 +33,7 @@ AssertTableEquals({0, 4, 0, 6, 0, 6, 11, 0, 5}, para.xs)
 DocumentStyles["P"].indent = 0
 DocumentStyles["P"].firstindent = 15
 
-local para = Document[1]
+local para = currentDocument[1]
 local lines = para:wrap(20)
 AssertEquals(4, #lines)
 

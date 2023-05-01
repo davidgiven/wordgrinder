@@ -108,7 +108,7 @@ local function callback(writer, document)
 				'WordGrinder '..VERSION..'.\n')
 			writer('.\\" Use the .ms macro package!\n')
 			writer('.TL\n')
-			emit_text(Document.name)
+			emit_text(currentDocument.name)
 			writer('\n')
 			linestart = true
 		end,
@@ -184,7 +184,7 @@ function Cmd.ExportTroffFile(filename)
 end
 
 function Cmd.ExportToTroffString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 
 

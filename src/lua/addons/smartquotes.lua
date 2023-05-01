@@ -27,10 +27,10 @@ do
 			):compile()
 
 		if settings.notinraw
-				and (Document[Document.cp].style ~= "RAW") then
+				and (currentDocument[currentDocument.cp].style ~= "RAW") then
 			local value = payload.value
-			local word = Document[Document.cp][Document.cw]
-			local prefix = word:sub(1, Document.co-1)
+			local word = currentDocument[currentDocument.cp][currentDocument.cw]
+			local prefix = word:sub(1, currentDocument.co-1)
 			local first = start_of_word_pattern(prefix) ~= nil
 
 			if settings.doublequotes and (value == '"') then

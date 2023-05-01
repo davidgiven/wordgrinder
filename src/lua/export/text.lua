@@ -62,6 +62,6 @@ function Cmd.ExportTextFile(filename)
 end
 
 function Cmd.ExportToTextString(document)
-	document = document or Document
+	document = document or currentDocument
 	return ExportToString(document, callback)
 end

@@ -118,6 +118,6 @@ function Cmd.ExportMarkdownFile(filename)
 end
 
 function Cmd.ExportToMarkdownString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

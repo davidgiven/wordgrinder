@@ -145,7 +145,7 @@ end
 
 function ExportFileWithUI(filename, title, extension, callback)
 	if not filename then
-		filename = Document.name
+		filename = currentDocument.name
 		if filename then
 			if not filename:find("%..-$") then
 				filename = filename .. extension

@@ -184,7 +184,7 @@ end
 -- Add the current word to the user dictionary.
 
 function Cmd.AddToUserDictionary()
-	local word = GetWordSimpleText(Document[Document.cp][Document.cw])
+	local word = GetWordSimpleText(currentDocument[currentDocument.cp][currentDocument.cw])
 
 	if (word ~= "") then
 		if (not GetUserDictionary()[word]) and
@@ -229,33 +229,33 @@ function Cmd.FindNextMisspeltWord()
 	-- afterwards. Otherwise, start at the current cursor position.
 
 	local sp, sw, so
-	if Document.mp then
-		sp, sw, so = Document.mp, Document.mw + 1, 1
-		if sw > #Document[sp] then
+	if currentDocument.mp then
+		sp, sw, so = currentDocument.mp, currentDocument.mw + 1, 1
+		if sw > #currentDocument[sp] then
 			sw = 1
 			sp = sp + 1
-			if sp > #Document then
+			if sp > #currentDocument then
 				sp = 1
 			end
 		end
 	else
-		sp, sw, so = Document.cp, Document.cw, 1
+		sp, sw, so = currentDocument.cp, currentDocument.cw, 1
 	end
 	local cp, cw, co = sp, sw, so
 
 	-- Keep looping until we reach the starting point again.
 
-	Document[1]:wrap()
+	currentDocument[1]:wrap()
 	while true do
-		local paragraph = Document[cp]
+		local paragraph = currentDocument[cp]
 		local word = paragraph[cw]
 		if IsWordMisspelt(word, paragraph.sentences[cw]) then
-			Document.cp = cp
-			Document.cw = cw
-			Document.co = #word + 1
-			Document.mp = cp
-			Document.mw = cw
-			Document.mo = 1
+			currentDocument.cp = cp
+			currentDocument.cw = cw
+			currentDocument.co = #word + 1
+			currentDocument.mp = cp
+			currentDocument.mw = cw
+			currentDocument.mo = 1
 			NonmodalMessage("Misspelt word found.")
 			QueueRedraw()
 			return true
@@ -265,13 +265,13 @@ function Cmd.FindNextMisspeltWord()
 
 		co = 1
 		cw = cw + 1
-		if (cw > #Document[cp]) then
+		if (cw > #currentDocument[cp]) then
 			cw = 1
 			cp = cp + 1
-			if (cp > #Document) then
+			if (cp > #currentDocument) then
 				cp = 1
 			end
-			Document[cp]:wrap()
+			currentDocument[cp]:wrap()
 		end
 
 		-- Check to see if we've scanned everything.

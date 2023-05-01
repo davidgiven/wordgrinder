@@ -62,18 +62,18 @@ end
 function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
 	local w = GetMaximumAllowedWidth(ScreenWidth)
-	if Document.margin > 0 then
-		papermargin = max(Document.margin + 2, math.floor(ScreenWidth/2 - w/2))
+	if currentDocument.margin > 0 then
+		papermargin = max(currentDocument.margin + 2, math.floor(ScreenWidth/2 - w/2))
 	else
 		papermargin = math.floor(ScreenWidth/2 - w/2)
 	end
 	w = ScreenWidth - papermargin*2
-	Document:wrap(w)
+	currentDocument:wrap(w)
 	return true
 end
 
 local function drawmargin(y, pn, p)
-	local controller = MarginControllers[Document.viewmode]
+	local controller = MarginControllers[currentDocument.viewmode]
 	if controller.getcontent then
 		local s = controller:getcontent(pn, p)
 
@@ -119,7 +119,7 @@ local function redrawstatus()
 		local s = {
 			Leafname(documentSet.name or "(unnamed)"),
 			"[",
-			Document.name or "",
+			currentDocument.name or "",
 			"] ",
 			changed_tab[documentSet.changed] or "",
 		}
@@ -231,20 +231,20 @@ function RedrawScreen()
 
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
-	if not Document.sp then
-		Document.sp = Document.cp
-		Document.sw = Document.cw
+	if not currentDocument.sp then
+		currentDocument.sp = currentDocument.cp
+		currentDocument.sw = currentDocument.cw
 	end
-	local sp, sw = Document.sp, Document.sw
-	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local sp, sw = currentDocument.sp, currentDocument.sw
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	local tx = papermargin + 1
 
 	if GetScrollMode() == "Fixed" then
-		sp = Document.cp
-		sw = Document.cw
+		sp = currentDocument.cp
+		sw = currentDocument.cw
 	else
-		if sp > #Document then
-			sp = #Document
+		if sp > #currentDocument then
+			sp = #currentDocument
 		elseif sp < 1 then
 			sp = 1
 		end
@@ -252,7 +252,7 @@ function RedrawScreen()
 
 	-- Find out the offset of the paragraph at the middle of the screen.
 
-	local paragraph = Document[sp]
+	local paragraph = currentDocument[sp]
 	local osw = sw
 	local sl
 	sl, sw = paragraph:getLineOfWord(sw)
@@ -268,13 +268,13 @@ function RedrawScreen()
 		local p = sp
 		
 		while p < cp do
-			cy = cy + #Document[p]:wrap() + Document:spaceBelow(p)
+			cy = cy + #currentDocument[p]:wrap() + currentDocument:spaceBelow(p)
 			p = p + 1
 		end
-		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy >= (ScreenHeight-5) then
-			Document.sp = cp
-			Document.sw = cw
+			currentDocument.sp = cp
+			currentDocument.sw = cw
 			return RedrawScreen()
 		end
 	else
@@ -282,12 +282,12 @@ function RedrawScreen()
 
 		while p > cp do
 			p = p - 1
-			cy = cy - #Document[p]:wrap() - Document:spaceBelow(p)
+			cy = cy - #currentDocument[p]:wrap() - currentDocument:spaceBelow(p)
 		end
-		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy < 4 then
-			Document.sp = cp
-			Document.sw = cw
+			currentDocument.sp = cp
+			currentDocument.sw = cw
 			return RedrawScreen()
 		end
 	end
@@ -295,19 +295,19 @@ function RedrawScreen()
 	-- Position the cursor.
 
 	do
-		local paragraph = Document[cp]
+		local paragraph = currentDocument[cp]
 		local word = paragraph[cw]
 		local cl = paragraph:getLineOfWord(cw)
 		GotoXY(tx + paragraph.xs[cw] +
-			GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(cl),
+			GetWidthFromOffset(word, currentDocument.co) + paragraph:getIndentOfLine(cl),
 			cy)
 	end
 
 	-- Cache values for mark drawing.
 
-	local mp = Document.mp
-	local mw = Document.mw
-	local mo = Document.mo
+	local mp = currentDocument.mp
+	local mw = currentDocument.mw
+	local mo = currentDocument.mo
 
 	local lm = papermargin
 	local rm = ScreenWidth - lm - 1
@@ -326,9 +326,9 @@ function RedrawScreen()
 	-- Draw backwards.
 
 	local pn = sp - 1
-	local sa = Document:spaceAbove(sp)
+	local sa = currentDocument:spaceAbove(sp)
 	local y = int(ScreenHeight/2) - sl - 1 - sa
-	local paragraph = Document[sp]
+	local paragraph = currentDocument[sp]
 	if paragraph then
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y+1, y+sa)
@@ -357,10 +357,10 @@ function RedrawScreen()
 		}
 	end
 
-	Document.topp = nil
-	Document.topw = nil
+	currentDocument.topp = nil
+	currentDocument.topw = nil
 	while (y >= 0) do
-		local paragraph = Document[pn]
+		local paragraph = currentDocument[pn]
 		if not paragraph then
 			break
 		end
@@ -370,8 +370,8 @@ function RedrawScreen()
 			local l = lines[ln]
 			drawline(paragraph, l, ln)
 
-			Document.topp = pn
-			Document.topw = l.wn
+			currentDocument.topp = pn
+			currentDocument.topw = l.wn
 			y = y - 1
 
 			if (y < 0) then
@@ -379,7 +379,7 @@ function RedrawScreen()
 			end
 		end
 
-		local sa = Document:spaceAbove(pn)
+		local sa = currentDocument:spaceAbove(pn)
 		y = y - sa
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y, y+sa)
@@ -395,7 +395,7 @@ function RedrawScreen()
 	y = int(ScreenHeight/2) - sl
 	pn = sp
 	while (y < ScreenHeight) do
-		local paragraph = Document[pn]
+		local paragraph = currentDocument[pn]
 		if not paragraph then
 			break
 		end
@@ -408,20 +408,20 @@ function RedrawScreen()
 			-- If the top of the page hasn't already been set, then the
 			-- current paragraph extends off the top of the screen.
 
-			if not Document.topp and (y == 0) then
-				Document.topp = pn
-				Document.topw = l.wn
+			if not currentDocument.topp and (y == 0) then
+				currentDocument.topp = pn
+				currentDocument.topw = l.wn
 			end
 
-			Document.botp = pn
-			Document.botw = l.wn
+			currentDocument.botp = pn
+			currentDocument.botw = l.wn
 			y = y + 1
 
 			if (y > ScreenHeight) then
 				break
 			end
 		end
-		local sb = Document:spaceBelow(pn)
+		local sb = currentDocument:spaceBelow(pn)
 		y = y + sb
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y-sb, y-1)
@@ -431,9 +431,9 @@ function RedrawScreen()
 	-- If the top of the page *still* hasn't been set, then we're on the
 	-- first paragraph of the document.
 
-	if not Document.topp then
-		Document.topp = 1
-		Document.topw = 1
+	if not currentDocument.topp then
+		currentDocument.topp = 1
+		currentDocument.topw = 1
 	end
 
 	if (y <= ScreenHeight) and WantTerminators() then
@@ -484,7 +484,7 @@ end
 
 do
 	local function cb(event, token)
-		Document:renumber()
+		currentDocument:renumber()
 	end
 
 	AddEventListener(Event.Changed, cb)

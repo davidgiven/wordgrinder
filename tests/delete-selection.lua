@@ -9,15 +9,15 @@ Cmd.GotoPreviousCharW()
 -- This should delete the selection only.
 Cmd.DeleteSelectionOrPreviousChar()
 
-AssertTableEquals({"f"}, Document[1])
-AssertEquals(2, Document.co)
+AssertTableEquals({"f"}, currentDocument[1])
+AssertEquals(2, currentDocument.co)
 
 -- Doing it again will delete the remaining char.
 
 Cmd.DeleteSelectionOrPreviousChar()
 
-AssertTableEquals({""}, Document[1])
-AssertEquals(1, Document.co)
+AssertTableEquals({""}, currentDocument[1])
+AssertEquals(1, currentDocument.co)
 
 ResetDocumentSet()
 Cmd.InsertStringIntoWord("foo")
@@ -29,14 +29,14 @@ Cmd.GotoNextCharW()
 -- This should delete the selection only.
 Cmd.DeleteSelectionOrNextChar()
 
-AssertEquals("o", Document[1][1])
-AssertEquals(1, Document.co)
+AssertEquals("o", currentDocument[1][1])
+AssertEquals(1, currentDocument.co)
 
 -- Doing it again will delete the remaining char.
 
 Cmd.DeleteSelectionOrNextChar()
 
-AssertEquals("", Document[1][1])
-AssertEquals(1, Document.co)
+AssertEquals("", currentDocument[1][1])
+AssertEquals(1, currentDocument.co)
 
 

@@ -4,7 +4,7 @@
 -- file in this distribution for the full text.
 
 local function maketimestamp(pattern: string, name: string?): string
-	name = name or Document.name
+	name = name or currentDocument.name
 	name = name:gsub("%%", "%%%%")
 	
 	local timestamp = os.date("%Y-%m-%d.%H%M")
@@ -17,7 +17,7 @@ local function maketimestamp(pattern: string, name: string?): string
 end
 
 function Cmd.CutToScrapbook()
-	if not Document.mp then
+	if not currentDocument.mp then
 		NonmodalMessage("There's nothing selected.")
 		return false
 	end
@@ -29,7 +29,7 @@ function Cmd.CutToScrapbook()
 end
 
 function Cmd.CopyToScrapbook()
-	if not Document.mp then
+	if not currentDocument.mp then
 		NonmodalMessage("There's nothing selected.")
 		return false
 	end
@@ -49,7 +49,7 @@ function Cmd.PasteToScrapbook()
 	
 	local settings = documentSet.addons.scrapbook
 	
-	local currentdocument = Document.name
+	local currentdocument = currentDocument.name
 	
 	if not documentSet:findDocument(settings.document) then
 		documentSet:addDocument(CreateDocument(), settings.document)

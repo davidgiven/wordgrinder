@@ -10,7 +10,7 @@ do
 	local function cb(event, token, terms)
 		local settings = documentSet.addons.pagecount or {}
 		if settings.enabled then
-			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
+			local pages = math.floor((currentDocument.wordcount or 0) / settings.wordsperpage)
 			terms[#terms+1] = {
 				priority=80,
 				value=string.format("%d %s", pages,

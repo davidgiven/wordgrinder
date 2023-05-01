@@ -7,13 +7,13 @@ Cmd.InsertStringIntoParagraph("67890")
 Cmd.GotoPreviousCharW()
 
 -- GotoPrevious/NextLine won't work without this.
-Document:wrap(80)
+currentDocument:wrap(80)
 
-AssertEquals(2, Document.cp)
-AssertEquals(5, Document.co)
+AssertEquals(2, currentDocument.cp)
+AssertEquals(5, currentDocument.co)
 
 Cmd.GotoPreviousLine()
 
-AssertEquals(1, Document.cp)
-AssertEquals(5, Document.co)
+AssertEquals(1, currentDocument.cp)
+AssertEquals(5, currentDocument.co)
 

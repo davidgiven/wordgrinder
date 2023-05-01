@@ -8,15 +8,15 @@ Cmd.SetMark()
 Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 
-AssertEquals(false, Document.sticky_selection)
-AssertEquals(1, Document.mp)
-AssertEquals(1, Document.mw)
-AssertEquals(4, Document.mo)
+AssertEquals(false, currentDocument.sticky_selection)
+AssertEquals(1, currentDocument.mp)
+AssertEquals(1, currentDocument.mw)
+AssertEquals(4, currentDocument.mo)
 
 -- This should delete the selection.
 Cmd.TypeWhileSelected()
 
-AssertEquals("f", Document[1][1])
+AssertEquals("f", currentDocument[1][1])
 
 -- Sticky
 
@@ -27,13 +27,13 @@ Cmd.ToggleMark()
 Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 
-AssertEquals(true, Document.sticky_selection)
-AssertEquals(1, Document.mp)
-AssertEquals(1, Document.mw)
-AssertEquals(4, Document.mo)
+AssertEquals(true, currentDocument.sticky_selection)
+AssertEquals(1, currentDocument.mp)
+AssertEquals(1, currentDocument.mw)
+AssertEquals(4, currentDocument.mo)
 
 -- This should *not* delete the selection.
 Cmd.TypeWhileSelected()
 
-AssertEquals("foo", Document[1][1])
+AssertEquals("foo", currentDocument[1][1])
 

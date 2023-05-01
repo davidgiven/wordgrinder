@@ -20,60 +20,60 @@ local table_concat = table.concat
 local unpack = rawget(_G, "unpack") or table.unpack
 
 function Cmd.GotoBeginningOfWord()
-	Document.co = 1
+	currentDocument.co = 1
 	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoEndOfWord()
-	Document.co = #Document[Document.cp][Document.cw] + 1
+	currentDocument.co = #currentDocument[currentDocument.cp][currentDocument.cw] + 1
 	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoBeginningOfParagraph()
-	Document.cw = 1
+	currentDocument.cw = 1
 	return Cmd.GotoBeginningOfWord()
 end
 
 function Cmd.GotoEndOfParagraph()
-	Document.cw = #Document[Document.cp]
+	currentDocument.cw = #currentDocument[currentDocument.cp]
 	return Cmd.GotoEndOfWord()
 end
 
 function Cmd.GotoBeginningOfDocument()
-	Document.cp = 1
+	currentDocument.cp = 1
 	return Cmd.GotoBeginningOfParagraph()
 end
 
 function Cmd.GotoEndOfDocument()
-	Document.cp = #Document
+	currentDocument.cp = #currentDocument
 	return Cmd.GotoEndOfParagraph()
 end
 
 function Cmd.GotoPreviousParagraph()
-	if (Document.cp == 1) then
+	if (currentDocument.cp == 1) then
 		QueueRedraw()
 		return false
 	end
 
-	Document.cp = Document.cp - 1
-	Document.cw = 1
-	Document.co = 1
+	currentDocument.cp = currentDocument.cp - 1
+	currentDocument.cw = 1
+	currentDocument.co = 1
 
 	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoNextParagraph()
-	if (Document.cp == #Document) then
+	if (currentDocument.cp == #currentDocument) then
 		QueueRedraw()
 		return false
 	end
 
-	Document.cp = Document.cp + 1
-	Document.cw = 1
-	Document.co = 1
+	currentDocument.cp = currentDocument.cp + 1
+	currentDocument.cw = 1
+	currentDocument.co = 1
 
 	QueueRedraw()
 	return true
@@ -88,17 +88,17 @@ function Cmd.GotoNextParagraphW()
 end
 
 function Cmd.GotoPreviousWord()
-	if (Document.cw == 1) then
+	if (currentDocument.cw == 1) then
 		QueueRedraw()
 		return false
 	end
 
 	if Cmd.GotoPreviousChar() then
 		-- If that worked, we weren't at the beginning of the word.
-		Document.co = 1
+		currentDocument.co = 1
 	else
-		Document.cw = Document.cw - 1
-		Document.co = 1
+		currentDocument.cw = currentDocument.cw - 1
+		currentDocument.co = 1
 	end
 
 	QueueRedraw()
@@ -106,15 +106,15 @@ function Cmd.GotoPreviousWord()
 end
 
 function Cmd.GotoNextWord()
-	local p = Document[Document.cp]
-	if (Document.cw == #p) then
-		Document.co = #(p[Document.cw]) + 1
+	local p = currentDocument[currentDocument.cp]
+	if (currentDocument.cw == #p) then
+		currentDocument.co = #(p[currentDocument.cw]) + 1
 		QueueRedraw()
 		return false
 	end
 
-	Document.cw = Document.cw + 1
-	Document.co = 1
+	currentDocument.cw = currentDocument.cw + 1
+	currentDocument.co = 1
 
 	QueueRedraw()
 	return true
@@ -135,26 +135,26 @@ function Cmd.GotoNextWordW()
 end
 
 function Cmd.GotoPreviousChar()
-	local word = Document[Document.cp][Document.cw]
-	local co = PrevCharInWord(word, Document.co)
+	local word = currentDocument[currentDocument.cp][currentDocument.cw]
+	local co = PrevCharInWord(word, currentDocument.co)
 	if not co then
 		return false
 	end
 
-	Document.co = co
+	currentDocument.co = co
 
 	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoNextChar()
-	local word = Document[Document.cp][Document.cw]
-	local co = NextCharInWord(word, Document.co)
+	local word = currentDocument[currentDocument.cp][currentDocument.cw]
+	local co = NextCharInWord(word, currentDocument.co)
 	if not co then
 		return false
 	end
 
-	Document.co = co
+	currentDocument.co = co
 
 	QueueRedraw()
 	return true
@@ -175,8 +175,8 @@ function Cmd.GotoNextCharW()
 end
 
 function Cmd.InsertStringIntoWord(c)
-	local cp, cw, co = Document.cp, Document.cw, Document.co
-	local paragraph = Document[cp]
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
+	local paragraph = currentDocument[cp]
 	local word = paragraph[cw]
 
 	local s, co = InsertIntoWord(word, c, co, GetCurrentStyleHint())
@@ -184,11 +184,11 @@ function Cmd.InsertStringIntoWord(c)
 		return false
 	end
 
-	Document[cp] = CreateParagraph(paragraph.style,
+	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		s,
 		paragraph:sub(cw+1))
-	Document.co = co
+	currentDocument.co = co
 
 	documentSet:touch()
 	QueueRedraw()
@@ -210,11 +210,11 @@ function Cmd.InsertStringIntoParagraph(c)
 end
 
 function Cmd.SplitCurrentWord()
-	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	local styleprime = ""
 	local styleprimelen = 0
 
-	if not Document.mp then
+	if not currentDocument.mp then
 		local stylehint = GetCurrentStyleHint()
 		-- This is a bit evil. We want to prime the new word with the current
 		-- style hint, so that when the cursor moves we don't lose the user's
@@ -239,19 +239,19 @@ function Cmd.SplitCurrentWord()
 		styleprimelen = 1
 	end
 
-	local paragraph = Document[cp]
+	local paragraph = currentDocument[cp]
 	local word = paragraph[cw]
 	local left = DeleteFromWord(word, co, #word+1)
 	local right = DeleteFromWord(word, 1, co)
 
-	Document[cp] = CreateParagraph(paragraph.style,
+	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		left,
 		styleprime..right,
 		paragraph:sub(cw+1))
 
-	Document.cw = cw + 1
-	Document.co = 1 + styleprimelen -- yes, this means that co has a minimum of 2
+	currentDocument.cw = cw + 1
+	currentDocument.co = 1 + styleprimelen -- yes, this means that co has a minimum of 2
 
 	documentSet:touch()
 	QueueRedraw()
@@ -259,15 +259,15 @@ function Cmd.SplitCurrentWord()
 end
 
 function Cmd.JoinWithNextParagraph()
-	local cp, cw, co = Document.cp, Document.cw, Document.co
-	if (cp == #Document) then
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
+	if (cp == #currentDocument) then
 		return false
 	end
 
-	Document[cp] = CreateParagraph(Document[cp].style,
-		Document[cp],
-		Document[cp+1])
-	Document:deleteParagraphAt(cp+1)
+	currentDocument[cp] = CreateParagraph(currentDocument[cp].style,
+		currentDocument[cp],
+		currentDocument[cp+1])
+	currentDocument:deleteParagraphAt(cp+1)
 
 	documentSet:touch()
 	QueueRedraw()
@@ -275,19 +275,19 @@ function Cmd.JoinWithNextParagraph()
 end
 
 function Cmd.JoinWithNextWord()
-	local cp, cw, co = Document.cp, Document.cw, Document.co
-	local paragraph = Document[cp]
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
+	local paragraph = currentDocument[cp]
 
 	if (cw == #paragraph) then
 		if not Cmd.JoinWithNextParagraph() then
 			return false
 		end
-		paragraph = Document[cp]
+		paragraph = currentDocument[cp]
 	end
 
 	local word, co, _ = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
-	Document.co = co
-	Document[cp] = CreateParagraph(paragraph.style,
+	currentDocument.co = co
+	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		word,
 		paragraph:sub(cw+2))
@@ -302,7 +302,7 @@ function Cmd.DeletePreviousChar()
 end
 
 function Cmd.DeleteSelectionOrPreviousChar()
-	if Document.mp then
+	if currentDocument.mp then
 		return Cmd.Delete()
 	else
 		return Cmd.DeletePreviousChar()
@@ -310,15 +310,15 @@ function Cmd.DeleteSelectionOrPreviousChar()
 end
 
 function Cmd.DeleteNextChar()
-	local cp, cw, co = Document.cp, Document.cw, Document.co
-	local paragraph = Document[cp]
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
+	local paragraph = currentDocument[cp]
 	local word = paragraph[cw]
 	local nextco = NextCharInWord(word, co)
 	if not nextco then
 		return Cmd.JoinWithNextWord()
 	end
 
-	Document[cp] = CreateParagraph(paragraph.style,
+	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		DeleteFromWord(word, co, nextco),
 		paragraph:sub(cw+1))
@@ -329,7 +329,7 @@ function Cmd.DeleteNextChar()
 end
 
 function Cmd.DeleteSelectionOrNextChar()
-	if Document.mp then
+	if currentDocument.mp then
 		return Cmd.Delete()
 	else
 		return Cmd.DeleteNextChar()
@@ -337,17 +337,17 @@ function Cmd.DeleteSelectionOrNextChar()
 end
 
 function Cmd.DeleteWordLeftOfCursor()
-	local cp = Document.cp
-	local cw = Document.cw
-	local co = Document.co
-	local paragraph = Document[cp]
+	local cp = currentDocument.cp
+	local cw = currentDocument.cw
+	local co = currentDocument.co
+	local paragraph = currentDocument[cp]
 	local word = paragraph[cw]
 
-	Document[cp] = CreateParagraph(paragraph.style,
+	currentDocument[cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw-1),
 		DeleteFromWord(word, 1, co),
 		paragraph:sub(cw+1))
-	Document.co = 1
+	currentDocument.co = 1
 
 	documentSet:touch()
 	QueueRedraw()
@@ -355,28 +355,28 @@ function Cmd.DeleteWordLeftOfCursor()
 end
 
 function Cmd.DeleteWord()
-	if (Document.co == 1) and (Document.cw == 1) then
+	if (currentDocument.co == 1) and (currentDocument.cw == 1) then
 		return Cmd.DeletePreviousChar()
 	end
 
-	if (Document.co == 1) then
+	if (currentDocument.co == 1) then
 		Cmd.DeletePreviousChar()
 	end
 
 	Cmd.GotoEndOfWord()
 	Cmd.DeleteWordLeftOfCursor()
-	if Document.cw ~= 1 then
+	if currentDocument.cw ~= 1 then
 		Cmd.DeletePreviousChar()
 	end
 end
 
 function Cmd.SplitCurrentParagraph()
-	if (Document.co == 1) and (Document.cw == 1) then
+	if (currentDocument.co == 1) and (currentDocument.cw == 1) then
 		-- Beginning of paragraph; we're going to create a new, empty paragraph
 		-- so we need to split to make sure there's an empty word for it to
 		-- contain.
 		Cmd.SplitCurrentWord()
-	elseif (Document.co > 1) then
+	elseif (currentDocument.co > 1) then
 		-- Otherwise, only split if we're not at the beginning of a word.
 		Cmd.SplitCurrentWord()
 	else
@@ -384,24 +384,24 @@ function Cmd.SplitCurrentParagraph()
 		QueueRedraw()
 	end
 
-	local cp, cw = Document.cp, Document.cw
-	local paragraph = Document[cp]
+	local cp, cw = currentDocument.cp, currentDocument.cw
+	local paragraph = currentDocument[cp]
 	local p1 = CreateParagraph(paragraph.style, paragraph:sub(1, cw-1))
 	local p2 = CreateParagraph(paragraph.style, paragraph:sub(cw))
 
-	Document[cp] = p2
-	Document:insertParagraphBefore(p1, cp)
-	Document.cp = Document.cp + 1
-	Document.cw = 1
-	Document.co = 1
+	currentDocument[cp] = p2
+	currentDocument:insertParagraphBefore(p1, cp)
+	currentDocument.cp = currentDocument.cp + 1
+	currentDocument.cw = 1
+	currentDocument.co = 1
 	QueueRedraw()
 	return true
 end
 
 function Cmd.GotoXPosition(pos)
-	local paragraph = Document[Document.cp]
-	local lines = paragraph:wrap(Document.wrapwidth)
-	local ln = paragraph:getLineOfWord(Document.cw)
+	local paragraph = currentDocument[currentDocument.cp]
+	local lines = paragraph:wrap(currentDocument.wrapwidth)
+	local ln = paragraph:getLineOfWord(currentDocument.cw)
 
 	local line = lines[ln]
 	local wordofline = #line
@@ -427,8 +427,8 @@ function Cmd.GotoXPosition(pos)
 	local wordx = paragraph.xs[wn]
 	wo = GetOffsetFromWidth(word, pos - wordx)
 
-	Document.cw = paragraph:getWordOfLine(ln) + wordofline - 1
-	Document.co = wo
+	currentDocument.cw = paragraph:getWordOfLine(ln) + wordofline - 1
+	currentDocument.co = wo
 
 	QueueRedraw()
 	return false
@@ -437,20 +437,20 @@ end
 function Cmd.GotoXYPosition(x, y)
 	local r = GetPositionOfLine(y)
 	if r then
-		Document.cp = r.p
-		Document.cw = r.w
+		currentDocument.cp = r.p
+		currentDocument.cw = r.w
 		return Cmd.GotoXPosition(x - r.x)
 	end
 	return false
 end
 
 local function getpos()
-	local paragraph = Document[Document.cp]
+	local paragraph = currentDocument[currentDocument.cp]
 	local lines = paragraph:wrap()
-	local cw = Document.cw
+	local cw = currentDocument.cw
 	local word = paragraph[cw]
 	local x, ln, wn = paragraph:getXOffsetOfWord(cw)
-	x = x + GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(ln)
+	x = x + GetWidthFromOffset(word, currentDocument.co) + paragraph:getIndentOfLine(ln)
 
 	return x, ln, lines
 end
@@ -459,7 +459,7 @@ function Cmd.GotoNextLine()
 	local x, ln, lines = getpos()
 
 	if (ln == #lines) then
-		if (Document.cp == #Document) then
+		if (currentDocument.cp == #currentDocument) then
 			return Cmd.GotoEndOfParagraph()
 		end
 
@@ -468,7 +468,7 @@ function Cmd.GotoNextLine()
 		       Cmd.GotoXPosition(x)
 	end
 
-	Document.cw = Document[Document.cp]:getWordOfLine(ln + 1)
+	currentDocument.cw = currentDocument[currentDocument.cp]:getWordOfLine(ln + 1)
 	return Cmd.GotoXPosition(x)
 end
 
@@ -476,7 +476,7 @@ function Cmd.GotoPreviousLine()
 	local x, ln, lines = getpos()
 
 	if (ln == 1) then
-		if (Document.cp == 1) then
+		if (currentDocument.cp == 1) then
 			return Cmd.GotoBeginningOfParagraph()
 		end
 
@@ -485,7 +485,7 @@ function Cmd.GotoPreviousLine()
 		       Cmd.GotoXPosition(x)
 	end
 
-	Document.cw = Document[Document.cp]:getWordOfLine(ln - 1)
+	currentDocument.cw = currentDocument[currentDocument.cp]:getWordOfLine(ln - 1)
 	return Cmd.GotoXPosition(x)
 end
 
@@ -498,22 +498,22 @@ function Cmd.GotoEndOfLine()
 end
 
 function Cmd.GotoPreviousPage()
-	if Document.topp and Document.topw then
+	if currentDocument.topp and currentDocument.topw then
 		local x, _, _ = getpos()
-		Document.cp = Document.topp
-		Document.cw = Document.topw
-		Document.co = 1
+		currentDocument.cp = currentDocument.topp
+		currentDocument.cw = currentDocument.topw
+		currentDocument.co = 1
 		return Cmd.GotoXPosition(x)
 	end
 	return false
 end
 
 function Cmd.GotoNextPage()
-	if Document.botp and Document.botw then
+	if currentDocument.botp and currentDocument.botw then
 		local x, _, _ = getpos()
-		Document.cp = Document.botp
-		Document.cw = Document.botw
-		Document.co = 1
+		currentDocument.cp = currentDocument.botp
+		currentDocument.cw = currentDocument.botw
+		currentDocument.co = 1
 		return Cmd.GotoXPosition(x)
 	end
 	return false
@@ -528,16 +528,16 @@ local style_tab =
 }
 
 function Cmd.ApplyStyleToSelection(s)
-	if not Document.mp then
+	if not currentDocument.mp then
 		return false
 	end
 
-	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
-	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local mp1, mw1, mo1, mp2, mw2, mo2 = currentDocument:getMarks()
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	local sor, sand = unpack(style_tab[s])
 
 	for p = mp1, mp2 do
-		local paragraph = Document[p]
+		local paragraph = currentDocument[p]
 		local firstword = 1
 		local lastword = #paragraph
 
@@ -564,7 +564,7 @@ function Cmd.ApplyStyleToSelection(s)
 			end
 
 			if (p == cp) and (wn == cw) then
-				word, Document.co = ApplyStyleToWord(word, sor, sand, fo, lo, co)
+				word, currentDocument.co = ApplyStyleToWord(word, sor, sand, fo, lo, co)
 			else
 				word = ApplyStyleToWord(word, sor, sand, fo, lo, 0)
 			end
@@ -572,7 +572,7 @@ function Cmd.ApplyStyleToSelection(s)
 			words[#words+1] = word
 		end
 
-		Document[p] = CreateParagraph(paragraph.style,
+		currentDocument[p] = CreateParagraph(paragraph.style,
 			paragraph:sub(1, firstword-1),
 			words,
 			paragraph:sub(lastword+1))
@@ -585,7 +585,7 @@ function Cmd.ApplyStyleToSelection(s)
 end
 
 function Cmd.SetStyle(s)
-	if Document.mp then
+	if currentDocument.mp then
 		return Cmd.ApplyStyleToSelection(s)
 	end
 
@@ -596,27 +596,27 @@ function Cmd.SetStyle(s)
 end
 
 function GetStyleAtCursor()
-	local cp = Document.cp
-	local cw = Document.cw
-	local co = Document.co
+	local cp = currentDocument.cp
+	local cw = currentDocument.cw
+	local co = currentDocument.co
 
-	return GetStyleFromWord(Document[cp][cw], co)
+	return GetStyleFromWord(currentDocument[cp][cw], co)
 end
 
 function GetStyleToLeftOfCursor()
-	local cp = Document.cp
-	local cw = Document.cw
-	local co = Document.co
+	local cp = currentDocument.cp
+	local cw = currentDocument.cw
+	local co = currentDocument.co
 
 	if (co == 1) then
 		if (cw == 1) then
 			return 0
 		end
 		cw = cw - 1
-		co = #Document[cp][cw]
+		co = #currentDocument[cp][cw]
 	end
 
-	return GetStyleFromWord(Document[cp][cw], co)
+	return GetStyleFromWord(currentDocument[cp][cw], co)
 end
 
 function Cmd.ActivateMenu(menu)
@@ -634,7 +634,7 @@ end
 
 function ConfirmDocumentErasure()
 	if documentSet.changed then
-		if not PromptForYesNo("Document set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
+		if not PromptForYesNo("currentDocument set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
 			return false
 		end
 	end
@@ -666,16 +666,16 @@ function Cmd.ChangeParagraphStyle(style)
 	end
 
 	local first, last
-	if Document.mp then
+	if currentDocument.mp then
 		local _
-		first, _, _, last, _, _ = Document:getMarks()
+		first, _, _, last, _, _ = currentDocument:getMarks()
 	else
-		first = Document.cp
+		first = currentDocument.cp
 		last = first
 	end
 
 	for p = first, last do
-		Document[p] = CreateParagraph(style, Document[p])
+		currentDocument[p] = CreateParagraph(style, currentDocument[p])
 	end
 
 	documentSet:touch()
@@ -684,7 +684,7 @@ function Cmd.ChangeParagraphStyle(style)
 end
 
 local function rewind_past_style_bytes(p, w, o)
-	local word = Document[p][w]
+	local word = currentDocument[p][w]
 	o = PrevCharInWord(word, o)
 	if o then
 		o = NextCharInWord(word, o)
@@ -696,16 +696,16 @@ end
 
 
 function Cmd.ToggleMark()
-	if Document.mp then
-		Document.mp = nil
-		Document.mw = nil
-		Document.mo = nil
-		Document.sticky_selection = false
+	if currentDocument.mp then
+		currentDocument.mp = nil
+		currentDocument.mw = nil
+		currentDocument.mo = nil
+		currentDocument.sticky_selection = false
 	else
-		Document.mp = Document.cp
-		Document.mw = Document.cw
-		Document.mo = rewind_past_style_bytes(Document.cp, Document.cw, Document.co)
-		Document.sticky_selection = true
+		currentDocument.mp = currentDocument.cp
+		currentDocument.mw = currentDocument.cw
+		currentDocument.mo = rewind_past_style_bytes(currentDocument.cp, currentDocument.cw, currentDocument.co)
+		currentDocument.sticky_selection = true
 	end
 
 	QueueRedraw()
@@ -713,33 +713,33 @@ function Cmd.ToggleMark()
 end
 
 function Cmd.SetMark()
-	if not Document.mp then
-		Document.mp = Document.cp
-		Document.mw = Document.cw
-		Document.mo = rewind_past_style_bytes(Document.cp, Document.cw, Document.co)
-		Document.sticky_selection = false
+	if not currentDocument.mp then
+		currentDocument.mp = currentDocument.cp
+		currentDocument.mw = currentDocument.cw
+		currentDocument.mo = rewind_past_style_bytes(currentDocument.cp, currentDocument.cw, currentDocument.co)
+		currentDocument.sticky_selection = false
 	end
 	return true
 end
 
 function Cmd.UnsetMark()
-	Document.mp = nil
-	Document.mw = nil
-	Document.mo = nil
+	currentDocument.mp = nil
+	currentDocument.mw = nil
+	currentDocument.mo = nil
 
 	QueueRedraw()
 	return true
 end
 
 function Cmd.MoveWhileSelected()
-	if Document.mp and not Document.sticky_selection then
+	if currentDocument.mp and not currentDocument.sticky_selection then
 		return Cmd.UnsetMark()
 	end
 	return true
 end
 
 function Cmd.TypeWhileSelected()
-	if Document.mp and not Document.sticky_selection then
+	if currentDocument.mp and not currentDocument.sticky_selection then
 		return Cmd.Delete()
 	end
 	return true
@@ -767,17 +767,17 @@ function Cmd.Cut()
 end
 
 function Cmd.Copy(keepselection: boolean?)
-	if not Document.mp then
+	if not currentDocument.mp then
 		return false
 	end
 
-	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
+	local mp1, mw1, mo1, mp2, mw2, mo2 = currentDocument:getMarks()
 	local buffer = CreateDocument()
 
 	-- Copy all the paragraphs from the selected area into the clipboard.
 
 	for p = mp1, mp2 do
-		local paragraph = Document[p]
+		local paragraph = currentDocument[p]
 
 		buffer:appendParagraph(paragraph:copy())
 	end
@@ -843,7 +843,7 @@ function Cmd.Paste()
 	if not buffer then
 		return false
 	end
-	if Document.mp then
+	if currentDocument.mp then
 		if not Cmd.Delete() then
 			return false
 		end
@@ -851,24 +851,24 @@ function Cmd.Paste()
 
 	-- Insert the first paragraph of the clipboard into the current paragraph.
 
-	local cw = Document.cw
+	local cw = currentDocument.cw
 	Cmd.SplitCurrentWord()
-	local paragraph = Document[Document.cp]
+	local paragraph = currentDocument[currentDocument.cp]
 
-	Document[Document.cp] = CreateParagraph(paragraph.style,
+	currentDocument[currentDocument.cp] = CreateParagraph(paragraph.style,
 		paragraph:sub(1, cw),
 		buffer[1],
 		paragraph:sub(cw+1))
-	Document.cw = Document.cw + #buffer[1]
-	Document.co = 1
+	currentDocument.cw = currentDocument.cw + #buffer[1]
+	currentDocument.co = 1
 
 	-- Splice the first word of the section just pasted.
 
 	do
-		local ow = Document.cw
-		Document.cw = cw
+		local ow = currentDocument.cw
+		currentDocument.cw = cw
 		Cmd.JoinWithNextWord()
-		Document.cw = ow - 1
+		currentDocument.cw = ow - 1
 	end
 
 	-- More than one paragraph?
@@ -881,13 +881,13 @@ function Cmd.Paste()
 		local p = 2
 		for p = 2, #buffer do
 			local paragraph = buffer[p]
-			Document:insertParagraphBefore(
+			currentDocument:insertParagraphBefore(
 				CreateParagraph(paragraph.style, paragraph),
-				Document.cp)
+				currentDocument.cp)
 
-			Document.cp = Document.cp + 1
-			Document.cw = 1
-			Document.co = 1
+			currentDocument.cp = currentDocument.cp + 1
+			currentDocument.cw = 1
+			currentDocument.co = 1
 		end
 	end
 
@@ -899,26 +899,26 @@ function Cmd.Paste()
 end
 
 function Cmd.Delete()
-	if not Document.mp then
+	if not currentDocument.mp then
 		return false
 	end
 
-	local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
+	local mp1, mw1, mo1, mp2, mw2, mo2 = currentDocument:getMarks()
 
 	-- Put the cursor at the end of the selection and split.
 
-	Document.cp = mp2
-	Document.cw = mw2
-	Document.co = mo2
+	currentDocument.cp = mp2
+	currentDocument.cw = mw2
+	currentDocument.co = mo2
 	if not Cmd.SplitCurrentParagraph() then
 		return false
 	end
 
 	-- Put the cursor at the beginning of the selection and split.
 
-	Document.cp = mp1
-	Document.cw = mw1
-	Document.co = mo1
+	currentDocument.cp = mp1
+	currentDocument.cw = mw1
+	currentDocument.co = mo1
 	if not Cmd.SplitCurrentParagraph() then
 		return false
 	end
@@ -927,7 +927,7 @@ function Cmd.Delete()
 	-- Delete them.
 
 	for i = 1, (mp2 - mp1 + 1) do
-		Document:deleteParagraphAt(Document.cp)
+		currentDocument:deleteParagraphAt(currentDocument.cp)
 	end
 
 	-- And merge the two areas together again.
@@ -1038,7 +1038,7 @@ function Cmd.FindNext()
 
 	-- Start at the current cursor position.
 
-	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	if (#patterns == 0) then
 		QueueRedraw()
 		NonmodalMessage("Nothing to search for.")
@@ -1050,7 +1050,7 @@ function Cmd.FindNext()
 	-- Keep looping until we reach the starting point again.
 
 	while true do
-		local word = Document[cp][cw]
+		local word = currentDocument[cp][cw]
 		local s, e = pattern(word, co)
 
 		if s then
@@ -1062,16 +1062,16 @@ function Cmd.FindNext()
 			local found = true
 			while (pi <= #patterns) do
 				ew = ew + 1
-				if (ew > #Document[ep]) then
+				if (ew > #currentDocument[ep]) then
 					ep = ep + 1
 					ew = 1
-					if (ep > #Document) then
+					if (ep > #currentDocument) then
 						found = false
 						break
 					end
 				end
 
-				word = Document[ep][ew]
+				word = currentDocument[ep][ew]
 				if not word then
 					found = false
 					break
@@ -1087,12 +1087,12 @@ function Cmd.FindNext()
 			end
 
 			if found then
-				Document.cp = ep
-				Document.cw = ew
-				Document.co = e
-				Document.mp = cp
-				Document.mw = cw
-				Document.mo = s
+				currentDocument.cp = ep
+				currentDocument.cw = ew
+				currentDocument.co = e
+				currentDocument.mp = cp
+				currentDocument.mw = cw
+				currentDocument.mo = s
 				NonmodalMessage("Found.")
 				QueueRedraw()
 				return true
@@ -1103,17 +1103,17 @@ function Cmd.FindNext()
 
 		co = 1
 		cw = cw + 1
-		if (cw > #Document[cp]) then
+		if (cw > #currentDocument[cp]) then
 			cw = 1
 			cp = cp + 1
-			if (cp > #Document) then
+			if (cp > #currentDocument) then
 				cp = 1
 			end
 		end
 
 		-- Check to see if we've scanned everything.
 
-		if (cp == Document.cp) and (cw == Document.cw) and (co == 1) then
+		if (cp == currentDocument.cp) and (cw == currentDocument.cw) and (co == 1) then
 			break
 		end
 	end
@@ -1124,7 +1124,7 @@ function Cmd.FindNext()
 end
 
 function Cmd.ReplaceThenFind()
-	if Document.mp then
+	if currentDocument.mp then
 		local e = Cmd.Delete() and Cmd.UnsetMark()
 		if not e then
 			return false

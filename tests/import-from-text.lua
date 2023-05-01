@@ -42,6 +42,6 @@ document = Cmd.ImportTextString(9)
 document = Cmd.ImportTextString("no trailing newline")
 documentSet:addDocument(document, "imported")
 documentSet:setCurrent("imported")
-AssertTableEquals({"no", "trailing", "newline"}, Document[1])
+AssertTableEquals({"no", "trailing", "newline"}, currentDocument[1])
 
 
