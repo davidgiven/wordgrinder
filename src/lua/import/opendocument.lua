@@ -262,14 +262,15 @@ function Cmd.ImportODTFile(filename)
 	
 	local docname = Leafname(filename)
 
-	if documentSet.documents[docname] then
+	if documentSet:_findDocument(docname) then
 		local id = 1
 		while true do
 			local f = docname.."-"..id
-			if not documentSet.documents[f] then
+			if not documentSet:_findDocument(f) then
 				docname = f
 				break
 			end
+			id = id + 1
 		end
 	end
 	

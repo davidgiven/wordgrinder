@@ -184,17 +184,19 @@ function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
 end
 
 function Cmd.SaveCurrentDocument()
-	local name = documentSet.name
+	local name: string? = documentSet.name
 	if not name then
 		name = FileBrowser("Save Document Set", "Save as:", true)
 		if not name then
 			return false
 		end
+		assert(name)
 		if name:find("/[^.]*$") then
 			name = name .. ".wg"
 		end
 		documentSet.name = name
 	end
+	assert(name)
 
 	return Cmd.SaveCurrentDocumentAs(name)
 end
@@ -681,7 +683,7 @@ function Cmd.LoadDocumentSet(filename): (boolean, string?)
 
 	-- The document is NOT dirty immediately after a load.
 	
-	documentSet.changed = false
+	documentSet._changed = false
 
 	return true
 end
@@ -714,7 +716,7 @@ function UpgradeDocument(oldversion)
 	if (oldversion < 3) then
 		-- Idle time defaults to 3.
 
-		documentSet.idletime = 3
+		(documentSet::any).idletime = 3
 	end
 
 	-- Upgrade version 5 to 6.
@@ -732,10 +734,10 @@ function UpgradeDocument(oldversion)
 		-- is now a string containing the name of the style; styles are looked up on
 		-- demand.
 
-        local function convertStyles(document)
+        local function convertStyles(document: Document)
             for _, p in ipairs(document) do
                 if (type(p.style) ~= "string") then
-                    p.style = p.style.name
+                    p.style = (p.style::any).name
                 end
             end
         end
@@ -743,7 +745,7 @@ function UpgradeDocument(oldversion)
 		for _, document in ipairs(documentSet.documents) do
             convertStyles(document)
         end
-		documentSet.styles = nil
+		(documentSet::any).styles = nil
 	end
 
 	-- Upgrade version 7 to 8.
@@ -755,8 +757,8 @@ function UpgradeDocument(oldversion)
 		-- A bug on 0.7.2 meant that the styles were still exported in
 		-- WordGrinder files, even though they were never used.
 
-		documentSet.styles = nil
-		documentSet.idletime = nil
+		(documentSet::any).styles = nil
+		(documentSet::any).idletime = nil
 	end
 end
 

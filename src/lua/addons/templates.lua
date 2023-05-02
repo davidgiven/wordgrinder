@@ -24,7 +24,7 @@ function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 		filename = filename .. ".wg"
 	end
 
-	documentSet.name = nil
+	documentSet.name = ""
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
@@ -58,7 +58,7 @@ function Cmd.CreateDocumentSetFromTemplate(): (boolean, string?)
 	end
 
 	local r, e = Cmd.LoadDocumentSet(filename)
-	documentSet.name = nil
+	documentSet.name = ""
 	return r, e
 end
 

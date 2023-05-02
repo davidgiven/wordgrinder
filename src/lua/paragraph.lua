@@ -300,7 +300,7 @@ function Paragraph.sub(self: Paragraph, start: number, count: number?): {string}
 	if not count then
 		count = #self - start + 1
 	else
-		count = min(count, #self - start + 1)
+		count = math.min(count, #self - start + 1)
 	end
 	assert(count)
 

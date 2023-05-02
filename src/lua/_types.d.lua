@@ -131,27 +131,3 @@ declare CMARK_NODE_STRONG: number
 declare CMARK_NODE_LINK: number
 declare CMARK_NODE_IMAGE: number
 
-declare function CreateMenu()
-declare function CreateMenuBindings()
-declare function CreateMenuTree()
-declare function LoadFromFile(filename: string): any?
-declare function ModalMessage(title: string?, message: string)
-declare function SaveToFile(filename: string, object: any): (boolean, string?)
-declare function SetTheme(theme: string)
-declare function SpellcheckerOff(): boolean
-declare function SpellcheckerRestore(state: boolean)
-declare function UnSmartquotify(s: string): string
-declare function CLIError(...: string)
-declare function CliConvert(opt1: string, opt2: string): never
-declare function EngageCLI()
-declare function SetColour(fg: Colour?, bg: Colour?)
-declare function RebuildDocumentsMenu(s: any)
-declare function WantFullStopSpaces(): boolean
-declare function WantDenseParagraphLayout(): boolean
-declare function GetMaximumAllowedWidth(w: number): number
-declare function WantTerminators(): boolean
-declare function CentreInField(x: number, y: number, w: number, s: string)
-declare function LAlignInField(x: number, y: number, w: number, s: string)
-declare function RAlignInField(x: number, y: number, w: number, s: string)
-declare function GetScrollMode(): string
-

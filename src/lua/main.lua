@@ -1,4 +1,4 @@
---!nonstrict
+
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -35,7 +35,7 @@ declare ARCH: string
 declare HOME: string
 declare WINDOWS_INSTALL_DIR: string?
 
-HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE")
+HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE") or "."
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
 
@@ -43,10 +43,15 @@ local configfile = CONFIGDIR.."/startup.lua"
 
 if (ARCH == "windows") then
     local exe = wg.getenv("WINDOWS_EXE")
-    local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
-    WINDOWS_INSTALL_DIR = dir
+    if not exe then
+        error("Cannot locate installation directory")
+    else
+        local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
+        WINDOWS_INSTALL_DIR = dir
+    end
 end
 
+declare Quitting: boolean
 Quitting = false
 function QuitForcedBySystem()
     Quitting = true
@@ -228,9 +233,9 @@ function WordProcessor(filename)
     local function eventloop()
         local nl = string.char(13)
         while true do
-            if documentSet.justchanged then
+            if documentSet._justchanged then
                 FireEvent("Changed")
-                documentSet.justchanged = false
+                documentSet._justchanged = false
             end
 
             FlushAsyncEvents()
@@ -267,6 +272,7 @@ function WordProcessor(filename)
 
     NonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.")
     while true do
+        local xpcall = (xpcall::any) :: (()->(), ()->string) -> (boolean, string)
         local f, e = xpcall(eventloop, debug.traceback)
         if not f then
             print(e)

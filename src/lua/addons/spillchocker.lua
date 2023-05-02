@@ -59,14 +59,12 @@ end
 local user_dictionary_cache: {[string]: string}?
 local system_dictionary_cache: {[string]: string}?
 
-local function user_dictionary_document_modified(s: string)
-	user_dictionary_cache = nil
-end
-
-local function get_user_dictionary_document()
+local function get_user_dictionary_document(): Document
 	local d = documentSet:findDocument(USER_DICTIONARY_NAME)
 	if not d then
 		d = CreateDocument()
+		assert(d)
+
 		documentSet:addDocument(d, USER_DICTIONARY_NAME)
 		NonmodalMessage("Creating dictionary in document '"
 				..USER_DICTIONARY_NAME.."'.")
@@ -81,11 +79,12 @@ local function get_user_dictionary_document()
 		AddEventListener("DocumentModified",
 			function(self, token, document)
 				if (document == d) then
-					user_dictionary_document_modified(d)
+					user_dictionary_cache = nil
 				end
 			end
 		)
 	end
+	assert(d)
 	return d
 end
 
@@ -182,7 +181,7 @@ function Cmd.AddToUserDictionary()
 				(not GetSystemDictionary()[word]) then
 			local d = get_user_dictionary_document()
 			d:appendParagraph(CreateParagraph("V", word))
-			d:touch()
+			documentSet:touch()
 			user_dictionary_cache = nil
 			NonmodalMessage("Word '"..word.."' added to user dictionary")
 		else

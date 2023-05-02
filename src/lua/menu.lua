@@ -543,7 +543,7 @@ function MenuTree.runmenu(self, x: number, y: number, menu: Menu): boolean?
 					if PromptForYesNo("Reset menu keybindings?",
 						"Are you sure you want to reset all the menu "..
 						"keybindings back to their defaults?") then
-						documentSet.menu = CreateMenuBindings()
+						documentSet.menu = CreateMenuTree()
 						documentSet:touch()
 						NonmodalMessage("All keybindings have been reset to their default settings.")
 						menu_stack = {}
@@ -671,7 +671,7 @@ function RebuildParagraphStylesMenu(styles: DocumentStyles)
 	CreateMenu("Paragraph Styles", m, ParagraphStylesMenu)
 end
 
-function RebuildDocumentsMenu(documents)
+function RebuildDocumentsMenu(documents: DocumentSet)
 	-- Remember any accelerator keys and unhook the old menu.
 
 	local ak_tab: {[string]: string} = {}

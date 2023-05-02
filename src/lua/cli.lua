@@ -118,7 +118,7 @@ function CliConvert(file1: string, file2: string)
 			-- then select the specified document.
 			
 			local dl = documentSet:getDocumentList()
-			if not dl[f1s] then
+			if not documentSet:_findDocument(f1s) then
 				CLIError("no such document '", f1s, "'")
 			end
 			documentSet:setCurrent(f1s)

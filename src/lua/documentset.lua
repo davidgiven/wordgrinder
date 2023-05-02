@@ -35,18 +35,21 @@ type DocumentSet = {
 	documents: {[number]: Document},
 	clipboard: Document?,
 	statusbar: boolean,
+	addons: {[string]: any},
+	findtext: string,
+	replacetext: string,
 
 	_documentIndex: {[string]: Document},
 	_changed: boolean,
 	_justchanged: boolean,
+	_findpatterns: {(string, number?) -> (number?, number?)}?,
 
 	touch: (self: DocumentSet) -> (),
 	clean: (self: DocumentSet) -> (),
 	getDocumentList: (self: DocumentSet) -> {Document},
 	_findDocument: (self: DocumentSet, name: string) -> number?,
 	findDocument: (self: DocumentSet, name: string) -> Document?,
-	addDocument: (self: DocumentSet, name: string, index: number)
-		-> Document,
+	addDocument: (self: DocumentSet, document: Document, name: string) -> Document,
 	moveDocumentIndexTo: (self: DocumentSet, name: string, targetIndex: number)
 		-> (),
 	deleteDocument: (self: DocumentSet, name: string) -> boolean,
@@ -96,17 +99,20 @@ end
 DocumentSet.findDocument = function(self: DocumentSet, name: string)
 	local document = self._documentIndex[name]
 	if not document then
-		document = self.documents[self:_findDocument(name)]
-		if document then
-			ModalMessage("Document index inconsistency corrected",
-				"Something freaky happened to '"..name.."'.")
-			self.documents[name] = document
+		local dn = self:_findDocument(name)
+		if dn then
+			document = self.documents[dn]
+			if document then
+				ModalMessage("Document index inconsistency corrected",
+					"Something freaky happened to '"..name.."'.")
+				self._documentIndex[name] = document
+			end
 		end
 	end
 	return document
 end
 
-DocumentSet.addDocument = function(self, document, name, index)
+DocumentSet.addDocument = function(self, document, name)
 	document.name = name
 
 	local n = self:_findDocument(name) or (#self.documents + 1)

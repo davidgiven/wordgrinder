@@ -38,7 +38,7 @@ end
 do
 	local function cb()
 		local settings = documentSet.addons.autosave
-		if not settings.enabled or not documentSet.changed then
+		if not settings.enabled or not documentSet._changed then
 			return
 		end
 		

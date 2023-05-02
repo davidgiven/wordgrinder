@@ -11,26 +11,27 @@ type MarginController = {
 
 	attach: (self: MarginController) -> (),
 	detach: ((self: MarginController) -> ())?,
-	getcontent: (self: MarginController, pn: number, paragraph: Paragraph) -> ()
+	getcontent: ((self: MarginController, pn: number, paragraph: Paragraph)
+		-> string?)?
 }
 
 -- This code defines the various controllers that work the margin displays.
 -- It's all a little overengineered, but is really intended to test some
 -- modularisation concepts.
 
-local no_margin_controller =
+local no_margin_controller: MarginController =
 {
 	attach = function(self: MarginController)
 		currentDocument.margin = 0
 		NonmodalMessage("Hiding margin.")
 	end,
 
-	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph)
+	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph): string?
 		return nil
 	end
 }
 
-local style_name_controller =
+local style_name_controller: MarginController =
 {
 	attach = function(self: MarginController)
 		local m = 0
@@ -46,12 +47,12 @@ local style_name_controller =
 		NonmodalMessage("Margin now displays paragraph styles.")
 	end,
 
-	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph)
+	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph): string?
 		return paragraph.style
 	end
 }
 
-local paragraph_number_controller =
+local paragraph_number_controller: MarginController =
 {
 	attach = function(self: MarginController)
 		local cb = function()
@@ -72,12 +73,12 @@ local paragraph_number_controller =
 		self.token = nil
 	end,
 
-	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph)
+	getcontent = function(self: MarginController, pn: number, paragraph: Paragraph): string?
 		return tostring(pn)
 	end
 }
 
-local word_count_controller =
+local word_count_controller: MarginController =
 {
 	attach = function(self: MarginController)
 		currentDocument.margin = 3
@@ -85,19 +86,18 @@ local word_count_controller =
 	end,
 
 	getcontent = function(self: MarginController,
-			pn: number, paragraph: Paragraph)
+			pn: number, paragraph: Paragraph): string?
 		return tostring(#paragraph)
 	end
 }
 
-declare marginControllers: {MarginController}
 marginControllers =
 {
 	[1] = no_margin_controller,
 	[2] = style_name_controller,
 	[3] = paragraph_number_controller,
 	[4] = word_count_controller
-} :: {MarginController}
+}
 
 --- Sets a specific margin mode for the current document.
 --

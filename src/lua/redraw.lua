@@ -72,10 +72,10 @@ function ResizeScreen()
 	return true
 end
 
-local function drawmargin(y, pn, p)
+local function drawmargin(y: number, pn: number, p: Paragraph)
 	local controller = marginControllers[currentDocument.viewmode]
 	if controller.getcontent then
-		local s = controller:getcontent(pn, p)
+		local s: string? = assert(controller.getcontent)(controller, pn, p)
 
 		if s then
 			SetColour(Palette.StyleFG, Palette.Desktop)
@@ -121,7 +121,7 @@ local function redrawstatus()
 			"[",
 			currentDocument.name or "",
 			"] ",
-			changed_tab[documentSet.changed] or "",
+			changed_tab[documentSet._changed] or "",
 		}
 
 		-- Reversed due to SetReverse later.

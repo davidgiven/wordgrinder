@@ -5,6 +5,7 @@ from tools.build import multibin
 SRCS = [
     "src/lua/_prologue.lua",
     "src/lua/events.lua",
+    "src/lua/margin.lua",
     "src/lua/main.lua",
     "src/lua/xml.lua",
     "src/lua/utils.lua",
@@ -17,7 +18,6 @@ SRCS = [
     "src/lua/ui.lua",
     "src/lua/browser.lua",
     "src/lua/html.lua",
-    "src/lua/margin.lua",
     "src/lua/xpattern.lua",
     "src/lua/fileio.lua",
     "src/lua/export.lua",

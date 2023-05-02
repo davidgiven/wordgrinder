@@ -644,7 +644,7 @@ end
 -- @return                   true if it's all right to go ahead, false to cancel
 
 function ConfirmDocumentErasure()
-	if documentSet.changed then
+	if documentSet._changed then
 		if not PromptForYesNo("currentDocument set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
 			return false
 		end
@@ -1044,6 +1044,7 @@ function Cmd.FindNext()
 	if not documentSet._findpatterns then
 		documentSet._findpatterns = compile_patterns(documentSet.findtext)
 	end
+	assert(documentSet._findpatterns)
 	local patterns = documentSet._findpatterns
 
 	-- Start at the current cursor position.
@@ -1098,6 +1099,8 @@ function Cmd.FindNext()
 			end
 
 			if found then
+				assert(s)
+				assert(e)
 				currentDocument.cp = ep
 				currentDocument.cw = ew
 				currentDocument.co = e

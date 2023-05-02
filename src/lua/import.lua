@@ -113,6 +113,7 @@ function ImportFileWithUI(filename, title, callback: (string) -> Document?): boo
 		QueueRedraw()
 		return false
 	end
+	assert(document)
 
 	-- Add the document to the document set.
 

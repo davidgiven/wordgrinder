@@ -4,8 +4,9 @@
 -- file in this distribution for the full text.
 
 type EventToken = {Event}
+type EventCallback = (Event, EventToken, ...any) -> ()
 
-local listeners = {} :: {[Event]: {[EventToken]: (Event, EventToken, ...any) -> ()}}
+local listeners = {} :: {[Event]: {[EventToken]: EventCallback}}
 local batched = {} :: {[Event]: boolean}
 
 type Event =

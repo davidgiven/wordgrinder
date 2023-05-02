@@ -20,9 +20,6 @@ local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
 local EISDIR = wg.EISDIR
 
-max = math.max
-min = math.min
-
 --- Transcodes a string.
 -- Converts the string to guaranteed valid UTF-8.
 --
@@ -163,9 +160,10 @@ end
 -- @return                   modified new table
 
 function MergeTables<T>(old: T, new: T): T
+	local nt = new::any
 	if old then
-		for k, v in pairs(old) do
-			new[k] = v
+		for k, v in pairs(old::any) do
+			nt[k] = v
 		end
 	end
 	return new
@@ -277,6 +275,8 @@ end
 
 -- Argument parser.
 
+declare FILENAME_ARG: {}
+declare UNKNOWN_ARG: {}
 FILENAME_ARG = {}
 UNKNOWN_ARG = {}
 function ParseArguments(argv: {string}, callbacks: {[any]: any})
@@ -449,12 +449,13 @@ function CreateIStream(data: string): any
 	{
 		__index =
 		{
-			read = function(self, a): string?
+			read = function(self, a: string): string?
 				if a == "*l" then
 					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
 					if (s == "") and (n == "") then
 						return nil
 					end
+					assert(e)
 					ptr = e + 1
 					return s
 				elseif a == "*a" then
