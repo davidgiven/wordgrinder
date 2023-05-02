@@ -108,6 +108,8 @@ int main(int argc, char* const* argv)
 
     Luau::assertHandler() = assertionHandler;
 
+	singletonConfig.parseOptions.allowDeclarationSyntax = true;
+
     Luau::FrontendOptions frontendOptions;
 
     LocalFileResolver fileResolver(ss.str());
