@@ -407,7 +407,6 @@ end
 function Cmd.GotoXPosition(pos: number)
 	local paragraph = currentDocument[currentDocument.cp]
 	local wd = paragraph:wrap()
-	wg.printerr(TableToString(wd))
 	local ln = paragraph:getLineOfWord(currentDocument.cw)
 	if not ln then
 		return false

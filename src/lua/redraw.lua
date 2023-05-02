@@ -4,8 +4,6 @@
 -- file in this distribution for the full text.
 
 local int = math.floor
-local min = math.min
-local max = math.max
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local ClearScreen = wg.clearscreen
@@ -63,7 +61,7 @@ function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
 	local w = GetMaximumAllowedWidth(ScreenWidth)
 	if currentDocument.margin > 0 then
-		papermargin = max(currentDocument.margin + 2, math.floor(ScreenWidth/2 - w/2))
+		papermargin = math.max(currentDocument.margin + 2, math.floor(ScreenWidth/2 - w/2))
 	else
 		papermargin = math.floor(ScreenWidth/2 - w/2)
 	end
@@ -463,7 +461,7 @@ function GetCharWithBlinkingCursor(timeout: number?)
 	local shown = true
 	while timeout > 0 do
 		local t = shown and BLINK_ON_TIME or BLINK_OFF_TIME
-		t = min(t, timeout)
+		t = math.min(t, timeout)
 		local c = wg.getchar(t)
 		if (c ~= "KEY_TIMEOUT") then
 			ShowCursor();

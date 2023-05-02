@@ -79,15 +79,17 @@ function Cmd.ConfigureDirectories()
 			value = settings.autosaves or "",
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Templates",
 		width = Form.Large,
 		height = 6,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 		
 		widgets = {
 			Form.Label {

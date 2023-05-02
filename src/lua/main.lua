@@ -115,7 +115,9 @@ function WordProcessor(filename)
     do
         local _, e = Mkdirs(CONFIGDIR)
         if e then
-            CLIError("cannot create configuration directory: "..e)
+            CLIError(string.format(
+                "cannot create configuration directory '%s': %s",
+                CONFIGDIR, e))
         end
 
         local function movefile(src: string, dest: string)

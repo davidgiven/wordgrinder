@@ -131,15 +131,17 @@ function Cmd.ConfigureScrapbook()
 			end
 		}
 	
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Timestamp",
 		width = Form.Large,
 		height = 9,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 		
 		widgets = {
 			Form.Label {

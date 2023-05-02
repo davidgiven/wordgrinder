@@ -307,15 +307,17 @@ function Cmd.ConfigureSpellchecker()
 			value = settings.useuserdictionary
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Spellchecker",
 		width = Form.Large,
 		height = 7,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			highlight_checkbox,

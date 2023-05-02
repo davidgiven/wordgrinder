@@ -35,7 +35,7 @@ function Cmd.ManageDocumentsUI()
 		end
 	}
 	
-	local function up_cb()
+	local function up_cb(self: Form): ActionResult
 		if (browser.cursor > 1) then
 			local document = browser.data[browser.cursor].document
 			documentSet:moveDocumentIndexTo(document.name, browser.cursor - 1)
@@ -45,7 +45,7 @@ function Cmd.ManageDocumentsUI()
 		return "nop"
 	end
 		
-	local function down_cb()
+	local function down_cb(self: Form): ActionResult
 		if (browser.cursor < #browser.data) then
 			documentSet:moveDocumentIndexTo(currentDocument.name, browser.cursor + 1)
 			browser.cursor = browser.cursor + 1
@@ -54,7 +54,7 @@ function Cmd.ManageDocumentsUI()
 		return "nop"
 	end
 		
-	local function rename_cb()
+	local function rename_cb(self: Form): ActionResult
 		local name = PromptForString("Change name of current document", "Please enter the new document name:", currentDocument.name)
 		if not name or (name == currentDocument.name) then
 			return "confirm"
@@ -68,7 +68,7 @@ function Cmd.ManageDocumentsUI()
 		return "confirm"
 	end
 		
-	local function delete_cb()
+	local function delete_cb(self: Form): ActionResult
 		if (#browser.data == 1) then
 			ModalMessage("Unable to delete document", "You can't delete the last document from the document set.")
 			return "confirm"
@@ -87,35 +87,37 @@ function Cmd.ManageDocumentsUI()
 		return "confirm"
 	end
 		
-	local function new_cb()
+	local function new_cb(self: Form): ActionResult
 		Cmd.AddBlankDocument()
 		return "confirm"
 	end
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Document Manager",
 		width = Form.Large,
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_RETURN"] = "cancel",
-		["KEY_ENTER"] = "cancel",
-		
-		["u"] = up_cb,
-		["U"] = up_cb,
-		
-		["d"] = down_cb,
-		["D"] = down_cb,
-		
-		["r"] = rename_cb,
-		["R"] = rename_cb,
-		
-		["x"] = delete_cb,
-		["X"] = delete_cb,
-		
-		["n"] = new_cb,
-		["N"] = new_cb,
+		actions = {
+			["KEY_RETURN"] = "cancel",
+			["KEY_ENTER"] = "cancel",
+			
+			["u"] = up_cb,
+			["U"] = up_cb,
+			
+			["d"] = down_cb,
+			["D"] = down_cb,
+			
+			["r"] = rename_cb,
+			["R"] = rename_cb,
+			
+			["x"] = delete_cb,
+			["X"] = delete_cb,
+			
+			["n"] = new_cb,
+			["N"] = new_cb,
+		},
 		
 		widgets = {
 			Form.Label {

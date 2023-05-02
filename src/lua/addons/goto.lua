@@ -16,15 +16,17 @@ local function gotobrowser(data, index)
 		cursor = index
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Table of Contents",
 		width = Form.Large,
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			Form.Label {

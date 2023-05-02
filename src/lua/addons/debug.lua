@@ -84,15 +84,17 @@ function Cmd.ConfigureDebug()
 			value = settings.currentword
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Debugging Options",
 		width = Form.Large,
 		height = 9,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 		
 		widgets = {
 			memory_checkbox,

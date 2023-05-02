@@ -85,26 +85,28 @@ function Cmd.ConfigureGui()
 			value = settings.font_bolditalic
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure GUI",
 		width = Form.Large,
 		height = 16,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-	
-		["KEY_^R"] = function()
-			windowwidth_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_width)
-			windowheight_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_height)
-			fontsize_textfield.value = tostring(DEFAULT_GUI_SETTINGS.font_size)
-			fontregular_textfield.value = DEFAULT_GUI_SETTINGS.font_regular
-			fontitalic_textfield.value = DEFAULT_GUI_SETTINGS.font_italic
-			fontbold_textfield.value = DEFAULT_GUI_SETTINGS.font_bold
-			fontbolditalic_textfield.value = DEFAULT_GUI_SETTINGS.font_bolditalic
-			return "redraw"
-		end,
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		
+			["KEY_^R"] = function()
+				windowwidth_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_width)
+				windowheight_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_height)
+				fontsize_textfield.value = tostring(DEFAULT_GUI_SETTINGS.font_size)
+				fontregular_textfield.value = DEFAULT_GUI_SETTINGS.font_regular
+				fontitalic_textfield.value = DEFAULT_GUI_SETTINGS.font_italic
+				fontbold_textfield.value = DEFAULT_GUI_SETTINGS.font_bold
+				fontbolditalic_textfield.value = DEFAULT_GUI_SETTINGS.font_bolditalic
+				return "redraw"
+			end,
+		},
 
 		widgets = {
 			windowwidth_textfield,

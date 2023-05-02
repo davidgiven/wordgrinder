@@ -21,9 +21,21 @@ local string_rep = string.rep
 
 ESCAPE_KEY = (FRONTEND == "ncurses") and "CTRL+C" or "ESCAPE"
 
-type Form = {
-	[string]: any,
+type FormCommand = "nop" | "confirm" | "redraw" | "cancel"
+type ActionResult = FormCommand | MenuCallback
+type FormAction = FormCommand | ((Form, any) -> ActionResult)
+type ActionTable = {[string]: FormAction}
 
+type Form = {
+	title: string,
+	width: number,
+	height: number,
+	stretchy: boolean?,
+	transient: boolean?,
+
+	focus: number?,
+
+	actions: ActionTable,
 	widgets: {Widget}
 }
 
@@ -40,7 +52,9 @@ Form.Large = {}
 
 -- Types.
 
-type Widget = any
+type Widget = {
+	[string]: any
+}
 
 local function makewidgetclass(class): ((any) -> Widget)
 	return function(table): Widget
@@ -499,19 +513,19 @@ Form.Browser = makewidgetclass {
 	end,
 }
 
-local standard_actions =
+local standard_actions: {[string]: FormAction} =
 {
-	["KEY_UP"] = function(dialogue: Form, key)
-		if dialogue.focus then
-			local f = dialogue.focus - 1
-			while (f ~= dialogue.focus) do
+	["KEY_UP"] = function(form: Form, key)
+		if form.focus then
+			local f = form.focus - 1
+			while (f ~= form.focus) do
 				if (f == 0) then
-					f = #dialogue
+					f = #form.widgets
 				end
 
-				local widget = dialogue[f]
+				local widget = form.widgets[f]
 				if widget.focusable then
-					dialogue.focus = f
+					form.focus = f
 					return "redraw"
 				end
 
@@ -522,17 +536,17 @@ local standard_actions =
 		return "nop"
 	end,
 
-	["KEY_DOWN"] = function(dialogue: Form, key)
-		if dialogue.focus then
-			local f = dialogue.focus + 1
-			while (f ~= dialogue.focus) do
-				if (f > #dialogue) then
+	["KEY_DOWN"] = function(form: Form, key)
+		if form.focus then
+			local f = form.focus + 1
+			while (f ~= form.focus) do
+				if (f > #form.widgets) then
 					f = 1
 				end
 
-				local widget = dialogue[f]
+				local widget = form.widgets[f]
 				if widget.focusable then
-					dialogue.focus = f
+					form.focus = f
 					return "redraw"
 				end
 
@@ -552,27 +566,28 @@ local function resolvesize(size, bound)
 	end
 end
 
-local function findaction(table: {[string]: any}, object, key)
+local function findaction(table: ActionTable, object, key: string): ActionResult?
 	local action = table[key]
-	if action and (type(action) == "function") then
-		action = action(object, key)
+	if action then
+		if type(action) == "function"  then
+			return action(object, key)
+		elseif type(action) == "string" then
+			return action::FormCommand
+		end
 	end
-	if not action and table.key then
-		action = table.key(object, key)
-	end
-	return action
+	return nil
 end
 
-local function findmouseaction(dialogue, m)
+local function findmouseaction(form, m)
 	local x = m.x
 	local y = m.y
-	for i, widget in dialogue.widgets do
+	for i, widget in form.widgets do
 		if (x >= widget.realx1) and (x <= widget.realx2)
 			and (y >= widget.realy1) and (y <= widget.realy2)
 		then
 			local action = nil
 			if m.b and widget.focusable then
-				dialogue.focus = i
+				form.focus = i
 				if widget.click then
 					action = widget:click(m)
 				end
@@ -586,18 +601,18 @@ local function findmouseaction(dialogue, m)
 	return nil
 end
 
-function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
-	local function redraw_dialogue()
+function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
+	local function redraw_form()
 		-- Ensure the screen is properly sized.
 
 		ResizeScreen()
 
 		-- Find a widget to give the focus to.
 
-		if not dialogue.focus then
-			for i, widget in dialogue.widgets do
+		if not form.focus then
+			for i, widget in form.widgets do
 				if widget.focusable then
-					dialogue.focus = i
+					form.focus = i
 					break
 				end
 			end
@@ -605,7 +620,7 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 
 		-- Initialise any widgets that need it.
 
-		for _, widget in dialogue.widgets do
+		for _, widget in form.widgets do
 			if widget.init then
 				widget:init()
 			end
@@ -617,29 +632,32 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 			redraw()
 		end
 
-		-- Size the dialogue.
+		-- Size the form.
 
-		if (dialogue.width == Form.Large) then
-			dialogue.realwidth = int(ScreenWidth * 6/7)
+		local realwidth = 0
+		local realheight = 0
+
+		if (form.width == Form.Large) then
+			realwidth = int(ScreenWidth * 6/7)
 		else
-			dialogue.realwidth = dialogue.width
+			realwidth = form.width
 		end
 
-		if (dialogue.height == Form.Large) then
-			dialogue.realheight = int(ScreenHeight * 5/6)
+		if (form.height == Form.Large) then
+			realheight = int(ScreenHeight * 5/6)
 		else
-			dialogue.realheight = dialogue.height
+			realheight = form.height
 		end
 
-		-- Is this a stretchy dialogue?
+		-- Is this a stretchy form?
 
-		if dialogue.stretchy then
+		if form.stretchy then
 			-- Automatically scale the height depending on a 'stretchy' widget.
 
-			for _, widget in dialogue.widgets do
+			for _, widget in form.widgets do
 				if (widget.y1 > 0) and (widget.y2 < 0) then
-					widget.realx1 = resolvesize(widget.x1, dialogue.realwidth)
-					widget.realx2 = resolvesize(widget.x2, dialogue.realwidth)
+					widget.realx1 = resolvesize(widget.x1, realwidth)
+					widget.realx2 = resolvesize(widget.x2, realwidth)
 					widget.realwidth = widget.realx2 - widget.realx1
 
 					local h = 1
@@ -647,29 +665,29 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 						h = widget:calculate_height()
 					end
 
-					dialogue.realheight = dialogue.height + h
+					realheight = form.height + h
 					break
 				end
 			end
 		end
 
-		-- Place the dialogue.
+		-- Place the form.
 
-		dialogue.realx = int(ScreenWidth/2 - dialogue.realwidth/2)
-		dialogue.realy = int(ScreenHeight/2 - dialogue.realheight/2)
+		local realx = int(ScreenWidth/2 - realwidth/2)
+		local realy = int(ScreenHeight/2 - realheight/2)
 
-		-- Place all widgets in the dialogue.
+		-- Place all widgets in the form.
 
-		for _, widget in dialogue.widgets do
-			widget.realx1 = resolvesize(widget.x1, dialogue.realwidth) + dialogue.realx
-			widget.realy1 = resolvesize(widget.y1, dialogue.realheight) + dialogue.realy
-			widget.realx2 = resolvesize(widget.x2, dialogue.realwidth) + dialogue.realx
-			widget.realy2 = resolvesize(widget.y2, dialogue.realheight) + dialogue.realy
+		for _, widget in form.widgets do
+			widget.realx1 = resolvesize(widget.x1, realwidth) + realx
+			widget.realy1 = resolvesize(widget.y1, realheight) + realy
+			widget.realx2 = resolvesize(widget.x2, realwidth) + realx
+			widget.realy2 = resolvesize(widget.y2, realheight) + realy
 			widget.realwidth = widget.realx2 - widget.realx1
 			widget.realheight = widget.realy2 - widget.realy1
 		end
 
-		-- Draw the dialogue itself.
+		-- Draw the form itself.
 
 		SetColour(Palette.ControlFG, Palette.ControlBG)
 		do
@@ -677,42 +695,42 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 			if helptext then
 				sizeadjust = 1
 			end
-			DrawTitledBox(dialogue.realx - 1, dialogue.realy - 1,
-				dialogue.realwidth, dialogue.realheight + sizeadjust,
-				dialogue.title)
+			DrawTitledBox(realx - 1, realy - 1,
+				realwidth, realheight + sizeadjust,
+				form.title)
 
 			if helptext then
-				CentreInField(dialogue.realx, dialogue.realy + dialogue.realheight,
-					dialogue.realwidth, "<"..helptext..">")
+				CentreInField(realx, realy + realheight,
+					realwidth, "<"..helptext..">")
 			end
 		end
 
 		-- Draw the widgets.
 
 		GotoXY(ScreenWidth-1, ScreenHeight-1)
-		for i, widget in dialogue.widgets do
-			widget.focus = (i == dialogue.focus)
+		for i, widget in form.widgets do
+			widget.focus = (i == form.focus)
 			widget:draw()
 		end
 
-		dialogue.transient = false
+		form.transient = false
 	end
 
 	-- Process keys.
 
-	redraw_dialogue()
+	redraw_form()
 	while not Quitting do
 		HideCursor()
-		local key = if dialogue.focus then
+		local key = if form.focus then
 			GetCharWithBlinkingCursor() else GetChar()
 
-		if dialogue.transient then
-			redraw_dialogue()
+		if form.transient then
+			redraw_form()
 		end
 
 		if (key == "KEY_RESIZE") then
 			ResizeScreen()
-			redraw_dialogue()
+			redraw_form()
 		end
 		if (key == "KEY_QUIT") then
 			QuitForcedBySystem()
@@ -720,10 +738,10 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 
 		local action = nil
 		if type(key) == "table" then
-			action = findmouseaction(dialogue, key)
+			action = findmouseaction(form, key)
 		else
-			if dialogue.focus then
-				local w = dialogue[dialogue.focus]
+			if form.focus then
+				local w = form.widgets[form.focus]
 				action = findaction(w, w, key)
 			end
 
@@ -733,8 +751,8 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 				elseif key == "KEY_ESCAPE" then
 					action = "cancel"
 				else
-					action = findaction(dialogue, dialogue, key) or
-						findaction(standard_actions, dialogue, key)
+					action = findaction(form.actions, form, key) or
+						findaction(standard_actions, form, key)
 				end
 			end
 		end
@@ -744,7 +762,7 @@ function Form.Run(dialogue: Form, redraw: (() -> ())?, helptext: string?)
 		elseif (action == "confirm") then
 			return true
 		elseif (action == "redraw") then
-			redraw_dialogue()
+			redraw_form()
 		end
 	end
 	return false

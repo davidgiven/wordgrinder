@@ -83,14 +83,16 @@ function ImmediateMessage(text)
 end
 
 function ModalMessage(title: string?, message: string)
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = title or "Message",
 		width = Form.Large,
 		height = 2,
 		stretchy = true,
 
-		[" "] = "confirm",
+		actions = {
+			[" "] = "confirm",
+		},
 
 		widgets = {
 			Form.WrappedLabel {
@@ -108,27 +110,29 @@ end
 function PromptForYesNo(title, message)
 	local result = nil
 
-	local function rtrue()
+	local function rtrue(self: Form): ActionResult
 		result = true
 		return "confirm"
 	end
 
-	local function rfalse()
+	local function rfalse(self: Form): ActionResult
 		result = false
 		return "confirm"
 	end
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = title or "Message",
 		width = Form.Large,
 		height = 2,
 		stretchy = true,
 
-		["n"] = rfalse,
-		["N"] = rfalse,
-		["y"] = rtrue,
-		["Y"] = rtrue,
+		actions = {
+			["n"] = rfalse,
+			["N"] = rfalse,
+			["y"] = rtrue,
+			["Y"] = rtrue,
+		},
 
 		widgets = {
 			Form.WrappedLabel {
@@ -157,15 +161,17 @@ function PromptForString(title: string, message: string, default: string?)
 		x1 = 1, y1 = -4, x2 = -1, y2 = -3,
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = title,
 		width = Form.Large,
 		height = 4,
 		stretchy = true,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			Form.WrappedLabel {
@@ -206,14 +212,16 @@ function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 		x1 = 11, y1 = 3, x2 = -1, y2 = 4,
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Find and Replace",
 		width = Form.Large,
 		height = 5,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			Form.Label {
@@ -245,15 +253,17 @@ function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 end
 
 function AboutDialogue()
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "About WordGrinder",
 		width = Form.Large,
 		height = 12,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		[" "] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+			[" "] = "confirm",
+		},
 
 		widgets = {
 			Form.Label {

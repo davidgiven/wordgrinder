@@ -345,8 +345,8 @@ function MenuTree.drawmenu(self, x: number, y: number, menu: Menu, n: number, to
 
 	local w = menu.maxwidth + 4 + akw
 	menu.realwidth = w
-	local visiblelen = min(#menu, ScreenHeight-y-3)
-	top = max(1, min(#menu - visiblelen + 1, top))
+	local visiblelen = math.min(#menu, ScreenHeight-y-3)
+	top = math.max(1, math.min(#menu - visiblelen + 1, top))
 	SetColour(Palette.ControlFG, Palette.ControlBG)
 	DrawTitledBox(x, y, w, visiblelen, menu.label)
 
@@ -425,7 +425,7 @@ function MenuTree.runmenu(self, x: number, y: number, menu: Menu): boolean?
 		local item
 
 		while not Quitting do
-			local visiblelen = min(#menu, ScreenHeight-y-3)
+			local visiblelen = math.min(#menu, ScreenHeight-y-3)
 			if (n < top) then
 				top = n
 			end
@@ -486,9 +486,9 @@ function MenuTree.runmenu(self, x: number, y: number, menu: Menu): boolean?
 						n = n + 1
 					end
 				elseif (c == "KEY_PGDN") then
-					n = int(min(n + visiblelen/2, #menu))
+					n = int(math.min(n + visiblelen/2, #menu))
 				elseif (c == "KEY_PGUP") then
-					n = int(max(n - visiblelen/2, 1))
+					n = int(math.max(n - visiblelen/2, 1))
 				elseif (c == "KEY_RETURN") or (c == "KEY_RIGHT") then
 					if (typeof(menu[n]) ~= "string") then
 						item = menu[n]

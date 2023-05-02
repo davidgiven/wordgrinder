@@ -238,15 +238,17 @@ function Cmd.ConfigureSmartQuotes()
 			value = settings.notinraw
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Smart Quotes",
 		width = Form.Large,
 		height = 13,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			single_checkbox,

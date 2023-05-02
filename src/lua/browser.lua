@@ -3,8 +3,6 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local min = min
-local max = max
 local int = math.floor
 local string_rep = string.rep
 local table_sort = table.sort
@@ -186,7 +184,7 @@ function Autocomplete(filename: string, x1: number, x2: number, y: number)
 
 	-- Display the autocompletion list to the user.
 	local boxw = x2 - x1
-	local boxh = min(y-1, #candidates)
+	local boxh = math.min(y-1, #candidates)
 	local boxx = x1
 	local boxy = y - 1 - boxh
 	DrawBox(boxx, boxy, boxw, boxh)
@@ -230,7 +228,7 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 		end,
 	}
 		
-	local function navigate(self, key)
+	local function navigate(self: Form, key: KeyboardEvent)
 		local action = browser[key](browser)
 		textfield.value = data[browser.cursor].data
 		textfield.cursor = textfield.value:len() + 1
@@ -240,7 +238,7 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 		return action
 	end
 
-	local function autocomplete(self)
+	local function autocomplete(self: Form): ActionResult
 		textfield.value = Autocomplete(textfield.value,
 			textfield.realx1-1, textfield.realx2-1, textfield.realy1)
 		textfield.cursor = textfield.value:len() + 1
@@ -251,7 +249,7 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 		return "nop"
 	end
 
-	local function go_to_parent(self, key)
+	local function go_to_parent(self: Form): ActionResult
 		textfield.value = ".."
 		return "confirm"
 	end
@@ -270,17 +268,19 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 		height = Form.Large,
 		stretchy = false,
 
-		["KEY_^P"] = go_to_parent,
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		["KEY_UP"] = navigate,
-		["KEY_DOWN"] = navigate,
-		["KEY_PGDN"] = navigate,
-		["KEY_PGUP"] = navigate,
+		actions = {
+			["KEY_^P"] = go_to_parent,
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 			
-		["KEY_TAB"] = autocomplete,
-		["KEY_^I"] = autocomplete,
+			["KEY_UP"] = navigate,
+			["KEY_DOWN"] = navigate,
+			["KEY_PGDN"] = navigate,
+			["KEY_PGUP"] = navigate,
+				
+			["KEY_TAB"] = autocomplete,
+			["KEY_^I"] = autocomplete,
+		},
 
 		widgets = {
 			Form.Label {

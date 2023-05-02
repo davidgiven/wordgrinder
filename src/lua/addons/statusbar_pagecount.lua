@@ -57,15 +57,17 @@ function Cmd.ConfigurePageCount()
 			value = tostring(settings.wordsperpage)
 		}
 		
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Page Count",
 		width = Form.Large,
 		height = 5,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 		
 		widgets = {
 			enabled_checkbox,

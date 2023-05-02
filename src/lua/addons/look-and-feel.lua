@@ -155,15 +155,17 @@ function Cmd.ConfigureLookAndFeel()
 			value = find(SCROLLMODES, settings.scrollmode)
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Look and Feel",
 		width = Form.Large,
 		height = 15,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
 		widgets = {
 			enabled_checkbox,
