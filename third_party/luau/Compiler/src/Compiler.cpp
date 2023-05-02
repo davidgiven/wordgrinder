@@ -3651,6 +3651,11 @@ struct Compiler
         {
             // do nothing
         }
+		else if (node->is<AstStatDeclareGlobal>() || node->is<AstStatDeclareClass>()
+			|| node->is<AstStatDeclareFunction>())
+		{
+			// do nothing
+		}
         else
         {
             LUAU_ASSERT(!"Unknown statement type");
