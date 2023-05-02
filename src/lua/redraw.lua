@@ -87,7 +87,7 @@ local function drawmargin(y, pn, p)
 	local style = documentStyles[p.style]
 	local function drawbullet(n)
 		local w = GetStringWidth(n) + 1
-		local i = style.indent
+		local i = (style.indent or 0)
 		if (i >= w) then
 			SetNormal()
 			SetColour(Palette.LB_FG, Palette.LB_BG)
@@ -130,7 +130,7 @@ local function redrawstatus()
 		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
 
-		local ss = {}
+		local ss: {StatusbarField} = {}
 		FireEvent("BuildStatusBar", ss)
 		table.sort(ss, function(x, y) return x.priority < y.priority end)
 
@@ -231,11 +231,11 @@ function RedrawScreen()
 
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
-	if not currentDocument.sp then
-		currentDocument.sp = currentDocument.cp
-		currentDocument.sw = currentDocument.cw
+	if not currentDocument._sp then
+		currentDocument._sp = currentDocument.cp
+		currentDocument._sw = currentDocument.cw
 	end
-	local sp, sw = currentDocument.sp, currentDocument.sw
+	local sp, sw = assert(currentDocument._sp), assert(currentDocument._sw)
 	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	local tx = papermargin + 1
 
@@ -254,11 +254,11 @@ function RedrawScreen()
 
 	local paragraph = currentDocument[sp]
 	local osw = sw
-	local sl
-	sl, sw = paragraph:getLineOfWord(sw)
+	local sl, sw = paragraph:getLineOfWord(sw)
 	if not sl then
 		sl = #paragraph:wrap()
 	end
+	assert(sl)
 
 	-- So, line sl on sp is supposed to be in the middle. We now work up
 	-- and down to find the real cursor position.
@@ -273,8 +273,8 @@ function RedrawScreen()
 		end
 		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy >= (ScreenHeight-5) then
-			currentDocument.sp = cp
-			currentDocument.sw = cw
+			currentDocument._sp = cp
+			currentDocument._sw = cw
 			return RedrawScreen()
 		end
 	else
@@ -286,8 +286,8 @@ function RedrawScreen()
 		end
 		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy < 4 then
-			currentDocument.sp = cp
-			currentDocument.sw = cw
+			currentDocument._sp = cp
+			currentDocument._sw = cw
 			return RedrawScreen()
 		end
 	end
@@ -296,9 +296,10 @@ function RedrawScreen()
 
 	do
 		local paragraph = currentDocument[cp]
+		local wd = paragraph:wrap()
 		local word = paragraph[cw]
 		local cl = paragraph:getLineOfWord(cw)
-		GotoXY(tx + paragraph.xs[cw] +
+		GotoXY(tx + wd.xs[cw] +
 			GetWidthFromOffset(word, currentDocument.co) + paragraph:getIndentOfLine(cl),
 			cy)
 	end
@@ -312,7 +313,7 @@ function RedrawScreen()
 	local lm = papermargin
 	local rm = ScreenWidth - lm - 1
 
-	local function setparacolour(paragraph)
+	local function setparacolour(paragraph: Paragraph)
 		SetColour(
 			Palette[paragraph.style.."_FG"],
 			Palette[paragraph.style.."_BG"])
@@ -335,7 +336,7 @@ function RedrawScreen()
 	end
 	lineindex = {}
 
-	local function drawline(paragraph, line, ln)
+	local function drawline(paragraph: Paragraph, line: Line, ln: number)
 		local x = paragraph:getIndentOfLine(ln)
 
 		setparacolour(paragraph)

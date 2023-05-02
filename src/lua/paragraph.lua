@@ -49,10 +49,10 @@ type Paragraph = {
 	wrap: (self: Paragraph, width: number?) -> WrapData,
 	renderLine: (self: Paragraph, line: Line, x: number, y: number) -> (),
 	renderMarkedLine: (self: Paragraph,
-		line: Line, x: number, y: number, width: number, pn: number) -> (),
-	getLineOfWord: (self: Paragraph, wn: number) -> (number?, number?),
+		line: Line, x: number, y: number, width: number?, pn: number) -> (),
+	getLineOfWord: (self: Paragraph, wn: number) -> (number, number),
 	getIndentOfLine: (self: Paragraph, ln: number) -> number,
-	getWordOfLine: (self: Paragraph, ln:number) -> number,
+	getWordOfLine: (self: Paragraph, ln: number) -> number,
 	getXOffsetOfWord: (self: Paragraph, wn: number) -> (number, number, number),
 	sub: (self: Paragraph, start: number, count: number?) -> {string},
 	asString: (self: Paragraph) -> string,
@@ -258,7 +258,7 @@ function Paragraph.renderMarkedLine(self: Paragraph, line, x, y, width, pn): ()
 end
 
 -- returns: line number, word number in line
-function Paragraph.getLineOfWord(self: Paragraph, wn: number): (number?, number?)
+function Paragraph.getLineOfWord(self: Paragraph, wn: number): (number, number)
 	local wd = self:wrap()
 	for ln, l in wd.lines do
 		if (wn <= #l) then
@@ -268,7 +268,7 @@ function Paragraph.getLineOfWord(self: Paragraph, wn: number): (number?, number?
 		wn = wn - #l
 	end
 
-	return nil, nil
+	error("word out of range")
 end
 
 -- returns: number of characters

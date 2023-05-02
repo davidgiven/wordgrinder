@@ -8,6 +8,8 @@
 declare Cmd: {[string]: any}
 Cmd = {}
 
+declare Form: {[string]: any}
+
 declare MenuTree: {[string]: any}
 declare M: {[string]: any}
 declare GlobalSettings: {[string]: {[any]: any}}
@@ -19,6 +21,8 @@ declare ScreenWidth: number
 declare ScreenHeight: number
 declare Palette: ColourMap
 
+declare ESCAPE_KEY: string
+
 declare BLINK_ON_TIME: number
 declare BLINK_OFF_TIME: number
 declare IDLE_TIME: number
@@ -26,6 +30,11 @@ declare IDLE_TIME: number
 BLINK_ON_TIME = 0.8
 BLINK_OFF_TIME = 0.53
 IDLE_TIME = (BLINK_ON_TIME + BLINK_OFF_TIME) * 5
+
+type StatusbarField = {
+	priority: number,
+	value: string
+}
 
 -- Polyfills for Luau.
 

@@ -166,13 +166,16 @@ end
 -----------------------------------------------------------------------------
 -- Actually sets a style for drawing.
 
-function SetColour(fg: Colour, bg: Colour)
+function SetColour(fg: Colour?, bg: Colour?)
 	if not fg then
 		fg = {1.0, 1.0, 1.0}
 	end
+	assert(fg)
+
 	if not bg then
 		bg = {0.0, 0.0, 0.0}
 	end
+	assert(bg)
 
 	wg.setcolour(fg, bg)
 end

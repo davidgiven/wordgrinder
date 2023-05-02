@@ -66,6 +66,7 @@ type Document = {
 	redostack: nil,
 
 	-- Transient data, not stored in files.
+	_changed: boolean,
 	_undostack: {ShadowDocument}?,
 	_redostack: {ShadowDocument}?,
 	_wrapwidth: number?,
@@ -73,6 +74,8 @@ type Document = {
 	_topw: number?, -- word number of top of screen
 	_botp: number?, -- paragraph number of bottom of screen
 	_botw: number?, -- word number of bottom of screen
+	_sp: number?, -- redraw point on screen, paragraph
+	_sw: number?, -- redraw point on screen, word
 
 	cp: number,
 	cw: number,

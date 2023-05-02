@@ -42,22 +42,6 @@ Form.Large = {}
 
 type Widget = any
 
-local function min<T>(a: T, b: T): T
-	if (a < b) then
-		return a
-	else
-		return b
-	end
-end
-
-local function max<T>(a: T, b: T): T
-	if (a > b) then
-		return a
-	else
-		return b
-	end
-end
-
 local function makewidgetclass(class): ((any) -> Widget)
 	return function(table): Widget
 		setmetatable(table, {__index = class})
@@ -395,10 +379,10 @@ Form.Browser = makewidgetclass {
 			self.offset = self.cursor - int(h/2)
 		end
 
-		self.offset = min(self.offset, self.cursor)
-		self.offset = max(self.offset, self.cursor - (h-2))
-		self.offset = min(self.offset, #self.data - (h-2))
-		self.offset = max(self.offset, 1)
+		self.offset = math.min(self.offset, self.cursor)
+		self.offset = math.max(self.offset, self.cursor - (h-2))
+		self.offset = math.min(self.offset, #self.data - (h-2))
+		self.offset = math.max(self.offset, 1)
 	end,
 
 	changed = function(self: Widget)

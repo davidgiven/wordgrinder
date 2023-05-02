@@ -95,15 +95,6 @@ declare wg: {
 	ENOENT: number,
 }
 
-declare FRONTEND: string
-declare DEBUG: boolean
-declare VERSION: string
-declare FILEFORMAT: number
-declare ARCH: string
-declare HOME: string
-declare CONFIGDIR: string
-declare WINDOWS_INSTALL_DIR: string?
-
 declare function CMarkParse(data: string): Markdown
 declare function CMarkIterate(node: Markdown): MarkdownIterator
 declare function CMarkNext(iter: MarkdownIterator): (number, number, Markdown, string?)
@@ -153,8 +144,14 @@ declare function UnSmartquotify(s: string): string
 declare function CLIError(...: string)
 declare function CliConvert(opt1: string, opt2: string): never
 declare function EngageCLI()
-declare function SetColour(fg: Colour, bg: Colour)
+declare function SetColour(fg: Colour?, bg: Colour?)
 declare function RebuildDocumentsMenu(s: any)
 declare function WantFullStopSpaces(): boolean
 declare function WantDenseParagraphLayout(): boolean
+declare function GetMaximumAllowedWidth(w: number): number
+declare function WantTerminators(): boolean
+declare function CentreInField(x: number, y: number, w: number, s: string)
+declare function LAlignInField(x: number, y: number, w: number, s: string)
+declare function RAlignInField(x: number, y: number, w: number, s: string)
+declare function GetScrollMode(): string
 

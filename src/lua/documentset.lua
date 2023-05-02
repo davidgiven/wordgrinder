@@ -32,19 +32,21 @@ type DocumentSet = {
 	name: string,
 	menu: MenuTree,
 	current: Document,
-	changed: boolean,
-	justchanged: boolean,
-	documents: {[string|number]: Document},
+	documents: {[number]: Document},
 	clipboard: Document?,
 	statusbar: boolean,
+
+	_documentIndex: {[string]: Document},
+	_changed: boolean,
+	_justchanged: boolean,
 
 	touch: (self: DocumentSet) -> (),
 	clean: (self: DocumentSet) -> (),
 	getDocumentList: (self: DocumentSet) -> {Document},
-	_findDocument: (self: DocumentSet, name: string) -> Document?,
+	_findDocument: (self: DocumentSet, name: string) -> number?,
 	findDocument: (self: DocumentSet, name: string) -> Document?,
 	addDocument: (self: DocumentSet, name: string, index: number)
-		-> currentDocument,
+		-> Document,
 	moveDocumentIndexTo: (self: DocumentSet, name: string, targetIndex: number)
 		-> (),
 	deleteDocument: (self: DocumentSet, name: string) -> boolean,
@@ -61,6 +63,7 @@ function CreateDocumentSet(): DocumentSet
 		fileformat = FILEFORMAT,
 		statusbar = true,
 		documents = {},
+		_documentIndex = {},
 		addons = {},
 	}
 
@@ -68,21 +71,21 @@ function CreateDocumentSet(): DocumentSet
 end
 
 DocumentSet.touch = function(self: DocumentSet)
-	self.changed = true
-	self.justchanged = true
+	self._changed = true
+	self._justchanged = true
 end
 
 DocumentSet.clean = function(self: DocumentSet)
-	self.changed = nil
-	self.justchanged = nil
+	self._changed = false
+	self._justchanged = false
 end
 
 DocumentSet.getDocumentList = function(self: DocumentSet)
 	return self.documents
 end
 
-DocumentSet._findDocument = function(self: DocumentSet, name)
-	for i, d in ipairs(self.documents) do
+DocumentSet._findDocument = function(self: DocumentSet, name): number?
+	for i, d in self.documents do
 		if (d.name == name) then
 			return i
 		end
@@ -91,7 +94,7 @@ DocumentSet._findDocument = function(self: DocumentSet, name)
 end
 
 DocumentSet.findDocument = function(self: DocumentSet, name: string)
-	local document = self.documents[name]
+	local document = self._documentIndex[name]
 	if not document then
 		document = self.documents[self:_findDocument(name)]
 		if document then
@@ -108,7 +111,7 @@ DocumentSet.addDocument = function(self, document, name, index)
 
 	local n = self:_findDocument(name) or (#self.documents + 1)
 	self.documents[n] = document
-	self.documents[name] = document
+	self._documentIndex[name] = document
 	if not self.current or (self.current.name == name) then
 		self:setCurrent(name)
 	end
@@ -142,8 +145,8 @@ DocumentSet.deleteDocument = function(self, name)
 	end
 	local document = self.documents[n]
 
-	table_remove(self.documents, n)
-	self.documents[name] = nil
+	table.remove(self.documents, n)
+	self._documentIndex[name] = nil
 
 	self:touch()
 	RebuildDocumentsMenu(self.documents)
@@ -163,11 +166,11 @@ end
 DocumentSet.setCurrent = function(self, name)
 	-- Ensure any housekeeping on the current document gets done.
 
-	if currentDocument.changed then
+	if currentDocument._changed then
 		FireEvent("Changed")
 	end
 
-	currentDocument = self.documents[name]
+	currentDocument = self._documentIndex[name]
 	if not currentDocument then
 		currentDocument = self.documents[1]
 	end

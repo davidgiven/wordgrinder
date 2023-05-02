@@ -559,8 +559,9 @@ local function loadfromstreamt(fp): DocumentSet
 	end
 
 	-- Patch up document names.
+	data._documentIndex = {}
 	for i, d in data.documents do
-		data.documents[d.name] = d
+		data._documentIndex[d.name] = d
 	end
 	data.current = data.documents[data.current :: any]
 

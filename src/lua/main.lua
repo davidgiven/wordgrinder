@@ -27,6 +27,14 @@ declare function GroupCallback(s: any): () -> (any?, any?)
 
 declare HOME: string
 declare CONFIGDIR: string
+declare FRONTEND: string
+declare DEBUG: boolean
+declare VERSION: string
+declare FILEFORMAT: number
+declare ARCH: string
+declare HOME: string
+declare WINDOWS_INSTALL_DIR: string?
+
 HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE")
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
