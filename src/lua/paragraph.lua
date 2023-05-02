@@ -27,7 +27,14 @@ local Paragraph = {}
 Paragraph.__index = Paragraph
 _G.Paragraph = Paragraph
 
-type Line = {[number]: string, wn: number}
+type Line = {[number]: number, wn: number}
+
+type WrapData = {
+	wrapwidth: number,
+	sentences: {[number]: boolean},
+	lines: {Line},
+	xs: {number},
+}
 
 type Paragraph = {
 	[number]: string,
@@ -35,21 +42,18 @@ type Paragraph = {
 
 	number: number,
 	style: string,
-	wrapwidth: number?,
-	sentences: {[number]: boolean}?,
-	lines: {{[number]: number, wn: number}}?,
-	xs: {number}?,
+
+	_wrapdata: WrapData?,
 
 	copy: (self: Paragraph) -> Paragraph,
-	touch: (self: Paragraph) -> (),
-	wrap: (self: Paragraph, width: number?) -> {Line},
+	wrap: (self: Paragraph, width: number?) -> WrapData,
 	renderLine: (self: Paragraph, line: Line, x: number, y: number) -> (),
 	renderMarkedLine: (self: Paragraph,
 		line: Line, x: number, y: number, width: number, pn: number) -> (),
 	getLineOfWord: (self: Paragraph, wn: number) -> (number?, number?),
 	getIndentOfLine: (self: Paragraph, ln: number) -> number,
-	getWordOfLine: (self: Paragraph, ln:number ) -> number,
-	getXOffsetOfWord: (self: Paragraph, wn: number) -> number,
+	getWordOfLine: (self: Paragraph, ln:number) -> number,
+	getXOffsetOfWord: (self: Paragraph, wn: number) -> (number, number, number),
 	sub: (self: Paragraph, start: number, count: number?) -> {string},
 	asString: (self: Paragraph) -> string,
 }
@@ -98,19 +102,18 @@ function Paragraph.copy(self: Paragraph): Paragraph
 	return CreateParagraph(self.style, words)
 end
 
-function Paragraph.touch(self: Paragraph)
-	self.lines = nil
-	self.wrapwidth = nil
-	self.xs = nil
-	self.sentences = nil
-end
-
 function Paragraph.wrap(self: Paragraph, width: number?): ()
-	local sentences = self.sentences
-	if (sentences == nil) then
+	width = width or currentDocument._wrapwidth or 80
+	assert(width)
+
+	if not self._wrapdata or self._wrapdata.wrapwidth ~= width then
+		local wrapdata = {}
+		wrapdata.wrapwidth = width
+
+		-- Recompute sentences.
+		
 		local issentence = true
-		sentences = {}
-		assert(sentences)
+		local sentences = {}
 		for wn, word in self do
 			if issentence then
 				sentences[wn] = true
@@ -122,18 +125,15 @@ function Paragraph.wrap(self: Paragraph, width: number?): ()
 			end
 		end
 		sentences[#self] = true
-		self.sentences = sentences
-	end
+		wrapdata.sentences = sentences
 
-	width = width or currentDocument.wrapwidth
-	assert(width)
-	if (self.wrapwidth ~= width) then
+		-- Recompute line wrapping.
+		
 		local lines = {}
 		local line = {wn = 1}
 		local w = 0
 		local xs = {}
 		local fullstopspaces = WantFullStopSpaces()
-		self.xs = xs
 
 		width = width - self:getIndentOfLine(1)
 
@@ -165,16 +165,19 @@ function Paragraph.wrap(self: Paragraph, width: number?): ()
 			lines[#lines+1] = line
 		end
 
-		self.lines = lines
+		wrapdata.lines = lines
+		wrapdata.xs = xs
+		self._wrapdata = wrapdata
+		return wrapdata
+	else
+		return self._wrapdata
 	end
-
-	return self.lines
 end
 
 function Paragraph.renderLine(self: Paragraph, line, x: number, y: number): ()
 	local cstyle = stylemarkup[self.style] or 0
 	local ostyle = 0
-	local xs = self.xs
+	local wd = self:wrap()
 
 	for _, wn in ipairs(line) do
 		local w = self[wn]
@@ -183,12 +186,12 @@ function Paragraph.renderLine(self: Paragraph, line, x: number, y: number): ()
 			word = w,
 			ostyle = ostyle,
 			cstyle = cstyle,
-			firstword = assert(self.sentences)[wn]
+			firstword = wd.sentences[wn]
 		}
 		FireEvent("DrawWord", payload)
 
 		ostyle = WriteStyled(
-			x+assert(xs)[wn], y,
+			x+wd.xs[wn], y,
 			payload.word,
 			payload.ostyle, 0, 0, payload.cstyle)
 	end
@@ -240,23 +243,24 @@ function Paragraph.renderMarkedLine(self: Paragraph, line, x, y, width, pn): ()
 			end
 		end
 
+		local wd = self:wrap()
 		local payload = {
 			word = self[w],
 			ostyle = ostyle,
 			cstyle = cstyle,
-			firstword = assert(self.sentences)[wn]
+			firstword = wd.sentences[wn]
 		}
 		FireEvent("DrawWord", payload)
 
-		ostyle = WriteStyled(x+assert(self.xs)[w], y, payload.word,
+		ostyle = WriteStyled(x+wd.xs[w], y, payload.word,
 			payload.ostyle, s, e, payload.cstyle)
 	end
 end
 
 -- returns: line number, word number in line
 function Paragraph.getLineOfWord(self: Paragraph, wn: number): (number?, number?)
-	local lines = self:wrap()
-	for ln, l in ipairs(lines) do
+	local wd = self:wrap()
+	for ln, l in wd.lines do
 		if (wn <= #l) then
 			return ln, wn
 		end
@@ -273,21 +277,21 @@ function Paragraph.getIndentOfLine(self: Paragraph, ln: number): number
 	if (ln == 1) then
 		indent = documentStyles[self.style].firstindent
 	end
-	indent = indent or documentStyles[self.style].indent or 0
+	local indent = indent or documentStyles[self.style].indent or 0
 	return indent
 end
 
 -- returns: word number
-function Paragraph.getWordOfLine(self: Paragraph, ln:number ): number
-	local lines = self:wrap()
-	return lines[ln].wn
+function Paragraph.getWordOfLine(self: Paragraph, ln: number): number
+	local wd = self:wrap()
+	return wd.lines[ln].wn
 end
 
 -- returns: X offset, line number, word number in line
 function Paragraph.getXOffsetOfWord(self: Paragraph, wn: number):
 		(number, number, number)
-	local lines = self:wrap()
-	local x = assert(self.xs)[wn]
+	local wd = self:wrap()
+	local x = wd.xs[wn]
 	local ln, wn = self:getLineOfWord(wn)
 	return x, assert(ln), assert(wn)
 end

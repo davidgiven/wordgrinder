@@ -56,7 +56,7 @@ function Cmd.Goto()
 	for paran, para in ipairs(currentDocument) do
 		local _, _, level = para.style:find("^H(%d)$")
 		if level then
-			level = tonumber(level)
+			local level = assert(tonumber(level))
 
 			-- Update the array of section counts. Remember that subsections
 			-- are local to their section, so make sure to zero out the

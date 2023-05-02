@@ -221,7 +221,7 @@ function Cmd.FindNextMisspeltWord()
 
 	local sp, sw, so
 	if currentDocument.mp then
-		sp, sw, so = currentDocument.mp, currentDocument.mw + 1, 1
+		sp, sw, so = assert(currentDocument.mp), assert(currentDocument.mw) + 1, 1
 		if sw > #currentDocument[sp] then
 			sw = 1
 			sp = sp + 1
@@ -240,7 +240,8 @@ function Cmd.FindNextMisspeltWord()
 	while true do
 		local paragraph = currentDocument[cp]
 		local word = paragraph[cw]
-		if IsWordMisspelt(word, paragraph.sentences[cw]) then
+		local wrapdata = paragraph:wrap()
+		if IsWordMisspelt(word, wrapdata.sentences[cw]) then
 			currentDocument.cp = cp
 			currentDocument.cw = cw
 			currentDocument.co = #word + 1

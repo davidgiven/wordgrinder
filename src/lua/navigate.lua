@@ -139,12 +139,12 @@ function Cmd.GotoPreviousChar()
 	local co = PrevCharInWord(word, currentDocument.co)
 	if not co then
 		return false
+	else
+		currentDocument.co = co
+
+		QueueRedraw()
+		return true
 	end
-
-	currentDocument.co = co
-
-	QueueRedraw()
-	return true
 end
 
 function Cmd.GotoNextChar()
@@ -152,12 +152,12 @@ function Cmd.GotoNextChar()
 	local co = NextCharInWord(word, currentDocument.co)
 	if not co then
 		return false
+	else
+		currentDocument.co = co
+
+		QueueRedraw()
+		return true
 	end
-
-	currentDocument.co = co
-
-	QueueRedraw()
-	return true
 end
 
 function Cmd.GotoPreviousCharW()
@@ -182,17 +182,17 @@ function Cmd.InsertStringIntoWord(c)
 	local s, co = InsertIntoWord(word, c, co, GetCurrentStyleHint())
 	if not co then
 		return false
+	else
+		currentDocument[cp] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, cw-1),
+			s,
+			paragraph:sub(cw+1))
+		currentDocument.co = co
+
+		documentSet:touch()
+		QueueRedraw()
+		return true
 	end
-
-	currentDocument[cp] = CreateParagraph(paragraph.style,
-		paragraph:sub(1, cw-1),
-		s,
-		paragraph:sub(cw+1))
-	currentDocument.co = co
-
-	documentSet:touch()
-	QueueRedraw()
-	return true
 end
 
 function Cmd.InsertStringIntoParagraph(c)
@@ -286,15 +286,19 @@ function Cmd.JoinWithNextWord()
 	end
 
 	local word, co, _ = InsertIntoWord(paragraph[cw+1], paragraph[cw], 1, 0)
-	currentDocument.co = co
-	currentDocument[cp] = CreateParagraph(paragraph.style,
-		paragraph:sub(1, cw-1),
-		word,
-		paragraph:sub(cw+2))
+	if word and co then
+		currentDocument.co = co
+		currentDocument[cp] = CreateParagraph(paragraph.style,
+			paragraph:sub(1, cw-1),
+			word,
+			paragraph:sub(cw+2))
 
-	documentSet:touch()
-	QueueRedraw()
-	return true
+		documentSet:touch()
+		QueueRedraw()
+		return true
+	else
+		return false
+	end
 end
 
 function Cmd.DeletePreviousChar()
@@ -402,10 +406,15 @@ end
 
 function Cmd.GotoXPosition(pos: number)
 	local paragraph = currentDocument[currentDocument.cp]
-	local lines = paragraph:wrap(currentDocument.wrapwidth)
+	local wd = paragraph:wrap()
+	wg.printerr(TableToString(wd))
 	local ln = paragraph:getLineOfWord(currentDocument.cw)
+	if not ln then
+		return false
+	end
+	assert(ln)
 
-	local line = lines[ln]
+	local line = wd.lines[ln]
 	local wordofline = #line
 
 	pos = pos - paragraph:getIndentOfLine(ln)
@@ -414,7 +423,7 @@ function Cmd.GotoXPosition(pos: number)
 	end
 
 	while (wordofline > 0) do
-		if (paragraph.xs[line[wordofline]] <= pos) then
+		if (wd.xs[line[wordofline]] <= pos) then
 			break
 		end
 		wordofline = wordofline - 1
@@ -426,7 +435,7 @@ function Cmd.GotoXPosition(pos: number)
 
 	local wn = line[wordofline]
 	local word = paragraph[wn]
-	local wordx = paragraph.xs[wn]
+	local wordx = wd.xs[wn]
 	local wo = GetOffsetFromWidth(word, pos - wordx)
 
 	currentDocument.cw = paragraph:getWordOfLine(ln) + wordofline - 1
@@ -448,13 +457,13 @@ end
 
 local function getpos()
 	local paragraph = currentDocument[currentDocument.cp]
-	local lines = paragraph:wrap()
+	local wd = paragraph:wrap()
 	local cw = currentDocument.cw
 	local word = paragraph[cw]
 	local x, ln, wn = paragraph:getXOffsetOfWord(cw)
 	x = x + GetWidthFromOffset(word, currentDocument.co) + paragraph:getIndentOfLine(ln)
 
-	return x, ln, lines
+	return x, ln, wd.lines
 end
 
 function Cmd.GotoNextLine()
@@ -500,10 +509,10 @@ function Cmd.GotoEndOfLine()
 end
 
 function Cmd.GotoPreviousPage()
-	if currentDocument.topp and currentDocument.topw then
+	if currentDocument._topp and currentDocument._topw then
 		local x, _, _ = getpos()
-		currentDocument.cp = currentDocument.topp
-		currentDocument.cw = currentDocument.topw
+		currentDocument.cp = currentDocument._topp
+		currentDocument.cw = currentDocument._topw
 		currentDocument.co = 1
 		return Cmd.GotoXPosition(x)
 	end
@@ -511,10 +520,10 @@ function Cmd.GotoPreviousPage()
 end
 
 function Cmd.GotoNextPage()
-	if currentDocument.botp and currentDocument.botw then
+	if currentDocument._botp and currentDocument._botw then
 		local x, _, _ = getpos()
-		currentDocument.cp = currentDocument.botp
-		currentDocument.cw = currentDocument.botw
+		currentDocument.cp = currentDocument._botp
+		currentDocument.cw = currentDocument._botw
 		currentDocument.co = 1
 		return Cmd.GotoXPosition(x)
 	end

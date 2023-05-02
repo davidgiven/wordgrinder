@@ -21,8 +21,12 @@ local ReadFile = wg.readfile
 
 local redrawpending = true
 
+declare function GroupCallback(s: any): () -> (any?, any?)
+
 -- Determine the user's home directory.
 
+declare HOME: string
+declare CONFIGDIR: string
 HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE")
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
@@ -55,7 +59,7 @@ function QueueRedraw()
             FireEvent("Moved")
         end
 
-        if not currentDocument.wrapwidth then
+        if not currentDocument._wrapwidth then
             ResizeScreen()
         end
     end
@@ -69,7 +73,6 @@ function ResetDocumentSet()
     documentSet:addDocument(CreateDocument(), "main")
     RebuildParagraphStylesMenu(documentStyles)
     RebuildDocumentsMenu(documentSet.documents)
-    documentSet:purge()
     documentSet:clean()
 
     FireEvent("DocumentCreated")
@@ -102,7 +105,7 @@ function WordProcessor(filename)
             CLIError("cannot create configuration directory: "..e)
         end
 
-        local function movefile(src, dest)
+        local function movefile(src: string, dest: string)
             if not Stat(src) then
                 return
             end
@@ -126,13 +129,16 @@ function WordProcessor(filename)
     do
         local data, e, errno = ReadFile(configfile)
         if data then
+            local f
             f, e = loadstring(data, configfile)
             if f then
                 xpcall(f, CLIError)
             else
+                assert(e)
                 CLIError("config file compilation error: "..e)
             end
         elseif (errno ~= wg.ENOENT) then
+            assert(e)
             CLIError("config file load error: "..e)
         end
     end
@@ -221,7 +227,7 @@ function WordProcessor(filename)
 
             FlushAsyncEvents()
             FireEvent("WaitingForUser")
-            local c = "KEY_TIMEOUT"
+            local c: InputEvent = "KEY_TIMEOUT"
             while (c == "KEY_TIMEOUT") do
                 if redrawpending then
                     RedrawScreen()
@@ -384,6 +390,7 @@ the program starts up (but after any --lua files). It defaults to:
 
         local function unrecognisedarg(arg)
             CLIError("unrecognised option '", arg, "' --- try --help for help")
+            assert(false)
         end
 
         local argmap = {

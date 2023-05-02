@@ -41,32 +41,47 @@ documentStyles = {} :: DocumentStyles
 local Document = {}
 Document.__index = Document
 _G.Document = Document
-currentDocument = (nil::any) :: Document
+declare currentDocument: Document
+
+type ShadowDocument = {
+	[number]: Paragraph,
+
+	cp: number,
+	cw: number,
+	co: number
+}
 
 type Document = {
 	[number]: Paragraph,
 
 	name: string,
 	wordcount: number,
-	wrapwidth: number?,
-	topp: number?,
-	topw: number?,
-	botp: number?,
-	botw: number?,
-	
+	viewmode: number,
+	margin: number,
+
 	-- These should no longer exist; this dates from a previous attempt
 	-- at undo with file version 6. We're not storing the undo buffer
 	-- in files any more.
 	undostack: nil,
 	redostack: nil,
 
+	-- Transient data, not stored in files.
+	_undostack: {ShadowDocument}?,
+	_redostack: {ShadowDocument}?,
+	_wrapwidth: number?,
+	_topp: number?, -- paragraph number of top of screen
+	_topw: number?, -- word number of top of screen
+	_botp: number?, -- paragraph number of bottom of screen
+	_botw: number?, -- word number of bottom of screen
+
 	cp: number,
 	cw: number,
 	co: number,
 
-	mp: number,
-	mw: number,
-	mo: number,
+	mp: number?,
+	mw: number?,
+	mo: number?,
+	sticky_selection: boolean,
 
 	cursor: (self: Document) -> {number},
 	appendParagraph: (self: Document, p: Paragraph) -> (),
@@ -79,7 +94,6 @@ type Document = {
 	purge: (self: Document) -> (),
 	spaceAbove: (self: Document, pn: number) -> number,
 	spaceBelow: (self: Document, pn: number) -> number,
-	touch: (self: Document) -> (),
 	renumber: (self: Document) -> (),
 }
 
@@ -107,8 +121,8 @@ function Document.deleteParagraphAt(self: Document, pn)
 	table.remove(self, pn)
 end
 
-function Document.wrap(self: Document, width)
-	self.wrapwidth = width
+function Document.wrap(self: Document, width: number)
+	self._wrapwidth = width
 end
 
 function Document.getMarks(self: Document)
@@ -116,9 +130,9 @@ function Document.getMarks(self: Document)
 		return
 	end
 
-	local mp1 = self.mp
-	local mw1 = self.mw
-	local mo1 = self.mo
+	local mp1 = assert(self.mp)
+	local mw1 = assert(self.mw)
+	local mo1 = assert(self.mo)
 	local mp2 = self.cp
 	local mw2 = self.cw
 	local mo2 = self.co
@@ -131,25 +145,6 @@ function Document.getMarks(self: Document)
 	end
 
 	return mp1, mw1, mo1, mp2, mw2, mo2
-end
-
--- remove any cached data prior to saving
-function Document.purge(self: Document)
-	for _, paragraph in ipairs(self) do
-		paragraph:touch()
-	end
-
-	self.topp = nil
-	self.topw = nil
-	self.botp = nil
-	self.botw = nil
-	self.wrapwidth = nil
-
-	-- These should no longer exist; this dates from a previous attempt
-	-- at undo with file version 6. We're not storing the undo buffer
-	-- in files any more.
-	self.undostack = nil
-	self.redostack = nil
 end
 
 -- calculate space above this paragraph
@@ -370,7 +365,7 @@ end
 function CreateDocument(): Document
 	local d =
 	{
-		wrapwidth = nil,
+		_wrapwidth = 0,
 		viewmode = 1,
 		margin = 0,
 		cp = 1,

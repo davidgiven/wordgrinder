@@ -154,7 +154,6 @@ function SaveToFile(filename: string, object: any): (boolean, string?)
 end
 
 function SaveDocumentSetRaw(filename): (boolean?, string?)
-	documentSet:purge()
 	return SaveToFile(filename, documentSet)
 end
 

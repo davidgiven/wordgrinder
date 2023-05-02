@@ -11,6 +11,7 @@ function LoadGlobalSettings(f: string?)
 	if not f then
 		f = filename
 	end
+	assert(f)
 
 	local s = LoadFromFile(f)
 	if s then
@@ -29,6 +30,7 @@ function SaveGlobalSettings(f: string?)
 	if not f then
 		f = filename
 	end
+	assert(f)
 
 	local r, e = SaveToFile(
 		f,

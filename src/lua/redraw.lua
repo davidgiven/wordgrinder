@@ -357,8 +357,8 @@ function RedrawScreen()
 		}
 	end
 
-	currentDocument.topp = nil
-	currentDocument.topw = nil
+	currentDocument._topp = nil
+	currentDocument._topw = nil
 	while (y >= 0) do
 		local paragraph = currentDocument[pn]
 		if not paragraph then
@@ -370,8 +370,8 @@ function RedrawScreen()
 			local l = lines[ln]
 			drawline(paragraph, l, ln)
 
-			currentDocument.topp = pn
-			currentDocument.topw = l.wn
+			currentDocument._topp = pn
+			currentDocument._topw = l.wn
 			y = y - 1
 
 			if (y < 0) then
@@ -408,13 +408,13 @@ function RedrawScreen()
 			-- If the top of the page hasn't already been set, then the
 			-- current paragraph extends off the top of the screen.
 
-			if not currentDocument.topp and (y == 0) then
-				currentDocument.topp = pn
-				currentDocument.topw = l.wn
+			if not currentDocument._topp and (y == 0) then
+				currentDocument._topp = pn
+				currentDocument._topw = l.wn
 			end
 
-			currentDocument.botp = pn
-			currentDocument.botw = l.wn
+			currentDocument._botp = pn
+			currentDocument._botw = l.wn
 			y = y + 1
 
 			if (y > ScreenHeight) then
@@ -431,9 +431,9 @@ function RedrawScreen()
 	-- If the top of the page *still* hasn't been set, then we're on the
 	-- first paragraph of the document.
 
-	if not currentDocument.topp then
-		currentDocument.topp = 1
-		currentDocument.topw = 1
+	if not currentDocument._topp then
+		currentDocument._topp = 1
+		currentDocument._topw = 1
 	end
 
 	if (y <= ScreenHeight) and WantTerminators() then

@@ -3,7 +3,9 @@
 -- file in this distribution for the full text.
 
 export type Colour = {number}
-export type InputEvent = {x: number, y: number, b: boolean} | string
+export type KeyboardEvent = string
+export type MouseEvent = {x: number, y: number, b: boolean}
+export type InputEvent = KeyboardEvent | MouseEvent
 
 export type Stat = {
 	size: number,
@@ -141,18 +143,18 @@ declare CMARK_NODE_IMAGE: number
 declare function CreateMenu()
 declare function CreateMenuBindings()
 declare function CreateMenuTree()
-declare function LoadFromFile()
+declare function LoadFromFile(filename: string): any?
 declare function ModalMessage(title: string?, message: string)
-declare function SaveToFile()
+declare function SaveToFile(filename: string, object: any): (boolean, string?)
 declare function SetTheme(theme: string)
 declare function SpellcheckerOff(): boolean
 declare function SpellcheckerRestore(state: boolean)
-declare function UnSmartquotify()
+declare function UnSmartquotify(s: string): string
 declare function CLIError(...: string)
+declare function CliConvert(opt1: string, opt2: string): never
+declare function EngageCLI()
 declare function SetColour(fg: Colour, bg: Colour)
-
-declare ScreenWidth: number
-declare ScreenHeight: number
-declare MenuTree: any
-declare GlobalSettings: {[string]: any}
+declare function RebuildDocumentsMenu(s: any)
+declare function WantFullStopSpaces(): boolean
+declare function WantDenseParagraphLayout(): boolean
 

@@ -5,14 +5,6 @@
 
 local STACKSIZE = 500
 
-type ShadowDocument = {
-	[number]: Paragraph,
-
-	cp: number,
-	cw: number,
-	co: number
-}
-
 local function shallowequals(t1, t2)
 	if (#t1 ~= #t2) then
 		return false
@@ -40,7 +32,7 @@ local function savedocument(): ShadowDocument
 	return shallowcopy(currentDocument)
 end
 
-local function loaddocument(copy: Document)
+local function loaddocument(copy: ShadowDocument)
 	local oldlen = #currentDocument
 	for i = 1, #copy do
 		currentDocument[i] = copy[i]
@@ -50,11 +42,11 @@ local function loaddocument(copy: Document)
 	end
 	currentDocument.cp, currentDocument.cw, currentDocument.co = copy.cp, copy.cw, copy.co
 	currentDocument.mp = nil
-	currentDocument:purge()
 	QueueRedraw()
 end
 
-local function movechange(srcstack, deststack)
+local function movechange(srcstack: {ShadowDocument},
+		deststack: {ShadowDocument})
 	local top = srcstack[1]
 	if not top then
 		return false
@@ -71,7 +63,7 @@ end
 -- Commit an undo checkpoint
 
 function Cmd.Checkpoint()
-	local undostack = currentDocument._undostack or {}
+	local undostack: {ShadowDocument} = currentDocument._undostack or {}
 	currentDocument._undostack = undostack
 
 	local top = undostack[1]
@@ -91,13 +83,13 @@ end
 -- Undo a change.
 
 function Cmd.Undo()
-	currentDocument._undostack = currentDocument._undostack or {}
-	currentDocument._redostack = currentDocument._redostack or {}
-	if not movechange(currentDocument._undostack, currentDocument._redostack) then
+	local undostack = currentDocument._undostack or {}
+	local redostack = currentDocument._redostack or {}
+	if not movechange(undostack, redostack) then
 		NonmodalMessage("Nothing left to undo")
 		return false
 	end
-	NonmodalMessage("Undone ("..#currentDocument._undostack.." left in undo buffer)")
+	NonmodalMessage("Undone ("..#undostack.." left in undo buffer)")
 	return true
 end
 
@@ -105,13 +97,13 @@ end
 -- Redo an undone change.
 
 function Cmd.Redo()
-	currentDocument._undostack = currentDocument._undostack or {}
-	currentDocument._redostack = currentDocument._redostack or {}
-	if not movechange(currentDocument._redostack, currentDocument._undostack) then
+	local undostack: {ShadowDocument} = currentDocument._undostack or {}
+	local redostack: {ShadowDocument} = currentDocument._redostack or {}
+	if not movechange(redostack, undostack) then
 		NonmodalMessage("Nothing left to redo")
 		return false
 	end
-	NonmodalMessage("Redone ("..#currentDocument._redostack.." left in redo buffer)")
+	NonmodalMessage("Redone ("..#redostack.." left in redo buffer)")
 	return true
 end
 

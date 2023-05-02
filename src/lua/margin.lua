@@ -68,7 +68,7 @@ local paragraph_number_controller =
 	end,
 
 	detach = function(self: MarginController)
-		RemoveEventListener(self.token)
+		RemoveEventListener(assert(self.token))
 		self.token = nil
 	end,
 
@@ -90,6 +90,7 @@ local word_count_controller =
 	end
 }
 
+declare marginControllers: {MarginController}
 marginControllers =
 {
 	[1] = no_margin_controller,

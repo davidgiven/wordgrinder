@@ -45,7 +45,7 @@ type StackedMenu = {
 	top: number
 }
 
-local MenuTree = {}
+MenuTree = {}
 MenuTree.__index = MenuTree
 type MenuTree = {
 }
@@ -90,7 +90,6 @@ function CreateMenu(n: string, m: {MenuItem}, replaces: Menu?): Menu
 			end
 		end
 
-		print(item.id)
 		if (item.label:len() > w) then
 			w = item.label:len()
 		end

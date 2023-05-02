@@ -359,7 +359,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	click = function(self: Widget, m: InputEvent)
+	click = function(self: Widget, m: MouseEvent)
 		local c = m.x - self.realx1 + self.offset
 		if (c >= 1) and (c <= #self.value) then
 			self.cursor = c
@@ -368,7 +368,7 @@ Form.TextField = makewidgetclass {
 		return "nop"
 	end,
 
-	key = function(self: Widget, key)
+	key = function(self: Widget, key: KeyboardEvent)
 		if not key:match("^KEY_") then
 			discard_transient_textfield(self)
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)

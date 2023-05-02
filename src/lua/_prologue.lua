@@ -5,7 +5,23 @@
 
 -- Global definitions that the various source files need.
 
-Cmd = {} :: {[string]: any}
+declare Cmd: {[string]: any}
+Cmd = {}
+
+declare MenuTree: {[string]: any}
+declare M: {[string]: any}
+declare GlobalSettings: {[string]: {[any]: any}}
+
+type Colour = {number}
+type ColourMap = {[string]: Colour}
+
+declare ScreenWidth: number
+declare ScreenHeight: number
+declare Palette: ColourMap
+
+declare BLINK_ON_TIME: number
+declare BLINK_OFF_TIME: number
+declare IDLE_TIME: number
 
 BLINK_ON_TIME = 0.8
 BLINK_OFF_TIME = 0.53

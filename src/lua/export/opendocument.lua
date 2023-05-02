@@ -170,11 +170,13 @@ local function export_odt_with_ui(filename, title, extension)
 			filename = "(unnamed)"
 		end
 			
-		filename = FileBrowser(title, "Export as:", true,
+		local filename = FileBrowser(title, "Export as:", true,
 			filename)
 		if not filename then
 			return false
 		end
+		assert(filename)
+
 		if filename:find("/[^.]*$") then
 			filename = filename .. extension
 		end

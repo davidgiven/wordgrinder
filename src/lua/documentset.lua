@@ -38,7 +38,6 @@ type DocumentSet = {
 	clipboard: Document?,
 	statusbar: boolean,
 
-	purge: (self: DocumentSet) -> (),
 	touch: (self: DocumentSet) -> (),
 	clean: (self: DocumentSet) -> (),
 	getDocumentList: (self: DocumentSet) -> {Document},
@@ -68,17 +67,9 @@ function CreateDocumentSet(): DocumentSet
 	return (setmetatable(ds, DocumentSet)::any)::DocumentSet
 end
 
--- remove any cached data prior to saving
-DocumentSet.purge = function(self: DocumentSet)
-	for _, l in self.documents do
-		l:purge()
-	end
-end
-
 DocumentSet.touch = function(self: DocumentSet)
 	self.changed = true
 	self.justchanged = true
-	currentDocument:touch()
 end
 
 DocumentSet.clean = function(self: DocumentSet)

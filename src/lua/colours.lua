@@ -7,11 +7,6 @@ local table_insert = table.insert
 local table_remove = table.remove
 local string_char = string.char
 
-type Colour = {number}
-type ColourMap = {[string]: Colour}
-
-Palette = {} :: ColourMap
-
 local function MakeDark(): ColourMap
 	local ink = {1, 1, 1}
 	local paper = {0.2, 0.2, 0.2}
