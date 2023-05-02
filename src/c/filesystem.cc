@@ -59,7 +59,9 @@ static int mkdir_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-    if (!std::filesystem::create_directory(filename))
+    std::error_code ec;
+    std::filesystem::create_directory(filename, ec);
+    if (ec)
         return pusherrno(L);
 
     lua_pushboolean(L, true);
@@ -70,7 +72,9 @@ static int mkdirs_cb(lua_State* L)
 {
     const char* filename = luaL_checklstring(L, 1, NULL);
 
-    if (!std::filesystem::create_directories(filename))
+    std::error_code ec;
+    std::filesystem::create_directories(filename, ec);
+    if (ec)
         return pusherrno(L);
 
     lua_pushboolean(L, true);
