@@ -254,7 +254,7 @@ function RedrawScreen()
 	local osw = sw
 	local sl, sw = paragraph:getLineOfWord(sw)
 	if not sl then
-		sl = #paragraph:wrap()
+		sl = #paragraph:wrap().lines
 	end
 	assert(sl)
 
@@ -266,7 +266,8 @@ function RedrawScreen()
 		local p = sp
 		
 		while p < cp do
-			cy = cy + #currentDocument[p]:wrap() + currentDocument:spaceBelow(p)
+			local wd = currentDocument[p]:wrap()
+			cy = cy + #wd.lines + currentDocument:spaceBelow(p)
 			p = p + 1
 		end
 		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
@@ -280,7 +281,8 @@ function RedrawScreen()
 
 		while p > cp do
 			p = p - 1
-			cy = cy - #currentDocument[p]:wrap() - currentDocument:spaceBelow(p)
+			local wd = currentDocument[p]:wrap()
+			cy = cy - #wd.lines - currentDocument:spaceBelow(p)
 		end
 		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy < 4 then
@@ -298,7 +300,8 @@ function RedrawScreen()
 		local word = paragraph[cw]
 		local cl = paragraph:getLineOfWord(cw)
 		GotoXY(tx + wd.xs[cw] +
-			GetWidthFromOffset(word, currentDocument.co) + paragraph:getIndentOfLine(cl),
+			GetWidthFromOffset(word, currentDocument.co) +
+			paragraph:getIndentOfLine(cl),
 			cy)
 	end
 
