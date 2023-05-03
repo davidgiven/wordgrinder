@@ -4,6 +4,7 @@ from tools.build import multibin
 
 SRCS = [
     "src/lua/_prologue.lua",
+    "src/lua/objects.lua",
     "src/lua/events.lua",
     "src/lua/margin.lua",
     "src/lua/main.lua",

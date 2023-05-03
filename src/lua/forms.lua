@@ -50,11 +50,11 @@ Form.Right = "right" :: WidgetAlignment
 Form.Centre = "centre" :: WidgetAlignment
 Form.Center = Form.Centre
 
-Form.Large = {}
+Form.Large = "large"
 
 --- Widget ------------------------------------------------------------------
 
-declare class Widget
+declare class Widget extends Object
 	x1: number
 	y1: number
 	x2: number
@@ -78,31 +78,25 @@ declare class Widget
 	action: (self: Widget, event: InputEvent) -> ActionResult
 end
 
-declare WidgetClass: Class
-WidgetClass = CreateClass(nil,
-	{
-		changed = function(self: Widget)
-		end,
+Form.Widget = Object {
+	changed = function(self: Widget)
+	end,
 
-		action = function(self: Widget, event: InputEvent)
-			return "nop"
-		end
-	}
-)
+	action = function(self: Widget, event: InputEvent)
+		return "nop"
+	end
+}
 
 --- DividerWidget -----------------------------------------------------------
 
 declare class DividerWidget extends Widget
 end
 
-declare DividerWidgetClass: Class
-DividerWidgetClass, Form.Divider = CreateClass(WidgetClass,
-	{
-		draw = function(self: DividerWidget)
-			Write(self.realx1, self.realy1, string_rep("─", self.realwidth))
-		end
-	}
-)
+Form.Divider = Form.Widget {
+	draw = function(self: DividerWidget)
+		Write(self.realx1, self.realy1, string_rep("─", self.realwidth))
+	end
+}
 
 --- WrapperLabelWidget ------------------------------------------------------
 
@@ -110,29 +104,26 @@ declare class WrappedLabelWidget extends Widget
 	value: string
 end
 
-declare WrappedLabelWidgetClass: Class
-WrappedLabelWidgetClass, Form.WrappedLabel = CreateClass(WidgetClass,
-	{
-		draw = function(self: WrappedLabelWidget)
-			local words = ParseStringIntoWords(self.value)
-			local paragraph = CreateParagraph("P", words)
-			local lines = paragraph:wrap(self.realwidth)
+Form.WrappedLabel = Form.Widget {
+	draw = function(self: WrappedLabelWidget)
+		local words = ParseStringIntoWords(self.value)
+		local paragraph = CreateParagraph("P", words)
+		local lines = paragraph:wrap(self.realwidth)
 
-			local s = SpellcheckerOff()
-			for i = 1, #lines do
-				paragraph:renderLine(lines[i], self.realx1, self.realy1+i-1)
-			end
-			SpellcheckerRestore(s)
-		end,
-
-		calculate_height = function(self: WrappedLabelWidget)
-			local words = ParseStringIntoWords(self.value)
-			local paragraph = CreateParagraph("P", words)
-			local lines = paragraph:wrap(self.realwidth)
-			return #lines
+		local s = SpellcheckerOff()
+		for i = 1, #lines do
+			paragraph:renderLine(lines[i], self.realx1, self.realy1+i-1)
 		end
-	}
-)
+		SpellcheckerRestore(s)
+	end,
+
+	calculate_height = function(self: WrappedLabelWidget)
+		local words = ParseStringIntoWords(self.value)
+		local paragraph = CreateParagraph("P", words)
+		local lines = paragraph:wrap(self.realwidth)
+		return #lines
+	end
+}
 
 --- LabelWidget -------------------------------------------------------------
 
@@ -141,26 +132,23 @@ declare class LabelWidget extends Widget
 	value: string
 end
 
-declare LabelWidget: Class
-LabelWidget, Form.Label = CreateClass(WidgetClass,
-	{
-		align = Form.Centre,
+Form.Label = Form.Widget {
+	align = Form.Centre,
 
-		draw = function(self: LabelWidget)
-			local xo
-			if (self.align == Form.Centre) then
-				xo = int((self.realwidth - GetStringWidth(self.value)) / 2)
-			elseif (self.align == Form.Left) then
-				xo = 0
-			elseif (self.align == Form.Right) then
-				xo = self.realwidth - GetStringWidth(self.value)
-			end
-
-			Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
-			Write(self.realx1 + xo, self.realy1, self.value)
+	draw = function(self: LabelWidget)
+		local xo
+		if (self.align == Form.Centre) then
+			xo = int((self.realwidth - GetStringWidth(self.value)) / 2)
+		elseif (self.align == Form.Left) then
+			xo = 0
+		elseif (self.align == Form.Right) then
+			xo = self.realwidth - GetStringWidth(self.value)
 		end
-	}
-)
+
+		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
+		Write(self.realx1 + xo, self.realy1, self.value)
+	end
+}
 
 --- CheckboxWidget ----------------------------------------------------------
 
@@ -172,39 +160,36 @@ end
 local checkbox_toggle = function(self: CheckboxWidget, key)
 end
 
-declare CheckboxWidget: Class
-CheckboxWidget, Form.Checkbox = CreateClass(WidgetClass,
-	{
-		value = false,
-		label = "Checkbox",
-		focusable = true,
+Form.Checkbox = Form.Widget {
+	value = false,
+	label = "Checkbox",
+	focusable = true,
 
-		draw = function(self: CheckboxWidget)
-			local s
-			if self.value then
-				s = "> YES"
-			else
-				s = "> NO "
-			end
+	draw = function(self: CheckboxWidget)
+		local s
+		if self.value then
+			s = "> YES"
+		else
+			s = "> NO "
+		end
 
-			Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 10))
+		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 10))
 
-			SetBright()
-			Write(self.realx2-10, self.realy1, s)
-			SetNormal()
+		SetBright()
+		Write(self.realx2-10, self.realy1, s)
+		SetNormal()
 
-			if self.focus then
-				GotoXY(self.realx2-10, self.realy1)
-			end
-		end,
-		
-		[" "] = function(self: CheckboxWidget, key)
-			self.value = not self.value
-			self:changed()
-			self:draw()
-		end,
-	}
-)
+		if self.focus then
+			GotoXY(self.realx2-10, self.realy1)
+		end
+	end,
+	
+	[" "] = function(self: CheckboxWidget, key)
+		self.value = not self.value
+		self:changed()
+		self:draw()
+	end,
+}
 
 --- ToggleWidget ------------------------------------------------------------
 
@@ -215,65 +200,62 @@ declare class ToggleWidget extends Widget
 	label: string
 end
 
-declare ToggleWidget: Class
-ToggleWidget, Form.Toggle = CreateClass(WidgetClass,
-	{
-		values = {"Default"},
-		value = 1,
-		label = "Toggle",
-		focusable = true,
+Form.Toggle = Form.Widget {
+	values = {"Default"},
+	value = 1,
+	label = "Toggle",
+	focusable = true,
 
-		draw = function(self: ToggleWidget)
-			Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
-			Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
+	draw = function(self: ToggleWidget)
+		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
+		Write(self.realx1, self.realy1, GetBoundedString(self.label, self.realwidth - 2))
 
-			local s = self.values[self.value]
-			if self.value == 1 then
-				s = "  "..s
-			else
-				s = "< "..s
-			end
-			if self.value == #self.values then
-				s = s.."  "
-			else
-				s = s.." >"
-			end
-
-			SetBright()
-			Write(self.realx2 - 12, self.realy1, s)
-			SetNormal()
-
-			if self.focus then
-				GotoXY(self.realx2 - 10, self.realy1)
-			end
-		end,
-
-		["KEY_LEFT"] = function(self: ToggleWidget, key)
-			if self.value ~= 1 then
-				self.value = self.value - 1
-				self:draw()
-			end
-			return "nop"
-		end,
-
-		["KEY_RIGHT"] = function(self: ToggleWidget, key)
-			if self.value ~= #self.values then
-				self.value = self.value + 1
-				self:draw()
-			end
-			return "nop"
-		end,
-
-		[" "] = function(self: ToggleWidget, key)
-			self.value = self.value + 1
-			if self.value > #self.values then
-				self.value = 1
-			end
-			self:draw()
-			return "nop"
+		local s = self.values[self.value]
+		if self.value == 1 then
+			s = "  "..s
+		else
+			s = "< "..s
 		end
-	}
-)
+		if self.value == #self.values then
+			s = s.."  "
+		else
+			s = s.." >"
+		end
+
+		SetBright()
+		Write(self.realx2 - 12, self.realy1, s)
+		SetNormal()
+
+		if self.focus then
+			GotoXY(self.realx2 - 10, self.realy1)
+		end
+	end,
+
+	["KEY_LEFT"] = function(self: ToggleWidget, key)
+		if self.value ~= 1 then
+			self.value = self.value - 1
+			self:draw()
+		end
+		return "nop"
+	end,
+
+	["KEY_RIGHT"] = function(self: ToggleWidget, key)
+		if self.value ~= #self.values then
+			self.value = self.value + 1
+			self:draw()
+		end
+		return "nop"
+	end,
+
+	[" "] = function(self: ToggleWidget, key)
+		self.value = self.value + 1
+		if self.value > #self.values then
+			self.value = 1
+		end
+		self:draw()
+		return "nop"
+	end
+}
 
 --- Textfield ---------------------------------------------------------------
 
@@ -296,167 +278,164 @@ local function discard_transient_textfield(self: TextField)
 	end
 end
 
-declare TextFieldClass: Class
-TextFieldClass, Form.TextField = CreateClass(WidgetClass,
-	{
-		focusable = true,
-		transient = false,
+Form.TextField = Form.Widget {
+	focusable = true,
+	transient = false,
 
-		init = function(self: TextField)
-			self.cursor = self.cursor or (self.value:len() + 1)
-			self.offset = self.offset or 1
-		end,
+	init = function(self: TextField)
+		self.cursor = self.cursor or (self.value:len() + 1)
+		self.offset = self.offset or 1
+	end,
 
-		draw = function(self: TextField)
-			SetBright()
-			Write(self.realx1, self.realy1 + 1, string_rep(
-				UseUnicode() and "▔" or " ", self.realwidth))
-			Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
-			SetNormal()
+	draw = function(self: TextField)
+		SetBright()
+		Write(self.realx1, self.realy1 + 1, string_rep(
+			UseUnicode() and "▔" or " ", self.realwidth))
+		Write(self.realx1, self.realy1, string_rep(" ", self.realwidth))
+		SetNormal()
 
-			-- If the cursor is to the left of the visible area, adjust.
+		-- If the cursor is to the left of the visible area, adjust.
 
-			if (self.cursor < self.offset) then
-				self.offset = self.cursor
+		if (self.cursor < self.offset) then
+			self.offset = self.cursor
+		end
+
+		-- If the cursor is to the right of the visible area, adjust. (This is
+		-- very crude, but I'm not sure there's a more elegant way of doing
+		-- it.)
+
+		while true do
+			local xo = GetStringWidth(self.value:sub(self.offset, self.cursor))
+			if (xo <= self.realwidth) then
+				break
 			end
 
-			-- If the cursor is to the right of the visible area, adjust. (This is
-			-- very crude, but I'm not sure there's a more elegant way of doing
-			-- it.)
+			local b = GetBytesOfCharacter(self.value:byte(self.offset))
+			self.offset = self.offset + b
+		end
 
+		-- Draw the visible bit of the string.
+
+		local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
+		SetBright()
+		if self.transient then
+			SetReverse()
+		end
+		Write(self.realx1, self.realy1, s)
+		SetNormal()
+
+		if self.focus then
+			GotoXY(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
+		end
+	end,
+
+	["KEY_LEFT"] = function(self: TextField, key)
+		keep_transient_textfield(self)
+		if (self.cursor > 1) then
 			while true do
-				local xo = GetStringWidth(self.value:sub(self.offset, self.cursor))
-				if (xo <= self.realwidth) then
+				self.cursor = self.cursor - 1
+				if (GetBytesOfCharacter(self.value:byte(self.cursor)) ~= 0) then
 					break
 				end
-
-				local b = GetBytesOfCharacter(self.value:byte(self.offset))
-				self.offset = self.offset + b
 			end
+			self:draw()
+		end
 
-			-- Draw the visible bit of the string.
+		return "nop"
+	end,
 
-			local s = GetBoundedString(self.value:sub(self.offset), self.realwidth)
-			SetBright()
-			if self.transient then
-				SetReverse()
-			end
-			Write(self.realx1, self.realy1, s)
-			SetNormal()
+	["KEY_RIGHT"] = function(self: TextField, key)
+		keep_transient_textfield(self)
+		if (self.cursor <= self.value:len()) then
+			self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
+			self:draw()
+		end
 
-			if self.focus then
-				GotoXY(self.realx1 + GetStringWidth(s:sub(1, self.cursor-self.offset)), self.realy1)
-			end
-		end,
+		return "nop"
+	end,
 
-		["KEY_LEFT"] = function(self: TextField, key)
-			keep_transient_textfield(self)
-			if (self.cursor > 1) then
-				while true do
-					self.cursor = self.cursor - 1
-					if (GetBytesOfCharacter(self.value:byte(self.cursor)) ~= 0) then
-						break
-					end
+	["KEY_HOME"] = function(self: TextField, key)
+		keep_transient_textfield(self)
+		self.cursor = 1
+		self:draw()
+
+		return "nop"
+	end,
+
+	["KEY_END"] = function(self: TextField, key)
+		keep_transient_textfield(self)
+		self.cursor = self.value:len() + 1
+		self:draw()
+
+		return "nop"
+	end,
+
+	["KEY_BACKSPACE"] = function(self: TextField, key)
+		discard_transient_textfield(self)
+		if (self.cursor > 1) then
+			local w
+			while true do
+				self.cursor = self.cursor - 1
+				w = GetBytesOfCharacter(self.value:byte(self.cursor))
+				if (w ~= 0) then
+					break
 				end
-				self:draw()
 			end
 
-			return "nop"
-		end,
-
-		["KEY_RIGHT"] = function(self: TextField, key)
-			keep_transient_textfield(self)
-			if (self.cursor <= self.value:len()) then
-				self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
-				self:draw()
-			end
-
-			return "nop"
-		end,
-
-		["KEY_HOME"] = function(self: TextField, key)
-			keep_transient_textfield(self)
-			self.cursor = 1
+			self.value = self.value:sub(1, self.cursor - 1) ..
+				self.value:sub(self.cursor + w)
+			self:changed()
 			self:draw()
+		end
 
-			return "nop"
-		end,
+		return "nop"
+	end,
 
-		["KEY_END"] = function(self: TextField, key)
-			keep_transient_textfield(self)
-			self.cursor = self.value:len() + 1
+	["KEY_DELETE"] = function(self: TextField, key)
+		discard_transient_textfield(self)
+		local v = self.value:byte(self.cursor)
+		if v then
+			local w = GetBytesOfCharacter(self.value:byte(self.cursor))
+			self.value = self.value:sub(1, self.cursor - 1) ..
+				self.value:sub(self.cursor + w)
+			self:changed()
 			self:draw()
+		end
 
-			return "nop"
-		end,
+		return "nop"
+	end,
 
-		["KEY_BACKSPACE"] = function(self: TextField, key)
+	["KEY_^U"] = function(self: TextField, key)
+		discard_transient_textfield(self)
+		self.cursor = 1
+		self.offset = 1
+		self.value = ""
+			self:changed()
+		self:draw()
+
+		return "nop"
+	end,
+
+	click = function(self: TextField, m: MouseEvent)
+		local c = m.x - self.realx1 + self.offset
+		if (c >= 1) and (c <= #self.value) then
+			self.cursor = c
+			return "redraw"
+		end
+		return "nop"
+	end,
+
+	key = function(self: TextField, key: KeyboardEvent): ActionResult
+		if not key:match("^KEY_") then
 			discard_transient_textfield(self)
-			if (self.cursor > 1) then
-				local w
-				while true do
-					self.cursor = self.cursor - 1
-					w = GetBytesOfCharacter(self.value:byte(self.cursor))
-					if (w ~= 0) then
-						break
-					end
-				end
-
-				self.value = self.value:sub(1, self.cursor - 1) ..
-					self.value:sub(self.cursor + w)
-				self:changed()
-				self:draw()
-			end
-
-			return "nop"
-		end,
-
-		["KEY_DELETE"] = function(self: TextField, key)
-			discard_transient_textfield(self)
-			local v = self.value:byte(self.cursor)
-			if v then
-				local w = GetBytesOfCharacter(self.value:byte(self.cursor))
-				self.value = self.value:sub(1, self.cursor - 1) ..
-					self.value:sub(self.cursor + w)
-				self:changed()
-				self:draw()
-			end
-
-			return "nop"
-		end,
-
-		["KEY_^U"] = function(self: TextField, key)
-			discard_transient_textfield(self)
-			self.cursor = 1
-			self.offset = 1
-			self.value = ""
-				self:changed()
+			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
+			self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
+			self:changed()
 			self:draw()
-
-			return "nop"
-		end,
-
-		click = function(self: TextField, m: MouseEvent)
-			local c = m.x - self.realx1 + self.offset
-			if (c >= 1) and (c <= #self.value) then
-				self.cursor = c
-				return "redraw"
-			end
-			return "nop"
-		end,
-
-		key = function(self: TextField, key: KeyboardEvent): ActionResult
-			if not key:match("^KEY_") then
-				discard_transient_textfield(self)
-				self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
-				self.cursor = self.cursor + GetBytesOfCharacter(key:byte(1))
-				self:changed()
-				self:draw()
-			end
-			return "nop"
-		end,
-	}
-)
+		end
+		return "nop"
+	end,
+}
 
 --- Browser --------------------------------------------------------------
 
@@ -475,144 +454,141 @@ declare class BrowserWidget extends Widget
 	_adjustOffset: (self: BrowserWidget) -> ()
 end
 
-declare BrowserWidgetClass: Class
-BrowserWidgetClass, Form.Browser = CreateClass(WidgetClass,
-	{
-		focusable = true,
-		data = {},
+Form.Browser = Form.Widget {
+	focusable = true,
+	data = {},
 
-		init = function(self: BrowserWidget)
-			self.cursor = self.cursor or 1
-			self.offset = self.offset or 0
-		end,
+	init = function(self: BrowserWidget)
+		self.cursor = self.cursor or 1
+		self.offset = self.offset or 0
+	end,
 
-		_adjustOffset = function(self: BrowserWidget)
-			local h = self.realheight
+	_adjustOffset = function(self: BrowserWidget)
+		local h = self.realheight
 
-			if (self.offset == 0) then
-				self.offset = self.cursor - int(h/2)
+		if (self.offset == 0) then
+			self.offset = self.cursor - int(h/2)
+		end
+
+		self.offset = math.min(self.offset, self.cursor)
+		self.offset = math.max(self.offset, self.cursor - (h-2))
+		self.offset = math.min(self.offset, #self.data - (h-2))
+		self.offset = math.max(self.offset, 1)
+	end,
+
+	changed = function(self: BrowserWidget)
+		return "nop"
+	end,
+
+	draw = function(self: BrowserWidget)
+		local x = self.realx1
+		local y = self.realy1
+		local w = self.realwidth
+		local h = self.realheight
+
+		-- Draw the box.
+
+		do
+			local border = string_rep(UseUnicode() and "─" or "-", w - 2)
+			SetBright()
+			Write(x, y, UseUnicode() and "┌" or "+")
+			Write(x+1, y, border)
+			Write(x+w-1, y, UseUnicode() and "┐" or "+")
+			for i = 1, h-1 do
+				Write(x, y+i, UseUnicode() and "│" or "|")
+				Write(x+w-1, y+i, UseUnicode() and "│" or "|")
+			end
+			Write(x, y+h, UseUnicode() and "└" or "+")
+			Write(x+1, y+h, border)
+			Write(x+w-1, y+h, UseUnicode() and "┘" or "+")
+			SetNormal()
+		end
+
+		self:_adjustOffset()
+
+		-- Draw the data.
+
+		local space = string_rep(" ", w - 2)
+		for i = 0, h-2 do
+			local index = self.offset + i
+			local item = self.data[index]
+			if not item then
+				break
 			end
 
-			self.offset = math.min(self.offset, self.cursor)
-			self.offset = math.max(self.offset, self.cursor - (h-2))
-			self.offset = math.min(self.offset, #self.data - (h-2))
-			self.offset = math.max(self.offset, 1)
-		end,
+			if (index == self.cursor) then
+				SetReverse()
+			else
+				SetNormal()
+			end
 
-		changed = function(self: BrowserWidget)
-			return "nop"
-		end,
+			Write(x+1, y+1+i, space)
+			local s = GetBoundedString(item.label, w-4)
+			Write(x+2, y+1+i, s)
 
-		draw = function(self: BrowserWidget)
-			local x = self.realx1
-			local y = self.realy1
-			local w = self.realwidth
-			local h = self.realheight
-
-			-- Draw the box.
-
-			do
-				local border = string_rep(UseUnicode() and "─" or "-", w - 2)
+			if (#self.data > (h-2)) then
+				SetNormal()
 				SetBright()
-				Write(x, y, UseUnicode() and "┌" or "+")
-				Write(x+1, y, border)
-				Write(x+w-1, y, UseUnicode() and "┐" or "+")
-				for i = 1, h-1 do
-					Write(x, y+i, UseUnicode() and "│" or "|")
-					Write(x+w-1, y+i, UseUnicode() and "│" or "|")
+				s = "│"
+				local yf = (i+1) * #self.data / (h-1)
+				if (yf >= self.offset) and (yf <= (self.offset + h-2)) then
+					s = "║"
 				end
-				Write(x, y+h, UseUnicode() and "└" or "+")
-				Write(x+1, y+h, border)
-				Write(x+w-1, y+h, UseUnicode() and "┘" or "+")
-				SetNormal()
-			end
-
-			self:_adjustOffset()
-
-			-- Draw the data.
-
-			local space = string_rep(" ", w - 2)
-			for i = 0, h-2 do
-				local index = self.offset + i
-				local item = self.data[index]
-				if not item then
-					break
-				end
-
-				if (index == self.cursor) then
-					SetReverse()
-				else
-					SetNormal()
-				end
-
-				Write(x+1, y+1+i, space)
-				local s = GetBoundedString(item.label, w-4)
-				Write(x+2, y+1+i, s)
-
-				if (#self.data > (h-2)) then
-					SetNormal()
-					SetBright()
-					s = "│"
-					local yf = (i+1) * #self.data / (h-1)
-					if (yf >= self.offset) and (yf <= (self.offset + h-2)) then
-						s = "║"
-					end
-					Write(x+w-1, y+1+i, s)
-				end
-				SetNormal()
+				Write(x+w-1, y+1+i, s)
 			end
 			SetNormal()
-		end,
+		end
+		SetNormal()
+	end,
 
-		["KEY_UP"] = function(self: BrowserWidget, key)
-			if (self.cursor > 1) then
-				self.cursor = self.cursor - 1
-				self:draw()
-				return self:changed()
-			end
+	["KEY_UP"] = function(self: BrowserWidget, key)
+		if (self.cursor > 1) then
+			self.cursor = self.cursor - 1
+			self:draw()
+			return self:changed()
+		end
 
-			return "nop"
-		end,
+		return "nop"
+	end,
 
-		["KEY_DOWN"] = function(self: BrowserWidget, key)
-			if (self.cursor < #self.data) then
-				self.cursor = self.cursor + 1
-				self:draw()
-				return self:changed()
-			end
+	["KEY_DOWN"] = function(self: BrowserWidget, key)
+		if (self.cursor < #self.data) then
+			self.cursor = self.cursor + 1
+			self:draw()
+			return self:changed()
+		end
 
-			return "nop"
-		end,
+		return "nop"
+	end,
 
-		["KEY_PGUP"] = function(self: BrowserWidget, key)
-			local oldcursor = self.cursor
-			self.cursor = oldcursor - int(self.realheight/2)
-			if (self.cursor < 1) then
-				self.cursor = 1
-			end
+	["KEY_PGUP"] = function(self: BrowserWidget, key)
+		local oldcursor = self.cursor
+		self.cursor = oldcursor - int(self.realheight/2)
+		if (self.cursor < 1) then
+			self.cursor = 1
+		end
 
-			if (self.cursor ~= oldcursor) then
-				self:draw()
-				return self:changed()
-			end
-			return "nop"
-		end,
+		if (self.cursor ~= oldcursor) then
+			self:draw()
+			return self:changed()
+		end
+		return "nop"
+	end,
 
-		["KEY_PGDN"] = function(self: BrowserWidget, key)
-			local oldcursor = self.cursor
-			self.cursor = oldcursor + int(self.realheight/2)
-			if (self.cursor > #self.data) then
-				self.cursor = #self.data
-			end
+	["KEY_PGDN"] = function(self: BrowserWidget, key)
+		local oldcursor = self.cursor
+		self.cursor = oldcursor + int(self.realheight/2)
+		if (self.cursor > #self.data) then
+			self.cursor = #self.data
+		end
 
-			if (self.cursor ~= oldcursor) then
-				self:draw()
-				return self:changed()
-			end
-			return "nop"
-		end,
-	}
-)
+		if (self.cursor ~= oldcursor) then
+			self:draw()
+			return self:changed()
+		end
+		return "nop"
+	end,
+}
 
 local standard_actions: {[string]: FormAction} =
 {
@@ -811,7 +787,6 @@ function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
 		GotoXY(ScreenWidth-1, ScreenHeight-1)
 		for i, widget in form.widgets do
 			widget.focus = (i == form.focus)
-			print(TableToString(widget))
 			widget:draw()
 		end
 
