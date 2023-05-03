@@ -20,6 +20,23 @@ local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
 local EISDIR = wg.EISDIR
 
+--- Creates a class.
+--
+-- @param super              superclass, if any
+-- @return                   the new class object
+
+function CreateClass<T>(super: Class?, methods: T): Class
+	if super then
+		(methods::any).__index = super
+	end
+	local class = (setmetatable(methods, {__index = methods})::any)::Class
+
+	return class, 
+		function(init: Class): T
+			return (setmetatable(init, {__init = class})::any)::T
+		end
+end
+
 --- Transcodes a string.
 -- Converts the string to guaranteed valid UTF-8.
 --

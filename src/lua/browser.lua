@@ -21,12 +21,6 @@ local ReadDir = wg.readdir
 local Stat = wg.stat
 local UseUnicode = wg.useunicode
 
-type BrowserItem = {
-	data: string,
-	label: string,
-	key: string?
-}
-
 type BrowserFileData = {
 	size: number,
 	mode: string,

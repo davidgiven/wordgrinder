@@ -48,6 +48,8 @@ declare GlobalSettings: {[string]: {[any]: any}}
 type Colour = {number}
 type ColourMap = {[string]: Colour}
 
+type Class = {[string]: any}
+
 declare ScreenWidth: number
 declare ScreenHeight: number
 declare Palette: ColourMap
