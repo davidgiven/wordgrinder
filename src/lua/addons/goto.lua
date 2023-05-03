@@ -19,8 +19,8 @@ local function gotobrowser(data, index)
 	local dialogue: Form =
 	{
 		title = "Table of Contents",
-		width = Form.Large,
-		height = Form.Large,
+		width = "large",
+		height = "large",
 		stretchy = false,
 
 		actions = {

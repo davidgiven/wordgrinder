@@ -235,7 +235,7 @@ function Cmd.ConfigureHTMLExport()
 	local dialogue: Form =
 	{
 		title = "Configure HTML Export",
-		width = Form.Large,
+		width = "large",
 		height = 13,
 		stretchy = false,
 
@@ -248,7 +248,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = 14, y2 = 1,
-				align = Form.Left,
+				align = "left",
 				value = "Underline on:"
 			},
 			underline_on_textfield,
@@ -256,7 +256,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = 14, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Underline off:"
 			},
 			underline_off_textfield,
@@ -264,7 +264,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 14, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Italics on:"
 			},
 			italic_on_textfield,
@@ -272,7 +272,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 7,
 				x2 = 14, y2 = 7,
-				align = Form.Left,
+				align = "left",
 				value = "Italics off:"
 			},
 			italic_off_textfield,
@@ -280,7 +280,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 9,
 				x2 = 14, y2 = 9,
-				align = Form.Left,
+				align = "left",
 				value = "Bold on:"
 			},
 			bold_on_textfield,
@@ -288,7 +288,7 @@ function Cmd.ConfigureHTMLExport()
 			Form.Label {
 				x1 = 1, y1 = 11,
 				x2 = 14, y2 = 11,
-				align = Form.Left,
+				align = "left",
 				value = "Bold off:"
 			},
 			bold_off_textfield,

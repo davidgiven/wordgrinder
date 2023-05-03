@@ -86,7 +86,7 @@ function ModalMessage(title: string?, message: string)
 	local dialogue: Form =
 	{
 		title = title or "Message",
-		width = Form.Large,
+		width = "large",
 		height = 2,
 		stretchy = true,
 
@@ -123,7 +123,7 @@ function PromptForYesNo(title, message)
 	local dialogue: Form =
 	{
 		title = title or "Message",
-		width = Form.Large,
+		width = "large",
 		height = 2,
 		stretchy = true,
 
@@ -164,7 +164,7 @@ function PromptForString(title: string, message: string, default: string?)
 	local dialogue: Form =
 	{
 		title = title,
-		width = Form.Large,
+		width = "large",
 		height = 4,
 		stretchy = true,
 
@@ -215,7 +215,7 @@ function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 	local dialogue: Form =
 	{
 		title = "Find and Replace",
-		width = Form.Large,
+		width = "large",
 		height = 5,
 
 		actions = {
@@ -227,13 +227,13 @@ function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 			Form.Label {
 				value = "Find:",
 				x1 = 1, y1 = 1, x2 = 10, y2 = 1,
-				align = Form.Left,
+				align = "left",
 			},
 
 			Form.Label {
 				value = "Replace:",
 				x1 = 1, y1 = 3, x2 = 10, y2 = 3,
-				align = Form.Left,
+				align = "left",
 			},
 
 			findfield,
@@ -256,7 +256,7 @@ function AboutDialogue()
 	local dialogue: Form =
 	{
 		title = "About WordGrinder",
-		width = Form.Large,
+		width = "large",
 		height = 12,
 
 		actions = {
@@ -269,43 +269,43 @@ function AboutDialogue()
 			Form.Label {
 				value = "WordGrinder "..VERSION,
 				x1 = 1, y1 = 1, x2 = -1, y2 = 1,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
 				x1 = 1, y1 = 2, x2 = -1, y2 = 2,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = "File format version "..FILEFORMAT,
 				x1 = 1, y1 = 4, x2 = -1, y2 = 4,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = "Cat vacuuming (n): pointless or otherwise inefficient",
 				x1 = 1, y1 = 6, x2 = -1, y2 = 6,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = "    displacement activity to avoid having to settle  ",
 				x1 = 1, y1 = 7, x2 = -1, y2 = 7,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = "    down and do some real writing.                   ",
 				x1 = 1, y1 = 8, x2 = -1, y2 = 8,
-				align = Form.Centre,
+				align = "centre",
 			},
 
 			Form.Label {
 				value = "For more information, see http://cowlark.com/wordgrinder.",
 				x1 = 1, y1 = 10, x2 = -1, y2 = 10,
-				align = Form.Centre,
+				align = "centre",
 			},
 		}
 	}

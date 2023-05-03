@@ -82,7 +82,7 @@ function Cmd.ConfigureDirectories()
 	local dialogue: Form =
 	{
 		title = "Configure Templates",
-		width = Form.Large,
+		width = "large",
 		height = 6,
 		stretchy = false,
 
@@ -95,7 +95,7 @@ function Cmd.ConfigureDirectories()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = 20, y2 = 1,
-				align = Form.Left,
+				align = "left",
 				value = "Template directory:"
 			},
 			templates_textfield,
@@ -103,13 +103,13 @@ function Cmd.ConfigureDirectories()
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = 20, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Autosave directory:"
 			},
 			Form.Label {
 				x1 = 1, y1 = 4,
 				x2 = 20, y2 = 4,
-				align = Form.Left,
+				align = "left",
 				value = "(leave blank for default)"
 			},
 			autosaves_textfield,

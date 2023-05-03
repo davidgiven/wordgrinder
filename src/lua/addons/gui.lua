@@ -88,7 +88,7 @@ function Cmd.ConfigureGui()
 	local dialogue: Form =
 	{
 		title = "Configure GUI",
-		width = Form.Large,
+		width = "large",
 		height = 16,
 		stretchy = false,
 
@@ -120,14 +120,14 @@ function Cmd.ConfigureGui()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = L-1, y2 = 1,
-				align = Form.Left,
+				align = "left",
 				value = "Default window width:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = L-1, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Default window height:"
 			},
 
@@ -135,42 +135,42 @@ function Cmd.ConfigureGui()
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = L-1, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Font size:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 7,
 				x2 = L-1, y2 = 7,
-				align = Form.Left,
+				align = "left",
 				value = "Normal font:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 9,
 				x2 = L-1, y2 = 9,
-				align = Form.Left,
+				align = "left",
 				value = "Italic font:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 11,
 				x2 = L-1, y2 = 11,
-				align = Form.Left,
+				align = "left",
 				value = "Bold font:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 13,
 				x2 = L-1, y2 = 13,
-				align = Form.Left,
+				align = "left",
 				value = "Bold/italic font:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = -1,
 				x2 = -1, y2 = -1,
-				align = Form.Centre,
+				align = "centre",
 				value = "<^R to reset to default>"
 			},
 		}

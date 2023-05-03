@@ -60,7 +60,7 @@ function Cmd.ConfigurePageCount()
 	local dialogue: Form =
 	{
 		title = "Configure Page Count",
-		width = Form.Large,
+		width = "large",
 		height = 5,
 		stretchy = false,
 
@@ -75,7 +75,7 @@ function Cmd.ConfigurePageCount()
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = 32, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Number of words per page:"
 			},
 			count_textfield,

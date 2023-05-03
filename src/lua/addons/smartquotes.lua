@@ -241,7 +241,7 @@ function Cmd.ConfigureSmartQuotes()
 	local dialogue: Form =
 	{
 		title = "Configure Smart Quotes",
-		width = Form.Large,
+		width = "large",
 		height = 13,
 		stretchy = false,
 
@@ -262,49 +262,49 @@ function Cmd.ConfigureSmartQuotes()
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 32, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Text used for single quotes:"
 			},
 
 			Form.Label {
 				x1 = -19, y1 = 5,
 				x2 = -17, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "L:"
 			},
 
 			Form.Label {
 				x1 = -9, y1 = 5,
 				x2 = -7, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "R:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 7,
 				x2 = 32, y2 = 7,
-				align = Form.Left,
+				align = "left",
 				value = "Text used for double quotes:"
 			},
 
 			Form.Label {
 				x1 = -19, y1 = 7,
 				x2 = -17, y2 = 7,
-				align = Form.Left,
+				align = "left",
 				value = "L:"
 			},
 
 			Form.Label {
 				x1 = -9, y1 = 7,
 				x2 = -7, y2 = 7,
-				align = Form.Left,
+				align = "left",
 				value = "R:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 11,
 				x2 = -1, y2 = 11,
-				align = Form.Centre,
+				align = "centre",
 				value = "To apply to existing text, copy and then paste it."
 			}
 		}

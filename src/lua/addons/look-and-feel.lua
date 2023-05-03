@@ -158,7 +158,7 @@ function Cmd.ConfigureLookAndFeel()
 	local dialogue: Form =
 	{
 		title = "Configure Look and Feel",
-		width = Form.Large,
+		width = "large",
 		height = 15,
 		stretchy = false,
 
@@ -173,7 +173,7 @@ function Cmd.ConfigureLookAndFeel()
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = -12, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Maximum allowed width",
 			},
 			maxwidth_textfield,

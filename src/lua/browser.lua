@@ -258,8 +258,8 @@ function Browser(title, topmessage, bottommessage, data: {BrowserItem})
 	dialogue =
 	{
 		title = title,
-		width = Form.Large,
-		height = Form.Large,
+		width = "large",
+		height = "large",
 		stretchy = false,
 
 		actions = {

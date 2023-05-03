@@ -87,7 +87,7 @@ function Cmd.ConfigureDebug()
 	local dialogue: Form =
 	{
 		title = "Configure Debugging Options",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
@@ -104,7 +104,7 @@ function Cmd.ConfigureDebug()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = -1, y2 = 1,
-				align = Form.Centre,
+				align = "centre",
 				value = "None of these options are of any interest to normal users."
 			},
 		}

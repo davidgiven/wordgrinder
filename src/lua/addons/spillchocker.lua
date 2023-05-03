@@ -310,7 +310,7 @@ function Cmd.ConfigureSpellchecker()
 	local dialogue: Form =
 	{
 		title = "Configure Spellchecker",
-		width = Form.Large,
+		width = "large",
 		height = 7,
 		stretchy = false,
 
@@ -327,21 +327,21 @@ function Cmd.ConfigureSpellchecker()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = 32, y2 = 1,
-				align = Form.Left,
+				align = "left",
 				value = "Display misspelt words:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = 32, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Use system dictionary:"
 			},
 
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 32, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Use user dictionary:"
 			},
 		}

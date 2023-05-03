@@ -134,7 +134,7 @@ function Cmd.ConfigureScrapbook()
 	local dialogue: Form =
 	{
 		title = "Configure Timestamp",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
@@ -147,7 +147,7 @@ function Cmd.ConfigureScrapbook()
 			Form.Label {
 				x1 = 1, y1 = 1,
 				x2 = 32, y2 = 1,
-				align = Form.Left,
+				align = "left",
 				value = "Name of scrapbook document:"
 			},
 			document_textfield,
@@ -157,7 +157,7 @@ function Cmd.ConfigureScrapbook()
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 32, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Timestamp pattern:"
 			},
 			pattern_textfield,

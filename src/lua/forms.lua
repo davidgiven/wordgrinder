@@ -28,8 +28,8 @@ type ActionTable = {[string]: FormAction}
 
 type Form = {
 	title: string,
-	width: number,
-	height: number,
+	width: number | "large",
+	height: number | "large",
 	stretchy: boolean?,
 	transient: boolean?,
 
@@ -42,15 +42,6 @@ type Form = {
 Form = {}
 
 type WidgetAlignment = "left" | "right" | "centre"
-
--- Atoms.
-
-Form.Left = "left" :: WidgetAlignment
-Form.Right = "right" :: WidgetAlignment
-Form.Centre = "centre" :: WidgetAlignment
-Form.Center = Form.Centre
-
-Form.Large = "large"
 
 --- Widget ------------------------------------------------------------------
 
@@ -133,15 +124,15 @@ declare class LabelWidget extends Widget
 end
 
 Form.Label = Form.Widget {
-	align = Form.Centre,
+	align = "centre",
 
 	draw = function(self: LabelWidget)
 		local xo
-		if (self.align == Form.Centre) then
+		if (self.align == "centre") then
 			xo = int((self.realwidth - GetStringWidth(self.value)) / 2)
-		elseif (self.align == Form.Left) then
+		elseif (self.align == "left") then
 			xo = 0
-		elseif (self.align == Form.Right) then
+		elseif (self.align == "right") then
 			xo = self.realwidth - GetStringWidth(self.value)
 		end
 
@@ -714,13 +705,13 @@ function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
 		local realwidth = 0
 		local realheight = 0
 
-		if (form.width == Form.Large) then
+		if (form.width == "large") then
 			realwidth = int(ScreenWidth * 6/7)
 		else
 			realwidth = form.width
 		end
 
-		if (form.height == Form.Large) then
+		if (form.height == "large") then
 			realheight = int(ScreenHeight * 5/6)
 		else
 			realheight = form.height
@@ -742,7 +733,7 @@ function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
 						h = widget:calculate_height()
 					end
 
-					realheight = form.height + h
+					realheight = realheight + h
 					break
 				end
 			end

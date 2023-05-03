@@ -152,7 +152,7 @@ function Cmd.ConfigureAutosave()
 	local dialogue: Form =
 	{
 		title = "Configure Autosave",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
@@ -167,7 +167,7 @@ function Cmd.ConfigureAutosave()
 			Form.Label {
 				x1 = 1, y1 = 3,
 				x2 = 32, y2 = 3,
-				align = Form.Left,
+				align = "left",
 				value = "Period between saves (minutes):"
 			},
 			period_textfield,
@@ -175,7 +175,7 @@ function Cmd.ConfigureAutosave()
 			Form.Label {
 				x1 = 1, y1 = 5,
 				x2 = 32, y2 = 5,
-				align = Form.Left,
+				align = "left",
 				value = "Autosave filename pattern:"
 			},
 			pattern_textfield,

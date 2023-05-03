@@ -95,8 +95,8 @@ function Cmd.ManageDocumentsUI()
 	local dialogue: Form =
 	{
 		title = "Document Manager",
-		width = Form.Large,
-		height = Form.Large,
+		width = "large",
+		height = "large",
 		stretchy = false,
 
 		actions = {
