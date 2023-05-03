@@ -100,14 +100,6 @@ type Document = {
 	renumber: (self: Document) -> (),
 }
 
-local stylemarkup =
-{
-	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,
-	["H2"] = BRIGHT + BOLD + UNDERLINE,
-	["H3"] = ITALIC + BRIGHT + BOLD,
-	["H4"] = BRIGHT + BOLD
-}
-
 function Document.cursor(self: Document)
 	return { self.cp, self.cw, self.co }
 end

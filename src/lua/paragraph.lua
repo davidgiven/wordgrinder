@@ -27,6 +27,14 @@ local Paragraph = {}
 Paragraph.__index = Paragraph
 _G.Paragraph = Paragraph
 
+local stylemarkup =
+{
+	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,
+	["H2"] = BRIGHT + BOLD + UNDERLINE,
+	["H3"] = ITALIC + BRIGHT + BOLD,
+	["H4"] = BRIGHT + BOLD
+}
+
 type Line = {[number]: number, wn: number}
 
 type WrapData = {

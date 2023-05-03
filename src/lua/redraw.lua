@@ -364,9 +364,9 @@ function RedrawScreen()
 			break
 		end
 
-		local lines = paragraph:wrap()
-		for ln = #lines, 1, -1 do
-			local l = lines[ln]
+		local wd = paragraph:wrap()
+		for ln = #wd.lines, 1, -1 do
+			local l = wd.lines[ln]
 			drawline(paragraph, l, ln)
 
 			currentDocument._topp = pn
@@ -401,7 +401,8 @@ function RedrawScreen()
 
 		drawmargin(y, pn, paragraph)
 
-		for ln, l in ipairs(paragraph:wrap()) do
+		local wd = paragraph:wrap()
+		for ln, l in wd.lines do
 			drawline(paragraph, l, ln)
 
 			-- If the top of the page hasn't already been set, then the
