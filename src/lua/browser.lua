@@ -88,7 +88,7 @@ function FileBrowser(title: string, message: string, saving: boolean,
 		}
 	end
 
-	local f = Browser(title, GetCwd(), message, labels)
+	local f = BrowserForm(title, GetCwd(), message, labels)
 	if not f then
 		return nil
 	end
@@ -188,7 +188,7 @@ function Autocomplete(filename: string, x1: number, x2: number, y: number)
 	return filename
 end
 
-function Browser(title, topmessage, bottommessage, data: {BrowserItem})
+function BrowserForm(title, topmessage, bottommessage, data: {BrowserItem})
 	local dialogue: Form
 
 	local browser = Form.Browser {

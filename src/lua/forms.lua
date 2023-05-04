@@ -83,11 +83,12 @@ Form.Widget = Object {
 declare class DividerWidget extends Widget
 end
 
-Form.Divider = Form.Widget {
+local Divider: DividerWidget = Form.Widget {
 	draw = function(self: DividerWidget)
 		Write(self.realx1, self.realy1, string_rep("─", self.realwidth))
 	end
 }
+Form.Divider = Divider
 
 --- WrapperLabelWidget ------------------------------------------------------
 
@@ -95,7 +96,7 @@ declare class WrappedLabelWidget extends Widget
 	value: string
 end
 
-Form.WrappedLabel = Form.Widget {
+local WrappedLabel: WrappedLabelWidget = Form.Widget {
 	draw = function(self: WrappedLabelWidget)
 		local words = ParseStringIntoWords(self.value)
 		local paragraph = CreateParagraph("P", words)
@@ -115,6 +116,7 @@ Form.WrappedLabel = Form.Widget {
 		return #lines
 	end
 }
+Form.WrappedLabel = WrappedLabel
 
 --- LabelWidget -------------------------------------------------------------
 
@@ -123,7 +125,7 @@ declare class LabelWidget extends Widget
 	value: string
 end
 
-Form.Label = Form.Widget {
+local Label: LabelWidget = Form.Widget {
 	align = "centre",
 
 	draw = function(self: LabelWidget)
@@ -140,6 +142,7 @@ Form.Label = Form.Widget {
 		Write(self.realx1 + xo, self.realy1, self.value)
 	end
 }
+Form.Label = Label
 
 --- CheckboxWidget ----------------------------------------------------------
 
@@ -151,7 +154,7 @@ end
 local checkbox_toggle = function(self: CheckboxWidget, key)
 end
 
-Form.Checkbox = Form.Widget {
+local Checkbox: CheckboxWidget = Form.Widget {
 	value = false,
 	label = "Checkbox",
 	focusable = true,
@@ -181,9 +184,9 @@ Form.Checkbox = Form.Widget {
 		self:draw()
 	end,
 }
+Form.Checkbox = Checkbox
 
 --- ToggleWidget ------------------------------------------------------------
-
 
 declare class ToggleWidget extends Widget
 	values: {string}
@@ -191,7 +194,7 @@ declare class ToggleWidget extends Widget
 	label: string
 end
 
-Form.Toggle = Form.Widget {
+local Toggle: ToggleWidget = Form.Widget {
 	values = {"Default"},
 	value = 1,
 	label = "Toggle",
@@ -247,21 +250,22 @@ Form.Toggle = Form.Widget {
 		return "nop"
 	end
 }
+Form.Toggle = Toggle
 
 --- Textfield ---------------------------------------------------------------
 
-declare class TextField extends Widget
+declare class TextFieldWidget extends Widget
 	value: string
 	cursor: number
 	offset: number
 	transient: boolean
 end
 
-local function keep_transient_textfield(self: TextField)
+local function keep_transient_textfield(self: TextFieldWidget)
 	self.transient = false
 end
 
-local function discard_transient_textfield(self: TextField)
+local function discard_transient_textfield(self: TextFieldWidget)
 	if self.transient then
 		self.value = ""
 		self.cursor = 1
@@ -269,16 +273,16 @@ local function discard_transient_textfield(self: TextField)
 	end
 end
 
-Form.TextField = Form.Widget {
+local TextField: TextFieldWidget = Form.Widget {
 	focusable = true,
 	transient = false,
 
-	init = function(self: TextField)
+	init = function(self: TextFieldWidget)
 		self.cursor = self.cursor or (self.value:len() + 1)
 		self.offset = self.offset or 1
 	end,
 
-	draw = function(self: TextField)
+	draw = function(self: TextFieldWidget)
 		SetBright()
 		Write(self.realx1, self.realy1 + 1, string_rep(
 			UseUnicode() and "▔" or " ", self.realwidth))
@@ -320,7 +324,7 @@ Form.TextField = Form.Widget {
 		end
 	end,
 
-	["KEY_LEFT"] = function(self: TextField, key)
+	["KEY_LEFT"] = function(self: TextFieldWidget, key)
 		keep_transient_textfield(self)
 		if (self.cursor > 1) then
 			while true do
@@ -335,7 +339,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_RIGHT"] = function(self: TextField, key)
+	["KEY_RIGHT"] = function(self: TextFieldWidget, key)
 		keep_transient_textfield(self)
 		if (self.cursor <= self.value:len()) then
 			self.cursor = self.cursor + GetBytesOfCharacter(self.value:byte(self.cursor))
@@ -345,7 +349,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_HOME"] = function(self: TextField, key)
+	["KEY_HOME"] = function(self: TextFieldWidget, key)
 		keep_transient_textfield(self)
 		self.cursor = 1
 		self:draw()
@@ -353,7 +357,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_END"] = function(self: TextField, key)
+	["KEY_END"] = function(self: TextFieldWidget, key)
 		keep_transient_textfield(self)
 		self.cursor = self.value:len() + 1
 		self:draw()
@@ -361,7 +365,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_BACKSPACE"] = function(self: TextField, key)
+	["KEY_BACKSPACE"] = function(self: TextFieldWidget, key)
 		discard_transient_textfield(self)
 		if (self.cursor > 1) then
 			local w
@@ -382,7 +386,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_DELETE"] = function(self: TextField, key)
+	["KEY_DELETE"] = function(self: TextFieldWidget, key)
 		discard_transient_textfield(self)
 		local v = self.value:byte(self.cursor)
 		if v then
@@ -396,7 +400,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	["KEY_^U"] = function(self: TextField, key)
+	["KEY_^U"] = function(self: TextFieldWidget, key)
 		discard_transient_textfield(self)
 		self.cursor = 1
 		self.offset = 1
@@ -407,7 +411,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	click = function(self: TextField, m: MouseEvent)
+	click = function(self: TextFieldWidget, m: MouseEvent)
 		local c = m.x - self.realx1 + self.offset
 		if (c >= 1) and (c <= #self.value) then
 			self.cursor = c
@@ -416,7 +420,7 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 
-	key = function(self: TextField, key: KeyboardEvent): ActionResult
+	key = function(self: TextFieldWidget, key: KeyboardEvent): ActionResult
 		if not key:match("^KEY_") then
 			discard_transient_textfield(self)
 			self.value = self.value:sub(1, self.cursor-1) .. key .. self.value:sub(self.cursor)
@@ -427,6 +431,8 @@ Form.TextField = Form.Widget {
 		return "nop"
 	end,
 }
+
+Form.TextField = TextField
 
 --- Browser --------------------------------------------------------------
 
@@ -445,7 +451,7 @@ declare class BrowserWidget extends Widget
 	_adjustOffset: (self: BrowserWidget) -> ()
 end
 
-Form.Browser = Form.Widget {
+local Browser: BrowserWidget = Form.Widget {
 	focusable = true,
 	data = {},
 
@@ -625,8 +631,9 @@ local standard_actions: {[string]: FormAction} =
 		return "nop"
 	end
 }
+Form.Browser = Browser
 
-local function resolvesize(size, bound)
+local function resolvesize(size: number, bound: number): number
 	if (size < 0) then
 		return size + bound
 	else

@@ -6,7 +6,7 @@ declare class Object
 	__call: (Object, any) -> any
 end
 
-local function instantiate(self: any, impl: any): any
+local function instantiate(self, impl)
 	return setmetatable(impl or {}, {__index = self, __call = instantiate})
 end
 	

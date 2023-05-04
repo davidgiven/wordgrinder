@@ -3,7 +3,6 @@
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local int = math.floor
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local ClearScreen = wg.clearscreen
@@ -261,7 +260,7 @@ function RedrawScreen()
 	-- So, line sl on sp is supposed to be in the middle. We now work up
 	-- and down to find the real cursor position.
 
-	local cy = int(ScreenHeight / 2) - sl
+	local cy = math.floor(ScreenHeight / 2) - sl
 	if cp >= sp then
 		local p = sp
 		
@@ -329,7 +328,7 @@ function RedrawScreen()
 
 	local pn = sp - 1
 	local sa = currentDocument:spaceAbove(sp)
-	local y = int(ScreenHeight/2) - sl - 1 - sa
+	local y = math.floor(ScreenHeight/2) - sl - 1 - sa
 	local paragraph = currentDocument[sp]
 	if paragraph then
 		SetColour(Palette.Paper, Palette.Paper)
@@ -394,7 +393,7 @@ function RedrawScreen()
 
 	-- Draw forwards.
 
-	y = int(ScreenHeight/2) - sl
+	y = math.floor(ScreenHeight/2) - sl
 	pn = sp
 	while (y < ScreenHeight) do
 		local paragraph = currentDocument[pn]
