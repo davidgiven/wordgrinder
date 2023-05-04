@@ -9,7 +9,6 @@
 #include <wctype.h>
 #include <sys/time.h>
 #include <time.h>
-#include "stb_ds.h"
 #include <fmt/format.h>
 
 #define KEY_TIMEOUT (KEY_MAX + 1)
@@ -30,16 +29,13 @@ typedef struct
     uint8_t bg;
 } pair_t;
 
-static colour_t* colours = NULL;
-static pair_t* colourPairs = NULL;
+static std::vector<colour_t> colours;
+static std::vector<pair_t> colourPairs;
 
 void dpy_init(const char* argv[]) {}
 
 void dpy_start(void)
 {
-    arrfree(colours);
-    arrfree(colourPairs);
-
     initscr();
 
     use_colours = has_colors() && can_change_color();
@@ -66,6 +62,8 @@ void dpy_start(void)
 
 void dpy_shutdown(void)
 {
+	colours.clear();
+	colourPairs.clear();
     endwin();
 }
 
@@ -138,15 +136,15 @@ void dpy_setattr(int andmask, int ormask)
 
 static uint8_t lookup_colour(const colour_t* colour)
 {
-    for (uint8_t i = 0; i < arrlen(colours); i++)
+    for (uint8_t i = 0; i < colours.size(); i++)
     {
         if ((colours[i].r == colour->r) && (colours[i].g == colour->g) &&
             (colours[i].b == colour->b))
             return i + FIRST_COLOUR_ID;
     }
 
-    uint8_t id = arrlen(colours) + FIRST_COLOUR_ID;
-    arrpush(colours, *colour);
+    uint8_t id = colours.size() + FIRST_COLOUR_ID;
+	colours.emplace_back(*colour);
     init_color(id, colour->r * 1000.0, colour->g * 1000.0, colour->b * 1000.0);
     return id;
 }
@@ -159,7 +157,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     uint8_t fgc = lookup_colour(fg);
     uint8_t bgc = lookup_colour(bg);
 
-    for (int i = 0; i < arrlen(colourPairs); i++)
+    for (int i = 0; i < colourPairs.size(); i++)
     {
         pair_t* p = &colourPairs[i];
         if ((p->fg == fgc) && (p->bg == bgc))
@@ -170,9 +168,8 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
         }
     }
 
-    currentPair = arrlen(colourPairs) + FIRST_PAIR_ID;
-    pair_t pair = {fgc, bgc};
-    arrpush(colourPairs, pair);
+    currentPair = colourPairs.size() + FIRST_PAIR_ID;
+	colourPairs.emplace_back(pair_t{fgc, bgc});
 
     init_pair(currentPair, fgc, bgc);
     update_attrs();
