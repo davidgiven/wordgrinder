@@ -1,7 +1,7 @@
 #include "globals.h"
 #include "gui.h"
 #include <GLFW/glfw3.h>
-#include "stb_ds.h"
+#include <deque>
 
 #define VKM_SHIFT 0x10000
 #define VKM_CTRL 0x20000
@@ -17,7 +17,7 @@ static cell_t* screen;
 static int cursorx;
 static int cursory;
 static bool cursorShown;
-static uni_t* keyboardQueue;
+static std::deque<uni_t> keyboardQueue;
 static bool pendingRedraw;
 static bool fullScreen;
 static int oldWindowX;
@@ -29,7 +29,7 @@ static void queueRedraw()
 {
     if (!pendingRedraw)
     {
-        arrins(keyboardQueue, 0, -KEY_RESIZE);
+        keyboardQueue.push_back(-KEY_RESIZE);
         pendingRedraw = true;
     }
 }
@@ -74,12 +74,12 @@ static void key_cb(
     {
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
-            arrins(keyboardQueue, 0, -((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
+            keyboardQueue.push_back(-((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
             return;
         }
         if (key == GLFW_KEY_SPACE)
         {
-            arrins(keyboardQueue, 0, -VKM_CTRLASCII);
+            keyboardQueue.push_back(-VKM_CTRLASCII);
             return;
         }
     }
@@ -120,8 +120,8 @@ static void key_cb(
         }
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
-            arrins(keyboardQueue, 0, -GLFW_KEY_ESCAPE);
-            arrins(keyboardQueue, 0, 'A' + (key - GLFW_KEY_A));
+            keyboardQueue.push_back(-GLFW_KEY_ESCAPE);
+            keyboardQueue.push_back('A' + (key - GLFW_KEY_A));
             return;
         }
     }
@@ -160,7 +160,7 @@ static void key_cb(
                 imods |= VKM_SHIFT;
             if (mods & GLFW_MOD_CONTROL)
                 imods |= VKM_CTRL;
-            arrins(keyboardQueue, 0, -(key | imods));
+            keyboardQueue.push_back(-(key | imods));
             break;
         }
     }
@@ -168,7 +168,7 @@ static void key_cb(
 
 static void character_cb(GLFWwindow* window, unsigned int c)
 {
-    arrins(keyboardQueue, 0, c);
+    keyboardQueue.push_back(c);
 }
 
 static void resize_cb(GLFWwindow* window, int width, int height)
@@ -183,7 +183,7 @@ static void refresh_cb(GLFWwindow* window)
 
 static void close_cb(GLFWwindow* window)
 {
-    arrins(keyboardQueue, 0, -KEY_QUIT);
+    keyboardQueue.push_back(-KEY_QUIT);
 }
 
 static void handle_mouse(double x, double y, bool b)
@@ -201,7 +201,7 @@ static void handle_mouse(double x, double y, bool b)
 
     if ((ix != oldix) || (iy != oldiy) || (b != oldb))
     {
-        arrins(keyboardQueue, 0, -encode_mouse_event(ix, iy, b));
+        keyboardQueue.push_back(-encode_mouse_event(ix, iy, b));
         oldix = ix;
         oldiy = iy;
         oldb = b;
@@ -227,7 +227,7 @@ static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
 
         case GLFW_MOUSE_BUTTON_RIGHT:
             if (action == GLFW_PRESS)
-                arrins(keyboardQueue, 0, -KEY_MENU);
+                keyboardQueue.push_back(-KEY_MENU);
             break;
     }
 }
@@ -235,9 +235,9 @@ static void mousebutton_cb(GLFWwindow* window, int button, int action, int mods)
 void scroll_cb(GLFWwindow* window, double xoffset, double yoffset)
 {
     if (yoffset < 0)
-        arrins(keyboardQueue, 0, -KEY_SCROLLDOWN);
+        keyboardQueue.push_back(-KEY_SCROLLDOWN);
     else
-        arrins(keyboardQueue, 0, -KEY_SCROLLUP);
+        keyboardQueue.push_back(-KEY_SCROLLUP);
 }
 
 void dpy_init(const char* argv[]) {}
@@ -343,7 +343,7 @@ void dpy_sync(void)
         screenWidth = sw;
         screenHeight = sh;
         screen = new cell_t[screenWidth * screenHeight];
-        arrins(keyboardQueue, 0, -KEY_RESIZE);
+        keyboardQueue.push_back(-KEY_RESIZE);
     }
     else
     {
@@ -454,8 +454,12 @@ uni_t dpy_getchar(double timeout)
     double endTime = glfwGetTime() + timeout;
     for (;;)
     {
-        if (arrlen(keyboardQueue) > 0)
-            return arrpop(keyboardQueue);
+        if (!keyboardQueue.empty())
+        {
+            uni_t c = keyboardQueue.front();
+            keyboardQueue.pop_front();
+            return c;
+        }
 
         if (timeout == -1)
             glfwWaitEvents();
