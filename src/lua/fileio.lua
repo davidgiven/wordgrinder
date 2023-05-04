@@ -497,7 +497,7 @@ local function loadfromstreamt(fp): DocumentSet
 			-- This is setting a property value.
 			local o: any = data
 			for e in k:gmatch("[^.]+") do
-				local en = e
+				local en: any = e
 				if e:find('^[0-9]+') then
 					en = assert(tonumber(e))
 				end
@@ -536,7 +536,8 @@ local function loadfromstreamt(fp): DocumentSet
 			if id == "clipboard" then
 				doc = assert(data.clipboard)
 			else
-				doc = data.documents[assert(tonumber(id))]
+				local n = assert(tonumber(id))
+				doc = data.documents[n]
 			end
 
 			local index = 1
@@ -560,7 +561,21 @@ local function loadfromstreamt(fp): DocumentSet
 		end
 	end
 
-	-- Patch up document names.
+	-- Bugfix: previously, the document metadata was written twice to the file,
+	-- once using the numeric document index as key and once using the name
+	-- (because the same table was used for both indices). This was wrong. So
+	-- we need to go through and remove the stub documents created erroneously
+	-- for the string keys. The actual data is added to the documents with
+	-- numeric keys, via the # line above.
+	
+	for i: any, d in data.documents do
+		if typeof(i) == "string" then
+			data.documents[i::any] = nil
+		end
+	end
+
+	-- Create the index by name.
+	--
 	data._documentIndex = {}
 	for i, d in data.documents do
 		data._documentIndex[d.name] = d

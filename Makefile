@@ -7,7 +7,7 @@ export WINDRES = windres
 export PKG_CONFIG = pkg-config
 export MAKENSIS = makensis
 
-export CFLAGS = -g -Os -ffunction-sections -fdata-sections
+export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
 export CXXFLAGS = $(CFLAGS) --std=c++17
 export LDFLAGS = -g
 export NINJAFLAGS =
