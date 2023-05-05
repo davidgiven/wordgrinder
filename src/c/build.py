@@ -112,5 +112,6 @@ make_wordgrinder(
     "clip_none",
     vars={
         "+cxxflags": ["-DFRONTEND=glfw"],
+        "+ldflags": ["-lGL"],
     },
 )
