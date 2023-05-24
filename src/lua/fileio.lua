@@ -496,7 +496,7 @@ local function loadfromstreamt(fp)
 			-- This is setting a property value.
 			local o = data
 			for e in k:gmatch("[^.]+") do
-				if e:find('^[0-9]+') then
+				if e:find('^[0-9]+$') then
 					e = tonumber(e)
 				end
 				if not o[e] then

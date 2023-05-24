@@ -10,6 +10,11 @@ function Cmd.AddBlankDocument(name)
 		end
 	end
 
+	if name:find('^[0-9]+$') then
+		ModalMessage("Can't use this name", "Sorry! As a temporary bug workaround you can't use names which are numbers. This will be fixed shortly.")
+		return false
+	end
+
 	if DocumentSet.documents[name] then
 		ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
 		return false
@@ -59,6 +64,11 @@ function Cmd.ManageDocumentsUI()
 			return "confirm"
 		end
 		
+		if name:find('^[0-9]+$') then
+			ModalMessage("Can't use this name", "Sorry! As a temporary bug workaround you can't use names which are numbers. This will be fixed shortly.")
+			return "confirm"
+		end
+
 		if not DocumentSet:renameDocument(Document.name, name) then
 			ModalMessage("Name in use", "Sorry! There's already a document with that name in this document set.")
 			return "confirm"
