@@ -499,7 +499,6 @@ local function loadfromstreamt(fp)
 				if e:find('^[0-9]+$') then
 					e = tonumber(e)
 				end
-				print(e)
 				if not o[e] then
 					if (o == data.documents) then
 						o[e] = CreateDocument()
