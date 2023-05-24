@@ -498,7 +498,7 @@ local function loadfromstreamt(fp): DocumentSet
 			local o: any = data
 			for e in k:gmatch("[^.]+") do
 				local en: any = e
-				if e:find('^[0-9]+') then
+				if e:find('^[0-9]+$') then
 					en = assert(tonumber(e))
 				end
 				if not o[en] then
