@@ -114,6 +114,8 @@ local function writetostreamt(object, write)
 			save_document(i, d)
 		end
 	end
+
+	return true
 end
 
 function SaveToString(object)
