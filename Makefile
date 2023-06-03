@@ -58,6 +58,7 @@ bin/wordgrinder-minimal-dependencies-for-debian.tar.xz:
 		README.Windows.txt \
 		README.wg \
 		build.py \
+		config.py \
 		extras \
 		licenses \
 		scripts \
