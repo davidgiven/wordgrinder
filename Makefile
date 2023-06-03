@@ -38,11 +38,36 @@ $(OBJ)/build.ninja: Makefile $(build-files)
 		-v OBJ,CC,CXX,AR,WINDRES,MAKENSIS \
 		build.py
 
+.PHONY: install
 install: all
 	test -f bin/wordgrinder && cp bin/wordgrinder $(PREFIX)/bin/wordgrinder
 	test -f bin/wordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/wordgrinder.1
 	test -f bin/xwordgrinder && cp bin/xwordgrinder $(PREFIX)/bin/xwordgrinder
 	test -f bin/xwordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/xwordgrinder.1
+
+.PHONY: debian-distr
+debian-distr: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
+
+.PHONY: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
+bin/wordgrinder-minimal-dependencies-for-debian.tar.xz:
+	tar cvaf $@ \
+		--transform "s,^,wordgrinder-$(VERSION)/," \
+		--exclude "*.dictionary" \
+		Makefile \
+		README \
+		README.Windows.txt \
+		README.wg \
+		build.py \
+		extras \
+		licenses \
+		scripts \
+		src \
+		testdocs \
+		tests \
+		third_party/luau \
+		tools \
+		wordgrinder.man \
+		xwordgrinder.man
 
 .DELETE_ON_ERROR:
 .SECONDARY:
