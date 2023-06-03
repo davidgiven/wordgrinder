@@ -77,6 +77,16 @@ If you want to install somewhere else, do:
 	PREFIX=/usr/local ./configure
 	make install
 
+To build with Docker, simply do:
+  
+    docker build -t wordgrinder:1 .
+
+Run the Docker image, volume mounting your current work directory and existing settings.dat file: 
+
+    docker run -it --rm --workdir=/work -v $PWD:/work -v $HOME/.wordgrinder:/root/.wordgrinder wordgrinder:1
+
+
+
 (Change PREFIX to whatever you like; naturally, if you're not installing in a
 global location, you don't need sudo.)
 
