@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008-2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -18,8 +19,9 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-function Cmd.ImportTextFileFromStream(fp)
+function Cmd.ImportTextString(data: string)
 	local document = CreateDocument()
+	local fp = CreateIStream(data)
 	for l in fp:lines() do
 		l = CanonicaliseString(l)
 		l = l:gsub("%c+", "")
@@ -36,10 +38,6 @@ function Cmd.ImportTextFileFromStream(fp)
 	return document
 end
 
-function Cmd.ImportTextFileFromString(s)
-	return Cmd.ImportTextFileFromStream(CreateIStream(s))
-end
-
 function Cmd.ImportTextFile(filename)
-	return ImportFileWithUI(filename, "Import Text File", Cmd.ImportTextFileFromStream)
+	return ImportFileWithUI(filename, "Import Text File", Cmd.ImportTextString)
 end

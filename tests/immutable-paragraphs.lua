@@ -1,4 +1,5 @@
-require "tests/testsuite"
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 local p = CreateParagraph("P", {"one"})
 AssertTableEquals({"one"}, p)

@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -15,23 +16,27 @@ local function gotobrowser(data, index)
 		cursor = index
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Table of Contents",
-		width = Form.Large,
-		height = Form.Large,
+		width = "large",
+		height = "large",
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			value = "Select heading to jump to:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
 
-		browser,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				value = "Select heading to jump to:"
+			},
+
+			browser,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -48,12 +53,12 @@ function Cmd.Goto()
 	ImmediateMessage("Scanning document...")
 
 	local data = {}
-	local levelcount = {0, 0, 0, 0}
+	local levelcount: {number} = {0, 0, 0, 0}
 	local currentheading = 1
-	for paran, para in ipairs(Document) do
+	for paran, para in ipairs(currentDocument) do
 		local _, _, level = para.style:find("^H(%d)$")
 		if level then
-			level = tonumber(level)
+			local level = assert(tonumber(level))
 
 			-- Update the array of section counts. Remember that subsections
 			-- are local to their section, so make sure to zero out the
@@ -76,7 +81,7 @@ function Cmd.Goto()
 				paran = paran
 			}
 
-			if (paran <= Document.cp) then
+			if (paran <= currentDocument.cp) then
 				currentheading = #data
 			end
 		end
@@ -91,9 +96,9 @@ function Cmd.Goto()
 	QueueRedraw()
 
 	if result then
-		Document.cp = data[result].paran
-		Document.cw = 1
-		Document.co = 1
+		currentDocument.cp = data[result].paran
+		currentDocument.cw = 1
+		currentDocument.co = 1
 		return true
 	end
 

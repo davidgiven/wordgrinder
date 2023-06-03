@@ -1,3 +1,4 @@
+--!nonstrict
 local function unorg(s)
 	s = s:gsub("#", "\\#")
 	s = s:gsub("- ", "\\- ")
@@ -9,7 +10,7 @@ local function unorg(s)
 	return s
 end
 
-local style_tab =
+local style_tab: {[string]: {any}} =
 {
 	["H1"] = {false, '* ', '\n'},
 	["H2"] = {false, '** ', '\n'},
@@ -25,7 +26,7 @@ local style_tab =
 	["PRE"] = {true, '#+begin_src\n', '\n#+end_src\n'}
 }
 
-local function callback(writer, document)
+local function callback(writer: (...string) -> (), document: Document)
 	local currentpara = nil
 
 	function changepara(newpara)
@@ -117,6 +118,6 @@ function Cmd.ExportOrgFile(filename)
 end
 
 function Cmd.ExportToOrgString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

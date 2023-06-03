@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("foo bar baz")
 Cmd.GotoPreviousWord()
@@ -8,5 +9,5 @@ Cmd.SetMark()
 Cmd.GotoEndOfWord()
 Cmd.Delete()
 
-AssertTableEquals({"foo", "", "baz"}, Document[1])
+AssertTableEquals({"foo", "", "baz"}, currentDocument[1])
 

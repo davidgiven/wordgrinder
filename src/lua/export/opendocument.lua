@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -41,7 +42,7 @@ local function list()
 	end
 end
 
-local style_tab =
+local style_tab: {[string]: {any}} =
 {
 	["H1"] = {false, header(), emit('</text:h>') },
 	["H2"] = {false, header(), emit('</text:h>') },
@@ -58,7 +59,7 @@ local style_tab =
 }
 
 local function callback(writer, document)
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 	local currentstylename = nil
 	
 	function changepara(para)
@@ -113,7 +114,7 @@ local function callback(writer, document)
 			writer(unhtml(s))
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()
@@ -158,7 +159,7 @@ end
 
 local function export_odt_with_ui(filename, title, extension)
 	if not filename then
-		filename = Document.name
+		filename = currentDocument.name
 		if filename then
 			if not filename:find("%..-$") then
 				filename = filename .. extension
@@ -169,11 +170,13 @@ local function export_odt_with_ui(filename, title, extension)
 			filename = "(unnamed)"
 		end
 			
-		filename = FileBrowser(title, "Export as:", true,
+		local filename = FileBrowser(title, "Export as:", true,
 			filename)
 		if not filename then
 			return false
 		end
+		assert(filename)
+
 		if filename:find("/[^.]*$") then
 			filename = filename .. extension
 		end
@@ -185,8 +188,7 @@ local function export_odt_with_ui(filename, title, extension)
 	local writer = function(s)
 		content[#content+1] = s
 	end
-	callback(writer, Document)
-	content = table_concat(content)
+	callback(writer, currentDocument)
 	
 	local xml =
 	{
@@ -358,11 +360,11 @@ local function export_odt_with_ui(filename, title, extension)
 				xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"/>
 		]],
 		
-		["content.xml"] = content
+		["content.xml"] = table.concat(content)
 	}
 	
 	if not writezip(filename, xml) then
-		ModalMessage(nil, "Unable to open the output file "..e..".")
+		ModalMessage(nil, "Unable to open the output file.")
 		QueueRedraw()
 		return false
 	end
@@ -377,6 +379,6 @@ end
 
 -- Note: just the content.xml.
 function Cmd.ExportToODTString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

@@ -1,12 +1,14 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local function maketimestamp(pattern, name)
-	name = name or Document.name
+local function maketimestamp(pattern: string, name: string?): string
+	name = name or currentDocument.name
+	assert(name)
 	name = name:gsub("%%", "%%%%")
 	
-	local timestamp = os.date("%Y-%m-%d.%H%M")
+	local timestamp = os.date("%Y-%m-%d.%H%M")::string
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
 	pattern = pattern:gsub("%%[nN]", name)
@@ -16,7 +18,7 @@ local function maketimestamp(pattern, name)
 end
 
 function Cmd.CutToScrapbook()
-	if not Document.mp then
+	if not currentDocument.mp then
 		NonmodalMessage("There's nothing selected.")
 		return false
 	end
@@ -28,7 +30,7 @@ function Cmd.CutToScrapbook()
 end
 
 function Cmd.CopyToScrapbook()
-	if not Document.mp then
+	if not currentDocument.mp then
 		NonmodalMessage("There's nothing selected.")
 		return false
 	end
@@ -40,21 +42,21 @@ function Cmd.CopyToScrapbook()
 end
 
 function Cmd.PasteToScrapbook()
-	local buffer = DocumentSet:getClipboard()
+	local buffer = documentSet:getClipboard()
 	if not buffer then
 		NonmodalMessage("There's nothing on the clipboard.")
 		return false
 	end
 	
-	local settings = DocumentSet.addons.scrapbook
+	local settings = documentSet.addons.scrapbook
 	
-	local currentdocument = Document.name
+	local currentdocument = currentDocument.name
 	
-	if not DocumentSet:findDocument(settings.document) then
-		DocumentSet:addDocument(CreateDocument(), settings.document)
+	if not documentSet:findDocument(settings.document) then
+		documentSet:addDocument(CreateDocument(), settings.document)
 		NonmodalMessage("Creating scrapbook in document '"..settings.document.."'.")
 	end
-	DocumentSet:setCurrent(settings.document)
+	documentSet:setCurrent(settings.document)
 
 	Cmd.GotoEndOfDocument()
 	Cmd.UnsetMark()
@@ -67,32 +69,32 @@ function Cmd.PasteToScrapbook()
 	Cmd.ChangeParagraphStyle("P")
 	Cmd.Paste()
 	
-	DocumentSet:setCurrent(currentdocument)
+	documentSet:setCurrent(currentdocument)
 	NonmodalMessage("Fragment added to scrapbook.")
 	
 	return false
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.scrapbook = DocumentSet.addons.scrapbook or {
+		documentSet.addons.scrapbook = documentSet.addons.scrapbook or {
 			document = "Scrapbook",
 			timestamp = true,
 			pattern = "Item from '%N' at %T:" 
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigureScrapbook()
-	local settings = DocumentSet.addons.scrapbook
+	local settings = documentSet.addons.scrapbook
 
 	local document_textfield =
 		Form.TextField {
@@ -122,42 +124,46 @@ function Cmd.ConfigureScrapbook()
 			value = settings.pattern,
 			
 			draw = function(self)
-				self.class.draw(self)
+				Form.TextField.draw(self)
 				
 				example_label.value = "(Example timestamp: "..maketimestamp(self.value)..")"
 				example_label:draw()
 			end
 		}
 	
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Timestamp",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 32, y2 = 1,
-			align = Form.Left,
-			value = "Name of scrapbook document:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
-		document_textfield,
 		
-		timestamp_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Timestamp pattern:"
-		},
-		pattern_textfield,
-		
-		example_label,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 32, y2 = 1,
+				align = "left",
+				value = "Name of scrapbook document:"
+			},
+			document_textfield,
+			
+			timestamp_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = "left",
+				value = "Timestamp pattern:"
+			},
+			pattern_textfield,
+			
+			example_label,
+		}
 	}
 	
 	while true do
@@ -182,7 +188,7 @@ function Cmd.ConfigureScrapbook()
 			settings.document = document
 			settings.timestamp = timestamp
 			settings.pattern = pattern
-			DocumentSet:touch()
+			documentSet:touch()
 
 			return true
 		end

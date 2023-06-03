@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -12,15 +13,37 @@ local bitxor = bit32.bxor
 local bit = bit32.btest
 local string_lower = string.lower
 local time = wg.time
+local WriteFile = wg.writefile
+
+type Exporter = {
+	prologue: () -> (),
+	epilogue: () -> (),
+
+	paragraph_start: (Paragraph) -> (),
+	paragraph_end: (Paragraph) -> (),
+
+	list_start: (string) -> (),
+	list_end: (string) -> (),
+
+	text: (string) -> (),
+	rawtext: (string) -> (),
+	notext: () -> (),
+	italic_on: () -> (),
+	italic_off: () -> (),
+	bold_on: () -> (),
+	bold_off: () -> (),
+	underline_on: () -> (),
+	underline_off: () -> (),
+}
 
 -- Renders the document by calling the appropriate functions on the cb
 -- table.
 
-function ExportFileUsingCallbacks(document, cb)
+function ExportFileUsingCallbacks(document: Document, cb: Exporter)
 	document:renumber()
 	cb.prologue()
 
-	local listmode = false
+	local listmode: string? = nil
 	local rawmode = false
 	local italic, underline, bold
 	local olditalic, oldunderline, oldbold
@@ -78,15 +101,15 @@ function ExportFileUsingCallbacks(document, cb)
 
 	for _, paragraph in ipairs(document) do
 		local name = paragraph.style
-		local style = DocumentStyles[name]
+		local style = documentStyles[name]
 
 		if listmode and not style.list then
 			cb.list_end(listmode)
-			listmode = false
+			listmode = nil
 		end
 		if not listmode and style.list then
 			cb.list_start(name)
-			listmode = true
+			listmode = name
 		end
 
 		rawmode = (name == "RAW")
@@ -133,7 +156,7 @@ function ExportFileUsingCallbacks(document, cb)
 		cb.paragraph_end(paragraph)
 	end
 	if listmode then
-		cb.list_end()
+		cb.list_end(listmode)
 	end
 	cb.epilogue()
 end
@@ -143,7 +166,7 @@ end
 
 function ExportFileWithUI(filename, title, extension, callback)
 	if not filename then
-		filename = Document.name
+		filename = currentDocument.name
 		if filename then
 			if not filename:find("%..-$") then
 				filename = filename .. extension
@@ -154,31 +177,32 @@ function ExportFileWithUI(filename, title, extension, callback)
 			filename = "(unnamed)"
 		end
 
-		filename = FileBrowser(title, "Export as:", true,
+		local filename = FileBrowser(title, "Export as:", true,
 			filename)
 		if not filename then
 			return false
 		end
+		assert(filename)
 		if filename:find("/[^.]*$") then
 			filename = filename .. extension
 		end
 	end
 
 	ImmediateMessage("Exporting "..filename.."...")
-	local fp, e = io.open(filename, "w")
-	if not fp then
+
+	local data: {string} = {}
+	local writer = function(...: {string})
+		for _, s in ipairs(...) do
+			data[#data+1] = s
+		end
+	end
+
+	local _, e = WriteFile(filename, table.concat(data))
+	if e then
 		ModalMessage(nil, "Unable to open the output file "..e..".")
 		QueueRedraw()
 		return false
 	end
-
-	local fpw = fp.write
-	local writer = function(...)
-		fpw(fp, ...)
-	end
-
-	callback(writer, Document)
-	fp:close()
 
 	QueueRedraw()
 	return true

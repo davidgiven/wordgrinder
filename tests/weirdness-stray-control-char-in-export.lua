@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 -- Test the low level function that's actually got the bug in it.
 
@@ -27,8 +28,8 @@ end
 -- but it's a bit brittle and I want to be absolutely sure it happens
 -- for the test case.
 
-Document[2][1] = "\16"
-ExportToString(Document, callback)
+currentDocument[2][1] = "\16"
+ExportToString(currentDocument, callback)
 
 AssertTableAndPropertiesEquals(
 	{

@@ -1,6 +1,7 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
-local filename = os.tmpname()
+local filename = wg.mkdtemp().."/temp.wg"
 
 GlobalSettings = {
 	boolValue = true,
@@ -12,7 +13,7 @@ GlobalSettings = {
 	stringWithQuotationMarks = 'one"two"three',
 	stringWithSpecialBytes = "one\001two\002three",
 }
-FireEvent(Event.RegisterAddons)
+FireEvent("RegisterAddons")
 
 SaveGlobalSettings(filename)
 

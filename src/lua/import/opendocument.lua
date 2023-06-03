@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008-2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -23,10 +24,22 @@ local STYLE_NS = "urn:oasis:names:tc:opendocument:xmlns:style:1.0"
 local FO_NS = "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
 local TEXT_NS = "urn:oasis:names:tc:opendocument:xmlns:text:1.0"
 
+type ODStyle = {
+	parent: string,
+	italic: boolean?,
+	bold: boolean?,
+	underline: boolean?,
+	indented: boolean?
+}
+
+type ODStyleMap = {
+	[string]: ODStyle
+}
+
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-local function parse_style(styles, xml)
+local function parse_style(styles: ODStyleMap, xml)
 	local NAME = STYLE_NS .. " name"
 	local FAMILY = STYLE_NS .. " family"
 	local PARENT_NAME = STYLE_NS .. " parent-name"
@@ -45,26 +58,18 @@ local function parse_style(styles, xml)
 
 	for _, element in ipairs(xml) do
 		if (element._name == TEXT_PROPERTIES) then
-			if (element[FONT_STYLE] == "italic") then
-				style.italic = true
-			end
-			if (element[FONT_WEIGHT] == "bold") then
-				style.bold = true
-			end
-			if (element[UNDERLINE_STYLE] == "solid") then
-				style.underline = true
-			end
+			style.italic = element[FONT_STYLE] == "italic"
+			style.bold = element[FONT_WEIGHT] == "bold"
+			style.underline = element[UNDERLINE_STYLE] == "solid"
 		elseif (element._name == PARAGRAPH_PROPERTIES) then
-			if element[MARGIN_LEFT] then
-				style.indented = true
-			end
+			style.indented = element[MARGIN_LEFT]
 		end
 	end
 
 	styles[name] = style
 end
 
-local function resolve_parent_styles(styles)
+local function resolve_parent_styles(styles: ODStyleMap)
 	local function recursively_fetch(name, attr)
 		local style = styles[name]
 		if style[attr] then
@@ -73,10 +78,10 @@ local function resolve_parent_styles(styles)
 		if style.parent then
 			return recursively_fetch(style.parent, attr)
 		end
-		return nil
+		return false
 	end
 
-	for k, v in pairs(styles) do
+	for k, v in styles do
 		v.italic = recursively_fetch(k, "italic")
 		v.bold = recursively_fetch(k, "bold")
 		v.underline = recursively_fetch(k, "underline")
@@ -100,13 +105,13 @@ local function collect_styles(styles, xml)
 	end
 end
 
-local function add_text(styles, importer, xml)
+local function add_text(styles: ODStyleMap, importer, xml)
 	local SPACE = TEXT_NS .. " s"
 	local SPACECOUNT = TEXT_NS .. " c"
 	local SPAN = TEXT_NS .. " span"
 	local STYLENAME = TEXT_NS .. " style-name"
 	
-	for _, element in ipairs(xml) do
+	for _, element: any in ipairs(xml) do
 		if (type(element) == "string") then
 			local needsflush = false
 			if string_find(element, "^ ") then
@@ -123,13 +128,13 @@ local function add_text(styles, importer, xml)
 				importer:flushword(false)
 			end
 		elseif (element._name == SPACE) then
-			local count = tonumber(element[SPACECOUNT] or 0) + 1
-			for i = 1, count do
+			local count = tonumber(element[SPACECOUNT]) or 0
+			for i = 1, count+1 do
 				importer:flushword(false)
 			end
 		elseif (element._name == SPAN) then
 			local stylename = element[STYLENAME] or ""
-			local style = styles[stylename] or {}
+			local style = styles[stylename] or {}::ODStyle
 			
 			if style.italic then
 				importer:style_on(ITALIC)
@@ -156,7 +161,8 @@ local function add_text(styles, importer, xml)
 	end
 end
 
-local function import_paragraphs(styles, importer, xml, defaultstyle)
+local function import_paragraphs(
+		styles: ODStyleMap, importer: Importer, xml, defaultstyle)
 	local PARAGRAPH = TEXT_NS .. " p"
 	local HEADER = TEXT_NS .. " h"
 	local LIST = TEXT_NS .. " list"
@@ -167,7 +173,7 @@ local function import_paragraphs(styles, importer, xml, defaultstyle)
 	for _, element in ipairs(xml) do
 		if (element._name == PARAGRAPH) then
 			local stylename = element[STYLENAME] or ""
-			local style = styles[stylename] or {}
+			local style = styles[stylename] or {}::ODStyle
 			local wgstyle = defaultstyle
 			
 			if style.indented then
@@ -177,8 +183,8 @@ local function import_paragraphs(styles, importer, xml, defaultstyle)
 			add_text(styles, importer, element)
 			importer:flushparagraph(wgstyle)
 		elseif (element._name == HEADER) then
-			local level = tonumber(element[OUTLINELEVEL] or 1)
-			if (level > 4) then
+			local level = assert(tonumber(element[OUTLINELEVEL] or 1))
+			if level > 4 then
 				level = 4
 			end
 			
@@ -202,13 +208,14 @@ function Cmd.ImportODTFile(filename)
 			return false
 		end
 	end
+	assert(filename)
 	
 	ImmediateMessage("Importing...")	
 
 	-- Load the styles and content subdocuments.
 	
-	local stylesxml = ReadFromZip(filename, "styles.xml")
-	local contentxml = ReadFromZip(filename, "content.xml")
+	local stylesxml: any = ReadFromZip(filename, "styles.xml")
+	local contentxml: any = ReadFromZip(filename, "content.xml")
 	if not stylesxml or not contentxml then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")
 		QueueRedraw()
@@ -221,7 +228,7 @@ function Cmd.ImportODTFile(filename)
 	-- Find out what text styles the document creates (so we can identify
 	-- italic and underlined text).
 	
-	local styles = {}
+	local styles: ODStyleMap = {}
 	collect_styles(styles, stylesxml)
 	collect_styles(styles, contentxml)
 	resolve_parent_styles(styles)
@@ -255,19 +262,20 @@ function Cmd.ImportODTFile(filename)
 	
 	local docname = Leafname(filename)
 
-	if DocumentSet.documents[docname] then
+	if documentSet:_findDocument(docname) then
 		local id = 1
 		while true do
 			local f = docname.."-"..id
-			if not DocumentSet.documents[f] then
+			if not documentSet:_findDocument(f) then
 				docname = f
 				break
 			end
+			id = id + 1
 		end
 	end
 	
-	DocumentSet:addDocument(document, docname)
-	DocumentSet:setCurrent(docname)
+	documentSet:addDocument(document, docname)
+	documentSet:setCurrent(docname)
 
 	QueueRedraw()
 	return true

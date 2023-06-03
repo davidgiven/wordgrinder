@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -72,23 +73,25 @@ do
 				denseparagraphs = false,
 				palette = "Light",
 				scrollmode = "Fixed",
+				fullstopspaces = false,
 			}
 		)
 		SetTheme(GlobalSettings.lookandfeel.palette)
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
-local function find(list, value)
+local function find(list, value): number?
 	for i, k in ipairs(list) do
 		if value == k then
 			return i
 		end
 	end
+	return nil
 end
 
 function Cmd.ConfigureLookAndFeel()
@@ -152,31 +155,35 @@ function Cmd.ConfigureLookAndFeel()
 			value = find(SCROLLMODES, settings.scrollmode)
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Look and Feel",
-		width = Form.Large,
+		width = "large",
 		height = 15,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		enabled_checkbox,
-
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = -12, y2 = 3,
-			align = Form.Left,
-			value = "Maximum allowed width",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
-		maxwidth_textfield,
 
-		terminators_checkbox,
-		denseparagraphs_checkbox,
-		fullstopspaces_checkbox,
-		palette_toggle,
-		scrollmode_toggle,
+		widgets = {
+			enabled_checkbox,
+
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = -12, y2 = 3,
+				align = "left",
+				value = "Maximum allowed width",
+			},
+			maxwidth_textfield,
+
+			terminators_checkbox,
+			denseparagraphs_checkbox,
+			fullstopspaces_checkbox,
+			palette_toggle,
+			scrollmode_toggle,
+		}
 	}
 
 	while true do

@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 local document = Cmd.ImportODTFile("testdocs/testdoc.odt")
 
@@ -34,7 +35,7 @@ normal text
 ]]
 expected = expected:gsub("@@@", VERSION)
 
-DocumentSet:setCurrent("testdoc.odt")
+documentSet:setCurrent("testdoc.odt")
 local output = Cmd.ExportToLatexString()
 AssertEquals(expected, output)
 

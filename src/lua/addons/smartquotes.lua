@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -14,7 +15,7 @@ end
 
 do
 	local function cb(event, token, payload)
-		local settings = DocumentSet.addons.smartquotes or {}
+		local settings = documentSet.addons.smartquotes or {}
 		local start_of_word_pattern =
 			(P("^") *
 			 (P("[\"']") +
@@ -26,10 +27,10 @@ do
 			):compile()
 
 		if settings.notinraw
-				and (Document[Document.cp].style ~= "RAW") then
+				and (currentDocument[currentDocument.cp].style ~= "RAW") then
 			local value = payload.value
-			local word = Document[Document.cp][Document.cw]
-			local prefix = word:sub(1, Document.co-1)
+			local word = currentDocument[currentDocument.cp][currentDocument.cw]
+			local prefix = word:sub(1, currentDocument.co-1)
 			local first = start_of_word_pattern(prefix) ~= nil
 
 			if settings.doublequotes and (value == '"') then
@@ -42,15 +43,15 @@ do
 		end
 	end
 
-	AddEventListener(Event.KeyTyped, cb)
+	AddEventListener("KeyTyped", cb)
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.smartquotes = DocumentSet.addons.smartquotes or {
+		documentSet.addons.smartquotes = documentSet.addons.smartquotes or {
 			doublequotes = false,
 			singlequotes = false,
 			notinraw = true,
@@ -61,14 +62,14 @@ do
 		}
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Undo any smart quotes.
 
 function UnSmartquotify(s)
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	s = s:gsub(escape(settings.leftdouble), '"')
 	s = s:gsub(escape(settings.rightdouble), '"')
 	s = s:gsub(escape(settings.leftsingle), "'")
@@ -80,7 +81,7 @@ end
 -- Process the selection.
 
 local function convert_clipboard()
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	local doc = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
@@ -104,7 +105,7 @@ local function convert_clipboard()
 			local newwords = {}
 			for _, w in ipairs(para) do
 				w = w:gsub('()(["\'])',
-					function(pos, s)
+					function(pos: number, s: string): string?
 						local prefix = w:sub(1, pos-1)
 						local first = start_of_word_pattern(prefix) ~= nil
 						if first then
@@ -120,7 +121,8 @@ local function convert_clipboard()
 								return rd
 							end
 						end
-					end)
+						return nil
+					end::any)
 
 				newwords[#newwords+1] = w
 			end
@@ -135,7 +137,7 @@ local function convert_clipboard()
 end
 
 local function unconvert_clipboard()
-	local settings = DocumentSet.addons.smartquotes or {}
+	local settings = documentSet.addons.smartquotes or {}
 	local clipboard = GetClipboard()
 
 	local ld = escape(settings.leftdouble)
@@ -182,7 +184,7 @@ end
 -- Configuration user interface.
 
 function Cmd.ConfigureSmartQuotes()
-	local settings = DocumentSet.addons.smartquotes
+	local settings = documentSet.addons.smartquotes
 
 	local single_checkbox =
 		Form.Checkbox {
@@ -236,71 +238,75 @@ function Cmd.ConfigureSmartQuotes()
 			value = settings.notinraw
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Smart Quotes",
-		width = Form.Large,
+		width = "large",
 		height = 13,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		single_checkbox,
-		double_checkbox,
-		leftsingle_textfield,
-		rightsingle_textfield,
-		leftdouble_textfield,
-		rightdouble_textfield,
-		notinraw_checkbox,
-
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Text used for single quotes:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
 
-		Form.Label {
-			x1 = -19, y1 = 5,
-			x2 = -17, y2 = 5,
-			align = Form.Left,
-			value = "L:"
-		},
+		widgets = {
+			single_checkbox,
+			double_checkbox,
+			leftsingle_textfield,
+			rightsingle_textfield,
+			leftdouble_textfield,
+			rightdouble_textfield,
+			notinraw_checkbox,
 
-		Form.Label {
-			x1 = -9, y1 = 5,
-			x2 = -7, y2 = 5,
-			align = Form.Left,
-			value = "R:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = "left",
+				value = "Text used for single quotes:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = 32, y2 = 7,
-			align = Form.Left,
-			value = "Text used for double quotes:"
-		},
+			Form.Label {
+				x1 = -19, y1 = 5,
+				x2 = -17, y2 = 5,
+				align = "left",
+				value = "L:"
+			},
 
-		Form.Label {
-			x1 = -19, y1 = 7,
-			x2 = -17, y2 = 7,
-			align = Form.Left,
-			value = "L:"
-		},
+			Form.Label {
+				x1 = -9, y1 = 5,
+				x2 = -7, y2 = 5,
+				align = "left",
+				value = "R:"
+			},
 
-		Form.Label {
-			x1 = -9, y1 = 7,
-			x2 = -7, y2 = 7,
-			align = Form.Left,
-			value = "R:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = 32, y2 = 7,
+				align = "left",
+				value = "Text used for double quotes:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = -1, y2 = 11,
-			align = Form.Centre,
-			value = "To apply to existing text, copy and then paste it."
+			Form.Label {
+				x1 = -19, y1 = 7,
+				x2 = -17, y2 = 7,
+				align = "left",
+				value = "L:"
+			},
+
+			Form.Label {
+				x1 = -9, y1 = 7,
+				x2 = -7, y2 = 7,
+				align = "left",
+				value = "R:"
+			},
+
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = -1, y2 = 11,
+				align = "centre",
+				value = "To apply to existing text, copy and then paste it."
+			}
 		}
 	}
 
@@ -317,7 +323,7 @@ function Cmd.ConfigureSmartQuotes()
 	settings.leftdouble = leftdouble_textfield.value
 	settings.rightdouble = rightdouble_textfield.value
 	settings.notinrawquotes = notinraw_checkbox.value
-	DocumentSet:touch()
+	documentSet:touch()
 
 	return true
 end

@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,6 +7,7 @@ local ITALIC = wg.ITALIC
 local UNDERLINE = wg.UNDERLINE
 local ParseWord = wg.parseword
 local WriteU8 = wg.writeu8
+local ReadFile = wg.readfile
 local bitand = bit32.band
 local bitor = bit32.bor
 local bitxor = bit32.bxor
@@ -15,9 +17,18 @@ local string_find = string.find
 local string_sub = string.sub
 local table_concat = table.concat
 
+type Importer = {
+	reset: (Importer) -> (),
+	style_on: (Importer, number) -> (),
+	style_off: (Importer, number) -> (),
+	text: (Importer, string) -> (),
+	flushword: (Importer, boolean?) -> (),
+	flushparagraph: (Importer, string) -> (),
+}
+
 -- Import helper functions. These functions build styled words and paragraphs.
 
-function CreateImporter(document)
+function CreateImporter(document: Document): Importer
 	local pbuffer
 	local wbuffer
 	local oldattr
@@ -77,49 +88,51 @@ end
 
 -- Does the standard selector-box-and-progress UI for each importer.
 
-function ImportFileWithUI(filename, title, callback)
+function ImportFileWithUI(filename, title, callback: (string) -> Document?): boolean
 	if not filename then
 		filename = FileBrowser(title, "Import from:", false)
 		if not filename then
 			return false
 		end
 	end
+	assert(filename)
 
 	ImmediateMessage("Importing...")
 
 	-- Actually import the file.
 
-	local fp = io.open(filename)
-	if not fp then
-		return nil
+	local data, e = ReadFile(filename)
+	if not data then
+		return false
 	end
 
-	local document = callback(fp)
+	assert(data)
+	local document = callback(data)
 	if not document then
 		ModalMessage(nil, "The import failed, probably because the file could not be found.")
 		QueueRedraw()
 		return false
 	end
-
-	fp:close()
+	assert(document)
 
 	-- Add the document to the document set.
 
 	local docname = Leafname(filename)
 
-	if DocumentSet.documents[docname] then
+	if documentSet:_findDocument(docname) then
 		local id = 1
 		while true do
 			local f = docname.."-"..id
-			if not DocumentSet.documents[f] then
+			if not documentSet:_findDocument(f) then
 				docname = f
 				break
 			end
+			id = id + 1
 		end
 	end
 
-	DocumentSet:addDocument(document, docname)
-	DocumentSet:setCurrent(docname)
+	documentSet:addDocument(document, docname)
+	documentSet:setCurrent(docname)
 
 	QueueRedraw()
 	return true

@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2022 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,7 +7,7 @@ local table_insert = table.insert
 local table_remove = table.remove
 local string_char = string.char
 
-local function MakeDark()
+local function MakeDark(): ColourMap
 	local ink = {1, 1, 1}
 	local paper = {0.2, 0.2, 0.2}
 	local headerfg = {1, 1, 0}
@@ -50,7 +51,7 @@ local function MakeDark()
 	}
 end
 
-local function MakeLight()
+local function MakeLight(): ColourMap
 	local ink = {0, 0, 0}
 	local paper = {0.760, 0.760, 0.730}
 	local headerfg = {0.14, 0.22, 0.40}
@@ -94,7 +95,7 @@ local function MakeLight()
 	}
 end
 
-local function MakeClassic()
+local function MakeClassic(): ColourMap
 	local ink = {0.8, 0.8, 0.8}
 	local white = {1, 1, 1}
 	local black = {0, 0, 0}
@@ -138,7 +139,7 @@ local function MakeClassic()
 	}
 end
 
-local Palettes = {
+local Palettes: {[string]: ColourMap} = {
 	Dark = MakeDark(),
 	Light = MakeLight(),
 	Classic = MakeClassic(),
@@ -147,7 +148,7 @@ local Palettes = {
 -----------------------------------------------------------------------------
 -- Gets the list of themes.
 
-function GetThemes()
+function GetThemes(): {string}
 	local t = {}
 	for n, _ in pairs(Palettes) do
 		t[#t+1] = n
@@ -158,20 +159,23 @@ end
 -----------------------------------------------------------------------------
 -- Configures the current theme.
 
-function SetTheme(theme)
+function SetTheme(theme: string)
 	Palette = Palettes[theme] or {}
 end
 
 -----------------------------------------------------------------------------
 -- Actually sets a style for drawing.
 
-function SetColour(fg, bg)
+function SetColour(fg: Colour?, bg: Colour?)
 	if not fg then
 		fg = {1.0, 1.0, 1.0}
 	end
+	assert(fg)
+
 	if not bg then
 		bg = {0.0, 0.0, 0.0}
 	end
+	assert(bg)
 
 	wg.setcolour(fg, bg)
 end

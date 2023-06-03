@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -19,29 +20,13 @@ local EEXIST = wg.EEXIST
 local EACCES = wg.EACCES
 local EISDIR = wg.EISDIR
 
-function max(a, b)
-	if (a > b) then
-		return a
-	else
-		return b
-	end
-end
-
-function min(a, b)
-	if (a < b) then
-		return a
-	else
-		return b
-	end
-end
-
 --- Transcodes a string.
 -- Converts the string to guaranteed valid UTF-8.
 --
 -- @param s                  string to process
 -- @return                   canonicalised string
 
-function CanonicaliseString(s)
+function CanonicaliseString(s: string): string
 	return wg.transcode(s)
 end
 
@@ -52,7 +37,7 @@ end
 -- @param plural             returned if number ~= 1
 -- @return                   either singular or plural
 
-function Pluralise(n, singular, plural)
+function Pluralise(n: number, singular: string, plural: string): string
 	if (n == 1) then
 		return singular
 	else
@@ -65,7 +50,7 @@ end
 -- @param filename           filename
 -- @return                   leaf
 
-function Leafname(filename)
+function Leafname(filename: string): string
 	local _, _, f = filename:find("([^/\\]*)$")
 	if f then
 		return f
@@ -78,7 +63,7 @@ end
 -- @param filename           filename
 -- @return                   directory
 
-function Dirname(filename)
+function Dirname(filename: string): string
 	local _, _, f = filename:find("(.*)[/\\][^/\\]*$")
 	if f then
 		if (f == "") then
@@ -89,33 +74,13 @@ function Dirname(filename)
 	return "."
 end
 
---- Produces an exception traceback.
---
--- @param e                  the error
--- @return                   the trace, as a string
-
-function Traceback(e)
-	local i = 1
-	local s = {"Exception: "..e}
-	while true do
-		local t = debug.getinfo(i)
-		if not t then
-			break
-		end
-		s[#s+1] = t.short_src .. ":" .. t.currentline
-		i = i + 1
-	end
-
-	return table.concat(s, "\n")
-end
-
 --- Splits a string by specifying the delimiter pattern.
 --
 -- @param str                the input string
 -- @param delim              the delimiter
 -- @return                   the list of words
 
-function SplitString(str, delim)
+function SplitString(str: string, delim: string): {string}
     -- Eliminate bad cases...
     if not str:find(delim) then
     	return {str}
@@ -123,8 +88,8 @@ function SplitString(str, delim)
 
     local result = {}
     local pat = "(.-)" .. delim .. "()"
-    local lastPos
-    for part, pos in str:gmatch(pat) do
+    local lastPos: number
+    for part, pos: any in str:gmatch(pat) do
 		result[#result+1] = part
 		lastPos = pos
     end
@@ -137,14 +102,14 @@ end
 -- @param t                  input table
 -- @return                   a string
 
-function TableToString(t)
+function TableToString(t: any): string
 	local function stringify(n)
 		if (type(n) == "string") then
 			return string.format("%q", n)
 		elseif (type(n) == "number") then
 			return tostring(n)
 		elseif (n == nil) then
-			return nil
+			return "nil"
 		elseif (type(n) == "boolean") then
 			return tostring(n)
 		elseif (type(n) == "function") then
@@ -168,16 +133,6 @@ function TableToString(t)
 	return "{"..table.concat(ts, ", ").."}"
 end
 
---- Return a table of the bytes of a string.
-
-function StringBytesToString(s)
-	local ts = {}
-	for i = 1, #s do
-		ts[#ts+1] = string.byte(s, i)
-	end
-	return TableToString(ts)
-end
-
 --- Insert element between elements of an array.
 -- The old array is left untouched.
 --
@@ -185,7 +140,7 @@ end
 -- @param spacer             the element to insert
 -- @return                   a new array
 
-function Intersperse(array, spacer)
+function Intersperse(array: any, spacer: any): any
 	local a = {}
 	for i = 1, #array-1 do
 		a[#a+1] = array[i]
@@ -204,10 +159,11 @@ end
 -- @param new                new table
 -- @return                   modified new table
 
-function MergeTables(old, new)
+function MergeTables<T>(old: T, new: T): T
+	local nt = new::any
 	if old then
-		for k, v in pairs(old) do
-			new[k] = v
+		for k, v in pairs(old::any) do
+			nt[k] = v
 		end
 	end
 	return new
@@ -219,7 +175,7 @@ end
 -- @param o                  object
 -- @return                   the proxy
 
-function ImmutabliseArray(o)
+function ImmutabliseArray(o: any): any
 	local p = {}
 	setmetatable(p,
 		{
@@ -258,7 +214,7 @@ end
 --- Returns the index metatable field of a table.
 -- Immutable objects are handled correctly.
 
-function GetClass(t)
+function GetClass(t: any): any
 	local index = nil
 	local mt = getmetatable(t)
 	if mt then
@@ -271,19 +227,9 @@ function GetClass(t)
 	return index
 end
 
--- Returns a load() callback which supplies a string.
-
-function ChunkStream(text)
-	return function()
-		local t = text
-		text = nil
-		return t
-	end
-end
-
 -- string.format("%q"); early Luas don't support control codes, so we emulate it.
 
-function Format(w)
+function Format(w: string): string
 	local ss = {'"'}
 
 	local i = 1
@@ -306,7 +252,7 @@ end
 
 -- Splits a string by whitespace.
 
-function ParseStringIntoWords(s)
+function ParseStringIntoWords(s: string): {string}
 	local words = {}
 	for w in s:gmatch("[^ \t\r\n]+") do
 		words[#words + 1] = w
@@ -319,7 +265,7 @@ end
 
 -- Convert an array to a map.
 
-function ArrayToMap(array)
+function ArrayToMap(array: any): any
 	local map = {}
 	for _, i in ipairs(array) do
 		map[i] = true
@@ -327,40 +273,13 @@ function ArrayToMap(array)
 	return map
 end
 
--- Make a directory and all necessary parents.
-
-function Mkdirs(dir)
-	local i = 1
-	while i ~= nil do
-		local newi = dir:find("/", i)
-		local d
-		if not newi then
-			d = dir
-			i = nil
-		else
-			d = dir:sub(1, newi-1)
-			i = newi + 1
-		end
-		if (d == "") then
-			-- Root directory?
-			d = "/"
-		end
-
-		local r, e, errno = Mkdir(d)
-		if (not r) and (errno ~= EEXIST) and (errno ~= EACCES)
-			and (errno ~= EISDIR)
-		then
-			return r, e, errno
-		end
-	end
-	return true
-end
-
 -- Argument parser.
 
+declare FILENAME_ARG: {}
+declare UNKNOWN_ARG: {}
 FILENAME_ARG = {}
 UNKNOWN_ARG = {}
-function ParseArguments(argv, callbacks)
+function ParseArguments(argv: {string}, callbacks: {[any]: any})
 	local function popn(n)
 		if (n == nil) then
 			return
@@ -413,12 +332,12 @@ end
 
 -- Returns the largest common prefix of the array.
 
-function LargestCommonPrefix(array)
+function LargestCommonPrefix(array: {string}): string?
 	if (#array == 0) then
 		return nil
 	end
 
-	local function all_strings_contain(p1, p2, s)
+	local function all_strings_contain(p1: number, p2: number, s: string)
 		s = s:sub(p1, p2)
 		for _, ss in ipairs(array) do
 			if (ss:sub(p1, p2) ~= s) then
@@ -453,12 +372,12 @@ end
 
 -- As for LargestCommonPrefix, but case insensitive.
 
-function LargestCommonPrefixCaseInsensitive(array)
+function LargestCommonPrefixCaseInsensitive(array: {string}): string?
 	if (#array == 0) then
 		return nil
 	end
 
-	local function all_strings_contain(p1, p2, s)
+	local function all_strings_contain(p1: number, p2: number, s: string)
 		s = s:sub(p1, p2):lower()
 		for _, ss in ipairs(array) do
 			if (ss:sub(p1, p2):lower() ~= s) then
@@ -523,23 +442,28 @@ end
 -- Create an input stream, from which lines can be read as if it were a file.
 -- It's incredibly limited to just the functions we need.
 
-function CreateIStream(data)
+function CreateIStream(data: string): any
 	local ptr = 1
 	local o = {}
 	setmetatable(o,
 	{
 		__index =
 		{
-			read = function(self, a)
+			read = function(self, a: string): string?
 				if a == "*l" then
 					local _, e, s, n = string_find(data, "([^\n]*)(\n?)", ptr)
 					if (s == "") and (n == "") then
 						return nil
 					end
+					assert(e)
 					ptr = e + 1
 					return s
+				elseif a == "*a" then
+					local s = data:sub(ptr)
+					ptr = #data
+					return s
 				else
-					error("unsupport read parameter")
+					error("unsupported read parameter '"..a.."'")
 				end
 			end,
 

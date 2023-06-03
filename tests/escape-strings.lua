@@ -1,7 +1,8 @@
 local escape = wg.escape
 local unescape = wg.unescape
 
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 AssertEquals("1234", escape("1234"))
 AssertEquals("12\\n34", escape("12\n34"))

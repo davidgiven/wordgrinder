@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 local function unset(s)
 	local a = {}
@@ -18,33 +19,33 @@ Cmd.DeleteWord()
 Cmd.AddToUserDictionary()
 AssertTableEquals({"fnord"}, unset(GetUserDictionary()))
 
-DocumentSet.addons.spellchecker.enabled = false
+documentSet.addons.spellchecker.enabled = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
-DocumentSet.addons.spellchecker.enabled = true
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = false
+documentSet.addons.spellchecker.enabled = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = false
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
 local payload = { word="fnord.", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord.", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
 local payload = { word="notfound", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"notfound", wg.DIM, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
-DocumentSet.addons.spellchecker.enabled = true
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = true
+documentSet.addons.spellchecker.enabled = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = true
 AssertEquals(false, IsWordMisspelt("lower", true))
 AssertEquals(false, IsWordMisspelt("Lower", true))
 AssertEquals(false, IsWordMisspelt("lower", false))
@@ -58,10 +59,10 @@ AssertEquals(true, IsWordMisspelt("Upper", false))
 AssertEquals(false, IsWordMisspelt("UPPER", true))
 AssertEquals(false, IsWordMisspelt("UPPER", false))
 
-DocumentSet.addons.spellchecker.useuserdictionary = true
-DocumentSet.addons.spellchecker.usesystemdictionary = true
+documentSet.addons.spellchecker.useuserdictionary = true
+documentSet.addons.spellchecker.usesystemdictionary = true
 local payload = { word="fnord", cstyle=0, ostyle=0 }
-FireEvent(Event.DrawWord, payload)
+FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
@@ -72,14 +73,14 @@ SetSystemDictionaryForTesting({"bar", "exclamation", "correct"})
 Cmd.InsertStringIntoParagraph("foo bar baz exclamation! Correct. incorroct")
 Cmd.GotoBeginningOfDocument()
 Cmd.FindNextMisspeltWord()
-AssertTableEquals({1, 1, 1}, {Document.mp, Document.mw, Document.mo})
-AssertTableEquals({1, 1, 4}, {Document.cp, Document.cw, Document.co})
+AssertTableEquals({1, 1, 1}, {currentDocument.mp, currentDocument.mw, currentDocument.mo})
+AssertTableEquals({1, 1, 4}, {currentDocument.cp, currentDocument.cw, currentDocument.co})
 
 Cmd.FindNextMisspeltWord()
-AssertTableEquals({1, 3, 1}, {Document.mp, Document.mw, Document.mo})
-AssertTableEquals({1, 3, 4}, {Document.cp, Document.cw, Document.co})
+AssertTableEquals({1, 3, 1}, {currentDocument.mp, currentDocument.mw, currentDocument.mo})
+AssertTableEquals({1, 3, 4}, {currentDocument.cp, currentDocument.cw, currentDocument.co})
 
 Cmd.FindNextMisspeltWord()
-AssertTableEquals({1, 6, 1}, {Document.mp, Document.mw, Document.mo})
-AssertTableEquals({1, 6, 10}, {Document.cp, Document.cw, Document.co})
+AssertTableEquals({1, 6, 1}, {currentDocument.mp, currentDocument.mw, currentDocument.mo})
+AssertTableEquals({1, 6, 10}, {currentDocument.cp, currentDocument.cw, currentDocument.co})
 

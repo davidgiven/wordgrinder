@@ -1,10 +1,8 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local int = math.floor
-local min = math.min
-local max = math.max
 local Write = wg.write
 local GotoXY = wg.gotoxy
 local ClearScreen = wg.clearscreen
@@ -61,19 +59,20 @@ end
 function ResizeScreen()
 	ScreenWidth, ScreenHeight = wg.getscreensize()
 	local w = GetMaximumAllowedWidth(ScreenWidth)
-	if Document.margin > 0 then
-		papermargin = max(Document.margin + 2, math.floor(ScreenWidth/2 - w/2))
+	if currentDocument.margin > 0 then
+		papermargin = math.max(currentDocument.margin + 2, math.floor(ScreenWidth/2 - w/2))
 	else
 		papermargin = math.floor(ScreenWidth/2 - w/2)
 	end
 	w = ScreenWidth - papermargin*2
-	Document:wrap(w)
+	currentDocument:wrap(w)
+	return true
 end
 
-local function drawmargin(y, pn, p)
-	local controller = MarginControllers[Document.viewmode]
+local function drawmargin(y: number, pn: number, p: Paragraph)
+	local controller = marginControllers[currentDocument.viewmode]
 	if controller.getcontent then
-		local s = controller:getcontent(pn, p)
+		local s: string? = assert(controller.getcontent)(controller, pn, p)
 
 		if s then
 			SetColour(Palette.StyleFG, Palette.Desktop)
@@ -82,10 +81,10 @@ local function drawmargin(y, pn, p)
 		end
 	end
 
-	local style = DocumentStyles[p.style]
+	local style = documentStyles[p.style]
 	local function drawbullet(n)
 		local w = GetStringWidth(n) + 1
-		local i = style.indent
+		local i = (style.indent or 0)
 		if (i >= w) then
 			SetNormal()
 			SetColour(Palette.LB_FG, Palette.LB_BG)
@@ -113,13 +112,13 @@ local changed_tab =
 local function redrawstatus()
 	local y = ScreenHeight - 1
 
-	if DocumentSet.statusbar then
+	if documentSet.statusbar then
 		local s = {
-			Leafname(DocumentSet.name or "(unnamed)"),
+			Leafname(documentSet.name or "(unnamed)"),
 			"[",
-			Document.name or "",
+			currentDocument.name or "",
 			"] ",
-			changed_tab[DocumentSet.changed] or "",
+			changed_tab[documentSet._changed] or "",
 		}
 
 		-- Reversed due to SetReverse later.
@@ -128,20 +127,20 @@ local function redrawstatus()
 		ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 		LAlignInField(0, ScreenHeight-1, ScreenWidth, table.concat(s, ""))
 
-		local ss = {}
-		FireEvent(Event.BuildStatusBar, ss)
+		local ss: {StatusbarField} = {}
+		FireEvent("BuildStatusBar", ss)
 		table.sort(ss, function(x, y) return x.priority < y.priority end)
 
 		local s = {" "}
 		for _, v in ipairs(ss) do
 			s[#s+1] = v.value
 		end
-		s = table.concat(s, " │ ")
-		if (string.sub(s, #s) == " ") then
-			s = string.sub(s, 1, #s-1)
+		local ss = table.concat(s, " │ ")
+		if (string.sub(ss, #ss) == " ") then
+			ss = string.sub(ss, 1, #ss-1)
 		end
 
-		RAlignInField(0, ScreenHeight-1, ScreenWidth, s)
+		RAlignInField(0, ScreenHeight-1, ScreenWidth, ss)
 		SetNormal()
 
 		y = y - 1
@@ -229,20 +228,20 @@ function RedrawScreen()
 
 	SetColour(nil, Palette.Desktop)
 	ClearScreen()
-	if not Document.sp then
-		Document.sp = Document.cp
-		Document.sw = Document.cw
+	if not currentDocument._sp then
+		currentDocument._sp = currentDocument.cp
+		currentDocument._sw = currentDocument.cw
 	end
-	local sp, sw = Document.sp, Document.sw
-	local cp, cw, co = Document.cp, Document.cw, Document.co
+	local sp, sw = assert(currentDocument._sp), assert(currentDocument._sw)
+	local cp, cw, co = currentDocument.cp, currentDocument.cw, currentDocument.co
 	local tx = papermargin + 1
 
 	if GetScrollMode() == "Fixed" then
-		sp = Document.cp
-		sw = Document.cw
+		sp = currentDocument.cp
+		sw = currentDocument.cw
 	else
-		if sp > #Document then
-			sp = #Document
+		if sp > #currentDocument then
+			sp = #currentDocument
 		elseif sp < 1 then
 			sp = 1
 		end
@@ -250,29 +249,30 @@ function RedrawScreen()
 
 	-- Find out the offset of the paragraph at the middle of the screen.
 
-	local paragraph = Document[sp]
+	local paragraph = currentDocument[sp]
 	local osw = sw
-	local sl
-	sl, sw = paragraph:getLineOfWord(sw)
+	local sl, sw = paragraph:getLineOfWord(sw)
 	if not sl then
-		sl = #paragraph:wrap()
+		sl = #paragraph:wrap().lines
 	end
+	assert(sl)
 
 	-- So, line sl on sp is supposed to be in the middle. We now work up
 	-- and down to find the real cursor position.
 
-	local cy = int(ScreenHeight / 2) - sl
+	local cy = math.floor(ScreenHeight / 2) - sl
 	if cp >= sp then
 		local p = sp
 		
 		while p < cp do
-			cy = cy + #Document[p]:wrap() + Document:spaceBelow(p)
+			local wd = currentDocument[p]:wrap()
+			cy = cy + #wd.lines + currentDocument:spaceBelow(p)
 			p = p + 1
 		end
-		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy >= (ScreenHeight-5) then
-			Document.sp = cp
-			Document.sw = cw
+			currentDocument._sp = cp
+			currentDocument._sw = cw
 			return RedrawScreen()
 		end
 	else
@@ -280,12 +280,13 @@ function RedrawScreen()
 
 		while p > cp do
 			p = p - 1
-			cy = cy - #Document[p]:wrap() - Document:spaceBelow(p)
+			local wd = currentDocument[p]:wrap()
+			cy = cy - #wd.lines - currentDocument:spaceBelow(p)
 		end
-		cy = cy + Document[p]:getLineOfWord(cw) - 1
+		cy = cy + currentDocument[p]:getLineOfWord(cw) - 1
 		if cy < 4 then
-			Document.sp = cp
-			Document.sw = cw
+			currentDocument._sp = cp
+			currentDocument._sw = cw
 			return RedrawScreen()
 		end
 	end
@@ -293,24 +294,26 @@ function RedrawScreen()
 	-- Position the cursor.
 
 	do
-		local paragraph = Document[cp]
+		local paragraph = currentDocument[cp]
+		local wd = paragraph:wrap()
 		local word = paragraph[cw]
 		local cl = paragraph:getLineOfWord(cw)
-		GotoXY(tx + paragraph.xs[cw] +
-			GetWidthFromOffset(word, Document.co) + paragraph:getIndentOfLine(cl),
+		GotoXY(tx + wd.xs[cw] +
+			GetWidthFromOffset(word, currentDocument.co) +
+			paragraph:getIndentOfLine(cl),
 			cy)
 	end
 
 	-- Cache values for mark drawing.
 
-	local mp = Document.mp
-	local mw = Document.mw
-	local mo = Document.mo
+	local mp = currentDocument.mp
+	local mw = currentDocument.mw
+	local mo = currentDocument.mo
 
 	local lm = papermargin
 	local rm = ScreenWidth - lm - 1
 
-	local function setparacolour(paragraph)
+	local function setparacolour(paragraph: Paragraph)
 		SetColour(
 			Palette[paragraph.style.."_FG"],
 			Palette[paragraph.style.."_BG"])
@@ -324,16 +327,16 @@ function RedrawScreen()
 	-- Draw backwards.
 
 	local pn = sp - 1
-	local sa = Document:spaceAbove(sp)
-	local y = int(ScreenHeight/2) - sl - 1 - sa
-	local paragraph = Document[sp]
+	local sa = currentDocument:spaceAbove(sp)
+	local y = math.floor(ScreenHeight/2) - sl - 1 - sa
+	local paragraph = currentDocument[sp]
 	if paragraph then
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y+1, y+sa)
 	end
 	lineindex = {}
 
-	local function drawline(paragraph, line, ln)
+	local function drawline(paragraph: Paragraph, line: Line, ln: number)
 		local x = paragraph:getIndentOfLine(ln)
 
 		setparacolour(paragraph)
@@ -355,21 +358,21 @@ function RedrawScreen()
 		}
 	end
 
-	Document.topp = nil
-	Document.topw = nil
+	currentDocument._topp = nil
+	currentDocument._topw = nil
 	while (y >= 0) do
-		local paragraph = Document[pn]
+		local paragraph = currentDocument[pn]
 		if not paragraph then
 			break
 		end
 
-		local lines = paragraph:wrap()
-		for ln = #lines, 1, -1 do
-			local l = lines[ln]
+		local wd = paragraph:wrap()
+		for ln = #wd.lines, 1, -1 do
+			local l = wd.lines[ln]
 			drawline(paragraph, l, ln)
 
-			Document.topp = pn
-			Document.topw = l.wn
+			currentDocument._topp = pn
+			currentDocument._topw = l.wn
 			y = y - 1
 
 			if (y < 0) then
@@ -377,7 +380,7 @@ function RedrawScreen()
 			end
 		end
 
-		local sa = Document:spaceAbove(pn)
+		local sa = currentDocument:spaceAbove(pn)
 		y = y - sa
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y, y+sa)
@@ -390,36 +393,37 @@ function RedrawScreen()
 
 	-- Draw forwards.
 
-	y = int(ScreenHeight/2) - sl
+	y = math.floor(ScreenHeight/2) - sl
 	pn = sp
 	while (y < ScreenHeight) do
-		local paragraph = Document[pn]
+		local paragraph = currentDocument[pn]
 		if not paragraph then
 			break
 		end
 
 		drawmargin(y, pn, paragraph)
 
-		for ln, l in ipairs(paragraph:wrap()) do
+		local wd = paragraph:wrap()
+		for ln, l in wd.lines do
 			drawline(paragraph, l, ln)
 
 			-- If the top of the page hasn't already been set, then the
 			-- current paragraph extends off the top of the screen.
 
-			if not Document.topp and (y == 0) then
-				Document.topp = pn
-				Document.topw = l.wn
+			if not currentDocument._topp and (y == 0) then
+				currentDocument._topp = pn
+				currentDocument._topw = l.wn
 			end
 
-			Document.botp = pn
-			Document.botw = l.wn
+			currentDocument._botp = pn
+			currentDocument._botw = l.wn
 			y = y + 1
 
 			if (y > ScreenHeight) then
 				break
 			end
 		end
-		local sb = Document:spaceBelow(pn)
+		local sb = currentDocument:spaceBelow(pn)
 		y = y + sb
 		SetColour(Palette.Paper, Palette.Paper)
 		clear(y-sb, y-1)
@@ -429,9 +433,9 @@ function RedrawScreen()
 	-- If the top of the page *still* hasn't been set, then we're on the
 	-- first paragraph of the document.
 
-	if not Document.topp then
-		Document.topp = 1
-		Document.topw = 1
+	if not currentDocument._topp then
+		currentDocument._topp = 1
+		currentDocument._topw = 1
 	end
 
 	if (y <= ScreenHeight) and WantTerminators() then
@@ -440,7 +444,7 @@ function RedrawScreen()
 
 	redrawstatus()
 
-	FireEvent(Event.Redraw)
+	FireEvent("Redraw")
 end
 
 function GetPositionOfLine(y)
@@ -451,14 +455,16 @@ function GetPositionOfLine(y)
 	return r
 end
 
-function GetCharWithBlinkingCursor(timeout)
+function GetCharWithBlinkingCursor(timeout: number?)
 	ShowCursor()
 
 	timeout = timeout or 1E10
+	assert(timeout)
+
 	local shown = true
 	while timeout > 0 do
 		local t = shown and BLINK_ON_TIME or BLINK_OFF_TIME
-		t = min(t, timeout)
+		t = math.min(t, timeout)
 		local c = wg.getchar(t)
 		if (c ~= "KEY_TIMEOUT") then
 			ShowCursor();
@@ -482,8 +488,8 @@ end
 
 do
 	local function cb(event, token)
-		Document:renumber()
+		currentDocument:renumber()
 	end
 
-	AddEventListener(Event.Changed, cb)
+	AddEventListener("Changed", cb)
 end

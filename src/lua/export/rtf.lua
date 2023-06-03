@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2011 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -56,7 +57,7 @@ local style_tab =
 }
 
 local function callback(writer, document)
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 	
 	return ExportFileUsingCallbacks(document,
 	{

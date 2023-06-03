@@ -66,19 +66,13 @@ LICENSE
 
 WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
-look in the licenses directory for the full license text.
+look in the `third_party` directory for the full license text.
 
 WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
-The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
-1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
-
-The distribution contains a copy of the Lpeg parser library. This is also MIT
-licensed and is © 2007-2019 Lua.org, PUC-Rio. See
-http://inf.puc-rio.br/~roberto/lpeg for more information.
-
-The distribution contains a copy of LuaBitOp. This is also MIT licensed and is ©
-2008-2012 Mike Pall. See http://bitop.luajit.org/ for more information.
+The distribution contains a copy of Luau. This is also MIT licensed and is ©
+2019-2022 Roblox Corporation and © 1994-2019 Lua.org, PUC-Rio. See
+http://luau-lang.org and http://lua.org for more information.
 
 The distribution contains a copy of the MiniZip library. This is © 1998-2010
 Gilles Vollant and Mathis Svenson, and is available under the BSD license.
@@ -87,16 +81,23 @@ The distribution contains a copy of the SCOWL wordlist for British and
 American-Canadian English. This is © Kevin Atkinson and J. Ross Beresford.
 Please see the licenses/COPYING.Scowl file for the full license text.
 
-The distribution contains a copy of the uthash and utlist libraries. This is ©
-2003-2009 Troy D Hanson, and is available under a simplified BSD license.
-
 The distribution contains a copy of the xpattern module. This is also MIT
 licensed and is © 2008-2009 David Manura. See
 http://lua-users.org/wiki/ExPattern for more information.
 
-The distribution contains a (thoroughly hacked up) copy of the Lunamark
-Markdown parser. This is also MIT licensed and is © 2009-2016 John MacFarlane.
-See https://github.com/jgm/lunamark for more information.
+The distribution contains a copy of the LargeLineHeight-NoLoopK version of the
+Fantasque Sans Mono font family. This is distributable under the terms of the
+Open Font License 1.1 © 2013-2017 Jany Belluz. See
+https://github.com/belluzj/fantasque-sans for more information.
+
+The distribution contains parts of the libstb utility library, written by
+Sean T Barrett et al. This is public domain where possible and MIT licensed
+otherwise. Please see https://github.com/nothings/stb/blob/master/LICENSE
+for more information.
+
+The distribution contains most of the clip clipboard library, written by David
+Capello. This is MIT licensed and is © 2015-2022 David Capello. Please see
+https://github.com/dacap/clip for more information.
 
 
 

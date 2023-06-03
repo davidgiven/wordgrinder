@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -6,12 +7,13 @@ local Chdir = wg.chdir
 local GetCwd = wg.getcwd
 local Stat = wg.stat
 local Access = wg.access
+local Mkdirs = wg.mkdirs
 local string_format = string.format
 local ENOENT = wg.ENOENT
 local W_OK = wg.W_OK
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
@@ -23,13 +25,14 @@ do
 		)
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 local function check_dir(dir)
+	local _
 	local st, e, errno = Access(dir, W_OK)
 	if (errno == ENOENT) then
 		if PromptForYesNo("Directory does not exist",
@@ -50,7 +53,7 @@ local function check_dir(dir)
 		return false
 	end
 
-	st, e, errno = Stat(dir)
+	local st, e, errno = Stat(dir)
 	if st and (st.mode ~= "directory") then
 		ModalMessage("File system error",
 			string_format("'%s' exists but is not a directory", dir))
@@ -76,37 +79,41 @@ function Cmd.ConfigureDirectories()
 			value = settings.autosaves or "",
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Templates",
-		width = Form.Large,
+		width = "large",
 		height = 6,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 20, y2 = 1,
-			align = Form.Left,
-			value = "Template directory:"
-		},
-		templates_textfield,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 20, y2 = 1,
+				align = "left",
+				value = "Template directory:"
+			},
+			templates_textfield,
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 20, y2 = 3,
-			align = Form.Left,
-			value = "Autosave directory:"
-		},
-		Form.Label {
-			x1 = 1, y1 = 4,
-			x2 = 20, y2 = 4,
-			align = Form.Left,
-			value = "(leave blank for default)"
-		},
-		autosaves_textfield,
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 20, y2 = 3,
+				align = "left",
+				value = "Autosave directory:"
+			},
+			Form.Label {
+				x1 = 1, y1 = 4,
+				x2 = 20, y2 = 4,
+				align = "left",
+				value = "(leave blank for default)"
+			},
+			autosaves_textfield,
+		}
 	}
 	
 	while true do

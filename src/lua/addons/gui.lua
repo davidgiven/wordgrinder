@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2021 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -24,7 +25,7 @@ do
 		end
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 --
 -----------------------------------------------------------------------------
@@ -84,91 +85,95 @@ function Cmd.ConfigureGui()
 			value = settings.font_bolditalic
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure GUI",
-		width = Form.Large,
+		width = "large",
 		height = 16,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-	
-		["KEY_^R"] = function()
-			windowwidth_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_width)
-			windowheight_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_height)
-			fontsize_textfield.value = tostring(DEFAULT_GUI_SETTINGS.font_size)
-			fontregular_textfield.value = DEFAULT_GUI_SETTINGS.font_regular
-			fontitalic_textfield.value = DEFAULT_GUI_SETTINGS.font_italic
-			fontbold_textfield.value = DEFAULT_GUI_SETTINGS.font_bold
-			fontbolditalic_textfield.value = DEFAULT_GUI_SETTINGS.font_bolditalic
-			return "redraw"
-		end,
-
-		windowwidth_textfield,
-		windowheight_textfield,
-		fontsize_textfield,
-		fontregular_textfield,
-		fontitalic_textfield,
-		fontbold_textfield,
-		fontbolditalic_textfield,
-
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = L-1, y2 = 1,
-			align = Form.Left,
-			value = "Default window width:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		
+			["KEY_^R"] = function()
+				windowwidth_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_width)
+				windowheight_textfield.value = tostring(DEFAULT_GUI_SETTINGS.window_height)
+				fontsize_textfield.value = tostring(DEFAULT_GUI_SETTINGS.font_size)
+				fontregular_textfield.value = DEFAULT_GUI_SETTINGS.font_regular
+				fontitalic_textfield.value = DEFAULT_GUI_SETTINGS.font_italic
+				fontbold_textfield.value = DEFAULT_GUI_SETTINGS.font_bold
+				fontbolditalic_textfield.value = DEFAULT_GUI_SETTINGS.font_bolditalic
+				return "redraw"
+			end,
 		},
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = L-1, y2 = 3,
-			align = Form.Left,
-			value = "Default window height:"
-		},
+		widgets = {
+			windowwidth_textfield,
+			windowheight_textfield,
+			fontsize_textfield,
+			fontregular_textfield,
+			fontitalic_textfield,
+			fontbold_textfield,
+			fontbolditalic_textfield,
+
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = L-1, y2 = 1,
+				align = "left",
+				value = "Default window width:"
+			},
+
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = L-1, y2 = 3,
+				align = "left",
+				value = "Default window height:"
+			},
 
 
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = L-1, y2 = 5,
-			align = Form.Left,
-			value = "Font size:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = L-1, y2 = 5,
+				align = "left",
+				value = "Font size:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = L-1, y2 = 7,
-			align = Form.Left,
-			value = "Normal font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = L-1, y2 = 7,
+				align = "left",
+				value = "Normal font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 9,
-			x2 = L-1, y2 = 9,
-			align = Form.Left,
-			value = "Italic font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 9,
+				x2 = L-1, y2 = 9,
+				align = "left",
+				value = "Italic font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = L-1, y2 = 11,
-			align = Form.Left,
-			value = "Bold font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = L-1, y2 = 11,
+				align = "left",
+				value = "Bold font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = 13,
-			x2 = L-1, y2 = 13,
-			align = Form.Left,
-			value = "Bold/italic font:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 13,
+				x2 = L-1, y2 = 13,
+				align = "left",
+				value = "Bold/italic font:"
+			},
 
-		Form.Label {
-			x1 = 1, y1 = -1,
-			x2 = -1, y2 = -1,
-			align = Form.Centre,
-			value = "<^R to reset to default>"
-		},
+			Form.Label {
+				x1 = 1, y1 = -1,
+				x2 = -1, y2 = -1,
+				align = "centre",
+				value = "<^R to reset to default>"
+			},
+		}
 	}
 
 	while true do
@@ -201,7 +206,7 @@ function Cmd.ConfigureGui()
 
 	wg.deinitscreen()
 	wg.initscreen()
-	FireEvent(Event.ScreenInitialised)
+	FireEvent("ScreenInitialised")
 	SaveGlobalSettings()
 
 	return true

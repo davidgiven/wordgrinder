@@ -8,7 +8,6 @@ set -e
 symbol="$1"
 shift
 
-echo '#include "globals.h"'
 count=0
 for f in "$@"; do
 	echo
@@ -22,8 +21,8 @@ done
 echo "const FileDescriptor $symbol[] = {"
 count=0
 for f in "$@"; do
-	echo "  { file_$count, sizeof(file_$count), \"$f\" },"
+	echo "  { std::string((const char*) file_$count, sizeof(file_$count)), \"$f\" },"
 	count=$(expr $count + 1)
 done
-echo "  { NULL, 0, NULL }"
+echo "  {}"
 echo "};"

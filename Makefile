@@ -1,84 +1,75 @@
-# Note: there are no configuration options here (other than the NINJA
-# variable). To configure properly, you need to pass parameters and/or
-# environment variables into the configure script.
+export OBJ = .obj
+export LUA = lua
+export CC = gcc
+export CXX = g++
+export AR = ar
+export WINDRES = windres
+export PKG_CONFIG = pkg-config
+export MAKENSIS = makensis
 
-# Which ninja do you want to use?
-ifeq ($(strip $(shell type ninja >/dev/null; echo $$?)),0)
-	NINJA ?= ninja
-else
-	ifeq ($(strip $(shell type ninja-build >/dev/null; echo $$?)),0)
-		NINJA ?= ninja-build
-    else
-        $(error No ninja found)
-    endif
-endif
+export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
+export CXXFLAGS = $(CFLAGS) --std=c++17
+export LDFLAGS = -g
+export NINJAFLAGS =
+export PREFIX = /usr/local
 
-hide = @
-OBJDIR = .obj
+export PYTHONHASHSEED = 1
 
-NINJABUILD = \
-	$(hide) $(NINJA) -f $(OBJDIR)/build.ninja $(NINJAFLAGS)
+#all: $(OBJ)/build.mk
+#	@+make -f $(OBJ)/build.mk +all
 
-.PHONY: all
-all: $(OBJDIR)/build.ninja
-	$(NINJABUILD)
-
-.PHONY: install
-install: $(OBJDIR)/build.ninja
-	$(NINJABUILD) install
-
-$(OBJDIR)/build.ninja: configure
-	$(hide) sh ./configure
-
-.DELETE_ON_ERROR:
-
+all: $(OBJ)/build.ninja
+	@ninja -f $< +all
+	
 clean:
 	@echo CLEAN
-	@rm -rf $(OBJDIR) bin
+	@rm -rf $(OBJ) bin
 
-.PHONY: distr
-distr: wordgrinder-$(VERSION).tar.xz
+build-files = $(shell find . -name 'build.py') build/*.py config.py
+$(OBJ)/build.mk: Makefile $(build-files)
+	@echo ACKBUILDER
+	@mkdir -p $(OBJ)
+	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m make -t +all -o $@ build.py
+
+$(OBJ)/build.ninja: Makefile $(build-files)
+	@echo ACKBUILDER
+	@mkdir -p $(OBJ)
+	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m ninja -t +all -o $@ \
+		-v OBJ,CC,CXX,AR,WINDRES,MAKENSIS \
+		build.py
+
+.PHONY: install
+install: all
+	test -f bin/wordgrinder && cp bin/wordgrinder $(PREFIX)/bin/wordgrinder
+	test -f bin/wordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/wordgrinder.1
+	test -f bin/xwordgrinder && cp bin/xwordgrinder $(PREFIX)/bin/xwordgrinder
+	test -f bin/xwordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/xwordgrinder.1
 
 .PHONY: debian-distr
-debian-distr: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
+debian-distr: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
 
-.PHONY: wordgrinder-$(VERSION).tar.xz
-wordgrinder-$(VERSION).tar.xz:
-	tar cvaf $@ \
-		--transform "s,^,wordgrinder-$(VERSION)/," \
-		extras \
-		licenses \
-		scripts \
-		src \
-		testdocs \
-		tests \
-		tools \
-		configure \
-		Makefile \
-		README \
-		README.wg \
-		README.Windows.txt \
-		wordgrinder.man \
-		xwordgrinder.man
-
-.PHONY: wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz
-wordgrinder-$(VERSION)-minimal-dependencies-for-debian.tar.xz:
+.PHONY: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
+bin/wordgrinder-minimal-dependencies-for-debian.tar.xz:
 	tar cvaf $@ \
 		--transform "s,^,wordgrinder-$(VERSION)/," \
 		--exclude "*.dictionary" \
-		--exclude "src/c/emu" \
+		Makefile \
+		README \
+		README.Windows.txt \
+		README.wg \
+		build.py \
+		config.py \
 		extras \
 		licenses \
 		scripts \
 		src \
 		testdocs \
 		tests \
+		third_party/luau \
 		tools \
-		configure \
-		Makefile \
-		README \
-		README.wg \
-		README.Windows.txt \
 		wordgrinder.man \
 		xwordgrinder.man
+
+.DELETE_ON_ERROR:
+.SECONDARY:
 

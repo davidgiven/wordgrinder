@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -42,12 +43,12 @@ local style_tab =
 		on='<pre>', off='</pre>'}
 }
 
-local function callback(writer, document)
-	local settings = DocumentSet.addons.htmlexport
+local function callback(writer: (...string) -> (), document)
+	local settings = documentSet.addons.htmlexport
 	local currentstylename = nil
 	local islist = false
 	
-	function changepara(para)
+	function changepara(para: Paragraph?)
 		local newstylename = para and para.style
 		local currentstyle = style_tab[currentstylename]
 		local newstyle = style_tab[newstylename]
@@ -72,6 +73,7 @@ local function callback(writer, document)
 			end
 
 			if newstyle then
+				assert(para)
 				if newstylename == "LN" then
 					writer(string.format('<li style="list-style-type: decimal;" value=%d>', para.number))
 				else
@@ -102,7 +104,7 @@ local function callback(writer, document)
 			writer(unhtml(s))
 		end,
 		
-		notext = function(s)
+		notext = function()
 			if (currentstylename ~= "PRE") then
 				writer('<br/>')
 			end
@@ -132,10 +134,10 @@ local function callback(writer, document)
 			writer(settings.bold_off)
 		end,
 		
-		list_start = function()
+		list_start = function(name)
 		end,
 		
-		list_end = function()
+		list_end = function(name)
 		end,
 		
 		paragraph_start = function(para)
@@ -146,7 +148,7 @@ local function callback(writer, document)
 		end,
 		
 		epilogue = function()
-			changepara(nil, nil)
+			changepara(nil)
 			writer('</body>\n')	
 			writer('</html>\n')
 		end
@@ -159,7 +161,7 @@ function Cmd.ExportHTMLFile(filename)
 end
 
 function Cmd.ExportToHTMLString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 
 -----------------------------------------------------------------------------
@@ -167,26 +169,26 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.htmlexport = DocumentSet.addons.htmlexport or {
+		documentSet.addons.htmlexport = documentSet.addons.htmlexport or {
 			underline_on = "<u>",
 			underline_off = "</u>",
 			italic_on = "<i>",
 			italic_off = "</i>"
 		}
 
-		local s = DocumentSet.addons.htmlexport
+		local s = documentSet.addons.htmlexport
 		s.bold_on = s.bold_on or "<b>"
 		s.bold_off = s.bold_off or "</b>"
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigureHTMLExport()
-	local settings = DocumentSet.addons.htmlexport
+	local settings = documentSet.addons.htmlexport
 
 	local underline_on_textfield =
 		Form.TextField {
@@ -230,63 +232,67 @@ function Cmd.ConfigureHTMLExport()
 			value = settings.bold_off
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure HTML Export",
-		width = Form.Large,
+		width = "large",
 		height = 13,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+		},
 
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 14, y2 = 1,
-			align = Form.Left,
-			value = "Underline on:"
-		},
-		underline_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 14, y2 = 3,
-			align = Form.Left,
-			value = "Underline off:"
-		},
-		underline_off_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 14, y2 = 5,
-			align = Form.Left,
-			value = "Italics on:"
-		},
-		italic_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 7,
-			x2 = 14, y2 = 7,
-			align = Form.Left,
-			value = "Italics off:"
-		},
-		italic_off_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 9,
-			x2 = 14, y2 = 9,
-			align = Form.Left,
-			value = "Bold on:"
-		},
-		bold_on_textfield,
-		
-		Form.Label {
-			x1 = 1, y1 = 11,
-			x2 = 14, y2 = 11,
-			align = Form.Left,
-			value = "Bold off:"
-		},
-		bold_off_textfield,
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 14, y2 = 1,
+				align = "left",
+				value = "Underline on:"
+			},
+			underline_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 14, y2 = 3,
+				align = "left",
+				value = "Underline off:"
+			},
+			underline_off_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 14, y2 = 5,
+				align = "left",
+				value = "Italics on:"
+			},
+			italic_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 7,
+				x2 = 14, y2 = 7,
+				align = "left",
+				value = "Italics off:"
+			},
+			italic_off_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 9,
+				x2 = 14, y2 = 9,
+				align = "left",
+				value = "Bold on:"
+			},
+			bold_on_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 11,
+				x2 = 14, y2 = 11,
+				align = "left",
+				value = "Bold off:"
+			},
+			bold_off_textfield,
+		}
 	}
 	
 	while true do

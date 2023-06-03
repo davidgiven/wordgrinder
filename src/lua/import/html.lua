@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008-2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -19,9 +20,7 @@ local table_concat = table.concat
 -----------------------------------------------------------------------------
 -- The importer itself.
 
-function Cmd.ImportHTMLFileFromStream(fp)
-	local data = fp:read("*a")
-
+function Cmd.ImportHTMLString(data)
 	-- Collapse whitespace; this makes things far easier to parse.
 
 	data = data:gsub("[\t\f]", " ")
@@ -37,32 +36,32 @@ function Cmd.ImportHTMLFileFromStream(fp)
 	
 	-- Helper function for reading tokens from the HTML stream.
 	
-	local pos = 1
+	local pos: number = 1
 	local len = data:len()
-	local function tokens()
+	local function tokens(): string?
 		if (pos >= len) then
 			return nil
 		end
 		
 		local s, e, t
-		s, e, t = string_find(data, "^([ \n])", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^([ \n])", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		if string_find(data, "^%c") then
+		if string.find(data, "^%c") then
 			pos = pos + 1
 			return tokens()
 		end
 		
-		s, e, t = string_find(data, "^(<[^>]*>)", pos)
-		if s then pos = e+1 return t:lower() end
+		s, e, t = string.find(data, "^(<[^>]*>)", pos)
+		if s then pos = assert(e)+1 return assert(t):lower() end
 		
-		s, e, t = string_find(data, "^(&[^;]-;)", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^(&[^;]-;)", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		s, e, t = string_find(data, "^([^ <&\n]+)", pos)
-		if s then pos = e+1 return t end
+		s, e, t = string.find(data, "^([^ <&\n]+)", pos)
+		if s then pos = assert(e)+1 return t end
 		
-		t = string_sub(data, pos, pos+1)
+		t = string.sub(data, pos, pos+1)
 		pos = pos + 1
 		return t
 	end
@@ -159,5 +158,5 @@ function Cmd.ImportHTMLFileFromStream(fp)
 end
 
 function Cmd.ImportHTMLFile(filename)
-	return ImportFileWithUI(filename, "Import HTML File", Cmd.ImportHTMLFileFromStream)
+	return ImportFileWithUI(filename, "Import HTML File", Cmd.ImportHTMLString)
 end

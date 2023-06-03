@@ -1,3 +1,4 @@
+--!nonstrict
 -- xpattern.lua
 -- Preliminary regular expression-like support in Lua
 -- Uses Lua patterns as the core building block.
@@ -16,7 +17,7 @@
 -- (c) 2008-2009 David Manura. Licensed under the same terms as Lua (MIT license).
 -- Please post patches.
 
-M = {}
+M = {} :: any
 
 local string = string
 local format = string.format
@@ -27,13 +28,12 @@ local ipairs = ipairs
 local setmetatable = setmetatable
 local type   = type
 local print  = print
-local load   = load
 
 
 -- Adds whitespace to string `s`.
 -- Whitespace string `ws` (default to '' if omitted) is prepended to each line
 -- of `s`.  Also ensures `s` is is terminated by a newline.
-local function add_whitespace(s, ws)
+local function add_whitespace(s: string, ws: any)
   ws = ws or ''
   s = s:gsub('[^\r\n]+', ws .. '%1')
   if s:match('[^\r\n]$') then
@@ -43,7 +43,7 @@ local function add_whitespace(s, ws)
 end
 
 -- Counts the number `count` of captures '()' in Lua pattern string `pat`.
-local function count_captures(pat)
+local function count_captures(pat: any): number
   local count = 0
   local pos = 1
   while pos <= #pat do
@@ -83,14 +83,14 @@ M._count_captures = count_captures
 
 
 -- Appends '()' to Lua pattern string `pat`.
-local function pat_append_pos(pat)
+local function pat_append_pos(pat: string)
   local prefix = pat:match'^(.*)%$$'
   pat = prefix and prefix .. '()$' or pat .. '()'
   return pat
 end
 
 -- Prepends '()' to Lua pattern string `pat`.
-local function pat_prepend_pos(pat)
+local function pat_prepend_pos(pat: string)
   local postfix = pat:match'^%^(.*)'
   pat = postfix and '^()' .. postfix or '()' .. pat
   return pat
@@ -98,7 +98,7 @@ end
 
 
 -- Prepends '^' to Lua pattern string `pat`.
-local function pat_prepend_carrot(pat)
+local function pat_prepend_carrot(pat: string)
   local postfix = pat:match'^%^(.*)'
   pat = postfix and pat or '^' .. pat
   return pat
@@ -108,7 +108,7 @@ end
 -- Return a string listing pattern capture variables with indices `firstidx`
 -- to `lastidx`.
 -- Ex: code_vars(1,2) --> 'c1,c2'
-local function code_vars(firstidx, lastidx)
+local function code_vars(firstidx: number, lastidx: number)
   local code = ''
   for i=firstidx,lastidx do
     code = code .. (i == firstidx and '' or ',') .. 'c' .. i
@@ -123,9 +123,9 @@ epat_mt.__index = epat_mt
 
 
 -- Builds an extended pattern object `epat` from Lua string pattern `pat`.
-local function pattern(pat)
+local function pattern(pat: string)
   local epat = setmetatable({}, epat_mt)
-  epat.call = function(srcidx0, destidx0, totncaptures0)
+  epat.call = function(srcidx0: number, destidx0: number, totncaptures0: number)
     local ncaptures = count_captures(pat)
     local lvars =
       code_vars(totncaptures0+1, totncaptures0+ncaptures)
@@ -152,7 +152,8 @@ end
 --  `totncaptures0` - number of captures prior to this match
 --  `code`      - Lua code string (code) and number of
 --  `ncaptures` - number of captures in pattern.
-local function gen(anypat, srcidx0, destidx0, totncaptures0)
+local function gen(anypat: any, srcidx0: number, destidx0: number,
+		totncaptures0: number, b)
   if type(anypat) == 'string' then
     anypat = pat_prepend_carrot(anypat)
     anypat = pattern(anypat)
@@ -166,7 +167,7 @@ end
 -- the given list (of size >= 0) of pattern objects.
 -- Specify a single string argument to convert a Lua pattern to an extended
 -- pattern object.
-local function seq(...) -- epats...
+local function seq(...: any) -- epats...
   -- Ensure args are extended pattern objects.
   local epats = {...}
   for i=1,#epats do
@@ -176,7 +177,8 @@ local function seq(...) -- epats...
   end
 
   local epat = setmetatable({}, epat_mt)
-  epat.call = function(srcidx0, destidx0, totncaptures0, ws)
+  epat.call = function(srcidx0: number, destidx0: number,
+		  totncaptures0: number, ws: any)
     if #epats == 0 then
       return 'pos' .. destidx0 .. ' = pos' .. srcidx0 .. '\n', 0
     elseif #epats == 1 then
@@ -211,7 +213,7 @@ M.P = seq
 
 -- Creates new extended pattern object `epat` that is the alternation of the
 -- given list of pattern objects `epats...`.
-local function alt(...) -- epats...
+local function alt(...: any) -- epats...
   -- Ensure args are extended pattern objects.
   local epats = {...}
   for i=1,#epats do
@@ -221,7 +223,7 @@ local function alt(...) -- epats...
   end
 
   local epat = setmetatable({}, epat_mt)
-  epat.call = function(srcidx0, destidx0, totncaptures0)
+  epat.call = function(srcidx0: number, destidx0: number, totncaptures0: number)
     if #epats == 0 then
       return 'pos' .. destidx0 .. ' = pos' .. srcidx0 .. '\n', 0
     elseif #epats == 1 then
@@ -256,9 +258,9 @@ M.alt = alt
 -- Creates new extended pattern object `epat` that is zero or more repetitions
 -- of the given pattern object `pat` (if one evaluates to false) or one or more
 -- (if one evaluates to true).
-local function star(pat, one)
+local function star(pat: any, one: any)
   local epat = setmetatable({}, epat_mt)
-  epat.call = function(srcidx0, destidx0, totncaptures0)
+  epat.call = function(srcidx0: number, destidx0: number, totncaptures0: number)
     local ncaptures = 0
     local destidx = destidx0 + 1
     local code = 'do\n' ..
@@ -285,9 +287,9 @@ M.star = star
 
 -- Creates new extended pattern object `epat` that is zero or one of the
 -- given pattern object `epat0`.
-local function zero_or_one(epat0)
+local function zero_or_one(epat0: any)
   local epat = setmetatable({}, epat_mt)
-  epat.call = function(srcidx0, destidx0, totncaptures0)
+  epat.call = function(srcidx0: number, destidx0: number, totncaptures0: number)
     local ncaptures = 0
     local destidx = destidx0 + 1
     local code = 'do\n' ..
@@ -311,7 +313,7 @@ M.zero_or_one = zero_or_one
 
 
 -- Gets Lua core code string `code` corresponding to pattern object `epat`
-local function basic_code_of(epat)
+local function basic_code_of(epat: any)
   local pat_code, ncaptures = epat(1, 2, 0, true)
   local lvars = code_vars(1, ncaptures)
 
@@ -349,7 +351,7 @@ M.basic_code_of = basic_code_of
 
 
 -- Gets Lua complete code string `code` corresponding to pattern object `epat`.
-local function code_of(epat)
+local function code_of(epat: any)
   local code =
     'local match = ...\n' ..
     'return function(s,pos)\n' ..
@@ -361,35 +363,35 @@ M.code_of = code_of
 
 
 -- Compiles pattern object `epat` to Lua function `f`.
-local function compile(epat)
+local function compile(epat: any)
   local code = code_of(epat)
   if M.debug then print('DEBUG:\n' .. code) end
-  local f = assert(load(ChunkStream(code)))(match)
+  local f = assert(loadstring(code))(match)
   return f
 end
 M.compile = compile
 
 
 -- operator for pattern matching
-function epat_mt.__call(epat, ...)
+function epat_mt.__call(epat: any, ...)
   return epat.call(...)
 end
 
 
 -- operator for pattern alternation
-function epat_mt.__add(a_epat, b_epat)
+function epat_mt.__add(a_epat: any, b_epat: any)
   return alt(a_epat, b_epat)
 end
 
 
 -- operator for pattern concatenation
-function epat_mt.__mul(a_epat, b_epat)
+function epat_mt.__mul(a_epat: any, b_epat: any)
   return seq(a_epat, b_epat)
 end
 
 
 -- operator for pattern repetition
-function epat_mt.__pow(epat, n)
+function epat_mt.__pow(epat: any, n: any)
   if n == 0 then
     return star(epat)
   elseif n == 1 then

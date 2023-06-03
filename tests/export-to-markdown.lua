@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("one two three")
 Cmd.SplitCurrentParagraph()

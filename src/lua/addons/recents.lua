@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2020 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -13,10 +14,10 @@ local NUMBER_OF_RECENTS = 10
 
 do
 	local function cb()
-		GlobalSettings.recents = GlobalSettings.recents or {}
+		GlobalSettings.recents = GlobalSettings.recents or ({} :: {string})
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -25,7 +26,7 @@ end
 do
 	local function cb()
 		local recents = GlobalSettings.recents
-		local name = DocumentSet.name
+		local name = documentSet.name
 		if not name then
 			return
 		end
@@ -44,7 +45,7 @@ do
 		SaveGlobalSettings()
 	end
 
-	AddEventListener(Event.DocumentLoaded, cb)
+	AddEventListener("DocumentLoaded", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -52,11 +53,15 @@ end
 
 function Cmd.LoadRecentDocument()
 	local recents = GlobalSettings.recents
-	local m = {}
+	local m: {MenuItem} = {}
 	for i, v in pairs(recents) do
-		m[#m+1] = { nil, string_char(48 + i), Leafname(v), nil,
-			function()
-				Cmd.LoadDocumentSet(v)
+		m[#m+1] = {
+			id = nil,
+			mk = string_char(48 + i),
+			label = Leafname(v),
+			ak = nil,
+			fn = function()
+				return Cmd.LoadDocumentSet(v)
 			end
 		}
 	end

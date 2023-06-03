@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -9,7 +10,7 @@ local string_char = string.char
 local string_format = string.format
 local string_gsub = string.gsub
 
-local style_tab =
+local style_tab: {[string]: string} =
 {
 	["H1"] = '.NH 1',
 	["H2"] = '.NH 2',
@@ -53,10 +54,10 @@ local function callback(writer, document)
 
 		s = string_gsub(s, '\\', '\\\\')
 		
-		local o = 1
+		local o: number? = 1
 		local n = string_len(s)
 		
-		while (o <= n) do
+		while o and (o <= n) do
 			local c = ReadU8(s, o)
 			o = NextCharInWord(s, o)
 			if (c < 127) then
@@ -107,7 +108,7 @@ local function callback(writer, document)
 				'WordGrinder '..VERSION..'.\n')
 			writer('.\\" Use the .ms macro package!\n')
 			writer('.TL\n')
-			emit_text(Document.name)
+			emit_text(currentDocument.name)
 			writer('\n')
 			linestart = true
 		end,
@@ -118,7 +119,7 @@ local function callback(writer, document)
 			writer(s)
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()
@@ -158,7 +159,7 @@ local function callback(writer, document)
 					writer(".DE\n")
 				end
 				if (style == "LN") then
-					writer(string_format(".IP %d. 3", para.number))
+					writer(string.format(".IP %d. 3", para.number))
 				else
 					writer(style_tab[style] or ".LP")
 				end
@@ -183,7 +184,7 @@ function Cmd.ExportTroffFile(filename)
 end
 
 function Cmd.ExportToTroffString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 
 

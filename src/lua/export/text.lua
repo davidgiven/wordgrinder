@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -16,7 +17,7 @@ local function callback(writer, document)
 			writer(s)
 		end,
 		
-		notext = function(s)
+		notext = function()
 		end,
 		
 		italic_on = function()
@@ -61,6 +62,6 @@ function Cmd.ExportTextFile(filename)
 end
 
 function Cmd.ExportToTextString(document)
-	document = document or Document
+	document = document or currentDocument
 	return ExportToString(document, callback)
 end

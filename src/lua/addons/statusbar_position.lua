@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -13,12 +14,12 @@ do
 			{
 				priority=100,
 				value=string_format("%s: %d/%d",
-					Document[Document.cp].style,
-					Document.cp,
-					#Document)
+					currentDocument[currentDocument.cp].style,
+					currentDocument.cp,
+					#currentDocument)
 			}
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 

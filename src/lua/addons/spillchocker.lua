@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -5,23 +6,24 @@
 local GetWordText = wg.getwordtext
 local GetCwd = wg.getcwd
 local ChDir = wg.chdir
+local ReadFile = wg.readfile
 
 local USER_DICTIONARY_NAME = "User dictionary"
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function find_default_dictionary()
 		if (ARCH == "windows") then
-			return WINDOWS_INSTALL_DIR .. "/Dictionaries/"
+			return assert(WINDOWS_INSTALL_DIR) .. "/Dictionaries/"
 		else
 			return "/etc/dictionaries-common/words"
 		end
 	end
 
 	local function cb()
-		DocumentSet.addons.spellchecker = DocumentSet.addons.spellchecker or {
+		documentSet.addons.spellchecker = documentSet.addons.spellchecker or {
 			enabled = false,
 			usesystemdictionary = true,
 			useuserdictionary = true
@@ -32,7 +34,7 @@ do
 		}
 	end
 
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -40,34 +42,30 @@ end
 -- spellchecking dialogue boxes, etc).
 
 function SpellcheckerOff()
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	local state = settings.enabled
 	settings.enabled = false
 	return state
 end
 
 function SpellcheckerRestore(s)
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	settings.enabled = s
 end
 
 -----------------------------------------------------------------------------
 -- Utilities.
 
-local user_dictionary_cache
-local user_dictionary_cache
-local system_dictionary_cache
+local user_dictionary_cache: {[string]: string}?
+local system_dictionary_cache: {[string]: string}?
 
-local function user_dictionary_document_modified()
-	user_dictionary_cache = nil
-	user_dictionary_cache = nil
-end
-
-local function get_user_dictionary_document()
-	local d = DocumentSet:findDocument(USER_DICTIONARY_NAME)
+local function get_user_dictionary_document(): Document
+	local d = documentSet:findDocument(USER_DICTIONARY_NAME)
 	if not d then
 		d = CreateDocument()
-		DocumentSet:addDocument(d, USER_DICTIONARY_NAME)
+		assert(d)
+
+		documentSet:addDocument(d, USER_DICTIONARY_NAME)
 		NonmodalMessage("Creating dictionary in document '"
 				..USER_DICTIONARY_NAME.."'.")
 
@@ -78,68 +76,82 @@ local function get_user_dictionary_document()
 						.. "considered valid in your document.", "%s")
 			)
 
-		AddEventListener(Event.DocumentModified,
+		AddEventListener("DocumentModified",
 			function(self, token, document)
 				if (document == d) then
-					user_dictionary_document_modified(d)
+					user_dictionary_cache = nil
 				end
 			end
 		)
 	end
+	assert(d)
 	return d
 end
 
-function GetUserDictionary()
+function GetUserDictionary(): {[string]: string}
 	if not user_dictionary_cache then
 		local d = get_user_dictionary_document()
-		user_dictionary_cache = {}
 
+		local c = {}
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
 				local w = GetWordSimpleText(p[1])
-				user_dictionary_cache[w:lower()] = w
+				c[w:lower()] = w
 			end
 		end
+		user_dictionary_cache = c
 	end
+	assert(user_dictionary_cache)
 	return user_dictionary_cache
 end
 
-function GetSystemDictionary()
-	local settings = GlobalSettings.systemdictionary or {}
+function GetSystemDictionary(): {[string]: string}
+	local settings = GlobalSettings.systemdictionary
 	if not system_dictionary_cache then
-		system_dictionary_cache = {}
+		local c = {}
+		system_dictionary_cache = c
 
 		if settings.filename then
 			NonmodalMessage("Loading system dictionary '"
 				.. settings.filename .. "'")
-			local fp, e = io.open(settings.filename, "r")
-			if fp then
+			local data, e = ReadFile(settings.filename)
+			if data then
+				local fp = CreateIStream(data)
 				for s in fp:lines() do
-					system_dictionary_cache[s:lower()] = s
+					c[s:lower()] = s
 				end
-				fp:close()
 			else
-				NonmodalMessage("Failed to load system dictionary: " .. e)
+				NonmodalMessage("Failed to load system dictionary: "
+					.. assert(e))
 			end
 			QueueRedraw()
 		end
 	end
+	assert(system_dictionary_cache)
 	return system_dictionary_cache
 end
 
 function SetSystemDictionaryForTesting(array)
-	system_dictionary_cache = {}
+	local c = {}
+	system_dictionary_cache = c
+
 	for _, w in ipairs(array) do
-		system_dictionary_cache[w:lower()] = w
+		c[w:lower()] = w
 	end
 end
 
 function IsWordMisspelt(word, firstword)
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 	if settings.enabled then
 		local misspelt = true
-		local systemdict = settings.usesystemdictionary and GetSystemDictionary() or {}
-		local userdict = settings.useuserdictionary and GetUserDictionary() or {}
+		local systemdict = {}
+		if settings.usesystemdictionary then
+			systemdict = GetSystemDictionary()
+		end
+		local userdict = {}
+		if settings.useuserdictionary then
+			userdict = GetUserDictionary()
+		end
 		local scs = GetWordSimpleText(word)
 		local sci = scs:lower()
 		if (sci == "")
@@ -162,23 +174,25 @@ end
 -- Add the current word to the user dictionary.
 
 function Cmd.AddToUserDictionary()
-	local word = GetWordSimpleText(Document[Document.cp][Document.cw])
+	local word = GetWordSimpleText(currentDocument[currentDocument.cp][currentDocument.cw])
 
 	if (word ~= "") then
 		if (not GetUserDictionary()[word]) and
 				(not GetSystemDictionary()[word]) then
 			local d = get_user_dictionary_document()
 			d:appendParagraph(CreateParagraph("V", word))
-			d:touch()
+			documentSet:touch()
 			user_dictionary_cache = nil
 			NonmodalMessage("Word '"..word.."' added to user dictionary")
 		else
 			NonmodalMessage("Word '"..word.."' already in user dictionary")
 		end
 
-		DocumentSet:touch()
+		documentSet:touch()
 		QueueRedraw()
 	end
+
+	return true
 end
 
 -----------------------------------------------------------------------------
@@ -192,7 +206,7 @@ do
 		end
 	end
 
-	AddEventListener(Event.DrawWord, cb)
+	AddEventListener("DrawWord", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -205,33 +219,34 @@ function Cmd.FindNextMisspeltWord()
 	-- afterwards. Otherwise, start at the current cursor position.
 
 	local sp, sw, so
-	if Document.mp then
-		sp, sw, so = Document.mp, Document.mw + 1, 1
-		if sw > #Document[sp] then
+	if currentDocument.mp then
+		sp, sw, so = assert(currentDocument.mp), assert(currentDocument.mw) + 1, 1
+		if sw > #currentDocument[sp] then
 			sw = 1
 			sp = sp + 1
-			if sp > #Document then
+			if sp > #currentDocument then
 				sp = 1
 			end
 		end
 	else
-		sp, sw, so = Document.cp, Document.cw, 1
+		sp, sw, so = currentDocument.cp, currentDocument.cw, 1
 	end
 	local cp, cw, co = sp, sw, so
 
 	-- Keep looping until we reach the starting point again.
 
-	Document[1]:wrap()
+	currentDocument[1]:wrap()
 	while true do
-		local paragraph = Document[cp]
+		local paragraph = currentDocument[cp]
 		local word = paragraph[cw]
-		if IsWordMisspelt(word, paragraph.sentences[cw]) then
-			Document.cp = cp
-			Document.cw = cw
-			Document.co = #word + 1
-			Document.mp = cp
-			Document.mw = cw
-			Document.mo = 1
+		local wrapdata = paragraph:wrap()
+		if IsWordMisspelt(word, wrapdata.sentences[cw]) then
+			currentDocument.cp = cp
+			currentDocument.cw = cw
+			currentDocument.co = #word + 1
+			currentDocument.mp = cp
+			currentDocument.mw = cw
+			currentDocument.mo = 1
 			NonmodalMessage("Misspelt word found.")
 			QueueRedraw()
 			return true
@@ -241,13 +256,13 @@ function Cmd.FindNextMisspeltWord()
 
 		co = 1
 		cw = cw + 1
-		if (cw > #Document[cp]) then
+		if (cw > #currentDocument[cp]) then
 			cw = 1
 			cp = cp + 1
-			if (cp > #Document) then
+			if (cp > #currentDocument) then
 				cp = 1
 			end
-			Document[cp]:wrap()
+			currentDocument[cp]:wrap()
 		end
 
 		-- Check to see if we've scanned everything.
@@ -266,7 +281,7 @@ end
 -- Per-document set configuration user interface.
 
 function Cmd.ConfigureSpellchecker()
-	local settings = DocumentSet.addons.spellchecker or {}
+	local settings = documentSet.addons.spellchecker or {}
 
 	local highlight_checkbox =
 		Form.Checkbox {
@@ -292,40 +307,44 @@ function Cmd.ConfigureSpellchecker()
 			value = settings.useuserdictionary
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Spellchecker",
-		width = Form.Large,
+		width = "large",
 		height = 7,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		highlight_checkbox,
-		systemdictionary_checkbox,
-		userdictionary_checkbox,
-
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = 32, y2 = 1,
-			align = Form.Left,
-			value = "Display misspelt words:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
 
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Use system dictionary:"
-		},
+		widgets = {
+			highlight_checkbox,
+			systemdictionary_checkbox,
+			userdictionary_checkbox,
 
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Use user dictionary:"
-		},
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = 32, y2 = 1,
+				align = "left",
+				value = "Display misspelt words:"
+			},
+
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = "left",
+				value = "Use system dictionary:"
+			},
+
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = "left",
+				value = "Use user dictionary:"
+			},
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -337,7 +356,7 @@ function Cmd.ConfigureSpellchecker()
 	settings.enabled = highlight_checkbox.value
 	settings.usesystemdictionary = systemdictionary_checkbox.value
 	settings.useuserdictionary = userdictionary_checkbox.value
-	DocumentSet:touch()
+	documentSet:touch()
 	return true
 end
 
@@ -351,8 +370,7 @@ function Cmd.ConfigureSystemDictionary()
 	local filename = FileBrowser(
 		"Load new system dictionary",
 		"Select the dictionary file to load.",
-		false,
-		settings.filename)
+		false)
 	ChDir(oldcwd)
 
 	if filename then

@@ -23,530 +23,186 @@ local REVERSE = wg.REVERSE
 local BRIGHT = wg.BRIGHT
 local DIM = wg.DIM
 
-local stylemarkup =
-{
-	["H1"] = ITALIC + BRIGHT + BOLD + UNDERLINE,
-	["H2"] = BRIGHT + BOLD + UNDERLINE,
-	["H3"] = ITALIC + BRIGHT + BOLD,
-	["H4"] = BRIGHT + BOLD
+type DocumentStyle = {
+	desc: string,
+	name: string,
+	above: number,
+	below: number,
+	indent: number?,
+	bullet: string?,
+	list: boolean?,
+	firstindent: number?,
+	numbered: boolean?,
 }
 
-DocumentSetClass =
-{
-	-- remove any cached data prior to saving
-	purge = function(self)
-		for _, l in ipairs(self.documents) do
-			l:purge()
-		end
-	end,
+type DocumentStyles = {[number | string]: DocumentStyle}
+documentStyles = {} :: DocumentStyles
 
-	touch = function(self)
-		self.changed = true
-		self.justchanged = true
-		Document:touch()
-	end,
+local Document = {}
+Document.__index = Document
+_G.Document = Document
+declare currentDocument: Document
 
-	clean = function(self)
-		self.changed = nil
-		self.justchanged = nil
-	end,
+type ShadowDocument = {
+	[number]: Paragraph,
 
-	getDocumentList = function(self)
-		return self.documents
-	end,
-
-	_findDocument = function(self, name)
-		for i, d in ipairs(self.documents) do
-			if (d.name == name) then
-				return i
-			end
-		end
-		return nil
-	end,
-
-	findDocument = function(self, name)
-		local document = self.documents[name]
-		if not document then
-			document = self.documents[self:_findDocument(name)]
-			if document then
-				ModalMessage("Document index inconsistency corrected",
-					"Something freaky happened to '"..name.."'.")
-				self.documents[name] = document
-			end
-		end
-		return document
-	end,
-
-	addDocument = function(self, document, name, index)
-		document.name = name
-
-		local n = self:_findDocument(name) or (#self.documents + 1)
-		self.documents[n] = document
-		self.documents[name] = document
-		if not self.current or (self.current.name == name) then
-			self:setCurrent(name)
-		end
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-		return document
-	end,
-
-	moveDocumentIndexTo = function(self, name, targetIndex)
-		local n = self:_findDocument(name)
-		if not n then
-			return
-		end
-		local document = self.documents[n]
-
-		table_remove(self.documents, n)
-		table_insert(self.documents, targetIndex, document)
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-	end,
-
-	deleteDocument = function(self, name)
-		if (#self.documents == 1) then
-			return false
-		end
-
-		local n = self:_findDocument(name)
-		if not n then
-			return
-		end
-		local document = self.documents[n]
-
-		table_remove(self.documents, n)
-		self.documents[name] = nil
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-
-		if (Document == document) then
-			document = self.documents[n]
-			if not document then
-				document = self.documents[#self.documents]
-			end
-
-			self:setCurrent(document.name)
-		end
-
-		return true
-	end,
-
-	setCurrent = function(self, name)
-		-- Ensure any housekeeping on the current document gets done.
-
-		if Document.changed then
-			FireEvent(Event.Changed)
-		end
-
-		Document = self.documents[name]
-		if not Document then
-			Document = self.documents[1]
-		end
-
-		self.current = Document
-		Document:renumber()
-		ResizeScreen()
-	end,
-
-	renameDocument = function(self, oldname, newname)
-		if self.documents[newname] then
-			return false
-		end
-
-		local d = self.documents[oldname]
-		self.documents[oldname] = nil
-		self.documents[newname] = d
-		d.name = newname
-
-		self:touch()
-		RebuildDocumentsMenu(self.documents)
-		return true
-	end,
-
-	setClipboard = function(self, clipboard)
-		self.clipboard = clipboard
-	end,
-
-	getClipboard = function(self)
-		return self.clipboard
-	end,
+	cp: number,
+	cw: number,
+	co: number
 }
 
-DocumentClass =
-{
-	cursor = function(self)
-		return { self.cp, self.cw, self.co }
-	end,
+type Document = {
+	[number]: Paragraph,
 
-	appendParagraph = function(self, p)
-		self[#self+1] = p
-	end,
+	name: string,
+	wordcount: number,
+	viewmode: number,
+	margin: number,
 
-	insertParagraphBefore = function(self, paragraph, pn)
-		table.insert(self, pn, paragraph)
-	end,
+	-- These should no longer exist; this dates from a previous attempt
+	-- at undo with file version 6. We're not storing the undo buffer
+	-- in files any more.
+	undostack: nil,
+	redostack: nil,
 
-	deleteParagraphAt = function(self, pn)
-		table.remove(self, pn)
-	end,
+	-- Transient data, not stored in files.
+	_changed: boolean,
+	_undostack: {ShadowDocument}?,
+	_redostack: {ShadowDocument}?,
+	_wrapwidth: number?,
+	_topp: number?, -- paragraph number of top of screen
+	_topw: number?, -- word number of top of screen
+	_botp: number?, -- paragraph number of bottom of screen
+	_botw: number?, -- word number of bottom of screen
+	_sp: number?, -- redraw point on screen, paragraph
+	_sw: number?, -- redraw point on screen, word
 
-	wrap = function(self, width)
-		self.wrapwidth = width
-	end,
+	cp: number,
+	cw: number,
+	co: number,
 
-	getMarks = function(self)
-		if not self.mp then
-			return
-		end
+	mp: number?,
+	mw: number?,
+	mo: number?,
+	sticky_selection: boolean,
 
-		local mp1 = self.mp
-		local mw1 = self.mw
-		local mo1 = self.mo
-		local mp2 = self.cp
-		local mw2 = self.cw
-		local mo2 = self.co
+	cursor: (self: Document) -> {number},
+	appendParagraph: (self: Document, p: Paragraph) -> (),
+	insertParagraphBefore: (self: Document, paragraph: Paragraph, pn: number)
+		-> (),
+	deleteParagraphAt: (self: Document, pn: number) -> (),
+	wrap: (self: Document, width: number) -> (),
+	getMarks: (self: Document)
+		-> (number, number, number, number, number, number),
+	purge: (self: Document) -> (),
+	spaceAbove: (self: Document, pn: number) -> number,
+	spaceBelow: (self: Document, pn: number) -> number,
+	renumber: (self: Document) -> (),
+}
 
-		if (mp1 > mp2) or
-		   ((mp1 == mp2) and
-		       ((mw1 > mw2) or ((mw1 == mw2) and (mo1 > mo2)))
-		   ) then
-			return mp2, mw2, mo2, mp1, mw1, mo1
-		end
+function Document.cursor(self: Document)
+	return { self.cp, self.cw, self.co }
+end
 
-		return mp1, mw1, mo1, mp2, mw2, mo2
-	end,
+function Document.appendParagraph(self: Document, p)
+	self[#self+1] = p
+end
 
-	-- remove any cached data prior to saving
-	purge = function(self)
-		for _, paragraph in ipairs(self) do
-			paragraph:touch()
-		end
+function Document.insertParagraphBefore(self: Document, paragraph, pn)
+	table.insert(self, pn, paragraph)
+end
 
-		self.topp = nil
-		self.topw = nil
-		self.botp = nil
-		self.botw = nil
-		self.wrapwidth = nil
+function Document.deleteParagraphAt(self: Document, pn)
+	table.remove(self, pn)
+end
 
-		-- These should no longer exist; this dates from a previous attempt
-		-- at undo with file version 6. We're not storing the undo buffer
-		-- in files any more.
-		self.undostack = nil
-		self.redostack = nil
-	end,
+function Document.wrap(self: Document, width: number)
+	self._wrapwidth = width
+end
 
-	-- calculate space above this paragraph
-	spaceAbove = function(self, pn)
-		local paragraph = self[pn]
-		local paragraphabove = self[pn - 1]
-
-		local sa = DocumentStyles[paragraph.style].above or 0 -- FIXME
-		local sb = 0
-		if paragraphabove then
-			sb = DocumentStyles[paragraphabove.style].below or 0 -- FIXME
-		end
-
-		if (sa > sb) then
-			return sa
-		else
-			return sb
-		end
-	end,
-
-	-- calculate space below this paragraph
-	spaceBelow = function(self, pn)
-		local paragraph = self[pn]
-		local paragraphbelow = self[pn + 1]
-
-		local sb = DocumentStyles[paragraph.style].below or 0 -- FIXME
-		local sa = 0
-		if paragraphbelow then
-			sa = DocumentStyles[paragraphbelow.style].above or 0 -- FIXME
-		end
-
-		if (sa > sb) then
-			return sa
-		else
-			return sb
-		end
-	end,
-
-	touch = function(self)
-		FireEvent(Event.DocumentModified, self)
-	end,
-
-	renumber = function(self)
-		local wc = 0
-		local pn = 1
-
-		for _, p in ipairs(self) do
-			wc = wc + #p
-
-			local style = DocumentStyles[p.style]
-			if style.numbered then
-				p.number = pn
-				pn = pn + 1
-			elseif not style.list then
-				pn = 1
-			end
-		end
-
-		self.wordcount = wc
+function Document.getMarks(self: Document)
+	if not self.mp then
+		return
 	end
-}
 
-ParagraphClass =
-{
-	copy = function(self)
-		local words = {}
-		for _, w in ipairs(self) do
-			words[#words+1] = w
-		end
+	local mp1 = assert(self.mp)
+	local mw1 = assert(self.mw)
+	local mo1 = assert(self.mo)
+	local mp2 = self.cp
+	local mw2 = self.cw
+	local mo2 = self.co
 
-		return CreateParagraph(self.style, words)
-	end,
-
-	touch = function(self)
-		self.lines = nil
-		self.wrapwidth = nil
-		self.xs = nil
-		self.sentences = nil
-	end,
-
-	wrap = function(self, width)
-		local sentences = self.sentences
-		if (sentences == nil) then
-			local issentence = true
-			sentences = {}
-			for wn, word in ipairs(self) do
-				if issentence then
-					sentences[wn] = true
-					issentence = false
-				end
-
-				if word:find("[^%a]$") then
-					issentence = true
-				end
-			end
-			sentences[#self] = true
-			self.sentences = sentences
-		end
-
-		width = width or Document.wrapwidth
-		if (self.wrapwidth ~= width) then
-			local lines = {}
-			local line = {wn = 1}
-			local w = 0
-			local xs = {}
-			local fullstopspaces = WantFullStopSpaces()
-			self.xs = xs
-
-			width = width - self:getIndentOfLine(1)
-
-			for wn, word in ipairs(self) do
-				-- get width of word (including space)
-				local ww = GetStringWidth(word) + 1
-
-				-- add an extra space if the user asked for it
-				if fullstopspaces and word:find("%.$") then
-					ww = ww + 1
-				end
-
-				xs[wn] = w
-				w = w + ww
-				if (w >= width) then
-					lines[#lines+1] = line
-					if #lines == 1 then
-						width = width + self:getIndentOfLine(1) - self:getIndentOfLine(2)
-					end
-					line = {wn = wn}
-					w = ww
-					xs[wn] = 0
-				end
-
-				line[#line+1] = wn
-			end
-
-			if (#line > 0) then
-				lines[#lines+1] = line
-			end
-
-			self.lines = lines
-		end
-
-		return self.lines
-	end,
-
-	renderLine = function(self, line, x, y)
-		local cstyle = stylemarkup[self.style] or 0
-		local ostyle = 0
-		local xs = self.xs
-
-		for _, wn in ipairs(line) do
-			local w = self[wn]
-
-			local payload = {
-				word = w,
-				ostyle = ostyle,
-				cstyle = cstyle,
-				firstword = self.sentences[wn]
-			}
-			FireEvent(Event.DrawWord, payload)
-
-			ostyle = WriteStyled(x+xs[wn], y, payload.word,
-				payload.ostyle, nil, nil, payload.cstyle)
-		end
-	end,
-
-	renderMarkedLine = function(self, line, x, y, width, pn)
-		width = width or (ScreenWidth - x)
-
-		local lwn = line.wn
-		local mp1, mw1, mo1, mp2, mw2, mo2 = Document:getMarks()
-
-		local cstyle = stylemarkup[self.style] or 0
-		local ostyle = 0
-		for wn, w in ipairs(line) do
-			local s, e
-
-			wn = lwn + wn - 1
-
-			if (pn < mp1) or (pn > mp2) then
-				s = nil
-			elseif (pn > mp1) and (pn < mp2) then
-				s = 1
-			else
-				if (pn == mp1) and (pn == mp2) then
-					if (wn == mw1) and (wn == mw2) then
-						s = mo1
-						e = mo2
-					elseif (wn == mw1) then
-						s = mo1
-					elseif (wn == mw2) then
-						s = 1
-						e = mo2
-					elseif (wn > mw1) and (wn < mw2) then
-						s = 1
-					end
-				elseif (pn == mp1) then
-					if (wn > mw1) then
-						s = 1
-					elseif (wn == mw1) then
-						s = mo1
-					end
-				else
-					s = 1
-					if (wn > mw2) then
-						s = nil
-					elseif (wn == mw2) then
-						e = mo2
-					end
-				end
-			end
-
-			local payload = {
-				word = self[w],
-				ostyle = ostyle,
-				cstyle = cstyle,
-				firstword = self.sentences[wn]
-			}
-			FireEvent(Event.DrawWord, payload)
-
-			ostyle = WriteStyled(x+self.xs[w], y, payload.word,
-				payload.ostyle, s, e, payload.cstyle)
-		end
-	end,
-
-	-- returns: line number, word number in line
-	getLineOfWord = function(self, wn)
-		local lines = self:wrap()
-		for ln, l in ipairs(lines) do
-			if (wn <= #l) then
-				return ln, wn
-			end
-
-			wn = wn - #l
-		end
-
-		return nil, nil
-	end,
-
-	-- returns: number of characters
-	getIndentOfLine = function(self, ln)
-		local indent
-		if (ln == 1) then
-			indent = DocumentStyles[self.style].firstindent
-		end
-		indent = indent or DocumentStyles[self.style].indent or 0
-		return indent
-	end,
-
-	-- returns: word number
-	getWordOfLine = function(self, ln)
-		local lines = self:wrap()
-		return lines[ln].wn
-	end,
-
-	-- returns: X offset, line number, word number in line
-	getXOffsetOfWord = function(self, wn)
-		local lines = self:wrap()
-		local x = self.xs[wn]
-		local ln, wn = self:getLineOfWord(wn)
-		return x, ln, wn
-	end,
-
-	sub = function(self, start, count)
-		if not count then
-			count = #self - start + 1
-		else
-			count = min(count, #self - start + 1)
-		end
-
-		local t = {}
-		for i = start, start+count-1 do
-			t[#t+1] = self[i]
-		end
-		return t
-	end,
-
-	-- return an unstyled string containing the contents of the paragraph.
-	asString = function(self)
-		local s = {}
-		for _, w in ipairs(self) do
-			s[#s+1] = GetWordText(w)
-		end
-
-		return table_concat(s, " ")
+	if (mp1 > mp2) or
+	   ((mp1 == mp2) and
+		   ((mw1 > mw2) or ((mw1 == mw2) and (mo1 > mo2)))
+	   ) then
+		return mp2, mw2, mo2, mp1, mw1, mo1
 	end
-}
 
-function CreateParagraph(style, ...)
-	words = {}
+	return mp1, mw1, mo1, mp2, mw2, mo2
+end
 
-	for _, t in ipairs({...}) do
-		if (type(t) == "table") then
-			for _, w in ipairs(t) do
-				words[#words+1] = w
-			end
-		else
-			words[#words+1] = t
+-- calculate space above this paragraph
+function Document.spaceAbove(self: Document, pn: number)
+	local paragraph = self[pn]
+	local paragraphabove = self[pn - 1]
+
+	local sa = documentStyles[paragraph.style].above or 0 -- FIXME
+	local sb = 0
+	if paragraphabove then
+		sb = documentStyles[paragraphabove.style].below or 0 -- FIXME
+	end
+
+	if (sa > sb) then
+		return sa
+	else
+		return sb
+	end
+end
+
+-- calculate space below this paragraph
+function Document.spaceBelow(self: Document, pn: number)
+	local paragraph = self[pn]
+	local paragraphbelow = self[pn + 1]
+
+	local sb = documentStyles[paragraph.style].below or 0 -- FIXME
+	local sa = 0
+	if paragraphbelow then
+		sa = documentStyles[paragraphbelow.style].above or 0 -- FIXME
+	end
+
+	if (sa > sb) then
+		return sa
+	else
+		return sb
+	end
+end
+
+function Document.touch(self: Document)
+	FireEvent("DocumentModified", self)
+end
+
+function Document.renumber(self: Document)
+	local wc = 0
+	local pn = 1
+
+	for _, p in ipairs(self) do
+		wc = wc + #p
+
+		local style = documentStyles[p.style]
+		if style.numbered then
+			p.number = pn
+			pn = pn + 1
+		elseif not style.list then
+			pn = 1
 		end
 	end
 
-	if type(style) ~= "string" then
-		error("paragraph style is not a string")
-	end
-	words.style = style
-
-	setmetatable(words, {__index = ParagraphClass})
-	return words
+	self.wordcount = wc
 end
 
 -- Returns how many screen spaces a portion of a string takes up.
-function GetWidthFromOffset(s, o)
+function GetWidthFromOffset(s: string, o: number)
 	return GetStringWidth(s:sub(1, o-1))
 end
 
@@ -573,7 +229,7 @@ function GetOffsetFromWidth(s, x)
 		return len + 1
 end
 
-function GetWordSimpleText(s)
+function GetWordSimpleText(s: string): string
 	s = GetWordText(s)
 	s = UnSmartquotify(s)
 	s = s:gsub('[~#&^$"<>]+', "")
@@ -582,7 +238,7 @@ function GetWordSimpleText(s)
 	return s
 end
 
-function OnlyFirstCharIsUppercase(s)
+function OnlyFirstCharIsUppercase(s: string): boolean
     -- Return true if only first character is uppercase
     local first_char = s:sub(0, 1)
     if first_char:upper() == first_char then
@@ -598,7 +254,7 @@ function UpdateDocumentStyles()
 	local plaintext =
 	{
 		desc = "Plain text",
-		name = "P"
+		name = "P",
 	}
 
 	if WantDenseParagraphLayout() then
@@ -611,7 +267,7 @@ function UpdateDocumentStyles()
 		plaintext.firstindent = 0
 	end
 
-	local styles =
+	local styles: {[number|string]: DocumentStyle} =
 	{
 		plaintext,
 		{
@@ -694,31 +350,17 @@ function UpdateDocumentStyles()
 		}
 	}
 
-	for _, s in ipairs(styles) do
+	for _, s in styles do
 		styles[s.name] = s
 	end
 
-	DocumentStyles = styles
+	documentStyles = styles
 end
 
-function CreateDocumentSet()
-	UpdateDocumentStyles()
-	local ds =
-	{
-		fileformat = FILEFORMAT,
-		statusbar = true,
-		documents = {},
-		addons = {},
-	}
-
-	setmetatable(ds, {__index = DocumentSetClass})
-	return ds
-end
-
-function CreateDocument()
+function CreateDocument(): Document
 	local d =
 	{
-		wrapwidth = nil,
+		_wrapwidth = 0,
 		viewmode = 1,
 		margin = 0,
 		cp = 1,
@@ -726,10 +368,10 @@ function CreateDocument()
 		co = 1,
 	}
 
-	setmetatable(d, {__index = DocumentClass})
+	local dd = (setmetatable(d, Document)::any) :: Document
 
 	local p = CreateParagraph("P", {""})
-	d:appendParagraph(p)
-	return d
+	dd:appendParagraph(p)
+	return dd
 end
 

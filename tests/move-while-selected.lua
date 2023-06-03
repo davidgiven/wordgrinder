@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 -- Non-sticky
 
@@ -7,15 +8,15 @@ Cmd.SetMark()
 Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 
-AssertEquals(false, Document.sticky_selection)
-AssertEquals(1, Document.mp)
-AssertEquals(1, Document.mw)
-AssertEquals(4, Document.mo)
+AssertEquals(false, currentDocument.sticky_selection)
+AssertEquals(1, currentDocument.mp)
+AssertEquals(1, currentDocument.mw)
+AssertEquals(4, currentDocument.mo)
 
 -- This should remove the selection.
 Cmd.MoveWhileSelected()
 
-AssertEquals(nil, Document.mp)
+AssertEquals(nil, currentDocument.mp)
 
 -- Sticky
 
@@ -26,15 +27,15 @@ Cmd.ToggleMark()
 Cmd.GotoPreviousCharW()
 Cmd.GotoPreviousCharW()
 
-AssertEquals(true, Document.sticky_selection)
-AssertEquals(1, Document.mp)
-AssertEquals(1, Document.mw)
-AssertEquals(4, Document.mo)
+AssertEquals(true, currentDocument.sticky_selection)
+AssertEquals(1, currentDocument.mp)
+AssertEquals(1, currentDocument.mw)
+AssertEquals(4, currentDocument.mo)
 
 -- This should *not* remove the selection.
 Cmd.MoveWhileSelected()
 
-AssertEquals(1, Document.mp)
+AssertEquals(1, currentDocument.mp)
 
 -- Ensure that setting a mark at the beginning of a word works.
 
@@ -42,8 +43,8 @@ ResetDocumentSet()
 Cmd.InsertStringIntoWord("foo")
 Cmd.SplitCurrentWord()
 Cmd.SetMark()
-AssertEquals(false, Document.sticky_selection)
-AssertEquals(1, Document.mp)
-AssertEquals(2, Document.mw)
-AssertEquals(1, Document.mo)
+AssertEquals(false, currentDocument.sticky_selection)
+AssertEquals(1, currentDocument.mp)
+AssertEquals(2, currentDocument.mw)
+AssertEquals(1, currentDocument.mo)
 

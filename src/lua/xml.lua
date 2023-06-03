@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -7,12 +8,24 @@ local coroutine_wrap = coroutine.wrap
 local writeu8 = wg.writeu8
 local string_find = string.find
 
-local function cowcopy(t)
-	return setmetatable({},
-		{
-			__index = t
-		}
-	)
+type XML = any
+
+type XMLAttr = {
+	name: string,
+	namespace: string,
+	value: string
+}
+
+type XMLToken = {
+	name: string,
+	namespace: string,
+	event: string,
+	attrs: {XMLAttr},
+	text: string,
+}
+
+local function cowcopy<T>(t: T): T
+	return (setmetatable({}, {__index = t})::any)::T
 end
 
 --- Tokenises XML.
@@ -22,7 +35,7 @@ end
 -- @param xml                   XML string to tokenise
 -- @return                      iterator
 
-function TokeniseXML(xml)
+function TokeniseXML(xml: string): () -> XMLToken?
 	local PROCESSING = '^<%?([%w_-]+)%s*(.-)%?>'
 	local COMMENT = '^<!%-%-(.-)%-%->'
 	local CDATA = '^<%!%[CDATA%[(.-)%]%]>'
@@ -59,7 +72,7 @@ function TokeniseXML(xml)
 	
 	local offset = 1
 	
-	local function parse_attributes(scope, data)
+	local function parse_attributes(scope: {[string]: string}, data: string)
 		local attrs = {}
 		local offset = 1
 		
@@ -101,6 +114,7 @@ function TokeniseXML(xml)
 				return attrs
 			end
 			
+			assert(e)
 			offset = e + 1
 		end
 	end
@@ -141,7 +155,7 @@ function TokeniseXML(xml)
 					coroutine_yield(
 						{
 							event = "text",
-							text = writeu8(tonumber(s1))
+							text = writeu8(assert(tonumber(s1)))
 						}
 					)
 					offset = e + 1
@@ -153,7 +167,7 @@ function TokeniseXML(xml)
 					coroutine_yield(
 						{
 							event = "text",
-							text = writeu8(tonumber("0x"..s1))
+							text = writeu8(assert(tonumber("0x"..s1)))
 						}
 					)
 					offset = e + 1
@@ -181,6 +195,7 @@ function TokeniseXML(xml)
 							attrs = parse_attributes({}, s2)
 						}
 					)
+					assert(e)
 					offset = e + 1
 					break
 				end
@@ -202,7 +217,7 @@ function TokeniseXML(xml)
 	end
 	
 	parse_tag = function(scope)
-		local _, e, s1, s2, s3, s4, s5 = string_find(xml, OPENTAG, offset)
+		local _, e, s1, s2, s3, s4, s5 = string.find(xml, OPENTAG, offset)
 		local newscope = cowcopy(scope)
 
 		local tag = {
@@ -219,6 +234,7 @@ function TokeniseXML(xml)
 		end
 		
 		coroutine_yield(tag)
+		assert(e)
 		offset = e + 1
 
 		if (s5 == "") then
@@ -246,16 +262,16 @@ end
 -- @param xml                   XML string to parse
 -- @return                      tree
 
-function ParseXML(xml)
+function ParseXML(xml): XML
 	local nextToken = TokeniseXML(xml)
 
-	local function parse_tag(token)
+	local function parse_tag(token: XMLToken): XML
 		local n = token.name
 		if (token.namespace ~= "") then
 			n = token.namespace .. " " .. n
 		end
 		
-		local t = {
+		local t: any = {
 			_name = n
 		}
 		
@@ -268,14 +284,17 @@ function ParseXML(xml)
 		end
 		
 		while true do
-			token = nextToken()
-			
-			if (token.event == "opentag") then
-				t[#t+1] = parse_tag(token)
-			elseif (token.event == "text") then
-				t[#t+1] = token.text
-			elseif (token.event == "closetag") then
+			local token = nextToken()
+			if not token then
 				return t
+			else
+				if (token.event == "opentag") then
+					t[#t+1] = parse_tag(token)
+				elseif (token.event == "text") then
+					t[#t+1] = token.text
+				elseif (token.event == "closetag") then
+					return t
+				end
 			end
 		end 
 	end
@@ -284,11 +303,10 @@ function ParseXML(xml)
 	
 	while true do
 		local token = nextToken()
-		if (token.event == "opentag") then
-			return parse_tag(token)
-		end
 		if not token then
 			return {}
+		elseif token.event == "opentag" then
+			return parse_tag(token)
 		end
 	end
 end

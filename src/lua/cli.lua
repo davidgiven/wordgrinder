@@ -1,10 +1,11 @@
+--!nonstrict
 -- © 2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
+local PrintErr = wg.printerr
 local string_find = string.find
 local table_concat = table.concat
-local stderr = io.stderr
 
 local import_table =
 {
@@ -27,27 +28,26 @@ local export_table =
 --	["rtf"] = Cmd.ExportRTFFile,
 }
 
-function CLIMessage(...)
-	stderr:write("wordgrinder: ", ...)
-	stderr:write("\n")
-	stderr:flush()
+function CLIMessage(...: string)
+	PrintErr("wordgrinder: ", ...)
+	PrintErr("\n")
 end
 
-function CLIError(...)
+function CLIError(...: string)
 	CLIMessage(...)
-	os.exit(1)
+	wg.exit(1)
 end
 		
 --- Engages CLI mode.
 
 function EngageCLI()
-	function ImmediateMessage(s)
+	function ImmediateMessage(s: string)
 		if s then
 			CLIMessage(s)
 		end
 	end
 	
-	function ModalMessage(s1, s2)
+	function ModalMessage(s1: string, s2: string)
 		if s2 then
 			CLIMessage(s2)
 		end
@@ -59,23 +59,27 @@ end
 -- @param file1                 Source filename
 -- @param file2                 Destination filename
 
-function CliConvert(file1, file2)
+function CliConvert(file1: string, file2: string)
 	EngageCLI()
 	
-	local function decode_filename(f)
+	local function decode_filename(f: string): (string, string, string, string)
 		local _, _, root, extension, hassubdoc, subdoc = string_find(f,
 			"^(.*)%.(%w*)(:?)(.*)$")
 		
 		if not root or not extension then
 			CLIError("unable to parse filename '", f, "'")
 		end
-			
+
+		assert(root)
+		assert(extension)
+		assert(hassubdoc)
+		assert(subdoc)
 		return root, extension, hassubdoc, subdoc
 	end
 	
 	local f1r, f1e, f1hs, f1s = decode_filename(file1)
 	local f1 = f1r.."."..f1e
-	local f2r, f2e, f2hs, f2s = decode_filename(file2)
+	local f2r, f2e, f2hs, _f2s = decode_filename(file2)
 	local f2 = f2r.."."..f2e
 	
 	if (f2hs ~= "") then
@@ -113,17 +117,17 @@ function CliConvert(file1, file2)
 			-- If the user specified a document name, and we loaded a wg file,
 			-- then select the specified document.
 			
-			local dl = DocumentSet:getDocumentList()
-			if not dl[f1s] then
+			local dl = documentSet:getDocumentList()
+			if not documentSet:_findDocument(f1s) then
 				CLIError("no such document '", f1s, "'")
 			end
-			DocumentSet:setCurrent(f1s)
+			documentSet:setCurrent(f1s)
 		else
 			-- Otherwise, rename the document we just imported to the name
 			-- that the user specified.
 			
-			local name = Document.name
-			DocumentSet:renameDocument(name, f1s)
+			local name = currentDocument.name
+			documentSet:renameDocument(name, f1s)
 		end
 	end
 	
@@ -131,6 +135,6 @@ function CliConvert(file1, file2)
 		CLIError("failed")
 	end
 	
-	os.exit(0)
+	wg.exit(0)
 end
 

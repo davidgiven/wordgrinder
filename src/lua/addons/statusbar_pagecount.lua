@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2013 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -7,9 +8,9 @@
 
 do
 	local function cb(event, token, terms)
-		local settings = DocumentSet.addons.pagecount or {}
+		local settings = documentSet.addons.pagecount or {}
 		if settings.enabled then
-			local pages = math.floor((Document.wordcount or 0) / settings.wordsperpage)
+			local pages = math.floor((currentDocument.wordcount or 0) / settings.wordsperpage)
 			terms[#terms+1] = {
 				priority=80,
 				value=string.format("%d %s", pages,
@@ -18,28 +19,28 @@ do
 		end
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.pagecount = DocumentSet.addons.pagecount or {
+		documentSet.addons.pagecount = documentSet.addons.pagecount or {
 			enabled = false,
 			wordsperpage = 250,
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigurePageCount()
-	local settings = DocumentSet.addons.pagecount
+	local settings = documentSet.addons.pagecount
 
 	local enabled_checkbox =
 		Form.Checkbox {
@@ -56,25 +57,29 @@ function Cmd.ConfigurePageCount()
 			value = tostring(settings.wordsperpage)
 		}
 		
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Page Count",
-		width = Form.Large,
+		width = "large",
 		height = 5,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		enabled_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Number of words per page:"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
-		count_textfield,
+		
+		widgets = {
+			enabled_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = "left",
+				value = "Number of words per page:"
+			},
+			count_textfield,
+		}
 	}
 	
 	while true do
@@ -92,7 +97,7 @@ function Cmd.ConfigurePageCount()
 		else
 			settings.enabled = enabled
 			settings.wordsperpage = wordsperpage
-			DocumentSet:touch()
+			documentSet:touch()
 
 			return true
 		end

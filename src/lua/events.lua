@@ -1,25 +1,29 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local listeners = {}
-local batched = {}
+type EventToken = {Event}
+type EventCallback = (Event, EventToken, ...any) -> ()
 
-Event = {}
-Event.BuildStatusBar = {}    --- (statusbararray) the contents of the statusbar is being calculated
-Event.Changed = {}           --- the document's been changed
-Event.DocumentCreated = {}   --- a new documentset has just been created
-Event.DocumentLoaded = {}    --- a new documentset has just been loaded
-Event.DocumentModified = {}  --- (document) a document has been modified
-Event.DocumentUpgrade = {}   --- (oldversion, newversion) the documentset is being upgraded
-Event.DrawWord = {}          --- (word=, ostyle=, cstyle=) a word is being drawn on the screen
-Event.KeyTyped = {}          --- (value=) user is typing into the document
-Event.Idle = {}              --- the user isn't touching the keyboard
-Event.Moved = {}             --- the cursor has moved
-Event.Redraw = {}            --- the screen has just been redrawn
-Event.RegisterAddons = {}    --- all addons should register themselves in the documentset
-Event.WaitingForUser = {}    --- we're about to wait for a keypress
-Event.ScreenInitialised = {} --- the screen has just been set up
+local listeners = {} :: {[Event]: {[EventToken]: EventCallback}}
+local batched = {} :: {[Event]: boolean}
+
+type Event =
+	  "BuildStatusBar"    --- (statusbararray) the contents of the statusbar is being calculated
+	| "Changed"           --- the document's been changed
+	| "DocumentCreated"   --- a new documentset has just been created
+	| "DocumentLoaded"    --- a new documentset has just been loaded
+	| "DocumentModified"  --- (document) a document has been modified
+	| "DocumentUpgrade"   --- (oldversion, newversion) the documentset is being upgraded
+	| "DrawWord"          --- (word=, ostyle=, cstyle=) a word is being drawn on the screen
+	| "KeyTyped"          --- (value=) user is typing into the document
+	| "Idle"              --- the user isn't touching the keyboard
+	| "Moved"             --- the cursor has moved
+	| "Redraw"            --- the screen has just been redrawn
+	| "RegisterAddons"    --- all addons should register themselves in the documentset
+	| "WaitingForUser"    --- we're about to wait for a keypress
+	| "ScreenInitialised" --- the screen has just been set up
 
 --- Adds a listener for a particular event.
 -- The supplied callback is added as a listener for the specified event.
@@ -33,7 +37,7 @@ Event.ScreenInitialised = {} --- the screen has just been set up
 -- @param callback           the callback to register
 -- @return                   the callback token
 
-function AddEventListener(event, callback)
+function AddEventListener(event: Event, callback)
 	-- Ensure there's a listener table for this event.
 	
 	if not listeners[event] then
@@ -42,7 +46,7 @@ function AddEventListener(event, callback)
 	
 	-- Register the callback.
 	
-	local token = {event}
+	local token: EventToken = {event}
 	listeners[event][token] = callback
 	return token
 end
@@ -53,8 +57,8 @@ end
 --
 -- @param token              a token returned by AddEventListener
 
-function RemoveEventListener(token)
-	local event = token[1]
+function RemoveEventListener(token: EventToken)
+	local event: Event = token[1]
 	listeners[event][token] = nil
 end
 
@@ -72,7 +76,7 @@ function FireEvent(event, ...)
 		return
 	end
 	
-	for token, callback in pairs(l) do
+	for token, callback in l do
 		callback(event, token, ...)
 	end
 end
@@ -95,12 +99,13 @@ end
 
 function FlushAsyncEvents()
 	while true do
-		local e = next(batched)
+		local e: Event? = next(batched)::any
 		if not e then
 			break
 		end
-		batched[e] = nil
+		assert(e)
 
+		batched[e] = nil
 		FireEvent(e)
 	end
 end

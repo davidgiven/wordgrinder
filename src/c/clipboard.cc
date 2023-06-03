@@ -3,11 +3,7 @@
  * file in this distribution for the full text.
  */
 
-extern "C"
-{
 #include "globals.h"
-}
-
 #include <vector>
 #include "clip.h"
 
@@ -76,8 +72,7 @@ void clipboard_init()
         {NULL,              NULL              }
     };
 
-    lua_getglobal(L, "wg");
-    luaL_setfuncs(L, funcs, 0);
+    luaL_register(L, "wg", funcs);
 }
 
 // vim: ts=4 sw=4 et

@@ -1,3 +1,5 @@
+--!nonstrict
+--
 local function unmarkdown(s)
 	s = s:gsub("#", "\\#")
 	s = s:gsub("- ", "\\- ")
@@ -9,7 +11,7 @@ local function unmarkdown(s)
 	return s
 end
 
-local style_tab =
+local style_tab: {[string]: {any}} =
 {
 	["H1"] = {false, '# ', '\n'},
 	["H2"] = {false, '## ', '\n'},
@@ -116,6 +118,6 @@ function Cmd.ExportMarkdownFile(filename)
 end
 
 function Cmd.ExportToMarkdownString()
-	return ExportToString(Document, callback)
+	return ExportToString(currentDocument, callback)
 end
 

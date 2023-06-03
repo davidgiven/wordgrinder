@@ -10,22 +10,9 @@ jobs:
       with:
         fetch-depth: 1
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev imagemagick
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
     - name: make
       run: |
-        ./configure \
-          debug ncurses test \
-          -and release ncurses test \
-          -and release ncurses lua=lua5.1 test \
-          -and release ncurses lua=lua5.2 test \
-          -and release ncurses lua=lua5.3 test \
-          -and release ncurses lua=luajit test \
-          -and debug glfw \
-          -and release glfw \
-          -and release glfw lua=lua5.1 \
-          -and release glfw lua=lua5.2 \
-          -and release glfw lua=lua5.3 \
-          -and release glfw lua=luajit 
         make
 
   build-macos:
@@ -35,10 +22,9 @@ jobs:
       with:
         fetch-depth: 1
     - name: brew
-      run: brew install pkg-config ninja glfw imagemagick wxwidgets
+      run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark fmt
     - name: make
       run: |
-        ./configure
         make
 
   build-windows:
@@ -54,13 +40,16 @@ jobs:
         install: >-
           make
           mingw-w64-i686-binutils
+          mingw-w64-i686-fmt
           mingw-w64-i686-gcc
           mingw-w64-i686-glfw
           mingw-w64-i686-imagemagick
           mingw-w64-i686-nsis
           mingw-w64-i686-pkg-config
           mingw-w64-i686-zlib
+          mingw-w64-i686-cmark
           ninja
+          python3
           vim
           zip
     - uses: actions/checkout@v1
@@ -68,7 +57,6 @@ jobs:
         fetch-depth: 1
     - name: build
       run: |
-        PATH=/mingw32/bin:$PATH ./configure
         PATH=/mingw32/bin:$PATH make
     - name: zip
       run: |

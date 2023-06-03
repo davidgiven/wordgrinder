@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2015 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -12,7 +13,7 @@ do
 	local function cb(event, token, terms)
 		local settings = GlobalSettings.debug
 		if settings.memory then
-			local mem = floor(collectgarbage("count"))
+			local mem = floor(gcinfo())
 			terms[#terms+1] = 
 				{
 					priority=50,
@@ -24,23 +25,23 @@ do
 				{
 					priority=50,
 					value=string_format("%d.%d.%d",
-						Document.cp, Document.cw, Document.co)
+						currentDocument.cp, currentDocument.cw, currentDocument.co)
 				}
 		end
 		if settings.currentword then
 			terms[#terms+1] = 
 				{
 					priority=50,
-					value=Format(Document[Document.cp][Document.cw])
+					value=Format(currentDocument[currentDocument.cp][currentDocument.cw])
 				}
 		end
 	end
 	
-	AddEventListener(Event.BuildStatusBar, cb)
+	AddEventListener("BuildStatusBar", cb)
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
@@ -51,7 +52,7 @@ do
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -83,26 +84,30 @@ function Cmd.ConfigureDebug()
 			value = settings.currentword
 		}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Debugging Options",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		memory_checkbox,
-		location_checkbox,
-		currentword_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			align = Form.Centre,
-			value = "None of these options are of any interest to normal users."
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
+		
+		widgets = {
+			memory_checkbox,
+			location_checkbox,
+			currentword_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				align = "centre",
+				value = "None of these options are of any interest to normal users."
+			},
+		}
 	}
 	
 	local result = Form.Run(dialogue, RedrawScreen,

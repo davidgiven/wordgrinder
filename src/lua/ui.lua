@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -17,14 +18,14 @@ local GetBytesOfCharacter = wg.getbytesofcharacter
 local GetBoundedString = wg.getboundedstring
 local UseUnicode = wg.useunicode
 
-function DrawStatusLine(s)
+function DrawStatusLine(s: string)
 	SetReverse()
 	ClearArea(0, ScreenHeight-1, ScreenWidth-1, ScreenHeight-1)
 	Write(0, ScreenHeight-1, s)
 	SetNormal()
 end
 
-function DrawBox(x, y, w, h)
+function DrawBox(x: number, y: number, w: number, h: number)
 	local border = string.rep(UseUnicode() and "─" or "-", w)
 	local space = string.rep(" ", w)
 	Write(x-1,   y,     UseUnicode() and " ┌" or " +")
@@ -42,24 +43,25 @@ function DrawBox(x, y, w, h)
 	end
 end
 
-function CentreInField(x, y, w, s)
+function CentreInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	local xo = int((w - GetStringWidth(s)) / 2)
 	Write(x+xo, y, s)
 end
 
-function LAlignInField(x, y, w, s)
+function LAlignInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	Write(x, y, s)
 end
 
-function RAlignInField(x, y, w, s)
+function RAlignInField(x: number, y: number, w: number, s: string)
 	s = GetBoundedString(s, w)
 	local xo = w - GetStringWidth(s)
 	Write(x+xo, y, s)
 end
 
-function DrawTitledBox(x, y, w, h, title, subtitle)
+function DrawTitledBox(x: number, y: number, w: number, h: number,
+		title: string, subtitle: string?)
 	SetBright()
 	DrawBox(x, y, w, h)
 	CentreInField(x+1, y, w, title)
@@ -80,20 +82,24 @@ function ImmediateMessage(text)
 	wg.sync()
 end
 
-function ModalMessage(title, message)
-	local dialogue =
+function ModalMessage(title: string?, message: string)
+	local dialogue: Form =
 	{
 		title = title or "Message",
-		width = Form.Large,
+		width = "large",
 		height = 2,
 		stretchy = true,
 
-		[" "] = "confirm",
-
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+		actions = {
+			[" "] = "confirm",
 		},
+
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+			},
+		}
 	}
 
 	Form.Run(dialogue, RedrawScreen,
@@ -104,32 +110,36 @@ end
 function PromptForYesNo(title, message)
 	local result = nil
 
-	local function rtrue()
+	local function rtrue(self: Form): ActionResult
 		result = true
 		return "confirm"
 	end
 
-	local function rfalse()
+	local function rfalse(self: Form): ActionResult
 		result = false
 		return "confirm"
 	end
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = title or "Message",
-		width = Form.Large,
+		width = "large",
 		height = 2,
 		stretchy = true,
 
-		["n"] = rfalse,
-		["N"] = rfalse,
-		["y"] = rtrue,
-		["Y"] = rtrue,
-
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+		actions = {
+			["n"] = rfalse,
+			["N"] = rfalse,
+			["y"] = rtrue,
+			["Y"] = rtrue,
 		},
+
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -3,
+			},
+		}
 	}
 
 	Form.Run(dialogue, RedrawScreen,
@@ -138,10 +148,11 @@ function PromptForYesNo(title, message)
 	return result
 end
 
-function PromptForString(title, message, default)
+function PromptForString(title: string, message: string, default: string?)
 	if not default then
 		default = ""
 	end
+	assert(default)
 
 	local textfield =
 	Form.TextField {
@@ -150,22 +161,26 @@ function PromptForString(title, message, default)
 		x1 = 1, y1 = -4, x2 = -1, y2 = -3,
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = title,
-		width = Form.Large,
+		width = "large",
 		height = 4,
 		stretchy = true,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		Form.WrappedLabel {
-			value = message,
-			x1 = 1, y1 = 1, x2 = -1, y2 = -6,
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
 
-		textfield,
+		widgets = {
+			Form.WrappedLabel {
+				value = message,
+				x1 = 1, y1 = 1, x2 = -1, y2 = -6,
+			},
+
+			textfield,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -179,9 +194,11 @@ function PromptForString(title, message, default)
 	end
 end
 
-function FindAndReplaceDialogue(defaultfind, defaultreplace)
+function FindAndReplaceDialogue(defaultfind: string?, defaultreplace: string?)
 	defaultfind = defaultfind or ""
 	defaultreplace = defaultreplace or ""
+	assert(defaultfind)
+	assert(defaultreplace)
 
 	local findfield = Form.TextField {
 		value = defaultfind,
@@ -195,29 +212,33 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 		x1 = 11, y1 = 3, x2 = -1, y2 = 4,
 	}
 
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Find and Replace",
-		width = Form.Large,
+		width = "large",
 		height = 5,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-
-		Form.Label {
-			value = "Find:",
-			x1 = 1, y1 = 1, x2 = 10, y2 = 1,
-			align = Form.Left,
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
 
-		Form.Label {
-			value = "Replace:",
-			x1 = 1, y1 = 3, x2 = 10, y2 = 3,
-			align = Form.Left,
-		},
+		widgets = {
+			Form.Label {
+				value = "Find:",
+				x1 = 1, y1 = 1, x2 = 10, y2 = 1,
+				align = "left",
+			},
 
-		findfield,
-		replacefield,
+			Form.Label {
+				value = "Replace:",
+				x1 = 1, y1 = 3, x2 = 10, y2 = 3,
+				align = "left",
+			},
+
+			findfield,
+			replacefield,
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,
@@ -232,57 +253,61 @@ function FindAndReplaceDialogue(defaultfind, defaultreplace)
 end
 
 function AboutDialogue()
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "About WordGrinder",
-		width = Form.Large,
+		width = "large",
 		height = 12,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		[" "] = "confirm",
-
-		Form.Label {
-			value = "WordGrinder "..VERSION,
-			x1 = 1, y1 = 1, x2 = -1, y2 = 1,
-			align = Form.Centre,
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
+			[" "] = "confirm",
 		},
 
-		Form.Label {
-			value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
-			x1 = 1, y1 = 2, x2 = -1, y2 = 2,
-			align = Form.Centre,
-		},
+		widgets = {
+			Form.Label {
+				value = "WordGrinder "..VERSION,
+				x1 = 1, y1 = 1, x2 = -1, y2 = 1,
+				align = "centre",
+			},
 
-		Form.Label {
-			value = "File format version "..FILEFORMAT,
-			x1 = 1, y1 = 4, x2 = -1, y2 = 4,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = (UseUnicode() and "©" or "(c)").." 2007-2022 David Given",
+				x1 = 1, y1 = 2, x2 = -1, y2 = 2,
+				align = "centre",
+			},
 
-		Form.Label {
-			value = "Cat vacuuming (n): pointless or otherwise inefficient",
-			x1 = 1, y1 = 6, x2 = -1, y2 = 6,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "File format version "..FILEFORMAT,
+				x1 = 1, y1 = 4, x2 = -1, y2 = 4,
+				align = "centre",
+			},
 
-		Form.Label {
-			value = "    displacement activity to avoid having to settle  ",
-			x1 = 1, y1 = 7, x2 = -1, y2 = 7,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "Cat vacuuming (n): pointless or otherwise inefficient",
+				x1 = 1, y1 = 6, x2 = -1, y2 = 6,
+				align = "centre",
+			},
 
-		Form.Label {
-			value = "    down and do some real writing.                   ",
-			x1 = 1, y1 = 8, x2 = -1, y2 = 8,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "    displacement activity to avoid having to settle  ",
+				x1 = 1, y1 = 7, x2 = -1, y2 = 7,
+				align = "centre",
+			},
 
-		Form.Label {
-			value = "For more information, see http://cowlark.com/wordgrinder.",
-			x1 = 1, y1 = 10, x2 = -1, y2 = 10,
-			align = Form.Centre,
-		},
+			Form.Label {
+				value = "    down and do some real writing.                   ",
+				x1 = 1, y1 = 8, x2 = -1, y2 = 8,
+				align = "centre",
+			},
+
+			Form.Label {
+				value = "For more information, see http://cowlark.com/wordgrinder.",
+				x1 = 1, y1 = 10, x2 = -1, y2 = 10,
+				align = "centre",
+			},
+		}
 	}
 
 	local result = Form.Run(dialogue, RedrawScreen,

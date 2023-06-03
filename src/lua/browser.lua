@@ -1,9 +1,8 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
-local min = min
-local max = max
 local int = math.floor
 local string_rep = string.rep
 local table_sort = table.sort
@@ -22,7 +21,13 @@ local ReadDir = wg.readdir
 local Stat = wg.stat
 local UseUnicode = wg.useunicode
 
-local function compare_filenames(f1, f2)
+type BrowserFileData = {
+	size: number,
+	mode: string,
+	name: string
+}
+	
+local function compare_filenames(f1: string, f2: string)
 	if (ARCH == "windows") then
 		return f1:lower() == f2:lower()
 	else
@@ -30,11 +35,19 @@ local function compare_filenames(f1, f2)
 	end
 end
 
-function FileBrowser(title, message, saving)
+function FileBrowser(title: string, message: string, saving: boolean,
+		default: string?): string?
 	local files = {}
-	for _, filename in ipairs(ReadDir(".")) do
+	local f, e, errno = ReadDir(".")
+	if e then
+		ModalMessage("Directory inaccessible",
+			"The current directory could not be accessed: "..e)
+		return nil
+	end
+
+	for _, filename in assert(f) do
 		if (filename ~= ".") and ((filename == "..") or not filename:match("^%.")) then
-			local attr = Stat(filename)
+			local attr = Stat(filename) :: BrowserFileData?
 			if attr then
 				attr.name = filename
 				files[#files+1] = attr
@@ -51,7 +64,7 @@ function FileBrowser(title, message, saving)
 		return false
 	end)
 	
-	local labels = {}
+	local labels: {BrowserItem} = {}
 	for _, attr in ipairs(files) do
 		local dmarker = "  "
 		if (attr.mode == "directory") then
@@ -75,7 +88,7 @@ function FileBrowser(title, message, saving)
 		}
 	end
 
-	local f = Browser(title, GetCwd(), message, labels)
+	local f = BrowserForm(title, GetCwd(), message, labels)
 	if not f then
 		return nil
 	end
@@ -119,7 +132,7 @@ function FileBrowser(title, message, saving)
 	end
 end
 
-function Autocomplete(filename, x1, x2, y)
+function Autocomplete(filename: string, x1: number, x2: number, y: number)
 	local dirname = Dirname(filename)
 	local leafname = Leafname(filename)
 
@@ -131,13 +144,14 @@ function Autocomplete(filename, x1, x2, y)
 	if not files then
 		return filename
 	end
+	assert(files)
 
 	if (dirname == "./") then
 		dirname = ""
 	end
 
 	local candidates = {}
-	for _, f in ipairs(files) do
+	for _, f in files do
 		if (compare_filenames(f:sub(1, #leafname), leafname)) then
 			local st = Stat(dirname.."/"..f)
 			if st and (st.mode == "directory") then
@@ -153,9 +167,9 @@ function Autocomplete(filename, x1, x2, y)
 	end
 
 	-- Does the LCP advance the filename? If so, return it.
-	local prefix = (ARCH == "windows")
-		and LargestCommonPrefixCaseInsensitive(candidates)
-		or LargestCommonPrefix(candidates)
+	local prefix = if (ARCH == "windows")
+		then LargestCommonPrefixCaseInsensitive(candidates)
+		else LargestCommonPrefix(candidates)
 	if (prefix == nil) then
 		return filename
 	elseif prefix ~= leafname then
@@ -164,7 +178,7 @@ function Autocomplete(filename, x1, x2, y)
 
 	-- Display the autocompletion list to the user.
 	local boxw = x2 - x1
-	local boxh = min(y-1, #candidates)
+	local boxh = math.min(y-1, #candidates)
 	local boxx = x1
 	local boxy = y - 1 - boxh
 	DrawBox(boxx, boxy, boxw, boxh)
@@ -174,8 +188,8 @@ function Autocomplete(filename, x1, x2, y)
 	return filename
 end
 
-function Browser(title, topmessage, bottommessage, data)
-	local dialogue
+function BrowserForm(title, topmessage, bottommessage, data: {BrowserItem})
+	local dialogue: Form
 
 	local browser = Form.Browser {
 		focusable = false,
@@ -208,7 +222,7 @@ function Browser(title, topmessage, bottommessage, data)
 		end,
 	}
 		
-	local function navigate(self, key)
+	local function navigate(self: Form, key: KeyboardEvent)
 		local action = browser[key](browser)
 		textfield.value = data[browser.cursor].data
 		textfield.cursor = textfield.value:len() + 1
@@ -218,7 +232,7 @@ function Browser(title, topmessage, bottommessage, data)
 		return action
 	end
 
-	local function autocomplete(self)
+	local function autocomplete(self: Form): ActionResult
 		textfield.value = Autocomplete(textfield.value,
 			textfield.realx1-1, textfield.realx2-1, textfield.realy1)
 		textfield.cursor = textfield.value:len() + 1
@@ -229,7 +243,7 @@ function Browser(title, topmessage, bottommessage, data)
 		return "nop"
 	end
 
-	local function go_to_parent(self, key)
+	local function go_to_parent(self: Form): ActionResult
 		textfield.value = ".."
 		return "confirm"
 	end
@@ -244,41 +258,45 @@ function Browser(title, topmessage, bottommessage, data)
 	dialogue =
 	{
 		title = title,
-		width = Form.Large,
-		height = Form.Large,
+		width = "large",
+		height = "large",
 		stretchy = false,
 
-		["KEY_^P"] = go_to_parent,
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		["KEY_UP"] = navigate,
-		["KEY_DOWN"] = navigate,
-		["KEY_PGDN"] = navigate,
-		["KEY_PGUP"] = navigate,
+		actions = {
+			["KEY_^P"] = go_to_parent,
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 			
-		["KEY_TAB"] = autocomplete,
-		["KEY_^I"] = autocomplete,
-
-		Form.Label {
-			x1 = 1, y1 = 1,
-			x2 = -1, y2 = 1,
-			value = topmessage
-		},
-		
-		textfield,
-		browser,
-		
-		Form.Label {
-			x1 = 1, y1 = -3,
-			x2 = GetStringWidth(bottommessage) + 1, y2 = -3,
-			value = bottommessage
+			["KEY_UP"] = navigate,
+			["KEY_DOWN"] = navigate,
+			["KEY_PGDN"] = navigate,
+			["KEY_PGUP"] = navigate,
+				
+			["KEY_TAB"] = autocomplete,
+			["KEY_^I"] = autocomplete,
 		},
 
-		Form.Label {
-			x1 = 1, y1 = -1,
-			x2 = -1, y2 = -1,
-			value = helptext
+		widgets = {
+			Form.Label {
+				x1 = 1, y1 = 1,
+				x2 = -1, y2 = 1,
+				value = topmessage
+			},
+			
+			textfield,
+			browser,
+			
+			Form.Label {
+				x1 = 1, y1 = -3,
+				x2 = GetStringWidth(bottommessage) + 1, y2 = -3,
+				value = bottommessage
+			},
+
+			Form.Label {
+				x1 = 1, y1 = -1,
+				x2 = -1, y2 = -1,
+				value = helptext
+			}
 		}
 	}
 	

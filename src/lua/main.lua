@@ -1,9 +1,11 @@
+
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
 local int = math.floor
 local table_remove = table.remove
+local Mkdirs = wg.mkdirs
 local Write = wg.write
 local SetNormal = wg.setnormal
 local SetBold = wg.setbold
@@ -13,23 +15,43 @@ local GetStringWidth = wg.getstringwidth
 local GetCwd = wg.getcwd
 local Stat = wg.stat
 local SetUnicode = wg.setunicode
+local PrintErr = wg.printerr
+local PrintOut = wg.printout
+local ReadFile = wg.readfile
 
 local redrawpending = true
 
+declare function GroupCallback(s: any): () -> (any?, any?)
+
 -- Determine the user's home directory.
 
-HOME = os.getenv("HOME") or os.getenv("USERPROFILE")
+declare HOME: string
+declare CONFIGDIR: string
+declare FRONTEND: string
+declare DEBUG: boolean
+declare VERSION: string
+declare FILEFORMAT: number
+declare ARCH: string
+declare HOME: string
+declare WINDOWS_INSTALL_DIR: string?
+
+HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE") or "."
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
 
 -- Determine the installation directory (Windows only).
 
 if (ARCH == "windows") then
-    local exe = os.getenv("WINDOWS_EXE")
-    local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
-    WINDOWS_INSTALL_DIR = dir
+    local exe = wg.getenv("WINDOWS_EXE")
+    if not exe then
+        error("Cannot locate installation directory")
+    else
+        local _, _, dir = exe:find("^(.*)[/\\][^/\\]*$")
+        WINDOWS_INSTALL_DIR = dir
+    end
 end
 
+declare Quitting: boolean
 Quitting = false
 function QuitForcedBySystem()
     Quitting = true
@@ -41,16 +63,16 @@ end
 local oldcp, oldcw, oldco
 function QueueRedraw()
     redrawpending = true
-    if Document then
-        if (oldcp ~= Document.cp) or (oldcw ~= Document.cw) or
-                (oldco ~= Document.co) then
-            oldcp = Document.cp
-            oldcw = Document.cw
-            oldco = Document.co
-            FireEvent(Event.Moved)
+    if currentDocument then
+        if (oldcp ~= currentDocument.cp) or (oldcw ~= currentDocument.cw) or
+                (oldco ~= currentDocument.co) then
+            oldcp = currentDocument.cp
+            oldcw = currentDocument.cw
+            oldco = currentDocument.co
+            FireEvent("Moved")
         end
 
-        if not Document.wrapwidth then
+        if not currentDocument._wrapwidth then
             ResizeScreen()
         end
     end
@@ -58,17 +80,16 @@ end
 
 function ResetDocumentSet()
     UpdateDocumentStyles()
-    DocumentSet = CreateDocumentSet()
-    DocumentSet.menu = CreateMenuBindings()
-    Document = CreateDocument()
-    DocumentSet:addDocument(CreateDocument(), "main")
-    RebuildParagraphStylesMenu(DocumentStyles)
-    RebuildDocumentsMenu(DocumentSet.documents)
-    DocumentSet:purge()
-    DocumentSet:clean()
+    documentSet = CreateDocumentSet()
+    documentSet.menu = CreateMenuTree()
+    currentDocument = CreateDocument()
+    documentSet:addDocument(CreateDocument(), "main")
+    RebuildParagraphStylesMenu(documentStyles)
+    RebuildDocumentsMenu(documentSet.documents)
+    documentSet:clean()
 
-    FireEvent(Event.DocumentCreated)
-    FireEvent(Event.RegisterAddons)
+    FireEvent("DocumentCreated")
+    FireEvent("RegisterAddons")
 end
 
 do
@@ -79,20 +100,8 @@ do
         SetCurrentStyleHint(0, 0)
     end
 
-    AddEventListener(Event.DocumentLoaded, cb)
-    AddEventListener(Event.DocumentCreated, cb)
-end
-
--- Kick the garbage collector whenever we're idle, just to keep
--- memory usage down.
-
-do
-    local function cb(event)
-        collectgarbage("collect")
-        QueueRedraw()
-    end
-
-    AddEventListener(Event.Idle, cb)
+    AddEventListener("DocumentLoaded", cb)
+    AddEventListener("DocumentCreated", cb)
 end
 
 -- This function contains the word processor proper, including the main event
@@ -106,10 +115,12 @@ function WordProcessor(filename)
     do
         local _, e = Mkdirs(CONFIGDIR)
         if e then
-            CLIError("cannot create configuration directory: "..e)
+            CLIError(string.format(
+                "cannot create configuration directory '%s': %s",
+                CONFIGDIR, e))
         end
 
-        local function movefile(src, dest)
+        local function movefile(src: string, dest: string)
             if not Stat(src) then
                 return
             end
@@ -118,7 +129,7 @@ function WordProcessor(filename)
                     ..src.." vs "..dest)
             end
             
-            local _, e = os.rename(src, dest)
+            local _, e = wg.rename(src, dest)
             if e then
                 CLIError("unable to migrate legacy config file: "..e)
             end
@@ -131,22 +142,24 @@ function WordProcessor(filename)
     -- Which config file are we loading?
 
     do
-        local fp, e, errno = io.open(configfile, "r")
-        if fp then
-            f, e = load(ChunkStream(fp:read("*a")), configfile)
+        local data, e, errno = ReadFile(configfile)
+        if data then
+            local f
+            f, e = loadstring(data, configfile)
             if f then
                 xpcall(f, CLIError)
             else
+                assert(e)
                 CLIError("config file compilation error: "..e)
             end
-            fp:close()
         elseif (errno ~= wg.ENOENT) then
+            assert(e)
             CLIError("config file load error: "..e)
         end
     end
 
     wg.initscreen()
-	FireEvent(Event.ScreenInitialised)
+	FireEvent("ScreenInitialised")
     ResizeScreen()
     RedrawScreen()
 
@@ -154,34 +167,30 @@ function WordProcessor(filename)
         if not Cmd.LoadDocumentSet(filename) then
             -- As a special case, if we tried to load a document from the command line and it
             -- doesn't exist, then we prime the document name so that saving the file is easy.
-            DocumentSet.name = filename
+            documentSet.name = filename
         end
     else
-        FireEvent(Event.DocumentLoaded)
+        FireEvent("DocumentLoaded")
     end
 
-    local masterkeymap = {
-        ["KEY_RESIZE"] = function() -- resize
-            ResizeScreen()
-            RedrawScreen()
-        end,
-
+    local masterkeymap: {[string]: MenuCallback} = {
+        ["KEY_RESIZE"] = GroupCallback{ResizeScreen, RedrawScreen},
         ["KEY_REDRAW"] = RedrawScreen,
 
-        [" "] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+        [" "] = GroupCallback{ Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentWord },
-        ["KEY_RETURN"] = { Cmd.Checkpoint, Cmd.TypeWhileSelected,
+        ["KEY_RETURN"] = GroupCallback{ Cmd.Checkpoint, Cmd.TypeWhileSelected,
             Cmd.SplitCurrentParagraph },
-        ["KEY_ESCAPE"] = Cmd.ActivateMenu,
-        ["KEY_MENU"] = Cmd.ActivateMenu,
-        ["KEY_QUIT"] = Cmd.TerminateProgram,
+        ["KEY_ESCAPE"] = GroupCallback{ Cmd.ActivateMenu },
+        ["KEY_MENU"] = GroupCallback{ Cmd.ActivateMenu },
+        ["KEY_QUIT"] = GroupCallback{ Cmd.TerminateProgram },
     }
 
     local function handle_key_event(c)
         -- Anything in masterkeymap overrides everything else.
         local f = masterkeymap[c]
         if f then
-            RunMenuAction(f)
+            f()
         else
             -- It's not in masterkeymap. If it's printable, insert it; if it's
             -- not, look it up in the menu hierarchy.
@@ -191,13 +200,13 @@ function WordProcessor(filename)
                 Cmd.TypeWhileSelected()
 
                 local payload = { value = c }
-                FireEvent(Event.KeyTyped, payload)
+                FireEvent("KeyTyped", payload)
 
                 Cmd.InsertStringIntoWord(payload.value)
             else
-                f = DocumentSet.menu:lookupAccelerator(c)
+                f = documentSet.menu:lookupAccelerator(c)
                 if f then
-                    RunMenuAction(f)
+                    f()
                 else
                     NonmodalMessage(c:gsub("^KEY_", "").." is not bound --- try ESCAPE for a menu")
                 end
@@ -226,14 +235,14 @@ function WordProcessor(filename)
     local function eventloop()
         local nl = string.char(13)
         while true do
-            if DocumentSet.justchanged then
-                FireEvent(Event.Changed)
-                DocumentSet.justchanged = false
+            if documentSet._justchanged then
+                FireEvent("Changed")
+                documentSet._justchanged = false
             end
 
             FlushAsyncEvents()
-            FireEvent(Event.WaitingForUser)
-            local c = "KEY_TIMEOUT"
+            FireEvent("WaitingForUser")
+            local c: InputEvent = "KEY_TIMEOUT"
             while (c == "KEY_TIMEOUT") do
                 if redrawpending then
                     RedrawScreen()
@@ -242,7 +251,7 @@ function WordProcessor(filename)
 
                 c = GetCharWithBlinkingCursor(IDLE_TIME)
                 if (c == "KEY_TIMEOUT") then
-                    FireEvent(Event.Idle)
+                    FireEvent("Idle")
                 end
             end
             if c ~= "KEY_RESIZE" then
@@ -265,7 +274,8 @@ function WordProcessor(filename)
 
     NonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.")
     while true do
-        local f, e = xpcall(eventloop, Traceback)
+        local xpcall = (xpcall::any) :: (()->(), ()->string) -> (boolean, string)
+        local f, e = xpcall(eventloop, debug.traceback)
         if not f then
             print(e)
             ModalMessage("Internal error!",
@@ -293,16 +303,13 @@ function Main(...)
     table_remove(arg, 1) -- contains the executable name
     local filename = nil
     do
-        local stdout = io.stdout
-        local stderr = io.stderr
-
         local function do_help()
-            stdout:write("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
+            PrintErr("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
             if DEBUG then
-                stdout:write("(This version has been compiled with debugging enabled.)\n")
+                PrintErr("(This version has been compiled with debugging enabled.)\n")
             end
 
-            stdout:write([[
+            PrintErr([[
 Syntax: wordgrinder [<options...>] [<filename>]
 Options:
    -h    --help                Displays this message.
@@ -332,7 +339,7 @@ the program starts up (but after any --lua files). It defaults to:
                 -- List debugging options here.
             end
 
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_lua(opt, ...)
@@ -344,10 +351,11 @@ the program starts up (but after any --lua files). It defaults to:
             if e then
                 CLIError("user script compilation error: "..e)
             end
+            assert(f)
 
             EngageCLI()
             f(...)
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_exec(opt, ...)
@@ -359,9 +367,10 @@ the program starts up (but after any --lua files). It defaults to:
             if e then
                 CLIError("user script compilation error: "..e)
             end
+            assert(f)
 
             f(...)
-            os.exit(0)
+            wg.exit(0)
         end
 
         local function do_convert(opt1, opt2)
@@ -397,6 +406,7 @@ the program starts up (but after any --lua files). It defaults to:
 
         local function unrecognisedarg(arg)
             CLIError("unrecognised option '", arg, "' --- try --help for help")
+            assert(false)
         end
 
         local argmap = {

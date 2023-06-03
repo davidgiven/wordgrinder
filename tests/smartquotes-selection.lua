@@ -1,8 +1,9 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
-DocumentSet.addons.smartquotes.singlequotes = false
-DocumentSet.addons.smartquotes.doublequotes = false
-DocumentSet.addons.smartquotes.notinraw = true
+documentSet.addons.smartquotes.singlequotes = false
+documentSet.addons.smartquotes.doublequotes = false
+documentSet.addons.smartquotes.notinraw = true
 
 Cmd.InsertStringIntoParagraph("'Hello, world!'")
 Cmd.SplitCurrentParagraph()
@@ -27,7 +28,7 @@ Cmd.SplitCurrentParagraph()
 
 Cmd.ChangeParagraphStyle("RAW")
 Cmd.InsertStringIntoParagraph("not'd")
-AssertEquals("RAW", Document[Document.cp].style)
+AssertEquals("RAW", currentDocument[currentDocument.cp].style)
 Cmd.SplitCurrentParagraph()
 
 Cmd.ChangeParagraphStyle("P")
@@ -40,20 +41,20 @@ Cmd.SplitCurrentParagraph()
 Cmd.GotoBeginningOfDocument()
 Cmd.SetMark()
 Cmd.GotoEndOfDocument()
-DocumentSet.addons.smartquotes.singlequotes = true
-DocumentSet.addons.smartquotes.doublequotes = true
+documentSet.addons.smartquotes.singlequotes = true
+documentSet.addons.smartquotes.doublequotes = true
 Cmd.Smartquotify()
 
-AssertTableEquals({"‘Hello,", "world!’"}, Document[1])
-AssertTableEquals({"“Hello,", "world!”"}, Document[2])
-AssertTableEquals({"flob’s"}, Document[3])
-AssertTableEquals({"\24‘fnord’"}, Document[4])
-AssertTableEquals({"\17‘\25fnord’"}, Document[5])
-AssertEquals("RAW", Document[6].style)
-AssertTableEquals({"not'd"}, Document[6])
+AssertTableEquals({"‘Hello,", "world!’"}, currentDocument[1])
+AssertTableEquals({"“Hello,", "world!”"}, currentDocument[2])
+AssertTableEquals({"flob’s"}, currentDocument[3])
+AssertTableEquals({"\24‘fnord’"}, currentDocument[4])
+AssertTableEquals({"\17‘\25fnord’"}, currentDocument[5])
+AssertEquals("RAW", currentDocument[6].style)
+AssertTableEquals({"not'd"}, currentDocument[6])
 AssertTableEquals({"“Once", "upon", "a", "time,”", "said", "K’trx’frn,",
-	"“there", "was", "an", "aardvark", "called", "Albert.”"}, Document[7])
-AssertTableEquals({"“‘nested’”"}, Document[8])
+	"“there", "was", "an", "aardvark", "called", "Albert.”"}, currentDocument[7])
+AssertTableEquals({"“‘nested’”"}, currentDocument[8])
 
 Cmd.GotoBeginningOfDocument()
 Cmd.Find("'Hello", "XXXX")
@@ -63,8 +64,8 @@ Cmd.GotoBeginningOfDocument()
 Cmd.Find('"Hello', "YYYY")
 Cmd.ReplaceThenFind()
 
-AssertTableEquals({"XXXX,", "world!’"}, Document[1])
-AssertTableEquals({"YYYY,", "world!”"}, Document[2])
+AssertTableEquals({"XXXX,", "world!’"}, currentDocument[1])
+AssertTableEquals({"YYYY,", "world!”"}, currentDocument[2])
 
 Cmd.GotoEndOfDocument()
 Cmd.GotoPreviousParagraph()
@@ -74,5 +75,5 @@ Cmd.GotoBeginningOfParagraph()
 Cmd.Unsmartquotify()
 
 AssertTableEquals({'"Once', "upon", "a", 'time,"', "said", "K'trx'frn,",
-	'"there', "was", "an", "aardvark", "called", 'Albert."'}, Document[7])
+	'"there', "was", "an", "aardvark", "called", 'Albert."'}, currentDocument[7])
 

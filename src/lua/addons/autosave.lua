@@ -1,3 +1,4 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
@@ -5,7 +6,7 @@
 local Stat = wg.stat
 
 local function announce()
-	local settings = DocumentSet.addons.autosave
+	local settings = documentSet.addons.autosave
 
 	if settings.enabled then
 		NonmodalMessage("Autosave is enabled. Next save in "..settings.period..
@@ -16,13 +17,13 @@ local function announce()
 	end	
 end
 
-local function makefilename(pattern)
-	local leafname = Leafname(DocumentSet.name)
-	local dirname = GlobalSettings.directories.autosaves or Dirname(DocumentSet.name)
+local function makefilename(pattern: string)
+	local leafname = Leafname(documentSet.name)
+	local dirname = GlobalSettings.directories.autosaves or Dirname(documentSet.name)
 	leafname = leafname:gsub("%.wg$", "")
 	leafname = leafname:gsub("%%", "%%%%")
 	
-	local timestamp = os.date("%Y-%m-%d.%H%M")
+	local timestamp = os.date("%Y-%m-%d.%H%M")::string
 	timestamp = timestamp:gsub("%%", "%%%%")
 	
 	pattern = pattern:gsub("%%[fF]", leafname)
@@ -36,8 +37,8 @@ end
 
 do
 	local function cb()
-		local settings = DocumentSet.addons.autosave
-		if not settings.enabled or not DocumentSet.changed then
+		local settings = documentSet.addons.autosave
+		if not settings.enabled or not documentSet._changed then
 			return
 		end
 		
@@ -52,6 +53,7 @@ do
 			local r, e = SaveDocumentSetRaw(filename)
 			
 			if not r then
+				assert(e)
 				ModalMessage("Autosave failed", "The document could not be autosaved: "..e)
 			else
 				NonmodalMessage("Autosaved as "..filename) 
@@ -62,7 +64,7 @@ do
 		end
 	end
 	
-	AddEventListener(Event.Idle, cb)
+	AddEventListener("Idle", cb)
 end
 
 -----------------------------------------------------------------------------
@@ -70,36 +72,36 @@ end
 
 do
 	local function cb()
-		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {}
-		DocumentSet.addons.autosave.lastsaved = nil
+		documentSet.addons.autosave = documentSet.addons.autosave or {}
+		documentSet.addons.autosave.lastsaved = nil
 		announce()
 	end
 	
-	AddEventListener(Event.DocumentLoaded, cb)
+	AddEventListener("DocumentLoaded", cb)
 end
 
 -----------------------------------------------------------------------------
--- Addon registration. Create the default settings in the DocumentSet.
+-- Addon registration. Create the default settings in the documentSet.
 
 do
 	local function cb()
-		DocumentSet.addons.autosave = DocumentSet.addons.autosave or {
+		documentSet.addons.autosave = documentSet.addons.autosave or {
 			enabled = false,
 			period = 10,
 			pattern = "%F.autosave.%T.wg",
 		}
 	end
 	
-	AddEventListener(Event.RegisterAddons, cb)
+	AddEventListener("RegisterAddons", cb)
 end
 
 -----------------------------------------------------------------------------
 -- Configuration user interface.
 
 function Cmd.ConfigureAutosave()
-	local settings = DocumentSet.addons.autosave
+	local settings = documentSet.addons.autosave
 
-	if not DocumentSet.name then
+	if not documentSet.name then
 		ModalMessage("Autosave not available", "You cannot use autosave "..
 			"until you have manually saved your document at least once, "..
 			"so that Autosave knows what base filename to use.")
@@ -135,7 +137,7 @@ function Cmd.ConfigureAutosave()
 			value = settings.pattern,
 			
 			draw = function(self)
-				self.class.draw(self)
+				Form.TextField.draw(self)
 
 				local f = makefilename(self.value)
 				if (#f > example_label.realwidth) then
@@ -147,35 +149,39 @@ function Cmd.ConfigureAutosave()
 			end
 		}
 	
-	local dialogue =
+	local dialogue: Form =
 	{
 		title = "Configure Autosave",
-		width = Form.Large,
+		width = "large",
 		height = 9,
 		stretchy = false,
 
-		["KEY_RETURN"] = "confirm",
-		["KEY_ENTER"] = "confirm",
-		
-		enabled_checkbox,
-		
-		Form.Label {
-			x1 = 1, y1 = 3,
-			x2 = 32, y2 = 3,
-			align = Form.Left,
-			value = "Period between saves (minutes):"
+		actions = {
+			["KEY_RETURN"] = "confirm",
+			["KEY_ENTER"] = "confirm",
 		},
-		period_textfield,
 		
-		Form.Label {
-			x1 = 1, y1 = 5,
-			x2 = 32, y2 = 5,
-			align = Form.Left,
-			value = "Autosave filename pattern:"
-		},
-		pattern_textfield,
+		widgets = {
+			enabled_checkbox,
+			
+			Form.Label {
+				x1 = 1, y1 = 3,
+				x2 = 32, y2 = 3,
+				align = "left",
+				value = "Period between saves (minutes):"
+			},
+			period_textfield,
+			
+			Form.Label {
+				x1 = 1, y1 = 5,
+				x2 = 32, y2 = 5,
+				align = "left",
+				value = "Autosave filename pattern:"
+			},
+			pattern_textfield,
 
-		example_label,
+			example_label,
+		}
 	}
 	
 	while true do
@@ -201,7 +207,7 @@ function Cmd.ConfigureAutosave()
 			settings.period = period
 			settings.pattern = pattern
 			settings.lastsaved = nil
-			DocumentSet:touch()
+			documentSet:touch()
 
 			announce()			
 			return true

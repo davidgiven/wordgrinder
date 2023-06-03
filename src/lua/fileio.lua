@@ -1,8 +1,10 @@
+--!nonstrict
 -- © 2008 David Given.
 -- WordGrinder is licensed under the MIT open source license. See the COPYING
 -- file in this distribution for the full text.
 
 local ParseWord = wg.parseword
+local WriteFile = wg.writefile
 local bitand = bit32.band
 local bitor = bit32.bor
 local bitxor = bit32.bxor
@@ -45,10 +47,10 @@ local function writetostreamt(object, write)
 		write("\n")
 	end
 
-	local function save(key, t, force)
+	local function save(key: string, t: any)
 		if (type(t) == "table") then
 			local m = GetClass(t)
-			if (m ~= ParagraphClass) and (key ~= ".current") then
+			if (m ~= Paragraph) and (key ~= ".current") then
 				for k, i in ipairs(t) do
 					save(key.."."..k, i)
 				end
@@ -103,7 +105,7 @@ local function writetostreamt(object, write)
 	save("", object)
 
 	local class = GetClass(object)
-	if class == DocumentSetClass then
+	if class == DocumentSet then
 		if object.current then
 			save(".current", object:_findDocument(object.current.name))
 		end
@@ -122,30 +124,20 @@ function SaveToString(object)
 		ss[#ss+1] = s
 	end
 
-	local r = writetostreamt(object, write)
-	return r, table.concat(ss)
+	writetostreamt(object, write)
+	return table.concat(ss)
 end
 
-function SaveToFile(filename, object)
+function SaveToFile(filename: string, object: any): (boolean, string?)
 	-- Write the file to a *different* filename (so that crashes during
 	-- writing doesn't corrupt the file).
 
-	local fp, e = io.open(filename..".new", "wb")
-	if not fp then
-		return nil, e
-	end
+	local s = TMAGIC .. "\n" .. SaveToString(object)
 
-	local fpw = fp.write
-
-	local r, s = SaveToString(object)
-
-	local e
-	if r then
-		r, e = fp:write(TMAGIC, "\n", s)
-	end
-	r, e = fp:close()
+	local new_filename = filename..".new"
+	local _, e = WriteFile(new_filename, s)
 	if e then
-		return r, e
+		return false, e
 	end
 
 	-- At this point, we know the new file has been written correctly.
@@ -153,8 +145,8 @@ function SaveToFile(filename, object)
 	-- one. On proper operating systems we could do this in a single
 	-- os.rename, but Windows doesn't support clobbering renames.
 
-	os.remove(filename)
-	r, e = os.rename(filename..".new", filename)
+	wg.remove(filename)
+	local r, e = wg.rename(new_filename, filename)
 	if e then
 		-- Yikes! The old file has gone, but we couldn't rename the new
 		-- one...
@@ -163,56 +155,61 @@ function SaveToFile(filename, object)
 	return r, e
 end
 
-function SaveDocumentSetRaw(filename)
-	DocumentSet:purge()
-	return SaveToFile(filename, DocumentSet)
+function SaveDocumentSetRaw(filename): (boolean?, string?)
+	return SaveToFile(filename, documentSet)
 end
 
-function Cmd.SaveCurrentDocumentAs(filename)
+function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
 	if not filename then
 		filename = FileBrowser("Save Document Set", "Save as:", true)
 		if not filename then
 			return false
 		end
+		assert(filename)
 		if filename:find("/[^.]*$") then
 			filename = filename .. ".wg"
 		end
 	end
-	DocumentSet.name = filename
+	assert(filename)
+	documentSet.name = filename
 
 	ImmediateMessage("Saving...")
-	DocumentSet:clean()
-	local r, e = SaveDocumentSetRaw(DocumentSet.name)
+	documentSet:clean()
+	local r, e = SaveDocumentSetRaw(documentSet.name)
 	if not r then
+		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
 	else
 		NonmodalMessage("Save succeeded.")
 	end
-	return r
+	return assert(r)
 end
 
 function Cmd.SaveCurrentDocument()
-	local name = DocumentSet.name
+	local name: string? = documentSet.name
 	if not name then
 		name = FileBrowser("Save Document Set", "Save as:", true)
 		if not name then
 			return false
 		end
+		assert(name)
 		if name:find("/[^.]*$") then
 			name = name .. ".wg"
 		end
-		DocumentSet.name = name
+		documentSet.name = name
 	end
+	assert(name)
 
 	return Cmd.SaveCurrentDocumentAs(name)
 end
 
-local function loadfromstream(fp)
-	local cache = {}
+local function loadfromstream(fp): DocumentSet
+	type Value = {[number]: any, text: string?}
+	local cache: {any} = {}
 	local load
 
 	local function populate_table(t)
-		local n = tonumber(fp:read("*l"))
+		local n = assert(tonumber(fp:read("*l")))
 		for i = 1, n do
 			t[i] = load()
 		end
@@ -231,22 +228,22 @@ local function loadfromstream(fp)
 
 	local load_cb = {
 		["DS"] = function()
-			local t = {}
-			setmetatable(t, {__index = DocumentSetClass})
+			local t: any = {}
+			setmetatable(t, DocumentSet)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["D"] = function()
-			local t = {}
-			setmetatable(t, {__index = DocumentClass})
+			local t: any = {}
+			setmetatable(t, Document)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["P"] = function()
-			local t = {}
-			setmetatable(t, {__index = ParagraphClass})
+			local t: any = {}
+			setmetatable(t, Paragraph)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -254,7 +251,7 @@ local function loadfromstream(fp)
 		["W"] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
-			local t = {}
+			local t: any = {}
 
 			-- Ensure we allocate a cache entry *before* calling
 			-- populate_table(), or else the numbers will go all wrong; the
@@ -269,14 +266,14 @@ local function loadfromstream(fp)
 		end,
 
 		["M"] = function()
-			local t = {}
-			setmetatable(t, {__index = MenuClass})
+			local t: any = {}
+			setmetatable(t, MenuTree)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		["T"] = function()
-			local t = {}
+			local t: any = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -326,8 +323,8 @@ local function loadfromstream(fp)
 	return load()
 end
 
-local function loadfromstreamz(fp)
-	local cache = {}
+local function loadfromstreamz(fp): DocumentSet
+	local cache: {any} = {}
 	local load
 	local data = decompress(fp:read("*a"))
 	local offset = 1
@@ -359,22 +356,22 @@ local function loadfromstreamz(fp)
 		end,
 
 		[DOCUMENTSETCLASS] = function()
-			local t = {}
-			setmetatable(t, {__index = DocumentSetClass})
+			local t: any = {}
+			setmetatable(t, DocumentSet)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[DOCUMENTCLASS] = function()
-			local t = {}
-			setmetatable(t, {__index = DocumentClass})
+			local t: any = {}
+			setmetatable(t, Document)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[PARAGRAPHCLASS] = function()
-			local t = {}
-			setmetatable(t, {__index = ParagraphClass})
+			local t: any = {}
+			setmetatable(t, Paragraph)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -382,7 +379,7 @@ local function loadfromstreamz(fp)
 		[WORDCLASS] = function()
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
-			local t = {}
+			local t: any = {}
 
 			-- Ensure we allocate a cache slot *before* calling populate_table,
 			-- or else the numbers all go wrong.
@@ -399,20 +396,20 @@ local function loadfromstreamz(fp)
 			-- Words used to be objects of their own; they've been replaced
 			-- with simple strings.
 
-			local t = load()
+			local t: any = load()
 			cache[#cache+1] = t
 			return t
 		end,
 
 		[MENUCLASS] = function()
-			local t = {}
-			setmetatable(t, {__index = MenuClass})
+			local t: any = {}
+			setmetatable(t, MenuTree)
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
 
 		[TABLE] = function()
-			local t = {}
+			local t: any = {}
 			cache[#cache + 1] = t
 			return populate_table(t)
 		end,
@@ -471,12 +468,12 @@ local function loadfromstreamz(fp)
 	return load()
 end
 
-local function loadfromstreamt(fp)
+local function loadfromstreamt(fp): DocumentSet
 	local data = CreateDocumentSet()
-	data.menu = CreateMenuBindings()
+	data.menu = CreateMenuTree()
 	data.documents = {}
 
-	local function readl()
+	local function readl(): string?
 		local s = fp:read("*l")
 		if s then
 			return s:gsub("\r", "")
@@ -489,24 +486,31 @@ local function loadfromstreamt(fp)
 		if not line then
 			break
 		end
+		assert(line)
 
 		if line:find("^%.") then
-			local _, _, k, p, v = line:find("^(.*)%.([^.:]+): (.*)$")
+			local s, _, k: any, p: any, v: any
+				= line:find("^(.*)%.([^.:]+): (.*)$")
+			if not s then
+				error(
+					string.format("malformed line when reading file: '%s'", line))
+			end
 
 			-- This is setting a property value.
-			local o = data
+			local o: any = data
 			for e in k:gmatch("[^.]+") do
+				local en: any = e
 				if e:find('^[0-9]+$') then
-					e = tonumber(e)
+					en = assert(tonumber(e))
 				end
-				if not o[e] then
+				if not o[en] then
 					if (o == data.documents) then
-						o[e] = CreateDocument()
+						o[en] = CreateDocument()
 					else
-						o[e] = {}
+						o[en] = {}
 					end
 				end
-				o = o[e]
+				o = o[en]
 			end
 
 			if v:find('^-?[0-9][0-9.e+-]*$') then
@@ -530,11 +534,12 @@ local function loadfromstreamt(fp)
 			o[p] = v
 		elseif line:find("^#") then
 			local id = line:sub(2)
-			local doc
+			local doc: Document
 			if id == "clipboard" then
-				doc = data.clipboard
+				doc = assert(data.clipboard)
 			else
-				doc = data.documents[tonumber(id)]
+				local n = assert(tonumber(id))
+				doc = data.documents[n]
 			end
 
 			local index = 1
@@ -554,15 +559,30 @@ local function loadfromstreamt(fp)
 			-- Just ignore these.
 		else
 			error(
-				string.format("malformed line when reading file: %s", line))
+				string.format("malformed line when reading file: '%s'", line))
 		end
 	end
 
-	-- Patch up document names.
-	for i, d in ipairs(data.documents) do
-		data.documents[d.name] = d
+	-- Bugfix: previously, the document metadata was written twice to the file,
+	-- once using the numeric document index as key and once using the name
+	-- (because the same table was used for both indices). This was wrong. So
+	-- we need to go through and remove the stub documents created erroneously
+	-- for the string keys. The actual data is added to the documents with
+	-- numeric keys, via the # line above.
+	
+	for i: any, d in data.documents do
+		if typeof(i) == "string" then
+			data.documents[i::any] = nil
+		end
 	end
-	data.current = data.documents[data.current]
+
+	-- Create the index by name.
+	--
+	data._documentIndex = {}
+	for i, d in data.documents do
+		data._documentIndex[d.name] = d
+	end
+	data.current = data.documents[data.current :: any]
 
 	-- Remove any clipboard (unused).
 	data.clipboard = nil
@@ -574,11 +594,15 @@ function LoadFromString(s)
 	return loadfromstreamt(CreateIStream(s))
 end
 
-function LoadFromFile(filename)
-	local fp, e = io.open(filename, "rb")
-	if not fp then
+function LoadFromFile(filename): (DocumentSet?, string?)
+	local data, _, e = wg.readfile(filename);
+	if not data then
+		assert(e)
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
+	assert(data)
+	local fp = CreateIStream(data)
+
 	local loader = nil
 	local magic = fp:read("*l"):gsub("\r", "")
 	if (magic == MAGIC) then
@@ -592,48 +616,49 @@ function LoadFromFile(filename)
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 
-	local d, e = loader(fp)
-	fp:close()
-
-	return d, e
+	return loader(fp)
 end
 
-local function loaddocument(filename)
-	local d, e = LoadFromFile(filename)
+local function loaddocument(filename): (DocumentSet?, string?)
+	local d: DocumentSet?, e = LoadFromFile(filename)
 	if e then
 		return nil, e
 	end
 
 	-- Even if the changed flag was set in the document on disk, remove it.
 
+	assert(d)
 	d:clean()
 
 	d.name = filename
 	return d
 end
 
-function Cmd.LoadDocumentSet(filename)
+function Cmd.LoadDocumentSet(filename): (boolean, string?)
 	if not ConfirmDocumentErasure() then
-		return false
+		return false, "Cancelled"
 	end
 
 	if not filename then
 		filename = FileBrowser("Load Document Set", "Load file:", false)
 		if not filename then
-			return false
+			return false, "Cancelled"
 		end
 	end
 
+	assert(filename)
 	ImmediateMessage("Loading "..filename.."...")
 	local d, e = loaddocument(filename)
 	if not d then
 		if not e then
 			e = "The load failed, probably because the file could not be opened."
 		end
+		assert(e)
 		ModalMessage("Load failed", e)
 		QueueRedraw()
-		return false
+		return false, e
 	end
+	assert(d)
 
 	-- Downgrading documents is not supported.
 	local fileformat = d.fileformat or 1
@@ -641,27 +666,27 @@ function Cmd.LoadDocumentSet(filename)
 		ModalMessage("Cannot load document", "This document belongs to a newer version of " ..
 			"WordGrinder and cannot be loaded. Sorry.")
 		QueueRedraw()
-		return false
+		return false, "Incompatible version"
 	end
 
-	DocumentSet = d
-	Document = d.current
+	documentSet = d
+	currentDocument = d.current
 
 	if (fileformat < FILEFORMAT) then
 		UpgradeDocument(fileformat)
-		FireEvent(Event.DocumentUpgrade, fileformat, FILEFORMAT)
+		FireEvent("DocumentUpgrade", fileformat, FILEFORMAT)
 
-		DocumentSet.fileformat = FILEFORMAT
-		DocumentSet.menu = CreateMenuBindings()
+		documentSet.fileformat = FILEFORMAT
+		documentSet.menu = CreateMenuTree()
 	end
-	FireEvent(Event.RegisterAddons)
-	DocumentSet:touch()
+	FireEvent("RegisterAddons")
+	documentSet:touch()
 
 	ResizeScreen()
-	FireEvent(Event.DocumentLoaded)
+	FireEvent("DocumentLoaded")
 
 	UpdateDocumentStyles()
-	RebuildDocumentsMenu(DocumentSet.documents)
+	RebuildDocumentsMenu(documentSet.documents)
 	QueueRedraw()
 
 	if (fileformat < FILEFORMAT) then
@@ -675,20 +700,20 @@ function Cmd.LoadDocumentSet(filename)
 
 	-- The document is NOT dirty immediately after a load.
 	
-	DocumentSet.changed = false
+	documentSet._changed = false
 
 	return true
 end
 
 function UpgradeDocument(oldversion)
-	DocumentSet.addons = DocumentSet.addons or {}
+	documentSet.addons = documentSet.addons or {}
 
 	-- Upgrade version 1 to 2.
 
 	if (oldversion < 2) then
 		-- Update wordcount.
 
-		for _, document in ipairs(DocumentSet.documents) do
+		for _, document in ipairs(documentSet.documents) do
 			local wc = 0
 
 			for _, p in ipairs(document) do
@@ -700,7 +725,7 @@ function UpgradeDocument(oldversion)
 
 		-- Status bar defaults to on.
 
-		DocumentSet.statusbar = true
+		documentSet.statusbar = true
 	end
 
 	-- Upgrade version 2 to 3.
@@ -708,7 +733,7 @@ function UpgradeDocument(oldversion)
 	if (oldversion < 3) then
 		-- Idle time defaults to 3.
 
-		DocumentSet.idletime = 3
+		(documentSet::any).idletime = 3
 	end
 
 	-- Upgrade version 5 to 6.
@@ -722,22 +747,22 @@ function UpgradeDocument(oldversion)
 	-- Upgrade version 6 to 7.
 
 	if (oldversion < 7) then
-		-- This is the version where DocumentSet.styles vanished. Each paragraph.style
+		-- This is the version where documentSet.styles vanished. Each paragraph.style
 		-- is now a string containing the name of the style; styles are looked up on
 		-- demand.
 
-        local function convertStyles(document)
+        local function convertStyles(document: Document)
             for _, p in ipairs(document) do
                 if (type(p.style) ~= "string") then
-                    p.style = p.style.name
+                    p.style = (p.style::any).name
                 end
             end
         end
 
-		for _, document in ipairs(DocumentSet.documents) do
+		for _, document in ipairs(documentSet.documents) do
             convertStyles(document)
         end
-		DocumentSet.styles = nil
+		(documentSet::any).styles = nil
 	end
 
 	-- Upgrade version 7 to 8.
@@ -749,8 +774,8 @@ function UpgradeDocument(oldversion)
 		-- A bug on 0.7.2 meant that the styles were still exported in
 		-- WordGrinder files, even though they were never used.
 
-		DocumentSet.styles = nil
-		DocumentSet.idletime = nil
+		(documentSet::any).styles = nil
+		(documentSet::any).idletime = nil
 	end
 end
 
@@ -760,7 +785,7 @@ function GetClipboard()
 		return LoadFromString(wgdata).documents[1]
 	end
 	if text then
-		return Cmd.ImportTextFileFromString(text)
+		return Cmd.ImportTextString(text)
 	end
 	return CreateDocument()
 end
@@ -772,7 +797,7 @@ function SetClipboard(document)
 	document.name = "clipboard"
 	documentSet.documents = { document }
 
-	local r, wgdata = SaveToString(documentSet)
+	local wgdata = SaveToString(documentSet)
 	wg.clipboard_set(text, wgdata)
 end
 

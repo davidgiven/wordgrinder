@@ -40,12 +40,6 @@ WordGrinder needs the following packages installed:
  - zlib. You will already have this, but just on the offchance, it's here:
      http://www.zlib.net/
 
- - Optionally: Lua, the programming language. WordGrinder has its own built-
-   in copy, but if you want to use the system Lua, install it and edit the
-   Makefile. Lua is available from:
-     http://www.lua.org/
-   WordGrinder will work with Lua versions 5.1, 5.2, 5.3, 5.4 or LuaJIT.
-
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
@@ -55,11 +49,10 @@ Chances are you already have these in your distribution. Merely install these
 packages:
 
   If you have Debian/Ubuntu:
-    ninja-build libncursesw5-dev liblua5.3-dev zlib1g-dev libglfw3-dev
+    ninja-build libncursesw5-dev zlib1g-dev libglfw3-dev
 
   If you have Fedora:
-	lua lua-devel lua-libs lua-filesystem zlib-devel libglfw-devel ncurses
-	ncurses-devel ninja-build
+	zlib-devel libglfw-devel ncurses ncurses-devel ninja-build
 
   If you have OSX with Homebrew:
     ninja pkg-config glfw
@@ -119,19 +112,13 @@ LICENSE
 
 WordGrinder contains a number of embedded libraries, described here. Not all of
 them may be used by any given binary depending on your configuration. Please
-look in the `licenses` directory for the full license text.
+look in the `third_party` directory for the full license text.
 
 WordGrinder is © 2007-2020 David Given, and is available under the MIT license.
 
-The distribution contains a copy of Lua 5.1. This is also MIT licensed and is ©
-1994–2017 Lua.org, PUC-Rio. See http://lua.org for more information.
-
-The distribution contains a copy of the Lpeg parser library. This is also MIT
-licensed and is © 2007-2019 Lua.org, PUC-Rio. See
-http://inf.puc-rio.br/~roberto/lpeg for more information.
-
-The distribution contains a copy of LuaBitOp. This is also MIT licensed and is ©
-2008-2012 Mike Pall. See http://bitop.luajit.org/ for more information.
+The distribution contains a copy of Luau. This is also MIT licensed and is ©
+2019-2022 Roblox Corporation and © 1994-2019 Lua.org, PUC-Rio. See
+http://luau-lang.org and http://lua.org for more information.
 
 The distribution contains a copy of the MiniZip library. This is © 1998-2010
 Gilles Vollant and Mathis Svenson, and is available under the BSD license.
@@ -143,10 +130,6 @@ Please see the licenses/COPYING.Scowl file for the full license text.
 The distribution contains a copy of the xpattern module. This is also MIT
 licensed and is © 2008-2009 David Manura. See
 http://lua-users.org/wiki/ExPattern for more information.
-
-The distribution contains a (thoroughly hacked up) copy of the Lunamark
-Markdown parser. This is also MIT licensed and is © 2009-2016 John MacFarlane.
-See https://github.com/jgm/lunamark for more information.
 
 The distribution contains a copy of the LargeLineHeight-NoLoopK version of the
 Fantasque Sans Mono font family. This is distributable under the terms of the
@@ -177,7 +160,10 @@ read. Emacs orgmode export (contributed by VitorGoatman@github). ESCAPE can be
 used to cancel things. Both TAB and ^I can be used for autocompletion in file
 dialogues. Miscellaneous editor state machine bugfixes. Multiple scroll modes.
 Changed the cursor shape for visibility. Use the system clipboard where
-possible. Added mouse support.
+possible. Added mouse support. Switch interpreters from Lua to Luau, and
+refactor _all_ the code to be type safe in strict mode, finding and fixing so
+many minor bugs along the way. The document index is now written to files
+correctly.
 
 WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more

@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 Cmd.InsertStringIntoParagraph("paragraph one")
 Cmd.ChangeParagraphStyle("LN")
@@ -9,40 +10,40 @@ Cmd.SplitCurrentParagraph()
 Cmd.InsertStringIntoParagraph("paragraph three")
 Cmd.ChangeParagraphStyle("LN")
 
-AssertEquals(3, #Document)
-AssertEquals("LN", Document[1].style)
-AssertEquals("LN", Document[2].style)
-AssertEquals("LN", Document[3].style)
-FireEvent(Event.Changed)
-AssertEquals(1, Document[1].number)
-AssertEquals(2, Document[2].number)
-AssertEquals(3, Document[3].number)
+AssertEquals(3, #currentDocument)
+AssertEquals("LN", currentDocument[1].style)
+AssertEquals("LN", currentDocument[2].style)
+AssertEquals("LN", currentDocument[3].style)
+FireEvent("Changed")
+AssertEquals(1, currentDocument[1].number)
+AssertEquals(2, currentDocument[2].number)
+AssertEquals(3, currentDocument[3].number)
 
-Document.cp = 2
+currentDocument.cp = 2
 Cmd.ChangeParagraphStyle("P")
 
-FireEvent(Event.Changed)
-AssertEquals(1, Document[1].number)
-AssertEquals(1, Document[3].number)
+FireEvent("Changed")
+AssertEquals(1, currentDocument[1].number)
+AssertEquals(1, currentDocument[3].number)
 
-Document.cp = 2
+currentDocument.cp = 2
 Cmd.ChangeParagraphStyle("LN")
 
-FireEvent(Event.Changed)
-AssertEquals(1, Document[1].number)
-AssertEquals(3, Document[3].number)
+FireEvent("Changed")
+AssertEquals(1, currentDocument[1].number)
+AssertEquals(3, currentDocument[3].number)
 
-Document.cp = 2
+currentDocument.cp = 2
 Cmd.ChangeParagraphStyle("L")
 
-FireEvent(Event.Changed)
-AssertEquals(1, Document[1].number)
-AssertEquals(2, Document[3].number)
+FireEvent("Changed")
+AssertEquals(1, currentDocument[1].number)
+AssertEquals(2, currentDocument[3].number)
 
-Document.cp = 2
+currentDocument.cp = 2
 Cmd.ChangeParagraphStyle("LB")
 
-FireEvent(Event.Changed)
-AssertEquals(1, Document[1].number)
-AssertEquals(2, Document[3].number)
+FireEvent("Changed")
+AssertEquals(1, currentDocument[1].number)
+AssertEquals(2, currentDocument[3].number)
 

@@ -1,4 +1,5 @@
-require("tests/testsuite")
+--!nonstrict
+loadfile("tests/testsuite.lua")()
 
 AssertTableEquals({"one", "two", "three"}, SplitString("one two three", "%s"))
 
