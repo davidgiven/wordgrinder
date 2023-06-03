@@ -644,7 +644,7 @@ end
 
 function ConfirmDocumentErasure()
 	if documentSet._changed then
-		if not PromptForYesNo("currentDocument set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
+		if not PromptForYesNo("Document set not saved!", "Some of the documents in this document set contain unsaved edits. Are you sure you want to discard them, without saving first?") then
 			return false
 		end
 	end
