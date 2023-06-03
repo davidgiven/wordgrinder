@@ -830,6 +830,11 @@ function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
 						findaction(standard_actions, form, key)
 				end
 			end
+
+			if not action and form.focus then
+				local w = form.widgets[form.focus]
+				action = w:key(key)
+			end
 		end
 
 		if (action == "cancel") then
