@@ -3,6 +3,7 @@
 
 #include "Luau/Common.h"
 
+#include <cstdint>
 #include <vector>
 #include <string>
 
