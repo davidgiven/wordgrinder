@@ -185,7 +185,8 @@ end
 function Paragraph.renderLine(self: Paragraph, line, x: number, y: number): ()
 	local cstyle = stylemarkup[self.style] or 0
 	local ostyle = 0
-	local wd = self:wrap()
+	local wd = self._wrapdata
+	assert(wd)
 
 	for _, wn in ipairs(line) do
 		local w = self[wn]

@@ -100,11 +100,11 @@ local WrappedLabel: WrappedLabelWidget = Form.Widget {
 	draw = function(self: WrappedLabelWidget)
 		local words = ParseStringIntoWords(self.value)
 		local paragraph = CreateParagraph("P", words)
-		local lines = paragraph:wrap(self.realwidth)
+		local wd = paragraph:wrap(self.realwidth)
 
 		local s = SpellcheckerOff()
-		for i = 1, #lines do
-			paragraph:renderLine(lines[i], self.realx1, self.realy1+i-1)
+		for i = 1, #wd.lines do
+			paragraph:renderLine(wd.lines[i], self.realx1, self.realy1+i-1)
 		end
 		SpellcheckerRestore(s)
 	end,
@@ -112,8 +112,8 @@ local WrappedLabel: WrappedLabelWidget = Form.Widget {
 	calculate_height = function(self: WrappedLabelWidget)
 		local words = ParseStringIntoWords(self.value)
 		local paragraph = CreateParagraph("P", words)
-		local lines = paragraph:wrap(self.realwidth)
-		return #lines
+		local wd = paragraph:wrap(self.realwidth)
+		return #wd.lines
 	end
 }
 Form.WrappedLabel = WrappedLabel
