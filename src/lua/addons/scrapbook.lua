@@ -124,7 +124,7 @@ function Cmd.ConfigureScrapbook()
 			value = settings.pattern,
 			
 			draw = function(self)
-				self.class.draw(self)
+				Form.TextField.draw(self)
 				
 				example_label.value = "(Example timestamp: "..maketimestamp(self.value)..")"
 				example_label:draw()

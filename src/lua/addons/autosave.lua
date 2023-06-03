@@ -137,7 +137,7 @@ function Cmd.ConfigureAutosave()
 			value = settings.pattern,
 			
 			draw = function(self)
-				self.class.draw(self)
+				Form.TextField.draw(self)
 
 				local f = makefilename(self.value)
 				if (#f > example_label.realwidth) then
