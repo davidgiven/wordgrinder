@@ -3,10 +3,7 @@ from build.c import clibrary
 
 clibrary(
     name="console",
-    srcs=[
-        "./dpy.cc",
-        "./realmain.cc"
-    ],
+    srcs=["./dpy.cc", "./realmain.cc"],
     vars=DefaultVars + {"+cflags": ["-Isrc/c"]},
     deps=[
         "src/c+globals",

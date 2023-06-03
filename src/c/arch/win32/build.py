@@ -8,26 +8,17 @@ windres(
     srcs=[
         "./wordgrinder.rc",
     ],
-    deps = [
-        "./manifest.xml"
-    ]
+    deps=["./manifest.xml"],
 )
 
 clibrary(
     name="win32",
-    srcs=[
-        "+rc"
-    ],
+    srcs=["+rc"],
 )
 
 makensis(
     name="installer",
     srcs=["extras/windows-installer.nsi"],
-    deps=[
-        "bin/wordgrinder",
-        "bin/wordgrinder-windows"
-    ],
-    defs={
-        "VERSION": VERSION
-    }
+    deps=["bin/wordgrinder", "bin/wordgrinder-windows"],
+    defs={"VERSION": VERSION},
 )

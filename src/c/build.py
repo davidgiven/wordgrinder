@@ -72,8 +72,13 @@ make_wordgrinder(
     "clip_none",
     vars={
         "+cxxflags": ["-DFRONTEND=wincon"],
-        "+ldflags": ["-mconsole", "-lole32", "-lshlwapi", "-lwindowscodecs",
-                     "-lrpcrt4"],
+        "+ldflags": [
+            "-mconsole",
+            "-lole32",
+            "-lshlwapi",
+            "-lwindowscodecs",
+            "-lrpcrt4",
+        ],
     },
 )
 
@@ -100,9 +105,19 @@ make_wordgrinder(
     "clip_win",
     vars={
         "+cxxflags": ["-DFRONTEND=glfw"],
-        "+ldflags": ["-static", "-static-libgcc", "-static-libstdc++", "-lssp", "-mwindows",
-                     "-lole32", "-lshlwapi",
-                     "-lwindowscodecs", "-lrpcrt4", "-lopengl32", "-lgdi32"],
+        "+ldflags": [
+            "-static",
+            "-static-libgcc",
+            "-static-libstdc++",
+            "-lssp",
+            "-mwindows",
+            "-lole32",
+            "-lshlwapi",
+            "-lwindowscodecs",
+            "-lrpcrt4",
+            "-lopengl32",
+            "-lgdi32",
+        ],
     },
 )
 

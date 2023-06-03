@@ -5,4 +5,3 @@ clibrary(
     name="wcwidth",
     srcs=["./wcwidth.cc"],
 )
-

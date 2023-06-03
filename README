@@ -40,12 +40,6 @@ WordGrinder needs the following packages installed:
  - zlib. You will already have this, but just on the offchance, it's here:
      http://www.zlib.net/
 
- - Optionally: Lua, the programming language. WordGrinder has its own built-
-   in copy, but if you want to use the system Lua, install it and edit the
-   Makefile. Lua is available from:
-     http://www.lua.org/
-   WordGrinder will work with Lua versions 5.1, 5.2, 5.3, 5.4 or LuaJIT.
-
  - a terminal emulator that supports UTF-8. gnome-terminal, konsole, xterm
    and rxvt-unicode do. rxvt and the Linux console don't (unless you use
    jfbterm). You will also need a decent set of Unicode fonts or WordGrinder
@@ -55,11 +49,10 @@ Chances are you already have these in your distribution. Merely install these
 packages:
 
   If you have Debian/Ubuntu:
-    ninja-build libncursesw5-dev liblua5.3-dev zlib1g-dev libglfw3-dev
+    ninja-build libncursesw5-dev zlib1g-dev libglfw3-dev
 
   If you have Fedora:
-	lua lua-devel lua-libs lua-filesystem zlib-devel libglfw-devel ncurses
-	ncurses-devel ninja-build
+	zlib-devel libglfw-devel ncurses ncurses-devel ninja-build
 
   If you have OSX with Homebrew:
     ninja pkg-config glfw

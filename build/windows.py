@@ -5,19 +5,23 @@ from build.ab2 import (
 )
 from os.path import *
 
+
 @Rule
-def windres(self, name, srcs: Targets, deps: Targets=[], label="WINDRES"):
+def windres(self, name, srcs: Targets, deps: Targets = [], label="WINDRES"):
     normalrule(
         replaces=self,
         ins=srcs,
         deps=deps,
-        outs=[name+".o"],
+        outs=[name + ".o"],
         label=label,
-        commands=["$(WINDRES) {ins[0]} {outs[0]}"]
+        commands=["$(WINDRES) {ins[0]} {outs[0]}"],
     )
 
+
 @Rule
-def makensis(self, name, srcs: Targets, deps: Targets=[], defs={}, label="MAKENSIS"):
+def makensis(
+    self, name, srcs: Targets, deps: Targets = [], defs={}, label="MAKENSIS"
+):
     d = ""
     for k in defs:
         d += f" -d{k}={defs[k]}"
@@ -26,7 +30,9 @@ def makensis(self, name, srcs: Targets, deps: Targets=[], defs={}, label="MAKENS
         replaces=self,
         ins=srcs,
         deps=deps,
-        outs=[name+".o"],
+        outs=[name + ".o"],
         label=label,
-        commands=["$(MAKENSIS) -nocd -v2 "+d+" -dOUTFILE={outs[0]} {ins[0]}"]
+        commands=[
+            "$(MAKENSIS) -nocd -v2 " + d + " -dOUTFILE={outs[0]} {ins[0]}"
+        ],
     )

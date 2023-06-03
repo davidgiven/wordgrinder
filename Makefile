@@ -11,6 +11,7 @@ export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
 export CXXFLAGS = $(CFLAGS) --std=c++17
 export LDFLAGS = -g
 export NINJAFLAGS =
+export PREFIX = /usr/local
 
 export PYTHONHASHSEED = 1
 
@@ -36,6 +37,12 @@ $(OBJ)/build.ninja: Makefile $(build-files)
 	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m ninja -t +all -o $@ \
 		-v OBJ,CC,CXX,AR,WINDRES,MAKENSIS \
 		build.py
+
+install: all
+	test -f bin/wordgrinder && cp bin/wordgrinder $(PREFIX)/bin/wordgrinder
+	test -f bin/wordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/wordgrinder.1
+	test -f bin/xwordgrinder && cp bin/xwordgrinder $(PREFIX)/bin/xwordgrinder
+	test -f bin/xwordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/xwordgrinder.1
 
 .DELETE_ON_ERROR:
 .SECONDARY:
