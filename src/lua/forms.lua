@@ -833,7 +833,9 @@ function Form.Run(form: Form, redraw: (() -> ())?, helptext: string?)
 
 			if not action and form.focus then
 				local w = form.widgets[form.focus]
-				action = w:key(key)
+				if w.key then
+					action = w:key(key)
+				end
 			end
 		end
 
