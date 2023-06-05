@@ -74,6 +74,10 @@ static void key_cb(
     {
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
+            const char* name = glfwGetKeyName(key, scancode);
+            if (name)
+                key = name[0];
+
             keyboardQueue.push_back(-((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
             return;
         }
