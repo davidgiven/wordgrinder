@@ -70,14 +70,17 @@ static void key_cb(
     if (action == GLFW_RELEASE)
         return;
 
+    if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
+    {
+        const char* name = glfwGetKeyName(key, scancode);
+        if (name)
+            key = name[0];
+    }
+
     if (mods & GLFW_MOD_CONTROL)
     {
         if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
         {
-            const char* name = glfwGetKeyName(key, scancode);
-            if (name)
-                key = name[0];
-
             keyboardQueue.push_back(-((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
             return;
         }
@@ -343,7 +346,7 @@ void dpy_sync(void)
     int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
-        delete [] screen;
+        delete[] screen;
         screenWidth = sw;
         screenHeight = sh;
         screen = new cell_t[screenWidth * screenHeight];
