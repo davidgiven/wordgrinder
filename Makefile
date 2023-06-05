@@ -19,7 +19,7 @@ export PYTHONHASHSEED = 1
 #	@+make -f $(OBJ)/build.mk +all
 
 all: $(OBJ)/build.ninja
-	@ninja -f $< +all
+	@ninja -f $< +all $(NINJAFLAGS)
 	
 clean:
 	@echo CLEAN
