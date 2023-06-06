@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     find_exe();
 #endif
 
-    setlocale(LC_ALL, "");
+    setlocale(LC_ALL, "C.UTF-8");
 #if defined WIN32
     enable_unicode = true;
 #else
