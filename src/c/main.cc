@@ -34,10 +34,14 @@ int main(int argc, char* argv[])
     find_exe();
 #endif
 
-    setlocale(LC_ALL, "");
 #if defined WIN32
+    setlocale(LC_ALL, "C");
+    enable_unicode = true;
+#elif defined OSX
+    setlocale(LC_ALL, "C");
     enable_unicode = true;
 #else
+    setlocale(LC_ALL, "C.UTF-8");
     enable_unicode = strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
 #endif
 

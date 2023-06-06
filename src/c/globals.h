@@ -36,6 +36,7 @@
 
 #if defined(__APPLE__) && defined(__MACH__)
 #define OSX
+#define EMULATED_WCWIDTH
 #endif
 
 #if defined _WIN32
