@@ -232,7 +232,7 @@ end
 function GetWordSimpleText(s: string): string
 	s = GetWordText(s)
 	s = UnSmartquotify(s)
-	s = s:gsub('[~#&^$"<>]+', "")
+	s = s:gsub('[`~#&^$"<>]+', "")
 	s = s:gsub("^[.'([{]+", "")
 	s = s:gsub("[',.!?:;)%]}]+$", "")
 	return s
