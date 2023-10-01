@@ -190,12 +190,14 @@ function ExportFileWithUI(filename, title, extension, callback)
 
 	ImmediateMessage("Exporting "..filename.."...")
 
-	local data: {string} = {}
-	local writer = function(...: {string})
-		for _, s in ipairs(...) do
-			data[#data+1] = s
-		end
-	end
+        local data: {string} = {}
+        local writer = function(...: string)
+                for _, s in ipairs({...}) do
+                        data[#data+1] = s
+                end
+        end
+
+        callback(writer, currentDocument)
 
 	local _, e = WriteFile(filename, table.concat(data))
 	if e then
