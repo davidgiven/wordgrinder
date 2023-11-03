@@ -250,6 +250,9 @@ function RedrawScreen()
 	-- Find out the offset of the paragraph at the middle of the screen.
 
 	local paragraph = currentDocument[sp]
+	if sw > #paragraph then
+		sw = #paragraph
+	end
 	local osw = sw
 	local sl, sw = paragraph:getLineOfWord(sw)
 	if not sl then
