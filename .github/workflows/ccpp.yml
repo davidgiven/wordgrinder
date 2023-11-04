@@ -57,7 +57,7 @@ jobs:
         fetch-depth: 1
     - name: build
       run: |
-        PATH=/mingw32/bin:$PATH make
+        PATH=/mingw32/bin:$PATH MAGICK_TIME_LIMIT=100 make
     - name: zip
       run: |
         zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
