@@ -619,6 +619,12 @@ function MenuTree.lookupAccelerator(self, c)
 			end
 		else
 			f = item.fn
+
+			if not f and item.menu then
+				f = function()
+					Cmd.ActivateMenu(item.menu)
+				end
+			end
 		end
 	end
 
