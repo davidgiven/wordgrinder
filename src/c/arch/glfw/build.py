@@ -1,8 +1,7 @@
-from build.ab2 import DefaultVars
 from build.c import clibrary
 from build.pkg import package
 from tools.build import multibin
-import platform
+from config import HAS_OSX
 
 package(name="libglfw3", package="glfw3")
 package(name="opengl", package="opengl")
@@ -24,18 +23,13 @@ clibrary(
         "./font.cc",
         "./main.cc",
         "./utils.cc",
-        "+font_table",
         "tools+icon_cc",
     ],
-    vars=DefaultVars
-    + {
-        "+cxxflags": ["-I./src/c"] + ["-DGL_SILENCE_DEPRECATION"]
-        if platform.system() == "Darwin"
-        else []
-    },
+    hdrs={"font_table.h": ".+font_table"},
+    cflags=(["-I./src/c"] + ["-DGL_SILENCE_DEPRECATION"] if HAS_OSX else []),
     deps=[
-        "+libglfw3",
-        "+opengl",
+        ".+libglfw3",
+        ".+opengl",
         "src/c+globals",
         "src/c/luau-em",
         "third_party/libstb",

@@ -1,50 +1,81 @@
-from build.ab2 import Rule
+from build.ab import Rule, emit, Target, bubbledattrsof, filenamesof
+from types import SimpleNamespace
 import os
 import subprocess
 
-_package_present = {}
-_package_cflags = {}
-_package_ldflags = {}
-_pkgconfig = os.getenv("PKG_CONFIG")
+emit(
+    """
+PKG_CONFIG ?= pkg-config
+PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
 
-
-def has_package(name):
-    global _package_present
-    if name not in _package_present:
-        r = subprocess.run(
-            f"{_pkgconfig} --exists {name}", shell=True, capture_output=True
-        )
-        _package_present[name] = True if r.returncode == 0 else False
-    return _package_present[name]
-
-
-def get_cflags(name):
-    global _package_cflags
-    if name not in _package_cflags:
-        r = subprocess.run(
-            f"{_pkgconfig} --cflags {name}", shell=True, capture_output=True
-        )
-        _package_cflags[name] = r.stdout.decode("utf-8").strip()
-    return _package_cflags[name]
-
-
-def get_ldflags(name):
-    global _package_ldflags
-    if name not in _package_ldflags:
-        r = subprocess.run(
-            f"{_pkgconfig} --libs {name}", shell=True, capture_output=True
-        )
-        _package_ldflags[name] = r.stdout.decode("utf-8").strip()
-    return _package_ldflags[name]
+HOST_PKG_CONFIG ?= pkg-config
+HOST_PACKAGES := $(shell $(HOST_PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
+"""
+)
 
 
 @Rule
-def package(self, name, package=None):
-    if has_package(package):
-        self.exportvars = {
-            "+cflags": [get_cflags(package)],
-            "+cxxflags": [get_cflags(package)],
-            "+ldflags": [get_ldflags(package)],
-        }
+def package(self, name, package=None, fallback: Target = None):
+    emit("ifeq ($(filter %s, $(PACKAGES)),)" % package)
+    if fallback:
+        emit(f"PACKAGE_DEPS_{package} := ", filenamesof(fallback))
+        emit(
+            f"PACKAGE_CFLAGS_{package} :=",
+            bubbledattrsof(fallback, "caller_cflags"),
+        )
+        emit(
+            f"PACKAGE_LDFLAGS_{package} := ",
+            bubbledattrsof(fallback, "caller_ldflags"),
+            f"$(filter %.a, $(PACKAGE_DEPS_{package}))",
+        )
+    else:
+        emit(f"$(error Required package '{package}' not installed.)")
+    emit("else")
+    emit(
+        f"PACKAGE_CFLAGS_{package} := $(shell $(PKG_CONFIG) --cflags {package})"
+    )
+    emit(
+        f"PACKAGE_LDFLAGS_{package} := $(shell $(PKG_CONFIG) --libs {package})"
+    )
+    emit(f"PACKAGE_DEPS_{package} :=")
+    emit("endif")
 
-    self.outs = []
+    self.attr.caller_cflags = [f"$(PACKAGE_CFLAGS_{package})"]
+    self.attr.caller_ldflags = [f"$(PACKAGE_LDFLAGS_{package})"]
+    self.traits.add("clibrary")
+    self.traits.add("cheaders")
+
+    self.ins = []
+    self.outs = [f"$(PACKAGE_DEPS_{package})"]
+
+
+@Rule
+def hostpackage(self, name, package=None, fallback: Target = None):
+    emit("ifeq ($(filter %s, $(HOST_PACKAGES)),)" % package)
+    if fallback:
+        emit(
+            f"HOST_PACKAGE_CFLAGS_{package} :=",
+            bubbledattrsof(fallback, "caller_cflags"),
+        )
+        emit(
+            f"HOST_PACKAGE_LDFLAGS_{package} := ",
+            bubbledattrsof(fallback, "caller_ldflags"),
+        )
+        emit(f"HOST_PACKAGE_DEP_{package} := ", fallback.name)
+    else:
+        emit(f"$(error Required host package '{package}' not installed.)")
+    emit("else")
+    emit(
+        f"HOST_PACKAGE_CFLAGS_{package} := $(shell $(HOST_PKG_CONFIG) --cflags {package})"
+    )
+    emit(
+        f"HOST_PACKAGE_LDFLAGS_{package} := $(shell $(HOST_PKG_CONFIG) --libs {package})"
+    )
+    emit(f"HOST_PACKAGE_DEP_{package} := ")
+    emit("endif")
+
+    self.attr.caller_cflags = [f"$(HOST_PACKAGE_CFLAGS_{package})"]
+    self.attr.caller_ldflags = [f"$(HOST_PACKAGE_LDFLAGS_{package})"]
+
+    self.ins = []
+    self.outs = [f"$(HOST_PACKAGE_DEP_{package})"]

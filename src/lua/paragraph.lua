@@ -280,6 +280,8 @@ function Paragraph.getLineOfWord(self: Paragraph, wn: number): (number, number)
 	error("word out of range")
 end
 
+
+
 -- returns: number of characters
 function Paragraph.getIndentOfLine(self: Paragraph, ln: number): number
 	local indent

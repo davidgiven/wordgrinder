@@ -1,4 +1,4 @@
-from build.ab2 import DefaultVars
+from build.ab import DefaultVars
 from build.c import clibrary
 from build.windows import windres, makensis
 from config import VERSION

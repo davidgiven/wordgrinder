@@ -21,7 +21,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .addons.smartquotes.rightdouble: "”"
 .addons.smartquotes.rightsingle: "’"
 .addons.smartquotes.singlequotes: true
-.addons.spellchecker.enabled: false
+.addons.spellchecker.enabled: true
 .addons.spellchecker.usesystemdictionary: true
 .addons.spellchecker.useuserdictionary: true
 .addons.widescreen.enabled: false

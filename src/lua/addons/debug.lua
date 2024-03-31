@@ -24,8 +24,13 @@ do
 			terms[#terms+1] = 
 				{
 					priority=50,
-					value=string_format("%d.%d.%d",
-						currentDocument.cp, currentDocument.cw, currentDocument.co)
+					value=string_format("%d.%d.%d / %d.%d.%d",
+						currentDocument.cp,
+						currentDocument.cw,
+						currentDocument.co,
+						#currentDocument,
+						#currentDocument[currentDocument.cp],
+						#currentDocument[currentDocument.cp][currentDocument.cw])
 				}
 		end
 		if settings.currentword then

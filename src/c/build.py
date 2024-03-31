@@ -1,6 +1,5 @@
-from build.ab2 import DefaultVars
 from build.c import cxxprogram, clibrary
-from build.pkg import has_package, package
+from build.pkg import package
 from config import FILEFORMAT
 
 package(name="libcmark", package="libcmark")
@@ -16,22 +15,16 @@ clibrary(
         "./screen.cc",
         "./word.cc",
         "./zip.cc",
-        "src/lua+luacode",
     ],
-    hdrs=["./globals.h"],
-    vars=DefaultVars
-    + {
-        "+cxxflags": [
-            f"-DFILEFORMAT={FILEFORMAT}",
-            "-DCMARK_STATIC_DEFINE",
-            "-I.",
-        ]
-    },
-    exportvars={
-        "+cxxflags": [f"-DFILEFORMAT={FILEFORMAT}", "-I."],
-    },
+    hdrs={"globals.h": "./globals.h", "script_table.h": "src/lua+luacode"},
+    cflags=[
+        f"-DFILEFORMAT={FILEFORMAT}",
+        "-DCMARK_STATIC_DEFINE",
+        "-I.",
+    ],
+    caller_cflags=f"-DFILEFORMAT={FILEFORMAT}",
     deps=[
-        "+fmt",
+        ".+fmt",
         "third_party/luau",
         "third_party/wcwidth",
         "src/c/luau-em",
@@ -40,93 +33,94 @@ clibrary(
 )
 
 
-def make_wordgrinder(name, arch, clip, vars={}):
+def make_wordgrinder(name, deps=[], cflags=[], ldflags=[]):
     cxxprogram(
         name=name,
         srcs=[
             "./lua.cc",
             "./clipboard.cc",
         ],
+        cflags=cflags,
+        ldflags=ldflags,
         deps=[
-            "+libcmark",
-            "+globals",
-            arch,
-            "third_party/clip+" + clip,
+            ".+libcmark",
+            ".+globals",
+            "third_party/clip+clip_common",
             "third_party/luau",
+            "third_party/minizip",
             "src/c/luau-em",
-        ],
-        vars=DefaultVars + vars,
+        ]
+        + deps,
     )
 
 
 make_wordgrinder(
     "wordgrinder-ncurses",
-    "src/c/arch/ncurses",
-    "clip_none",
-    vars={"+cxxflags": ["-DFRONTEND=ncurses"]},
+    deps=["src/c/arch/ncurses", "third_party/clip+clip_none"],
+    cflags=["-DFRONTEND=ncurses"],
 )
 
 make_wordgrinder(
     "wordgrinder-wincon",
-    ["src/c/arch/win32", "src/c/arch/win32/console"],
-    "clip_none",
-    vars={
-        "+cxxflags": ["-DFRONTEND=wincon"],
-        "+ldflags": [
-            "-mconsole",
-            "-lole32",
-            "-lshlwapi",
-            "-lwindowscodecs",
-            "-lrpcrt4",
-        ],
-    },
+    deps=[
+        "src/c/arch/win32",
+        "src/c/arch/win32/console",
+        "third_party/clip+clip_none",
+    ],
+    cflags=["-DFRONTEND=wincon"],
+    ldflags=[
+        "-mconsole",
+        "-lole32",
+        "-lshlwapi",
+        "-lwindowscodecs",
+        "-lrpcrt4",
+    ],
 )
 
 make_wordgrinder(
     "wordgrinder-glfw-x11",
-    "src/c/arch/glfw",
-    "clip_x11",
-    vars={"+cxxflags": ["-DFRONTEND=glfw"]},
+    deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_x11"],
+    cflags=["-DFRONTEND=glfw"],
 )
 
 make_wordgrinder(
     "wordgrinder-glfw-osx",
-    "src/c/arch/glfw",
-    "clip_osx",
-    vars={
-        "+cxxflags": ["-DFRONTEND=glfw"],
-        "+ldflags": ["-framework", "Cocoa", "-framework", "OpenGL"],
-    },
+    deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_osx"],
+    cflags=["-DFRONTEND=glfw"],
+    ldflags=["-framework", "Cocoa", "-framework", "OpenGL"],
 )
 
 make_wordgrinder(
     "wordgrinder-glfw-windows",
-    ["src/c/arch/win32", "src/c/arch/glfw"],
-    "clip_win",
-    vars={
-        "+cxxflags": ["-DFRONTEND=glfw"],
-        "+ldflags": [
-            "-static",
-            "-static-libgcc",
-            "-static-libstdc++",
-            "-lssp",
-            "-mwindows",
-            "-lole32",
-            "-lshlwapi",
-            "-lwindowscodecs",
-            "-lrpcrt4",
-            "-lopengl32",
-            "-lgdi32",
-        ],
-    },
+    deps=[
+        "src/c/arch/win32",
+        "src/c/arch/glfw",
+        "third_party/libstb",
+        "third_party/clip+clip_win",
+    ],
+    cflags=["-DFRONTEND=glfw"],
+    ldflags=[
+        "-static",
+        "-static-libgcc",
+        "-static-libstdc++",
+        "-lssp",
+        "-mwindows",
+        "-lole32",
+        "-lshlwapi",
+        "-lwindowscodecs",
+        "-lrpcrt4",
+        "-lopengl32",
+        "-lgdi32",
+    ],
 )
 
 make_wordgrinder(
     "wordgrinder-glfw-haiku",
-    ["src/c/arch/glfw"],
-    "clip_none",
-    vars={
-        "+cxxflags": ["-DFRONTEND=glfw"],
-        "+ldflags": ["-lGL"],
-    },
+    deps=[
+        "src/c/arch/glfw",
+        "third_party/libstb",
+        "third_party/clip+clip_none",
+    ],
+    cflags=["-DFRONTEND=glfw"],
+    ldflags=["-lGL"],
 )
