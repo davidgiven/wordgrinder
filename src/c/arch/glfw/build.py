@@ -29,10 +29,10 @@ cxxlibrary(
     cflags=(["-I./src/c"] + ["-DGL_SILENCE_DEPRECATION"] if HAS_OSX else []),
     deps=[
         ".+libglfw3",
-#        ".+opengl",
         "src/c+globals",
         "src/c/luau-em",
         "third_party/libstb",
         "third_party/luau",
-    ],
+    ]
+    + ([] if HAS_OSX else [".+opengl"]),
 )

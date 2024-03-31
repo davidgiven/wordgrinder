@@ -48,7 +48,7 @@ def make_wordgrinder(name, deps=[], cflags=[], ldflags=[]):
             "third_party/clip+clip_common",
             "third_party/luau",
             "third_party/minizip",
-		"third_party/wcwidth",
+            "third_party/wcwidth",
             "src/c/luau-em",
         ]
         + deps,
@@ -57,7 +57,11 @@ def make_wordgrinder(name, deps=[], cflags=[], ldflags=[]):
 
 make_wordgrinder(
     "wordgrinder-ncurses",
-    deps=["src/c/arch/ncurses", "third_party/clip+clip_none", "third_party/wcwidth"],
+    deps=[
+        "src/c/arch/ncurses",
+        "third_party/clip+clip_none",
+        "third_party/wcwidth",
+    ],
     cflags=["-DFRONTEND=ncurses"],
 )
 
