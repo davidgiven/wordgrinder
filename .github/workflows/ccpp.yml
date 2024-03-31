@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config ninja glfw3 imagemagick wxwidgets cmark fmt nproc gmake
+      run: brew install pkg-config ninja glfw3 imagemagick wxwidgets cmark fmt procs gmake
     - name: make
       run: |
         gmake -j$(nproc)
