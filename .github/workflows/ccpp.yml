@@ -13,7 +13,7 @@ jobs:
       run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
     - name: make
       run: |
-        make
+        make -j$(nproc)
 
   build-macos:
     runs-on: macos-latest
@@ -25,7 +25,7 @@ jobs:
       run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark fmt
     - name: make
       run: |
-        make
+        gmake -j$(nproc)
 
   build-windows:
     runs-on: windows-latest
