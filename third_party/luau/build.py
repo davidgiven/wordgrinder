@@ -1,6 +1,6 @@
-from build.c import clibrary, cxxprogram
+from build.c import cxxlibrary, cxxprogram
 
-clibrary(
+cxxlibrary(
     name="luau",
     srcs=[
         "./Analysis/src/Anyification.cpp",

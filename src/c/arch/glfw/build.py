@@ -1,4 +1,4 @@
-from build.c import clibrary
+from build.c import cxxlibrary
 from build.pkg import package
 from tools.build import multibin
 from config import HAS_OSX
@@ -17,7 +17,7 @@ multibin(
     ],
 )
 
-clibrary(
+cxxlibrary(
     name="glfw",
     srcs=[
         "./font.cc",
@@ -29,7 +29,7 @@ clibrary(
     cflags=(["-I./src/c"] + ["-DGL_SILENCE_DEPRECATION"] if HAS_OSX else []),
     deps=[
         ".+libglfw3",
-        ".+opengl",
+#        ".+opengl",
         "src/c+globals",
         "src/c/luau-em",
         "third_party/libstb",

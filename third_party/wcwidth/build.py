@@ -1,6 +1,6 @@
-from build.c import clibrary
+from build.c import cxxlibrary
 
-clibrary(
+cxxlibrary(
     name="wcwidth",
     srcs=["./wcwidth.cc"],
 )

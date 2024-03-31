@@ -21,7 +21,7 @@ from types import SimpleNamespace
 class Toolchain:
     label = ""
     cfile = ["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
-    cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
+    cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CXXFLAGS) {cflags}"]
     clibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cprogram = ["$(CC) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"]
@@ -31,7 +31,7 @@ class Toolchain:
 class HostToolchain:
     label = "HOST "
     cfile = ["$(HOSTCC) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
-    cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
+    cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCXXFLAGS) {cflags}"]
     clibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
     cprogram = ["$(HOSTCC) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
@@ -109,6 +109,8 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule):
             or f.endswith(".cpp")
             or f.endswith(".S")
             or f.endswith(".s")
+            or f.endswith(".mm")
+            or f.endswith(".m")
         ]
         if any(f.endswith(".o") for f in filenamesof(s)):
             objs += [s]

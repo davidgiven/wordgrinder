@@ -1,9 +1,9 @@
-from build.c import clibrary
+from build.c import cxxlibrary
 from build.pkg import package
 
 package(name="libncursesw", package="ncursesw")
 
-clibrary(
+cxxlibrary(
     name="ncurses",
     srcs=["./dpy.cc"],
     deps=[
