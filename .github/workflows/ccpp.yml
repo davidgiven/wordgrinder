@@ -6,9 +6,7 @@ jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+    - uses: actions/checkout@v4
     - name: apt
       run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
     - name: make
@@ -18,52 +16,50 @@ jobs:
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+    - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark fmt
+      run: brew install pkg-config ninja glfw3 imagemagick wxwidgets cmark fmt nproc gmake
     - name: make
       run: |
         gmake -j$(nproc)
 
-  build-windows:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: mingw32
-        update: true
-        install: >-
-          make
-          mingw-w64-i686-binutils
-          mingw-w64-i686-fmt
-          mingw-w64-i686-gcc
-          mingw-w64-i686-glfw
-          mingw-w64-i686-imagemagick
-          mingw-w64-i686-nsis
-          mingw-w64-i686-pkg-config
-          mingw-w64-i686-zlib
-          mingw-w64-i686-cmark
-          ninja
-          python3
-          vim
-          zip
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-    - name: build
-      run: |
-        PATH=/mingw32/bin:$PATH MAGICK_TIME_LIMIT=100 make
-    - name: zip
-      run: |
-        zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
-    - name: upload
-      uses: actions/upload-artifact@v2
-      with:
-        name: ${{ github.event.repository.name }}.${{ github.sha }}
-        path: wordgrinder-windows.zip
+  #build-windows:
+  #  runs-on: windows-latest
+  #  defaults:
+  #    run:
+  #      shell: msys2 {0}
+  #  steps:
+  #  - uses: msys2/setup-msys2@v2
+  #    with:
+  #      msystem: mingw32
+  #      update: true
+  #      install: >-
+  #        make
+  #        mingw-w64-i686-binutils
+  #        mingw-w64-i686-fmt
+  #        mingw-w64-i686-gcc
+  #        mingw-w64-i686-glfw
+  #        mingw-w64-i686-imagemagick
+  #        mingw-w64-i686-nsis
+  #        mingw-w64-i686-pkg-config
+  #        mingw-w64-i686-zlib
+  #        mingw-w64-i686-cmark
+  #        ninja
+  #        python3
+  #        vim
+  #        zip
+  #  - uses: actions/checkout@v1
+  #    with:
+  #      fetch-depth: 1
+  #  - name: build
+  #    run: |
+  #      PATH=/mingw32/bin:$PATH MAGICK_TIME_LIMIT=100 make
+  #  - name: zip
+  #    run: |
+  #      zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
+  #  - name: upload
+  #    uses: actions/upload-artifact@v2
+  #    with:
+  #      name: ${{ github.event.repository.name }}.${{ github.sha }}
+  #      path: wordgrinder-windows.zip
 
