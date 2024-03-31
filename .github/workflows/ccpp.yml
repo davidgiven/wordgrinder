@@ -21,7 +21,7 @@ jobs:
       run: brew install pkg-config glfw3 imagemagick wxwidgets cmark fmt procs make
     - name: make
       run: |
-        gmake -j$(nproc)
+        gmake -j$(nproc) BUILD_TYPE=osx
 
   #build-windows:
   #  runs-on: windows-latest
