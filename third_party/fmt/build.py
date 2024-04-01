@@ -6,7 +6,7 @@ cxxlibrary(
         "./src/format.cc",
         "./src/os.cc",
     ],
-    cflags=["-Idep/fmt/include"],
+    cflags=["-Ithird_party/fmt/include"],
     hdrs={
         "fmt/args.h": "./include/fmt/args.h",
         "fmt/chrono.h": "./include/fmt/chrono.h",
