@@ -47,7 +47,7 @@ jobs:
 
     - name: run
       run: |
-        wsl sh -c 'make BUILDTYPE=windows -j$(nproc)'
+        wsl sh -c 'make -C . BUILDTYPE=windows -j$(nproc)'
 
     - name: zip
       run: |
