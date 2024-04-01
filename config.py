@@ -11,8 +11,9 @@ BUILD_TYPE = os.getenv("BUILD_TYPE")
 IS_WINDOWS = BUILD_TYPE in {"windows", "wincon-only"}
 HAS_XWORDGRINDER = BUILD_TYPE == "unix"
 HAS_OSX = BUILD_TYPE == "osx"
-HAS_NCURSES = BUILD_TYPE in {"unix", "unix-ncurses-only"}
-HAS_GLFW = BUILD_TYPE in {"windows", "unix", "osx"}
+HAS_NCURSES = BUILD_TYPE in {"unix", "osx", "haiku", "unix-ncurses-only"}
+HAS_GLFW = BUILD_TYPE in {"windows", "unix", "osx", "haiku"}
+HAS_HAIKU = BUILD_TYPE in {"haiku"}
 
 if IS_WINDOWS:
     TEST_BINARY = "src/c/+wordgrinder-wincon"

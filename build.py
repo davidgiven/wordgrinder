@@ -11,6 +11,11 @@ export(
         if BUILD_TYPE == "unix"
         else {}
     )
+    | (
+        {"bin/wordgrinder-haiku": "src/c+wordgrinder-glfw-haiku"}
+        if BUILD_TYPE == "haiku"
+        else {}
+    )
     | ({"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"} if BUILD_TYPE == "osx" else {})
     | (
         {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}

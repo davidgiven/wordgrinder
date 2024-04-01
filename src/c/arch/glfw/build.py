@@ -1,7 +1,7 @@
 from build.c import cxxlibrary
 from build.pkg import package
 from tools.build import multibin
-from config import HAS_OSX
+from config import HAS_OSX, HAS_HAIKU
 
 package(name="libglfw3", package="glfw3")
 package(name="opengl", package="opengl")
@@ -34,5 +34,5 @@ cxxlibrary(
         "third_party/libstb",
         "third_party/luau",
     ]
-    + ([] if HAS_OSX else [".+opengl"]),
+    + ([] if HAS_OSX or HAS_HAIKU else [".+opengl"]),
 )
