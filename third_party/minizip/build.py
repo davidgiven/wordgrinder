@@ -1,4 +1,3 @@
-from build.ab2 import DefaultVars
 from build.c import clibrary
 from build.pkg import package
 
