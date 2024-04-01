@@ -55,7 +55,9 @@ debian-distr: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
 
 .PHONY: bin/wordgrinder-minimal-dependencies-for-debian.tar.xz
 bin/wordgrinder-minimal-dependencies-for-debian.tar.xz:
-	tar cvaf $@ \
+	@echo Make Debian distribution
+	$(hide) mkdir -p $(dir $@)
+	$(hide) tar cvaf $@ \
 		--transform "s,^,wordgrinder-$(VERSION)/," \
 		--exclude "*.dictionary" \
 		Makefile \
