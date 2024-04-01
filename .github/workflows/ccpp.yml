@@ -44,14 +44,16 @@ jobs:
         git config --global core.eol lf
         
     - uses: actions/checkout@v4
+      with:
+        path: 'wordgrinder'
 
     - name: run
       run: |
-        wsl sh -c 'make -C . BUILDTYPE=windows -j$(nproc)'
+        wsl sh -c 'make -C wordgrinder BUILDTYPE=windows -j$(nproc)'
 
     - name: zip
       run: |
-        zip -9 wordgrinder-windows.zip bin/*.exe
+        zip -9 wordgrinder-windows.zip wordgrinder/bin/*.exe
 
     - name: upload
       uses: actions/upload-artifact@v2
