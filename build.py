@@ -1,5 +1,5 @@
 from build.ab import export
-from config import TEST_BINARY, VERSION, BUILD_TYPE
+from config import TEST_BINARY, VERSION, BUILDTYPE
 
 export(
     name="binaries",
@@ -8,13 +8,13 @@ export(
     }
     | (
         {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
-        if BUILD_TYPE == "unix"
+        if BUILDTYPE == "unix"
         else {}
     )
-    | ({"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"} if BUILD_TYPE == "osx" else {})
+    | ({"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"} if BUILDTYPE == "osx" else {})
     | (
         {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
-        if BUILD_TYPE == "windows"
+        if BUILDTYPE == "windows"
         else {}
     )
 )
@@ -26,15 +26,15 @@ export(
             {
                 f"bin/WordGrinder-{VERSION}-setup.exe": "src/c/arch/win32+installer"
             }
-            if BUILD_TYPE == "windows"
+            if BUILDTYPE == "windows"
             else {}
         )
         | (
             {f"bin/xwordgrinder.1": "extras+xwordgrinder.1"}
-            if BUILD_TYPE in {"unix", "osx"}
+            if BUILDTYPE in {"unix", "osx"}
             else {}
         )
-        | ({"bin/wordgrinder.1": "extras+wordgrinder.1"} if BUILD_TYPE in {"unix", "osx"} else {})
+        | ({"bin/wordgrinder.1": "extras+wordgrinder.1"} if BUILDTYPE in {"unix", "osx"} else {})
     ),
     deps=["tests", "src/lua+typecheck", "+binaries"],
 )
