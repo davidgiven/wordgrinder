@@ -1,19 +1,38 @@
-export OBJ = .obj
-export LUA = lua
-export CC = gcc
-export CXX = g++
-export AR = ar
-export WINDRES = windres
-export PKG_CONFIG = pkg-config
-export MAKENSIS = makensis
-
-export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
-export CXXFLAGS = $(CFLAGS) --std=c++17
-export LDFLAGS = -g
-export NINJAFLAGS =
-export PREFIX = /usr/local
-
 export BUILDTYPE ?= unix
+
+ifeq ($(BUILDTYPE),windows)
+	MINGW = i686-w64-mingw32-
+	CC = $(MINGW)gcc
+	CXX = $(MINGW)g++ -std=c++17
+	CFLAGS += \
+		-ffunction-sections \
+		-fdata-sections \
+		-Wno-attributes
+	CXXFLAGS += \
+		-fext-numeric-literals \
+		-Wno-deprecated-enum-float-conversion \
+		-Wno-deprecated-enum-enum-conversion
+	LDFLAGS += -static
+	AR = $(MINGW)ar
+	PKG_CONFIG = $(MINGW)pkg-config -static
+	WINDRES = $(MINGW)windres
+	MAKENSIS = makensis
+	EXT = .exe
+else
+	export CC = gcc
+	export CXX = g++
+	export CFLAGS
+	export CXXFLAGS
+	export LDFLAGS
+	export AR = ar
+	export PKG_CONFIG = pkg-config
+endif
+
+CFLAGS += -g -Os -ffunction-sections -fdata-sections
+CXXFLAGS = $(CFLAGS) --std=c++17
+LDFLAGS += -ffunction-sections -fdata-sections
+
+export PREFIX = /usr/local
 
 export REALOBJ = .obj
 export OBJ = $(REALOBJ)/$(BUILDTYPE)

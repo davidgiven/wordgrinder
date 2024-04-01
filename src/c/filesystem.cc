@@ -16,7 +16,7 @@
 
 #ifdef WIN32
 #include <windows.h>
-#include <Rpc.h>
+#include <rpc.h>
 #endif
 
 static int pusherrno(lua_State* L)

@@ -4,7 +4,7 @@ from config import TEST_BINARY, VERSION, BUILDTYPE
 export(
     name="binaries",
     items={
-        "bin/wordgrinder": TEST_BINARY,
+        "bin/wordgrinder$(EXT)": TEST_BINARY,
     }
     | (
         {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
@@ -16,12 +16,16 @@ export(
         if BUILDTYPE == "haiku"
         else {}
     )
-    | ({"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"} if BUILDTYPE == "osx" else {})
     | (
-        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
-        if BUILDTYPE == "windows"
+        {"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"}
+        if BUILDTYPE == "osx"
         else {}
     )
+    | (
+        {"bin/wordgrinder-windows$(EXT)": "src/c+wordgrinder-glfw-windows"}
+        if BUILDTYPE == "windows"
+        else {}
+    ),
 )
 
 export(
@@ -39,7 +43,11 @@ export(
             if BUILDTYPE in {"unix", "osx"}
             else {}
         )
-        | ({"bin/wordgrinder.1": "extras+wordgrinder.1"} if BUILDTYPE in {"unix", "osx"} else {})
+        | (
+            {"bin/wordgrinder.1": "extras+wordgrinder.1"}
+            if BUILDTYPE in {"unix", "osx"}
+            else {}
+        )
     ),
     deps=["tests", "src/lua+typecheck", "+binaries"],
 )

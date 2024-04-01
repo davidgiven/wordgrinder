@@ -3,7 +3,7 @@ from build.pkg import package
 from config import FILEFORMAT
 
 package(name="libcmark", package="libcmark", fallback="third_party/cmark")
-package(name="fmt", package="fmt")
+package(name="fmt", package="fmt", fallback="third_party/fmt")
 
 cxxlibrary(
     name="globals",
@@ -25,6 +25,7 @@ cxxlibrary(
     caller_cflags=f"-DFILEFORMAT={FILEFORMAT}",
     deps=[
         ".+fmt",
+        ".+libcmark",
         "third_party/luau",
         "third_party/wcwidth",
         "src/c/luau-em",
