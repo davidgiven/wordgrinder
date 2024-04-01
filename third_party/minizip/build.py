@@ -10,6 +10,6 @@ clibrary(
         "./unzip.c",
         "./zip.c",
     ],
-    hdrs=["./zip.h", "./unzip.h"],
-    deps=["+zlib"],
+    hdrs={"zip.h": "./zip.h", "unzip.h": "./unzip.h", "ioapi.h": "./ioapi.h"},
+    deps=[".+zlib"],
 )

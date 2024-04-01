@@ -1,33 +1,29 @@
-from build.ab2 import export
-from build.pkg import has_package
-from config import TEST_BINARY, VERSION
-import platform
-
-osx = platform.system() == "Darwin"
-windows = platform.system() == "Windows"
-haiku = platform.system() == "Haiku"
-
-has_xwordgrinder = has_package("xcb") and not osx
+from build.ab import export
+from config import TEST_BINARY, VERSION, BUILDTYPE
 
 export(
     name="binaries",
     items={
-        "bin/wordgrinder": TEST_BINARY,
+        "bin/wordgrinder$(EXT)": TEST_BINARY,
     }
     | (
         {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
-        if has_xwordgrinder
-        else {}
-    )
-    | ({"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"} if osx else {})
-    | (
-        {"bin/wordgrinder-windows": "src/c+wordgrinder-glfw-windows"}
-        if windows
+        if BUILDTYPE == "unix"
         else {}
     )
     | (
         {"bin/wordgrinder-haiku": "src/c+wordgrinder-glfw-haiku"}
-        if haiku
+        if BUILDTYPE == "haiku"
+        else {}
+    )
+    | (
+        {"bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx"}
+        if BUILDTYPE == "osx"
+        else {}
+    )
+    | (
+        {"bin/wordgrinder-windows$(EXT)": "src/c+wordgrinder-glfw-windows"}
+        if BUILDTYPE == "windows"
         else {}
     ),
 )
@@ -39,15 +35,19 @@ export(
             {
                 f"bin/WordGrinder-{VERSION}-setup.exe": "src/c/arch/win32+installer"
             }
-            if windows
+            if BUILDTYPE == "windows"
             else {}
         )
         | (
             {f"bin/xwordgrinder.1": "extras+xwordgrinder.1"}
-            if has_xwordgrinder
+            if BUILDTYPE in {"unix", "osx"}
             else {}
         )
-        | ({"bin/wordgrinder.1": "extras+wordgrinder.1"} if not windows else {})
+        | (
+            {"bin/wordgrinder.1": "extras+wordgrinder.1"}
+            if BUILDTYPE in {"unix", "osx"}
+            else {}
+        )
     ),
     deps=["tests", "src/lua+typecheck", "+binaries"],
 )

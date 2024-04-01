@@ -1,15 +1,13 @@
-from build.ab2 import DefaultVars
-from build.c import clibrary
+from build.c import cxxlibrary
 from build.pkg import package
 
 package(name="libncursesw", package="ncursesw")
 
-clibrary(
+cxxlibrary(
     name="ncurses",
     srcs=["./dpy.cc"],
-    vars=DefaultVars + {"+cflags": ["-Isrc/c"]},
     deps=[
-        "+libncursesw",
+        ".+libncursesw",
         "src/c+globals",
         "src/c/luau-em",
         "third_party/libstb",

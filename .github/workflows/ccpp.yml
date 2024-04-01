@@ -2,65 +2,66 @@ name: C/C++ CI
 
 on: [push, workflow_dispatch]
 
+concurrency: 
+  group: environment-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+    - uses: actions/checkout@v4
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev python3-pil libfmt-dev
     - name: make
       run: |
-        make
+        make -j$(nproc)
 
   build-macos:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
+    - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config ninja glfw imagemagick wxwidgets cmark fmt
+      run: |
+        brew install pkg-config glfw3 python3 cmark fmt coreutils make
+        brew link --overwrite python3
+        python3 -m pip install --upgrade Pillow
     - name: make
       run: |
-        make
+        gmake -j$(nproc) BUILDTYPE=osx
 
   build-windows:
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
+
     steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        msystem: mingw32
-        update: true
-        install: >-
-          make
-          mingw-w64-i686-binutils
-          mingw-w64-i686-fmt
-          mingw-w64-i686-gcc
-          mingw-w64-i686-glfw
-          mingw-w64-i686-imagemagick
-          mingw-w64-i686-nsis
-          mingw-w64-i686-pkg-config
-          mingw-w64-i686-zlib
-          mingw-w64-i686-cmark
-          ninja
-          python3
-          vim
-          zip
-    - uses: actions/checkout@v1
-      with:
-        fetch-depth: 1
-    - name: build
+    - name: setup WSL
       run: |
-        PATH=/mingw32/bin:$PATH MAGICK_TIME_LIMIT=100 make
+        curl -L https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/releases/download/39.0.1/Fedora-Remix-for-WSL-SL_39.0.1.0_x64_arm64.msixbundle -o fedora.msixbundle
+        unzip fedora.msixbundle Fedora-Remix-for-WSL-SL_39.0.1.0_x64.msix
+        unzip Fedora-Remix-for-WSL-SL_39.0.1.0_x64.msix install.tar.gz
+        wsl --update
+        wsl --import fedora fedora install.tar.gz
+        wsl --set-default fedora
+        wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-38-1.noarch.rpm'
+        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow'
+
+    - name: fix line endings
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        
+    - uses: actions/checkout@v4
+      with:
+        path: 'wordgrinder'
+
+    - name: run
+      run: |
+        wsl sh -c 'make -C wordgrinder BUILDTYPE=windows -j$(nproc)'
+
     - name: zip
       run: |
-        zip -9 wordgrinder-windows.zip bin/WordGrinder-*-setup.exe
+        wsl sh -c 'zip -9 wordgrinder-windows.zip wordgrinder/bin/*.exe'
+
     - name: upload
       uses: actions/upload-artifact@v2
       with:

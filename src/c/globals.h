@@ -40,6 +40,7 @@
 #endif
 
 #if defined _WIN32
+#undef WIN32
 #define WIN32
 #define EMULATED_WCWIDTH
 #endif

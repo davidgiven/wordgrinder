@@ -1,8 +1,8 @@
-from build.c import clibrary
+from build.c import cxxlibrary
 
-clibrary(
+cxxlibrary(
     name="luau-em",
     srcs=["./lauxlib.cc"],
-    hdrs=["./lauxlib.h"],
+    hdrs={"lauxlib.h": "./lauxlib.h"},
     deps=["third_party/luau"],
 )

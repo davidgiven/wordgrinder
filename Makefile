@@ -1,45 +1,50 @@
-export OBJ = .obj
-export LUA = lua
-export CC = gcc
-export CXX = g++
-export AR = ar
-export WINDRES = windres
-export PKG_CONFIG = pkg-config
-export MAKENSIS = makensis
+export BUILDTYPE ?= unix
 
-export CFLAGS = -g -O0 -ffunction-sections -fdata-sections
-export CXXFLAGS = $(CFLAGS) --std=c++17
-export LDFLAGS = -g
-export NINJAFLAGS =
+ifeq ($(BUILDTYPE),windows)
+	MINGW = i686-w64-mingw32-
+	CC = $(MINGW)gcc
+	CXX = $(MINGW)g++ -std=c++17
+	CFLAGS += \
+		-ffunction-sections \
+		-fdata-sections \
+		-Wno-attributes
+	CXXFLAGS += \
+		-fext-numeric-literals \
+		-Wno-deprecated-enum-float-conversion \
+		-Wno-deprecated-enum-enum-conversion
+	LDFLAGS += -static
+	AR = $(MINGW)ar
+	PKG_CONFIG = $(MINGW)pkg-config -static
+	WINDRES = $(MINGW)windres
+	MAKENSIS = makensis
+	EXT = .exe
+else
+	export CC = gcc
+	export CXX = g++
+	export CFLAGS
+	export CXXFLAGS
+	export LDFLAGS
+	export AR = ar
+	export PKG_CONFIG = pkg-config
+endif
+
+CFLAGS += -g -Os -ffunction-sections -fdata-sections
+CXXFLAGS = $(CFLAGS) --std=c++17
+LDFLAGS += -ffunction-sections -fdata-sections
+
 export PREFIX = /usr/local
 
-export PYTHONHASHSEED = 1
+export REALOBJ = .obj
+export OBJ = $(REALOBJ)/$(BUILDTYPE)
 
-#all: $(OBJ)/build.mk
-#	@+make -f $(OBJ)/build.mk +all
+.PHONY: all
+all: +all
 
-all: $(OBJ)/build.ninja
-	@ninja -f $< +all $(NINJAFLAGS)
-	
-clean:
-	@echo CLEAN
-	@rm -rf $(OBJ) bin
-
-build-files = $(shell find . -name 'build.py') build/*.py config.py
-$(OBJ)/build.mk: Makefile $(build-files)
-	@echo ACKBUILDER
-	@mkdir -p $(OBJ)
-	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m make -t +all -o $@ build.py
-
-$(OBJ)/build.ninja: Makefile $(build-files)
-	@echo ACKBUILDER
-	@mkdir -p $(OBJ)
-	@python3 -X pycache_prefix=$(OBJ) build/ab2.py -m ninja -t +all -o $@ \
-		-v OBJ,CC,CXX,AR,WINDRES,MAKENSIS \
-		build.py
+clean::
+	$(hide) rm -rf $(REALOBJ)
 
 .PHONY: install
-install: all
+install: +all
 	test -f bin/wordgrinder && cp bin/wordgrinder $(PREFIX)/bin/wordgrinder
 	test -f bin/wordgrinder.1 && cp bin/wordgrinder.1 $(PREFIX)/man/man1/wordgrinder.1
 	test -f bin/xwordgrinder && cp bin/xwordgrinder $(PREFIX)/bin/xwordgrinder
@@ -70,6 +75,4 @@ bin/wordgrinder-minimal-dependencies-for-debian.tar.xz:
 		wordgrinder.man \
 		xwordgrinder.man
 
-.DELETE_ON_ERROR:
-.SECONDARY:
-
+include build/ab.mk

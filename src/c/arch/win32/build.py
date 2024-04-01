@@ -1,4 +1,4 @@
-from build.ab2 import DefaultVars
+from build.ab import normalrule
 from build.c import clibrary
 from build.windows import windres, makensis
 from config import VERSION
@@ -13,12 +13,28 @@ windres(
 
 clibrary(
     name="win32",
-    srcs=["+rc"],
+    srcs=[".+rc"],
+)
+
+normalrule(
+    name="wordgrinder-stripped",
+    ins=["src/c+wordgrinder-wincon"],
+    outs=["wordgrinder-stripped.exe"],
+    commands=["strip {ins[0]} -o {outs[0]}"],
+    label="STRIP"
+)
+
+normalrule(
+    name="wordgrinder-windows-stripped",
+    ins=["src/c+wordgrinder-glfw-windows"],
+    outs=["wordgrinder-windows-stripped.exe"],
+    commands=["strip {ins[0]} -o {outs[0]}"],
+    label="STRIP"
 )
 
 makensis(
     name="installer",
     srcs=["extras/windows-installer.nsi"],
-    deps=["bin/wordgrinder", "bin/wordgrinder-windows"],
+    deps=[".+wordgrinder-stripped", ".+wordgrinder-windows-stripped"],
     defs={"VERSION": VERSION},
 )

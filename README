@@ -145,6 +145,14 @@ The distribution contains most of the clip clipboard library, written by David
 Capello. This is MIT licensed and is © 2015-2022 David Capello. Please see
 https://github.com/dacap/clip for more information.
 
+The distribution contains a cut-down version of the cmark Markdown library. This
+is an aggregation of various pieces of software that in total is 2-clause BSD /
+MIT licensed. Please see https://github.com/commonmark/cmark/blob/master/COPYING
+for more information.
+
+The distribution contains a cut-down version of the fmt library. This is MIT
+licensed and is © 2012 Victor Zverovich et al. Please see
+https://github.com/fmtlib/fmt for more information.
 
 
 REVISION HISTORY

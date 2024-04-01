@@ -1,10 +1,9 @@
-from build.ab2 import DefaultVars
 from build.c import clibrary
 
 clibrary(
     name="console",
     srcs=["./dpy.cc", "./realmain.cc"],
-    vars=DefaultVars + {"+cflags": ["-Isrc/c"]},
+    cflags=["-Isrc/c"],
     deps=[
         "src/c+globals",
         "src/c/luau-em",

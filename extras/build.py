@@ -1,4 +1,4 @@
-from build.ab2 import normalrule, Rule, Target
+from build.ab import normalrule, Rule, Target
 from config import DATE, VERSION
 
 

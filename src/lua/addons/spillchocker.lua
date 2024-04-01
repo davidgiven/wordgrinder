@@ -355,6 +355,7 @@ function Cmd.ConfigureSpellchecker()
 
 	settings.enabled = highlight_checkbox.value
 	settings.usesystemdictionary = systemdictionary_checkbox.value
+	system_dictionary_cache = nil
 	settings.useuserdictionary = userdictionary_checkbox.value
 	documentSet:touch()
 	return true

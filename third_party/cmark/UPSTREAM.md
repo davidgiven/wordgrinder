@@ -1,0 +1,1 @@
+This is a cut-down version of cmark 0.30.2-6 fetched from Debian.

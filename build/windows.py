@@ -1,4 +1,4 @@
-from build.ab2 import (
+from build.ab import (
     Rule,
     Targets,
     normalrule,

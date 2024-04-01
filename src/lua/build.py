@@ -1,5 +1,4 @@
-from build.ab2 import normalrule
-from build.c import clibrary
+from build.ab import normalrule
 from tools.build import multibin
 
 SRCS = [
