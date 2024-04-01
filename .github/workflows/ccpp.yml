@@ -19,9 +19,9 @@ jobs:
     - uses: actions/checkout@v4
     - name: brew
       run: |
-        brew install pkg-config glfw3 python3 pillow cmark fmt coreutils make
+        brew install pkg-config glfw3 python3 cmark fmt coreutils make
         brew link --overwrite python3
-        which python3
+        python3 -m pip install --upgrade Pillow
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
