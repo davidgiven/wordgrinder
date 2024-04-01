@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-#cmakedefine HAVE_STDBOOL_H
+#define HAVE_STDBOOL_H
 
 #ifdef HAVE_STDBOOL_H
   #include <stdbool.h>
@@ -13,9 +13,9 @@ extern "C" {
   typedef char bool;
 #endif
 
-#cmakedefine HAVE___BUILTIN_EXPECT
+#define HAVE___BUILTIN_EXPECT
 
-#cmakedefine HAVE___ATTRIBUTE__
+#define HAVE___ATTRIBUTE__
 
 #ifdef HAVE___ATTRIBUTE__
   #define CMARK_ATTRIBUTE(list) __attribute__ (list)
