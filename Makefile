@@ -13,10 +13,10 @@ export LDFLAGS = -g
 export NINJAFLAGS =
 export PREFIX = /usr/local
 
-export BUILD_TYPE = unix
+export BUILDTYPE ?= unix
 
 export REALOBJ = .obj
-export OBJ = $(REALOBJ)/$(BUILD_TYPE)
+export OBJ = $(REALOBJ)/$(BUILDTYPE)
 
 .PHONY: all
 all: +all
