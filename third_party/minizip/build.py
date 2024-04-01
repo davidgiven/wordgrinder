@@ -1,3 +1,4 @@
+from build.ab2 import DefaultVars
 from build.c import clibrary
 from build.pkg import package
 
@@ -12,4 +13,5 @@ clibrary(
     ],
     hdrs={"zip.h": "./zip.h", "unzip.h": "./unzip.h", "ioapi.h": "./ioapi.h"},
     deps=[".+zlib"],
+    cflags=["-DNOCRYPT"],
 )
