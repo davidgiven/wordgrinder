@@ -2,7 +2,7 @@ from build.c import cxxprogram, cxxlibrary
 from build.pkg import package
 from config import FILEFORMAT
 
-package(name="libcmark", package="libcmark")
+package(name="libcmark", package="libcmark", fallback="third_party/cmark")
 package(name="fmt", package="fmt")
 
 cxxlibrary(
