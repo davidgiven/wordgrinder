@@ -19,8 +19,8 @@ cxxprogram(
 
 normalrule(
     name="icon_cc",
-    ins=["./makeicon.sh", "extras/icon.png"],
+    ins=["extras/icon.png"],
     outs=["icon.cc"],
-    commands=["{ins[0]} {ins[1]} > {outs[0]}"],
+    commands=["png2ico {out[0]} {ins[0]}"],
     label="MAKEICON",
 )
