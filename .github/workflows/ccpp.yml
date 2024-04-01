@@ -36,7 +36,7 @@ jobs:
         wsl --import fedora fedora install.tar.gz
         wsl --set-default fedora
         wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-38-1.noarch.rpm'
-        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis png2ico'
+        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis ImageMagick'
 
     - name: fix line endings
       run: |
