@@ -150,6 +150,9 @@ is an aggregation of various pieces of software that in total is 2-clause BSD /
 MIT licensed. Please see https://github.com/commonmark/cmark/blob/master/COPYING
 for more information.
 
+The distribution contains a cut-down version of the fmt library. This is MIT
+licensed and is © 2012 Victor Zverovich et al. Please see
+https://github.com/fmtlib/fmt for more information.
 
 
 REVISION HISTORY
