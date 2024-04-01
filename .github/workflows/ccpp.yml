@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config glfw3 imagemagick wxwidgets cmark fmt procs make
+      run: brew install pkg-config glfw3 imagemagick wxwidgets cmark fmt coreutils make
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
