@@ -21,6 +21,6 @@ normalrule(
     name="icon_cc",
     ins=["extras/icon.png"],
     outs=["icon.cc"],
-    commands=["png2ico {out[0]} {ins[0]}"],
+    commands=["png2ico {outs[0]} {ins[0]}"],
     label="MAKEICON",
 )
