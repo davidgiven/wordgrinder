@@ -8,7 +8,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev imagemagick libfmt-dev
+      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev python3-pil libfmt-dev
     - name: make
       run: |
         make -j$(nproc)
@@ -18,7 +18,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config glfw3 imagemagick wxwidgets cmark fmt coreutils make
+      run: brew install pkg-config glfw3 pillow wxwidgets cmark fmt coreutils make
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
@@ -36,7 +36,7 @@ jobs:
         wsl --import fedora fedora install.tar.gz
         wsl --set-default fedora
         wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-38-1.noarch.rpm'
-        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis'
+        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow'
 
     - name: fix line endings
       run: |
