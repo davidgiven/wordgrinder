@@ -2,6 +2,10 @@ name: C/C++ CI
 
 on: [push, workflow_dispatch]
 
+concurrency: 
+  group: environment-${{ github.head_ref }}
+  cancel-in-progress: true
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest

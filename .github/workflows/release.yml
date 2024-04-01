@@ -1,5 +1,9 @@
 name: Autorelease
 
+concurrency: 
+  group: environment-release-${{ github.head_ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches:
@@ -7,64 +11,63 @@ on:
   workflow_dispatch:
 
 jobs:
-  dev-release:
+  release-windows:
     runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
+
     steps:
-    - uses: msys2/setup-msys2@v2
-      with:
-        update: true
-        msystem: MINGW32
-        install: >-
-          make
-          mingw-w64-i686-binutils
-          mingw-w64-i686-fmt
-          mingw-w64-i686-gcc
-          mingw-w64-i686-glfw
-          mingw-w64-i686-imagemagick
-          mingw-w64-i686-nsis
-          mingw-w64-i686-pkg-config
-          mingw-w64-i686-zlib
-          mingw-w64-i686-cmark
-          ninja
-          python3
-          tar
-          vim
-          zip
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
-    - name: build
+    - name: setup WSL
       run: |
-        PATH=/mingw32/bin:/opt/bin:$PATH MAGICK_TIME_LIMIT=100 make all debian-distr
+        curl -L https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/releases/download/39.0.1/Fedora-Remix-for-WSL-SL_39.0.1.0_x64_arm64.msixbundle -o fedora.msixbundle
+        unzip fedora.msixbundle Fedora-Remix-for-WSL-SL_39.0.1.0_x64.msix
+        unzip Fedora-Remix-for-WSL-SL_39.0.1.0_x64.msix install.tar.gz
+        wsl --update
+        wsl --import fedora fedora install.tar.gz
+        wsl --set-default fedora
+        wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-38-1.noarch.rpm'
+        wsl sh -c 'dnf -y install --setop=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow'
+
+    - name: fix line endings
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+        
+    - uses: actions/checkout@v4
+      with:
+        path: 'wordgrinder'
+
+    - name: run
+      run: |
+        wsl sh -c 'make -C wordgrinder BUILDTYPE=windows -j$(nproc) +all debian-distr'
+
+    - name: date
+      run: |
+        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+
     - name: tag
       uses: EndBug/latest-tag@latest
       with:
         tag-name: dev
+        force-branch: false
+        git-directory: 'wordgrinder'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - name: delete-old-assets
       uses: mknejp/delete-release-assets@v1
       with:
         token: ${{ github.token }}
         tag: dev
         assets: | 
-          bin/wordgrinder-*.tar.xz
-          bin/WordGrinder-*-setup.exe
-        fail-if-no-assets: false
-    - name: date
-      run: |
-          echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+          wordgrinder-*.tar.xz
+          WordGrinder-*-setup.exe
+
     - name: release
       uses: softprops/action-gh-release@v1
       with:
         name: Development build ${{ env.RELEASE_DATE }}
         files: |
-          bin/wordgrinder-*.tar.xz
-          bin/WordGrinder-*-setup.exe
+          wordgrinder/bin/wordgrinder-*.tar.xz
+          wordgrinder/bin/WordGrinder-*-setup.exe
         tag_name: dev
-        prerelease: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
