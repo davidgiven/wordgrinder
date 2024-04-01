@@ -21,6 +21,7 @@ jobs:
       run: |
         brew install pkg-config glfw3 python3 pillow cmark fmt coreutils make
         brew link --overwrite python3
+        which python3
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
