@@ -18,7 +18,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: brew
-      run: brew install pkg-config glfw3 pillow wxwidgets cmark fmt coreutils make
+      run: |
+        brew install pkg-config glfw3 python3 pillow cmark fmt coreutils make
+        brew link --overwrite python3
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
@@ -53,7 +55,7 @@ jobs:
 
     - name: zip
       run: |
-        zip -9 wordgrinder-windows.zip wordgrinder/bin/*.exe
+        wsl sh -c 'zip -9 wordgrinder-windows.zip wordgrinder/bin/*.exe'
 
     - name: upload
       uses: actions/upload-artifact@v2
