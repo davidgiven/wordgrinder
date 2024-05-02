@@ -612,7 +612,7 @@ function LoadFromFile(filename): (DocumentSet?, string?)
 	elseif (magic == TMAGIC) then
 		loader = loadfromstreamt
 	else
-		fp:close()
+		--fp:close()
 		return nil, ("'"..filename.."' is not a valid WordGrinder file.")
 	end
 
