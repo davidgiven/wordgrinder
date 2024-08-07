@@ -13,7 +13,7 @@ namespace CodeGen
 namespace X64
 {
 
-static const std::array<OperandX64, 6> kWindowsGprOrder = {rcx, rdx, r8, r9, addr[rsp + 32], addr[rsp + 40]};
+static const std::array<OperandX64, 6> kWindowsGprOrder = {rcx, rdx, r8, r9, addr[rsp + kStackRegHomeStorage], addr[rsp + kStackRegHomeStorage + 8]};
 static const std::array<OperandX64, 6> kSystemvGprOrder = {rdi, rsi, rdx, rcx, r8, r9};
 static const std::array<OperandX64, 4> kXmmOrder = {xmm0, xmm1, xmm2, xmm3}; // Common order for first 4 fp arguments on Windows/SystemV
 
@@ -38,9 +38,9 @@ IrCallWrapperX64::IrCallWrapperX64(IrRegAllocX64& regs, AssemblyBuilderX64& buil
 void IrCallWrapperX64::addArgument(SizeX64 targetSize, OperandX64 source, IrOp sourceOp)
 {
     // Instruction operands rely on current instruction index for lifetime tracking
-    LUAU_ASSERT(instIdx != kInvalidInstIdx || sourceOp.kind == IrOpKind::None);
+    CODEGEN_ASSERT(instIdx != kInvalidInstIdx || sourceOp.kind == IrOpKind::None);
 
-    LUAU_ASSERT(argCount < kMaxCallArguments);
+    CODEGEN_ASSERT(argCount < kMaxCallArguments);
     CallArgument& arg = args[argCount++];
     arg = {targetSize, source, sourceOp};
 
@@ -142,11 +142,11 @@ void IrCallWrapperX64::call(const OperandX64& func)
         if (CallArgument* candidate = findNonInterferingArgument())
         {
             // This section is only for handling register targets
-            LUAU_ASSERT(candidate->target.cat == CategoryX64::reg);
+            CODEGEN_ASSERT(candidate->target.cat == CategoryX64::reg);
 
             freeSourceRegisters(*candidate);
 
-            LUAU_ASSERT(getRegisterUses(candidate->target.base) == 0);
+            CODEGEN_ASSERT(getRegisterUses(candidate->target.base) == 0);
             regs.takeReg(candidate->target.base, kInvalidInstIdx);
 
             moveToTarget(*candidate);
@@ -161,7 +161,7 @@ void IrCallWrapperX64::call(const OperandX64& func)
         else
         {
             for (int i = 0; i < argCount; ++i)
-                LUAU_ASSERT(!args[i].candidate);
+                CODEGEN_ASSERT(!args[i].candidate);
             break;
         }
     }
@@ -212,20 +212,26 @@ RegisterX64 IrCallWrapperX64::suggestNextArgumentRegister(SizeX64 size) const
 {
     OperandX64 target = getNextArgumentTarget(size);
 
-    return target.cat == CategoryX64::reg ? regs.takeReg(target.base, kInvalidInstIdx) : regs.allocReg(size, kInvalidInstIdx);
+    if (target.cat != CategoryX64::reg)
+        return regs.allocReg(size, kInvalidInstIdx);
+
+    if (!regs.canTakeReg(target.base))
+        return regs.allocReg(size, kInvalidInstIdx);
+
+    return regs.takeReg(target.base, kInvalidInstIdx);
 }
 
 OperandX64 IrCallWrapperX64::getNextArgumentTarget(SizeX64 size) const
 {
     if (size == SizeX64::xmmword)
     {
-        LUAU_ASSERT(size_t(xmmPos) < kXmmOrder.size());
+        CODEGEN_ASSERT(size_t(xmmPos) < kXmmOrder.size());
         return kXmmOrder[xmmPos];
     }
 
     const std::array<OperandX64, 6>& gprOrder = build.abi == ABIX64::Windows ? kWindowsGprOrder : kSystemvGprOrder;
 
-    LUAU_ASSERT(size_t(gprPos) < gprOrder.size());
+    CODEGEN_ASSERT(size_t(gprPos) < gprOrder.size());
     OperandX64 target = gprOrder[gprPos];
 
     // Keep requested argument size
@@ -410,7 +416,7 @@ void IrCallWrapperX64::removeRegisterUse(RegisterX64 reg)
 {
     if (reg.size == SizeX64::xmmword)
     {
-        LUAU_ASSERT(xmmUses[reg.index] != 0);
+        CODEGEN_ASSERT(xmmUses[reg.index] != 0);
         xmmUses[reg.index]--;
 
         if (xmmUses[reg.index] == 0) // we don't use persistent xmm regs so no need to call shouldFreeRegister
@@ -418,7 +424,7 @@ void IrCallWrapperX64::removeRegisterUse(RegisterX64 reg)
     }
     else if (reg.size != SizeX64::none)
     {
-        LUAU_ASSERT(gprUses[reg.index] != 0);
+        CODEGEN_ASSERT(gprUses[reg.index] != 0);
         gprUses[reg.index]--;
 
         if (gprUses[reg.index] == 0 && regs.shouldFreeGpr(reg))

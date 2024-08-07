@@ -3,8 +3,8 @@
 
 #include "Luau/Lexer.h"
 #include "Luau/StringUtils.h"
-
-LUAU_FASTFLAGVARIABLE(LuauEnableNonstrictByDefaultForLuauConfig, false)
+#include <algorithm>
+#include <unordered_map>
 
 namespace Luau
 {
@@ -12,7 +12,6 @@ namespace Luau
 using Error = std::optional<std::string>;
 
 Config::Config()
-    : mode(FFlag::LuauEnableNonstrictByDefaultForLuauConfig ? Mode::Nonstrict : Mode::NoCheck)
 {
     enabledLint.setDefaults();
 }
@@ -46,7 +45,12 @@ Error parseModeString(Mode& mode, const std::string& modeString, bool compat)
 }
 
 static Error parseLintRuleStringForCode(
-    LintOptions& enabledLints, LintOptions& fatalLints, LintWarning::Code code, const std::string& value, bool compat)
+    LintOptions& enabledLints,
+    LintOptions& fatalLints,
+    LintWarning::Code code,
+    const std::string& value,
+    bool compat
+)
 {
     if (value == "true")
     {
@@ -110,20 +114,55 @@ Error parseLintRuleString(LintOptions& enabledLints, LintOptions& fatalLints, co
     return std::nullopt;
 }
 
+bool isValidAlias(const std::string& alias)
+{
+    if (alias.empty())
+        return false;
+
+    bool aliasIsNotAPath = alias != "." && alias != ".." && alias.find_first_of("\\/") == std::string::npos;
+
+    if (!aliasIsNotAPath)
+        return false;
+
+    for (char ch : alias)
+    {
+        bool isupper = 'A' <= ch && ch <= 'Z';
+        bool islower = 'a' <= ch && ch <= 'z';
+        bool isdigit = '0' <= ch && ch <= '9';
+        if (!isupper && !islower && !isdigit && ch != '-' && ch != '_' && ch != '.')
+            return false;
+    }
+
+    return true;
+}
+
+Error parseAlias(std::unordered_map<std::string, std::string>& aliases, std::string aliasKey, const std::string& aliasValue)
+{
+    if (!isValidAlias(aliasKey))
+        return Error{"Invalid alias " + aliasKey};
+
+    std::transform(
+        aliasKey.begin(),
+        aliasKey.end(),
+        aliasKey.begin(),
+        [](unsigned char c)
+        {
+            return ('A' <= c && c <= 'Z') ? (c + ('a' - 'A')) : c;
+        }
+    );
+    if (!aliases.count(aliasKey))
+        aliases[std::move(aliasKey)] = aliasValue;
+
+    return std::nullopt;
+}
+
 static void next(Lexer& lexer)
 {
     lexer.next();
 
     // skip C-style comments as Lexer only understands Lua-style comments atm
-    while (lexer.current().type == '/')
-    {
-        Lexeme peek = lexer.lookahead();
-
-        if (peek.type != '/' || peek.location.begin != lexer.current().location.end)
-            break;
-
+    while (lexer.current().type == Luau::Lexeme::FloorDiv)
         lexer.nextline();
-    }
 }
 
 static Error fail(Lexer& lexer, const char* message)
@@ -167,7 +206,7 @@ static Error parseJson(const std::string& contents, Action action)
             }
             else if (lexer.current().type == Lexeme::QuotedString)
             {
-                std::string value(lexer.current().data, lexer.current().length);
+                std::string value(lexer.current().data, lexer.current().getLength());
                 next(lexer);
 
                 if (Error err = action(keys, value))
@@ -204,7 +243,7 @@ static Error parseJson(const std::string& contents, Action action)
             }
             else if (lexer.current().type == Lexeme::QuotedString)
             {
-                std::string key(lexer.current().data, lexer.current().length);
+                std::string key(lexer.current().data, lexer.current().getLength());
                 next(lexer);
 
                 keys.push_back(key);
@@ -218,11 +257,10 @@ static Error parseJson(const std::string& contents, Action action)
                     arrayTop = (lexer.current().type == '[');
                     next(lexer);
                 }
-                else if (lexer.current().type == Lexeme::QuotedString || lexer.current().type == Lexeme::ReservedTrue ||
-                         lexer.current().type == Lexeme::ReservedFalse)
+                else if (lexer.current().type == Lexeme::QuotedString || lexer.current().type == Lexeme::ReservedTrue || lexer.current().type == Lexeme::ReservedFalse)
                 {
                     std::string value = lexer.current().type == Lexeme::QuotedString
-                                            ? std::string(lexer.current().data, lexer.current().length)
+                                            ? std::string(lexer.current().data, lexer.current().getLength())
                                             : (lexer.current().type == Lexeme::ReservedTrue ? "true" : "false");
                     next(lexer);
 
@@ -249,28 +287,39 @@ static Error parseJson(const std::string& contents, Action action)
 
 Error parseConfig(const std::string& contents, Config& config, bool compat)
 {
-    return parseJson(contents, [&](const std::vector<std::string>& keys, const std::string& value) -> Error {
-        if (keys.size() == 1 && keys[0] == "languageMode")
-            return parseModeString(config.mode, value, compat);
-        else if (keys.size() == 2 && keys[0] == "lint")
-            return parseLintRuleString(config.enabledLint, config.fatalLint, keys[1], value, compat);
-        else if (keys.size() == 1 && keys[0] == "lintErrors")
-            return parseBoolean(config.lintErrors, value);
-        else if (keys.size() == 1 && keys[0] == "typeErrors")
-            return parseBoolean(config.typeErrors, value);
-        else if (keys.size() == 1 && keys[0] == "globals")
+    return parseJson(
+        contents,
+        [&](const std::vector<std::string>& keys, const std::string& value) -> Error
         {
-            config.globals.push_back(value);
-            return std::nullopt;
+            if (keys.size() == 1 && keys[0] == "languageMode")
+                return parseModeString(config.mode, value, compat);
+            else if (keys.size() == 2 && keys[0] == "lint")
+                return parseLintRuleString(config.enabledLint, config.fatalLint, keys[1], value, compat);
+            else if (keys.size() == 1 && keys[0] == "lintErrors")
+                return parseBoolean(config.lintErrors, value);
+            else if (keys.size() == 1 && keys[0] == "typeErrors")
+                return parseBoolean(config.typeErrors, value);
+            else if (keys.size() == 1 && keys[0] == "globals")
+            {
+                config.globals.push_back(value);
+                return std::nullopt;
+            }
+            else if (keys.size() == 1 && keys[0] == "paths")
+            {
+                config.paths.push_back(value);
+                return std::nullopt;
+            }
+            else if (keys.size() == 2 && keys[0] == "aliases")
+                return parseAlias(config.aliases, keys[1], value);
+            else if (compat && keys.size() == 2 && keys[0] == "language" && keys[1] == "mode")
+                return parseModeString(config.mode, value, compat);
+            else
+            {
+                std::vector<std::string_view> keysv(keys.begin(), keys.end());
+                return "Unknown key " + join(keysv, "/");
+            }
         }
-        else if (compat && keys.size() == 2 && keys[0] == "language" && keys[1] == "mode")
-            return parseModeString(config.mode, value, compat);
-        else
-        {
-            std::vector<std::string_view> keysv(keys.begin(), keys.end());
-            return "Unknown key " + join(keysv, "/");
-        }
-    });
+    );
 }
 
 const Config& NullConfigResolver::getConfig(const ModuleName& name) const

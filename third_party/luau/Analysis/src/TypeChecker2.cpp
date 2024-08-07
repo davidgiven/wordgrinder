@@ -3,26 +3,34 @@
 
 #include "Luau/Ast.h"
 #include "Luau/AstQuery.h"
-#include "Luau/Clone.h"
 #include "Luau/Common.h"
 #include "Luau/DcrLogger.h"
+#include "Luau/DenseHash.h"
 #include "Luau/Error.h"
+#include "Luau/InsertionOrderedMap.h"
 #include "Luau/Instantiation.h"
 #include "Luau/Metamethods.h"
 #include "Luau/Normalize.h"
+#include "Luau/OverloadResolution.h"
+#include "Luau/Subtyping.h"
+#include "Luau/TimeTrace.h"
 #include "Luau/ToString.h"
 #include "Luau/TxnLog.h"
 #include "Luau/Type.h"
-#include "Luau/TypeReduction.h"
+#include "Luau/TypeFunction.h"
+#include "Luau/TypeFunctionReductionGuesser.h"
+#include "Luau/TypeFwd.h"
+#include "Luau/TypePack.h"
+#include "Luau/TypePath.h"
 #include "Luau/TypeUtils.h"
-#include "Luau/Unifier.h"
+#include "Luau/TypeOrPack.h"
+#include "Luau/VisitType.h"
 
 #include <algorithm>
+#include <iostream>
+#include <ostream>
 
 LUAU_FASTFLAG(DebugLuauMagicTypes)
-LUAU_FASTFLAG(DebugLuauDontReduceTypes)
-
-LUAU_FASTFLAG(LuauNegatedClassTypes)
 
 namespace Luau
 {
@@ -31,6 +39,7 @@ namespace Luau
 // TODO move these
 using PrintLineProc = void (*)(const std::string&);
 extern PrintLineProc luauPrintLine;
+
 
 /* Push a scope onto the end of a stack for the lifetime of the StackPusher instance.
  * TypeChecker2 uses this to maintain knowledge about which scope encloses every
@@ -84,27 +93,327 @@ static std::optional<std::string> getIdentifierOfBaseVar(AstExpr* node)
     return std::nullopt;
 }
 
+template<typename T>
+bool areEquivalent(const T& a, const T& b)
+{
+    if (a.function != b.function)
+        return false;
+
+    if (a.typeArguments.size() != b.typeArguments.size() || a.packArguments.size() != b.packArguments.size())
+        return false;
+
+    for (size_t i = 0; i < a.typeArguments.size(); ++i)
+    {
+        if (follow(a.typeArguments[i]) != follow(b.typeArguments[i]))
+            return false;
+    }
+
+    for (size_t i = 0; i < a.packArguments.size(); ++i)
+    {
+        if (follow(a.packArguments[i]) != follow(b.packArguments[i]))
+            return false;
+    }
+
+    return true;
+}
+
+struct TypeFunctionFinder : TypeOnceVisitor
+{
+    DenseHashSet<TypeId> mentionedFunctions{nullptr};
+    DenseHashSet<TypePackId> mentionedFunctionPacks{nullptr};
+
+    bool visit(TypeId ty, const TypeFunctionInstanceType&) override
+    {
+        mentionedFunctions.insert(ty);
+        return true;
+    }
+
+    bool visit(TypePackId tp, const TypeFunctionInstanceTypePack&) override
+    {
+        mentionedFunctionPacks.insert(tp);
+        return true;
+    }
+};
+
+struct InternalTypeFunctionFinder : TypeOnceVisitor
+{
+    DenseHashSet<TypeId> internalFunctions{nullptr};
+    DenseHashSet<TypePackId> internalPackFunctions{nullptr};
+    DenseHashSet<TypeId> mentionedFunctions{nullptr};
+    DenseHashSet<TypePackId> mentionedFunctionPacks{nullptr};
+
+    InternalTypeFunctionFinder(std::vector<TypeId>& declStack)
+    {
+        TypeFunctionFinder f;
+        for (TypeId fn : declStack)
+            f.traverse(fn);
+
+        mentionedFunctions = std::move(f.mentionedFunctions);
+        mentionedFunctionPacks = std::move(f.mentionedFunctionPacks);
+    }
+
+    bool visit(TypeId ty, const TypeFunctionInstanceType& tfit) override
+    {
+        bool hasGeneric = false;
+
+        for (TypeId p : tfit.typeArguments)
+        {
+            if (get<GenericType>(follow(p)))
+            {
+                hasGeneric = true;
+                break;
+            }
+        }
+
+        for (TypePackId p : tfit.packArguments)
+        {
+            if (get<GenericTypePack>(follow(p)))
+            {
+                hasGeneric = true;
+                break;
+            }
+        }
+
+        if (hasGeneric)
+        {
+            for (TypeId mentioned : mentionedFunctions)
+            {
+                const TypeFunctionInstanceType* mentionedTfit = get<TypeFunctionInstanceType>(mentioned);
+                LUAU_ASSERT(mentionedTfit);
+                if (areEquivalent(tfit, *mentionedTfit))
+                {
+                    return true;
+                }
+            }
+
+            internalFunctions.insert(ty);
+        }
+
+        return true;
+    }
+
+    bool visit(TypePackId tp, const TypeFunctionInstanceTypePack& tfitp) override
+    {
+        bool hasGeneric = false;
+
+        for (TypeId p : tfitp.typeArguments)
+        {
+            if (get<GenericType>(follow(p)))
+            {
+                hasGeneric = true;
+                break;
+            }
+        }
+
+        for (TypePackId p : tfitp.packArguments)
+        {
+            if (get<GenericTypePack>(follow(p)))
+            {
+                hasGeneric = true;
+                break;
+            }
+        }
+
+        if (hasGeneric)
+        {
+            for (TypePackId mentioned : mentionedFunctionPacks)
+            {
+                const TypeFunctionInstanceTypePack* mentionedTfitp = get<TypeFunctionInstanceTypePack>(mentioned);
+                LUAU_ASSERT(mentionedTfitp);
+                if (areEquivalent(tfitp, *mentionedTfitp))
+                {
+                    return true;
+                }
+            }
+
+            internalPackFunctions.insert(tp);
+        }
+
+        return true;
+    }
+};
+
 struct TypeChecker2
 {
     NotNull<BuiltinTypes> builtinTypes;
     DcrLogger* logger;
-    NotNull<InternalErrorReporter> ice;
+    const NotNull<TypeCheckLimits> limits;
+    const NotNull<InternalErrorReporter> ice;
     const SourceModule* sourceModule;
     Module* module;
-    TypeArena testArena;
 
+    TypeContext typeContext = TypeContext::Default;
     std::vector<NotNull<Scope>> stack;
+    std::vector<TypeId> functionDeclStack;
+
+    DenseHashSet<TypeId> seenTypeFunctionInstances{nullptr};
 
     Normalizer normalizer;
+    Subtyping _subtyping;
+    NotNull<Subtyping> subtyping;
 
-    TypeChecker2(NotNull<BuiltinTypes> builtinTypes, NotNull<UnifierSharedState> unifierState, DcrLogger* logger, const SourceModule* sourceModule, Module* module)
+    TypeChecker2(NotNull<BuiltinTypes> builtinTypes, NotNull<UnifierSharedState> unifierState, NotNull<TypeCheckLimits> limits, DcrLogger* logger,
+        const SourceModule* sourceModule, Module* module)
         : builtinTypes(builtinTypes)
         , logger(logger)
+        , limits(limits)
         , ice(unifierState->iceHandler)
         , sourceModule(sourceModule)
         , module(module)
-        , normalizer{&testArena, builtinTypes, unifierState}
+        , normalizer{&module->internalTypes, builtinTypes, unifierState, /* cacheInhabitance */ true}
+        , _subtyping{builtinTypes, NotNull{&module->internalTypes}, NotNull{&normalizer}, NotNull{unifierState->iceHandler},
+              NotNull{module->getModuleScope().get()}}
+        , subtyping(&_subtyping)
     {
+    }
+
+    static bool allowsNoReturnValues(const TypePackId tp)
+    {
+        for (TypeId ty : tp)
+        {
+            if (!get<ErrorType>(follow(ty)))
+                return false;
+        }
+
+        return true;
+    }
+
+    static Location getEndLocation(const AstExprFunction* function)
+    {
+        Location loc = function->location;
+        if (loc.begin.line != loc.end.line)
+        {
+            Position begin = loc.end;
+            begin.column = std::max(0u, begin.column - 3);
+            loc = Location(begin, 3);
+        }
+
+        return loc;
+    }
+
+    bool isErrorCall(const AstExprCall* call)
+    {
+        const AstExprGlobal* global = call->func->as<AstExprGlobal>();
+        if (!global)
+            return false;
+
+        if (global->name == "error")
+            return true;
+        else if (global->name == "assert")
+        {
+            // assert() will error because it is missing the first argument
+            if (call->args.size == 0)
+                return true;
+
+            if (AstExprConstantBool* expr = call->args.data[0]->as<AstExprConstantBool>())
+                if (!expr->value)
+                    return true;
+        }
+
+        return false;
+    }
+
+    bool hasBreak(AstStat* node)
+    {
+        if (AstStatBlock* stat = node->as<AstStatBlock>())
+        {
+            for (size_t i = 0; i < stat->body.size; ++i)
+            {
+                if (hasBreak(stat->body.data[i]))
+                    return true;
+            }
+
+            return false;
+        }
+
+        if (node->is<AstStatBreak>())
+            return true;
+
+        if (AstStatIf* stat = node->as<AstStatIf>())
+        {
+            if (hasBreak(stat->thenbody))
+                return true;
+
+            if (stat->elsebody && hasBreak(stat->elsebody))
+                return true;
+
+            return false;
+        }
+
+        return false;
+    }
+
+    // returns the last statement before the block implicitly exits, or nullptr if the block does not implicitly exit
+    // i.e. returns nullptr if the block returns properly or never returns
+    const AstStat* getFallthrough(const AstStat* node)
+    {
+        if (const AstStatBlock* stat = node->as<AstStatBlock>())
+        {
+            if (stat->body.size == 0)
+                return stat;
+
+            for (size_t i = 0; i < stat->body.size - 1; ++i)
+            {
+                if (getFallthrough(stat->body.data[i]) == nullptr)
+                    return nullptr;
+            }
+
+            return getFallthrough(stat->body.data[stat->body.size - 1]);
+        }
+
+        if (const AstStatIf* stat = node->as<AstStatIf>())
+        {
+            if (const AstStat* thenf = getFallthrough(stat->thenbody))
+                return thenf;
+
+            if (stat->elsebody)
+            {
+                if (const AstStat* elsef = getFallthrough(stat->elsebody))
+                    return elsef;
+
+                return nullptr;
+            }
+            else
+                return stat;
+        }
+
+        if (node->is<AstStatReturn>())
+            return nullptr;
+
+        if (const AstStatExpr* stat = node->as<AstStatExpr>())
+        {
+            if (AstExprCall* call = stat->expr->as<AstExprCall>(); call && isErrorCall(call))
+                return nullptr;
+
+            return stat;
+        }
+
+        if (const AstStatWhile* stat = node->as<AstStatWhile>())
+        {
+            if (AstExprConstantBool* expr = stat->condition->as<AstExprConstantBool>())
+            {
+                if (expr->value && !hasBreak(stat->body))
+                    return nullptr;
+            }
+
+            return node;
+        }
+
+        if (const AstStatRepeat* stat = node->as<AstStatRepeat>())
+        {
+            if (AstExprConstantBool* expr = stat->condition->as<AstExprConstantBool>())
+            {
+                if (!expr->value && !hasBreak(stat->body))
+                    return nullptr;
+            }
+
+            if (getFallthrough(stat->body) == nullptr)
+                return nullptr;
+
+            return node;
+        }
+
+        return node;
     }
 
     std::optional<StackPusher> pushStack(AstNode* node)
@@ -113,6 +422,36 @@ struct TypeChecker2
             return StackPusher{stack, *scope};
         else
             return std::nullopt;
+    }
+
+    void checkForInternalTypeFunction(TypeId ty, Location location)
+    {
+        InternalTypeFunctionFinder finder(functionDeclStack);
+        finder.traverse(ty);
+
+        for (TypeId internal : finder.internalFunctions)
+            reportError(WhereClauseNeeded{internal}, location);
+
+        for (TypePackId internal : finder.internalPackFunctions)
+            reportError(PackWhereClauseNeeded{internal}, location);
+    }
+
+    TypeId checkForTypeFunctionInhabitance(TypeId instance, Location location)
+    {
+        if (seenTypeFunctionInstances.find(instance))
+            return instance;
+        seenTypeFunctionInstances.insert(instance);
+
+        ErrorVec errors = reduceTypeFunctions(
+                              instance,
+                              location,
+                              TypeFunctionContext{NotNull{&module->internalTypes}, builtinTypes, stack.back(), NotNull{&normalizer}, ice, limits},
+                              true
+        )
+                              .errors;
+        if (!isErrorSuppressing(location, instance))
+            reportErrors(std::move(errors));
+        return instance;
     }
 
     TypePackId lookupPack(AstExpr* expr)
@@ -134,11 +473,11 @@ struct TypeChecker2
         // allows us not to think about this very much in the actual typechecking logic.
         TypeId* ty = module->astTypes.find(expr);
         if (ty)
-            return follow(*ty);
+            return checkForTypeFunctionInhabitance(follow(*ty), expr->location);
 
         TypePackId* tp = module->astTypePacks.find(expr);
         if (tp)
-            return flattenPack(*tp);
+            return checkForTypeFunctionInhabitance(flattenPack(*tp), expr->location);
 
         return builtinTypes->anyType;
     }
@@ -153,7 +492,8 @@ struct TypeChecker2
                 {
                     TypeId argTy = lookupAnnotation(ref->parameters.data[0].type);
                     luauPrintLine(format(
-                        "_luau_print (%d, %d): %s\n", annotation->location.begin.line, annotation->location.begin.column, toString(argTy).c_str()));
+                        "_luau_print (%d, %d): %s\n", annotation->location.begin.line, annotation->location.begin.column, toString(argTy).c_str()
+                    ));
                     return follow(argTy);
                 }
             }
@@ -161,14 +501,15 @@ struct TypeChecker2
 
         TypeId* ty = module->astResolvedTypes.find(annotation);
         LUAU_ASSERT(ty);
-        return follow(*ty);
+        return checkForTypeFunctionInhabitance(follow(*ty), annotation->location);
     }
 
-    TypePackId lookupPackAnnotation(AstTypePack* annotation)
+    std::optional<TypePackId> lookupPackAnnotation(AstTypePack* annotation)
     {
         TypePackId* tp = module->astResolvedTypePacks.find(annotation);
-        LUAU_ASSERT(tp);
-        return follow(*tp);
+        if (tp != nullptr)
+            return {follow(*tp)};
+        return {};
     }
 
     TypeId lookupExpectedType(AstExpr* expr)
@@ -206,20 +547,21 @@ struct TypeChecker2
     Scope* findInnermostScope(Location location)
     {
         Scope* bestScope = module->getModuleScope().get();
-        Location bestLocation = module->scopes[0].first;
 
-        for (size_t i = 0; i < module->scopes.size(); ++i)
+        bool didNarrow;
+        do
         {
-            auto& [scopeBounds, scope] = module->scopes[i];
-            if (scopeBounds.encloses(location))
+            didNarrow = false;
+            for (auto scope : bestScope->children)
             {
-                if (scopeBounds.begin > bestLocation.begin || scopeBounds.end < bestLocation.end)
+                if (scope->location.encloses(location))
                 {
                     bestScope = scope.get();
-                    bestLocation = scopeBounds;
+                    didNarrow = true;
+                    break;
                 }
             }
-        }
+        } while (didNarrow && bestScope->children.size() > 0);
 
         return bestScope;
     }
@@ -260,6 +602,8 @@ struct TypeChecker2
             return visit(s);
         else if (auto s = stat->as<AstStatTypeAlias>())
             return visit(s);
+        else if (auto f = stat->as<AstStatTypeFunction>())
+            return visit(f);
         else if (auto s = stat->as<AstStatDeclareFunction>())
             return visit(s);
         else if (auto s = stat->as<AstStatDeclareGlobal>())
@@ -282,7 +626,11 @@ struct TypeChecker2
 
     void visit(AstStatIf* ifStatement)
     {
-        visit(ifStatement->condition, ValueContext::RValue);
+        {
+            InConditionalContext flipper{&typeContext};
+            visit(ifStatement->condition, ValueContext::RValue);
+        }
+
         visit(ifStatement->thenbody);
         if (ifStatement->elsebody)
             visit(ifStatement->elsebody);
@@ -309,19 +657,10 @@ struct TypeChecker2
         Scope* scope = findInnermostScope(ret->location);
         TypePackId expectedRetType = scope->returnType;
 
-        TypeArena* arena = &testArena;
+        TypeArena* arena = &module->internalTypes;
         TypePackId actualRetType = reconstructPack(ret->list, *arena);
 
-        Unifier u{NotNull{&normalizer}, Mode::Strict, stack.back(), ret->location, Covariant};
-
-        u.tryUnify(actualRetType, expectedRetType);
-        const bool ok = u.errors.empty() && u.log.empty();
-
-        if (!ok)
-        {
-            for (const TypeError& e : u.errors)
-                reportError(e);
-        }
+        testIsSubtype(actualRetType, expectedRetType, ret->location);
 
         for (AstExpr* expr : ret->list)
             visit(expr, ValueContext::RValue);
@@ -352,11 +691,7 @@ struct TypeChecker2
                     TypeId annotationType = lookupAnnotation(var->annotation);
                     TypeId valueType = value ? lookupType(value) : nullptr;
                     if (valueType)
-                    {
-                        ErrorVec errors = tryUnify(stack.back(), value->location, valueType, annotationType);
-                        if (!errors.empty())
-                            reportErrors(std::move(errors));
-                    }
+                        testIsSubtype(valueType, annotationType, value->location);
 
                     visit(var->annotation);
                 }
@@ -381,9 +716,7 @@ struct TypeChecker2
                     if (var->annotation)
                     {
                         TypeId varType = lookupAnnotation(var->annotation);
-                        ErrorVec errors = tryUnify(stack.back(), value->location, valueTypes.head[j - i], varType);
-                        if (!errors.empty())
-                            reportErrors(std::move(errors));
+                        testIsSubtype(valueTypes.head[j - i], varType, value->location);
 
                         visit(var->annotation);
                     }
@@ -402,7 +735,8 @@ struct TypeChecker2
                             local->values.data[local->values.size - 1]->is<AstExprCall>() ? CountMismatch::FunctionResult
                                                                                           : CountMismatch::ExprListResult,
                         },
-                        errorLocation);
+                        errorLocation
+                    );
                 }
             }
         }
@@ -410,20 +744,21 @@ struct TypeChecker2
 
     void visit(AstStatFor* forStatement)
     {
-        NotNull<Scope> scope = stack.back();
-
         if (forStatement->var->annotation)
         {
             visit(forStatement->var->annotation);
-            reportErrors(tryUnify(scope, forStatement->var->location, builtinTypes->numberType, lookupAnnotation(forStatement->var->annotation)));
+
+            TypeId annotatedType = lookupAnnotation(forStatement->var->annotation);
+            testIsSubtype(builtinTypes->numberType, annotatedType, forStatement->var->location);
         }
 
-        auto checkNumber = [this, scope](AstExpr* expr) {
+        auto checkNumber = [this](AstExpr* expr)
+        {
             if (!expr)
                 return;
 
             visit(expr, ValueContext::RValue);
-            reportErrors(tryUnify(scope, expr->location, lookupType(expr), builtinTypes->numberType));
+            testIsSubtype(lookupType(expr), builtinTypes->numberType, expr->location);
         };
 
         checkNumber(forStatement->from);
@@ -451,7 +786,7 @@ struct TypeChecker2
             return;
 
         NotNull<Scope> scope = stack.back();
-        TypeArena& arena = testArena;
+        TypeArena& arena = module->internalTypes;
 
         std::vector<TypeId> variableTypes;
         for (AstLocal* var : forInStatement->vars)
@@ -461,12 +796,47 @@ struct TypeChecker2
             variableTypes.emplace_back(*ty);
         }
 
-        // ugh.  There's nothing in the AST to hang a whole type pack on for the
-        // set of iteratees, so we have to piece it back together by hand.
+        AstExpr* firstValue = forInStatement->values.data[0];
+
+        // we need to build up a typepack for the iterators/values portion of the for-in statement.
         std::vector<TypeId> valueTypes;
-        for (size_t i = 0; i < forInStatement->values.size - 1; ++i)
+        std::optional<TypePackId> iteratorTail;
+
+        // since the first value may be the only iterator (e.g. if it is a call), we want to
+        // look to see if it has a resulting typepack as our iterators.
+        TypePackId* retPack = module->astTypePacks.find(firstValue);
+        if (retPack)
+        {
+            auto [head, tail] = flatten(*retPack);
+            valueTypes = head;
+            iteratorTail = tail;
+        }
+        else
+        {
+            valueTypes.emplace_back(lookupType(firstValue));
+        }
+
+        // if the initial and expected types from the iterator unified during constraint solving,
+        // we'll have a resolved type to use here, but we'll only use it if either the iterator is
+        // directly present in the for-in statement or if we have an iterator state constraining us
+        TypeId* resolvedTy = module->astForInNextTypes.find(firstValue);
+        if (resolvedTy && (!retPack || valueTypes.size() > 1))
+            valueTypes[0] = *resolvedTy;
+
+        for (size_t i = 1; i < forInStatement->values.size - 1; ++i)
+        {
             valueTypes.emplace_back(lookupType(forInStatement->values.data[i]));
-        TypePackId iteratorTail = lookupPack(forInStatement->values.data[forInStatement->values.size - 1]);
+        }
+
+        // if we had more than one value, the tail from the first value is no longer appropriate to use.
+        if (forInStatement->values.size > 1)
+        {
+            auto [head, tail] = flatten(lookupPack(forInStatement->values.data[forInStatement->values.size - 1]));
+            valueTypes.insert(valueTypes.end(), head.begin(), head.end());
+            iteratorTail = tail;
+        }
+
+        // and now we can put everything together to get the actual typepack of the iterators.
         TypePackId iteratorPack = arena.addTypePack(valueTypes, iteratorTail);
 
         // ... and then expand it out to 3 values (if possible)
@@ -478,8 +848,8 @@ struct TypeChecker2
         }
         TypeId iteratorTy = follow(iteratorTypes.head[0]);
 
-        auto checkFunction = [this, &arena, &scope, &forInStatement, &variableTypes](
-                                 const FunctionType* iterFtv, std::vector<TypeId> iterTys, bool isMm) {
+        auto checkFunction = [this, &arena, &forInStatement, &variableTypes](const FunctionType* iterFtv, std::vector<TypeId> iterTys, bool isMm)
+        {
             if (iterTys.size() < 1 || iterTys.size() > 3)
             {
                 if (isMm)
@@ -496,13 +866,14 @@ struct TypeChecker2
             {
                 if (isMm)
                     reportError(
-                        GenericError{"__iter metamethod's next() function does not return enough values"}, getLocation(forInStatement->values));
+                        GenericError{"__iter metamethod's next() function does not return enough values"}, getLocation(forInStatement->values)
+                    );
                 else
                     reportError(GenericError{"next() does not return enough values"}, forInStatement->values.data[0]->location);
             }
 
             for (size_t i = 0; i < std::min(expectedVariableTypes.head.size(), variableTypes.size()); ++i)
-                reportErrors(tryUnify(scope, forInStatement->vars.data[i]->location, variableTypes[i], expectedVariableTypes.head[i]));
+                testIsSubtype(variableTypes[i], expectedVariableTypes.head[i], forInStatement->vars.data[i]->location);
 
             // nextFn is going to be invoked with (arrayTy, startIndexTy)
 
@@ -513,37 +884,53 @@ struct TypeChecker2
             // This depends on the types in iterateePack and therefore
             // iteratorTypes.
 
+            // If the iteratee is an error type, then we can't really say anything else about iteration over it.
+            // After all, it _could've_ been a table.
+            if (get<ErrorType>(follow(flattenPack(iterFtv->argTypes))))
+                return;
+
             // If iteratorTypes is too short to be a valid call to nextFn, we have to report a count mismatch error.
             // If 2 is too short to be a valid call to nextFn, we have to report a count mismatch error.
             // If 2 is too long to be a valid call to nextFn, we have to report a count mismatch error.
             auto [minCount, maxCount] = getParameterExtents(TxnLog::empty(), iterFtv->argTypes, /*includeHiddenVariadics*/ true);
 
-            if (minCount > 2)
-                reportError(CountMismatch{2, std::nullopt, minCount, CountMismatch::Arg}, forInStatement->vars.data[0]->location);
-            if (maxCount && *maxCount < 2)
-                reportError(CountMismatch{2, std::nullopt, *maxCount, CountMismatch::Arg}, forInStatement->vars.data[0]->location);
-
             TypePack flattenedArgTypes = extendTypePack(arena, builtinTypes, iterFtv->argTypes, 2);
             size_t firstIterationArgCount = iterTys.empty() ? 0 : iterTys.size() - 1;
             size_t actualArgCount = expectedVariableTypes.head.size();
-
             if (firstIterationArgCount < minCount)
-                reportError(CountMismatch{2, std::nullopt, firstIterationArgCount, CountMismatch::Arg}, forInStatement->vars.data[0]->location);
+            {
+                if (isMm)
+                    reportError(GenericError{"__iter metamethod must return (next[, table[, state]])"}, getLocation(forInStatement->values));
+                else
+                    reportError(CountMismatch{2, std::nullopt, firstIterationArgCount, CountMismatch::Arg}, forInStatement->values.data[0]->location);
+            }
+
             else if (actualArgCount < minCount)
-                reportError(CountMismatch{2, std::nullopt, actualArgCount, CountMismatch::Arg}, forInStatement->vars.data[0]->location);
+            {
+                if (isMm)
+                    reportError(GenericError{"__iter metamethod must return (next[, table[, state]])"}, getLocation(forInStatement->values));
+                else
+                    reportError(CountMismatch{2, std::nullopt, firstIterationArgCount, CountMismatch::Arg}, forInStatement->values.data[0]->location);
+            }
+
 
             if (iterTys.size() >= 2 && flattenedArgTypes.head.size() > 0)
             {
                 size_t valueIndex = forInStatement->values.size > 1 ? 1 : 0;
-                reportErrors(tryUnify(scope, forInStatement->values.data[valueIndex]->location, iterTys[1], flattenedArgTypes.head[0]));
+                testIsSubtype(iterTys[1], flattenedArgTypes.head[0], forInStatement->values.data[valueIndex]->location);
             }
 
             if (iterTys.size() == 3 && flattenedArgTypes.head.size() > 1)
             {
                 size_t valueIndex = forInStatement->values.size > 2 ? 2 : 0;
-                reportErrors(tryUnify(scope, forInStatement->values.data[valueIndex]->location, iterTys[2], flattenedArgTypes.head[1]));
+                testIsSubtype(iterTys[2], flattenedArgTypes.head[1], forInStatement->values.data[valueIndex]->location);
             }
         };
+
+        std::shared_ptr<const NormalizedType> iteratorNorm = normalizer.normalize(iteratorTy);
+
+        if (!iteratorNorm)
+            reportError(NormalizationTooComplex{}, firstValue->location);
 
         /*
          * If the first iterator argument is a function
@@ -568,9 +955,9 @@ struct TypeChecker2
         {
             if ((forInStatement->vars.size == 1 || forInStatement->vars.size == 2) && ttv->indexer)
             {
-                reportErrors(tryUnify(scope, forInStatement->vars.data[0]->location, variableTypes[0], ttv->indexer->indexType));
+                testIsSubtype(variableTypes[0], ttv->indexer->indexType, forInStatement->vars.data[0]->location);
                 if (variableTypes.size() == 2)
-                    reportErrors(tryUnify(scope, forInStatement->vars.data[1]->location, variableTypes[1], ttv->indexer->indexResultType));
+                    testIsSubtype(variableTypes[1], ttv->indexer->indexResultType, forInStatement->vars.data[1]->location);
             }
             else
                 reportError(GenericError{"Cannot iterate over a table without indexer"}, forInStatement->values.data[0]->location);
@@ -579,21 +966,21 @@ struct TypeChecker2
         {
             // nothing
         }
-        else if (isOptional(iteratorTy))
+        else if (isOptional(iteratorTy) && !(iteratorNorm && iteratorNorm->shouldSuppressErrors()))
         {
             reportError(OptionalValueAccess{iteratorTy}, forInStatement->values.data[0]->location);
         }
         else if (std::optional<TypeId> iterMmTy =
                      findMetatableEntry(builtinTypes, module->errors, iteratorTy, "__iter", forInStatement->values.data[0]->location))
         {
-            Instantiation instantiation{TxnLog::empty(), &arena, TypeLevel{}, scope};
+            Instantiation instantiation{TxnLog::empty(), &arena, builtinTypes, TypeLevel{}, scope};
 
-            if (std::optional<TypeId> instantiatedIterMmTy = instantiation.substitute(*iterMmTy))
+            if (std::optional<TypeId> instantiatedIterMmTy = instantiate(builtinTypes, NotNull{&arena}, limits, scope, *iterMmTy))
             {
                 if (const FunctionType* iterMmFtv = get<FunctionType>(*instantiatedIterMmTy))
                 {
                     TypePackId argPack = arena.addTypePack({iteratorTy});
-                    reportErrors(tryUnify(scope, forInStatement->values.data[0]->location, argPack, iterMmFtv->argTypes));
+                    testIsSubtype(argPack, iterMmFtv->argTypes, forInStatement->values.data[0]->location);
 
                     TypePack mmIteratorTypes = extendTypePack(arena, builtinTypes, iterMmFtv->retTypes, 3);
 
@@ -614,7 +1001,7 @@ struct TypeChecker2
                         {
                             checkFunction(nextFtv, instantiatedIteratorTypes, true);
                         }
-                        else
+                        else if (!isErrorSuppressing(forInStatement->values.data[0]->location, *instantiatedNextFn))
                         {
                             reportError(CannotCallNonFunction{*instantiatedNextFn}, forInStatement->values.data[0]->location);
                         }
@@ -624,7 +1011,7 @@ struct TypeChecker2
                         reportError(UnificationTooComplex{}, forInStatement->values.data[0]->location);
                     }
                 }
-                else
+                else if (!isErrorSuppressing(forInStatement->values.data[0]->location, *iterMmTy))
                 {
                     // TODO: This will not tell the user that this is because the
                     // metamethod isn't callable. This is not ideal, and we should
@@ -640,9 +1027,60 @@ struct TypeChecker2
                 reportError(UnificationTooComplex{}, forInStatement->values.data[0]->location);
             }
         }
-        else
+        else if (iteratorNorm && iteratorNorm->hasTables())
+        {
+            // Ok. All tables can be iterated.
+        }
+        else if (!iteratorNorm || !iteratorNorm->shouldSuppressErrors())
         {
             reportError(CannotCallNonFunction{iteratorTy}, forInStatement->values.data[0]->location);
+        }
+    }
+
+    std::optional<TypeId> getBindingType(AstExpr* expr)
+    {
+        if (auto localExpr = expr->as<AstExprLocal>())
+        {
+            Scope* s = stack.back();
+            return s->lookup(localExpr->local);
+        }
+        else if (auto globalExpr = expr->as<AstExprGlobal>())
+        {
+            Scope* s = stack.back();
+            return s->lookup(globalExpr->name);
+        }
+        else
+            return std::nullopt;
+    }
+
+    // this should only be called if the type of `lhs` is `never`.
+    void reportErrorsFromAssigningToNever(AstExpr* lhs, TypeId rhsType)
+    {
+
+        if (auto indexName = lhs->as<AstExprIndexName>())
+        {
+            TypeId indexedType = lookupType(indexName->expr);
+
+            // if it's already never, I don't think we have anything to do here.
+            if (get<NeverType>(indexedType))
+                return;
+
+            std::string prop = indexName->index.value;
+
+            std::shared_ptr<const NormalizedType> norm = normalizer.normalize(indexedType);
+            if (!norm)
+            {
+                reportError(NormalizationTooComplex{}, lhs->location);
+                return;
+            }
+
+            // if the type is error suppressing, we don't actually have any work left to do.
+            if (norm->shouldSuppressErrors())
+                return;
+
+            const auto propTypes = lookupProp(norm.get(), prop, ValueContext::LValue, lhs->location, builtinTypes->stringType, module->errors);
+
+            reportError(CannotAssignToNever{rhsType, propTypes.typesOfProp, CannotAssignToNever::Reason::PropertyNarrowed}, lhs->location);
         }
     }
 
@@ -661,11 +1099,19 @@ struct TypeChecker2
             TypeId rhsType = lookupType(rhs);
 
             if (get<NeverType>(lhsType))
-                continue;
-
-            if (!isSubtype(rhsType, lhsType, stack.back()))
             {
-                reportError(TypeMismatch{lhsType, rhsType}, rhs->location);
+                reportErrorsFromAssigningToNever(lhs, rhsType);
+                continue;
+            }
+
+            bool ok = testIsSubtype(rhsType, lhsType, rhs->location);
+
+            // If rhsType </: lhsType, then it's not useful to also report that rhsType </: bindingType
+            if (ok)
+            {
+                std::optional<TypeId> bindingType = getBindingType(lhs);
+                if (bindingType)
+                    testIsSubtype(rhsType, *bindingType, rhs->location);
             }
         }
     }
@@ -673,10 +1119,13 @@ struct TypeChecker2
     void visit(AstStatCompoundAssign* stat)
     {
         AstExprBinary fake{stat->location, stat->op, stat->var, stat->value};
-        TypeId resultTy = visit(&fake, stat);
+        visit(&fake, stat);
+
+        TypeId* resultTy = module->astCompoundAssignResultTypes.find(stat);
+        LUAU_ASSERT(resultTy);
         TypeId varTy = lookupType(stat->var);
 
-        reportErrors(tryUnify(stack.back(), stat->location, resultTy, varTy));
+        testIsSubtype(*resultTy, varTy, stat->location);
     }
 
     void visit(AstStatFunction* stat)
@@ -703,6 +1152,13 @@ struct TypeChecker2
     {
         visitGenerics(stat->generics, stat->genericPacks);
         visit(stat->type);
+    }
+
+    void visit(AstStatTypeFunction* stat)
+    {
+        // TODO: add type checking for user-defined type functions
+
+        reportError(TypeError{stat->location, GenericError{"This syntax is not supported"}});
     }
 
     void visit(AstTypeList types)
@@ -796,34 +1252,48 @@ struct TypeChecker2
 
     void visit(AstExprConstantNil* expr)
     {
-        NotNull<Scope> scope = stack.back();
+#if defined(LUAU_ENABLE_ASSERT)
         TypeId actualType = lookupType(expr);
         TypeId expectedType = builtinTypes->nilType;
-        LUAU_ASSERT(isSubtype(actualType, expectedType, scope));
+
+        SubtypingResult r = subtyping->isSubtype(actualType, expectedType);
+        LUAU_ASSERT(r.isSubtype || isErrorSuppressing(expr->location, actualType));
+#endif
     }
 
     void visit(AstExprConstantBool* expr)
     {
-        NotNull<Scope> scope = stack.back();
-        TypeId actualType = lookupType(expr);
-        TypeId expectedType = builtinTypes->booleanType;
-        LUAU_ASSERT(isSubtype(actualType, expectedType, scope));
+        // booleans use specialized inference logic for singleton types, which can lead to real type errors here.
+
+        const TypeId bestType = expr->value ? builtinTypes->trueType : builtinTypes->falseType;
+        const TypeId inferredType = lookupType(expr);
+
+        const SubtypingResult r = subtyping->isSubtype(bestType, inferredType);
+        if (!r.isSubtype && !isErrorSuppressing(expr->location, inferredType))
+            reportError(TypeMismatch{inferredType, bestType}, expr->location);
     }
 
     void visit(AstExprConstantNumber* expr)
     {
-        NotNull<Scope> scope = stack.back();
-        TypeId actualType = lookupType(expr);
-        TypeId expectedType = builtinTypes->numberType;
-        LUAU_ASSERT(isSubtype(actualType, expectedType, scope));
+#if defined(LUAU_ENABLE_ASSERT)
+        const TypeId bestType = builtinTypes->numberType;
+        const TypeId inferredType = lookupType(expr);
+
+        const SubtypingResult r = subtyping->isSubtype(bestType, inferredType);
+        LUAU_ASSERT(r.isSubtype || isErrorSuppressing(expr->location, inferredType));
+#endif
     }
 
     void visit(AstExprConstantString* expr)
     {
-        NotNull<Scope> scope = stack.back();
-        TypeId actualType = lookupType(expr);
-        TypeId expectedType = builtinTypes->stringType;
-        LUAU_ASSERT(isSubtype(actualType, expectedType, scope));
+        // strings use specialized inference logic for singleton types, which can lead to real type errors here.
+
+        const TypeId bestType = module->internalTypes.addType(SingletonType{StringSingleton{std::string{expr->value.data, expr->value.size}}});
+        const TypeId inferredType = lookupType(expr);
+
+        const SubtypingResult r = subtyping->isSubtype(bestType, inferredType);
+        if (!r.isSubtype && !isErrorSuppressing(expr->location, inferredType))
+            reportError(TypeMismatch{inferredType, bestType}, expr->location);
     }
 
     void visit(AstExprLocal* expr)
@@ -833,7 +1303,9 @@ struct TypeChecker2
 
     void visit(AstExprGlobal* expr)
     {
-        // TODO!
+        NotNull<Scope> scope = stack.back();
+        if (!scope->lookup(expr->name))
+            reportError(UnknownSymbol{expr->name.value, UnknownSymbol::Binding}, expr->location);
     }
 
     void visit(AstExprVarargs* expr)
@@ -841,188 +1313,49 @@ struct TypeChecker2
         // TODO!
     }
 
-    ErrorVec visitOverload(AstExprCall* call, NotNull<const FunctionType> overloadFunctionType, const std::vector<Location>& argLocs,
-        TypePackId expectedArgTypes, TypePackId expectedRetType)
-    {
-        ErrorVec overloadErrors =
-            tryUnify(stack.back(), call->location, overloadFunctionType->retTypes, expectedRetType, CountMismatch::FunctionResult);
-
-        size_t argIndex = 0;
-        auto inferredArgIt = begin(overloadFunctionType->argTypes);
-        auto expectedArgIt = begin(expectedArgTypes);
-        while (inferredArgIt != end(overloadFunctionType->argTypes) && expectedArgIt != end(expectedArgTypes))
-        {
-            Location argLoc = (argIndex >= argLocs.size()) ? argLocs.back() : argLocs[argIndex];
-            ErrorVec argErrors = tryUnify(stack.back(), argLoc, *expectedArgIt, *inferredArgIt);
-            for (TypeError e : argErrors)
-                overloadErrors.emplace_back(e);
-
-            ++argIndex;
-            ++inferredArgIt;
-            ++expectedArgIt;
-        }
-
-        // piggyback on the unifier for arity checking, but we can't do this for checking the actual arguments since the locations would be bad
-        ErrorVec argumentErrors = tryUnify(stack.back(), call->location, expectedArgTypes, overloadFunctionType->argTypes);
-        for (TypeError e : argumentErrors)
-            if (get<CountMismatch>(e) != nullptr)
-                overloadErrors.emplace_back(std::move(e));
-
-        return overloadErrors;
-    }
-
-    void reportOverloadResolutionErrors(AstExprCall* call, std::vector<TypeId> overloads, TypePackId expectedArgTypes,
-        const std::vector<TypeId>& overloadsThatMatchArgCount, std::vector<std::pair<ErrorVec, TypeId>> overloadsErrors)
-    {
-        if (overloads.size() == 1)
-        {
-            reportErrors(std::get<0>(overloadsErrors.front()));
-            return;
-        }
-
-        std::vector<TypeId> overloadTypes = overloadsThatMatchArgCount;
-        if (overloadsThatMatchArgCount.size() == 0)
-        {
-            reportError(GenericError{"No overload for function accepts " + std::to_string(size(expectedArgTypes)) + " arguments."}, call->location);
-            // If no overloads match argument count, just list all overloads.
-            overloadTypes = overloads;
-        }
-        else
-        {
-            // Report errors of the first argument-count-matching, but failing overload
-            TypeId overload = overloadsThatMatchArgCount[0];
-
-            // Remove the overload we are reporting errors about from the list of alternatives
-            overloadTypes.erase(std::remove(overloadTypes.begin(), overloadTypes.end(), overload), overloadTypes.end());
-
-            const FunctionType* ftv = get<FunctionType>(overload);
-            LUAU_ASSERT(ftv); // overload must be a function type here
-
-            auto error = std::find_if(overloadsErrors.begin(), overloadsErrors.end(), [overload](const std::pair<ErrorVec, TypeId>& e) {
-                return overload == e.second;
-            });
-
-            LUAU_ASSERT(error != overloadsErrors.end());
-            reportErrors(std::get<0>(*error));
-
-            // If only one overload matched, we don't need this error because we provided the previous errors.
-            if (overloadsThatMatchArgCount.size() == 1)
-                return;
-        }
-
-        std::string s;
-        for (size_t i = 0; i < overloadTypes.size(); ++i)
-        {
-            TypeId overload = follow(overloadTypes[i]);
-
-            if (i > 0)
-                s += "; ";
-
-            if (i > 0 && i == overloadTypes.size() - 1)
-                s += "and ";
-
-            s += toString(overload);
-        }
-
-        if (overloadsThatMatchArgCount.size() == 0)
-            reportError(ExtraInformation{"Available overloads: " + s}, call->func->location);
-        else
-            reportError(ExtraInformation{"Other overloads are also not viable: " + s}, call->func->location);
-    }
-
     // Note: this is intentionally separated from `visit(AstExprCall*)` for stack allocation purposes.
     void visitCall(AstExprCall* call)
     {
-        TypeArena* arena = &testArena;
-        Instantiation instantiation{TxnLog::empty(), arena, TypeLevel{}, stack.back()};
-
-        TypePackId expectedRetType = lookupExpectedPack(call, *arena);
-        TypeId functionType = lookupType(call->func);
-        TypeId testFunctionType = functionType;
         TypePack args;
-        std::vector<Location> argLocs;
-        argLocs.reserve(call->args.size + 1);
+        std::vector<AstExpr*> argExprs;
+        argExprs.reserve(call->args.size + 1);
 
-        if (get<AnyType>(functionType) || get<ErrorType>(functionType) || get<NeverType>(functionType))
+        TypeId* originalCallTy = module->astOriginalCallTypes.find(call);
+        TypeId* selectedOverloadTy = module->astOverloadResolvedTypes.find(call);
+        if (!originalCallTy)
             return;
-        else if (std::optional<TypeId> callMm = findMetatableEntry(builtinTypes, module->errors, functionType, "__call", call->func->location))
-        {
-            if (get<FunctionType>(follow(*callMm)))
-            {
-                if (std::optional<TypeId> instantiatedCallMm = instantiation.substitute(*callMm))
-                {
-                    args.head.push_back(functionType);
-                    argLocs.push_back(call->func->location);
-                    testFunctionType = follow(*instantiatedCallMm);
-                }
-                else
-                {
-                    reportError(UnificationTooComplex{}, call->func->location);
-                    return;
-                }
-            }
-            else
-            {
-                // TODO: This doesn't flag the __call metamethod as the problem
-                // very clearly.
-                reportError(CannotCallNonFunction{*callMm}, call->func->location);
-                return;
-            }
-        }
-        else if (get<FunctionType>(functionType))
-        {
-            if (std::optional<TypeId> instantiatedFunctionType = instantiation.substitute(functionType))
-            {
-                testFunctionType = *instantiatedFunctionType;
-            }
-            else
-            {
-                reportError(UnificationTooComplex{}, call->func->location);
-                return;
-            }
-        }
-        else if (auto itv = get<IntersectionType>(functionType))
-        {
-            // We do nothing here because we'll flatten the intersection later, but we don't want to report it as a non-function.
-        }
-        else if (auto utv = get<UnionType>(functionType))
-        {
-            // Sometimes it's okay to call a union of functions, but only if all of the functions are the same.
-            // Another scenario we might run into it is if the union has a nil member. In this case, we want to throw an error
-            if (isOptional(functionType))
-            {
-                reportError(OptionalValueAccess{functionType}, call->location);
-                return;
-            }
-            std::optional<TypeId> fst;
-            for (TypeId ty : utv)
-            {
-                if (!fst)
-                    fst = follow(ty);
-                else if (fst != follow(ty))
-                {
-                    reportError(CannotCallNonFunction{functionType}, call->func->location);
-                    return;
-                }
-            }
 
-            if (!fst)
-                ice->ice("UnionType had no elements, so fst is nullopt?");
+        TypeId fnTy = follow(*originalCallTy);
 
-            if (std::optional<TypeId> instantiatedFunctionType = instantiation.substitute(*fst))
-            {
-                testFunctionType = *instantiatedFunctionType;
-            }
-            else
-            {
-                reportError(UnificationTooComplex{}, call->func->location);
-                return;
-            }
-        }
-        else
-        {
-            reportError(CannotCallNonFunction{functionType}, call->func->location);
+
+        if (get<AnyType>(fnTy) || get<ErrorType>(fnTy) || get<NeverType>(fnTy))
             return;
+        else if (isOptional(fnTy))
+        {
+            switch (shouldSuppressErrors(NotNull{&normalizer}, fnTy))
+            {
+            case ErrorSuppression::Suppress:
+                break;
+            case ErrorSuppression::NormalizationFailed:
+                reportError(NormalizationTooComplex{}, call->func->location);
+                // fallthrough intentional
+            case ErrorSuppression::DoNotSuppress:
+                reportError(OptionalValueAccess{fnTy}, call->func->location);
+            }
+            return;
+        }
+
+        if (selectedOverloadTy)
+        {
+            SubtypingResult result = subtyping->isSubtype(*originalCallTy, *selectedOverloadTy);
+            if (result.isSubtype)
+                fnTy = follow(*selectedOverloadTy);
+
+            if (result.normalizationTooComplex)
+            {
+                reportError(NormalizationTooComplex{}, call->func->location);
+                return;
+            }
         }
 
         if (call->self)
@@ -1032,21 +1365,24 @@ struct TypeChecker2
                 ice->ice("method call expression has no 'self'");
 
             args.head.push_back(lookupType(indexExpr->expr));
-            argLocs.push_back(indexExpr->expr->location);
+            argExprs.push_back(indexExpr->expr);
         }
 
         for (size_t i = 0; i < call->args.size; ++i)
         {
             AstExpr* arg = call->args.data[i];
-            argLocs.push_back(arg->location);
+            argExprs.push_back(arg);
             TypeId* argTy = module->astTypes.find(arg);
             if (argTy)
                 args.head.push_back(*argTy);
             else if (i == call->args.size - 1)
             {
-                TypePackId* argTail = module->astTypePacks.find(arg);
-                if (argTail)
-                    args.tail = *argTail;
+                if (auto argTail = module->astTypePacks.find(arg))
+                {
+                    auto [head, tail] = flatten(*argTail);
+                    args.head.insert(args.head.end(), head.begin(), head.end());
+                    args.tail = tail;
+                }
                 else
                     args.tail = builtinTypes->anyTypePack;
             }
@@ -1054,63 +1390,92 @@ struct TypeChecker2
                 args.head.push_back(builtinTypes->anyType);
         }
 
-        TypePackId expectedArgTypes = arena->addTypePack(args);
 
-        std::vector<TypeId> overloads = flattenIntersection(testFunctionType);
-        std::vector<std::pair<ErrorVec, TypeId>> overloadsErrors;
-        overloadsErrors.reserve(overloads.size());
 
-        std::vector<TypeId> overloadsThatMatchArgCount;
+        OverloadResolver resolver{
+            builtinTypes,
+            NotNull{&module->internalTypes},
+            NotNull{&normalizer},
+            NotNull{stack.back()},
+            ice,
+            limits,
+            call->location,
+        };
+        resolver.resolve(fnTy, &args, call->func, &argExprs);
 
-        for (TypeId overload : overloads)
+        auto norm = normalizer.normalize(fnTy);
+        if (!norm)
+            reportError(NormalizationTooComplex{}, call->func->location);
+        auto isInhabited = normalizer.isInhabited(norm.get());
+        if (isInhabited == NormalizationResult::HitLimits)
+            reportError(NormalizationTooComplex{}, call->func->location);
+
+        if (norm && norm->shouldSuppressErrors())
+            return; // error suppressing function type!
+        else if (!resolver.ok.empty())
+            return; // We found a call that works, so this is ok.
+        else if (!norm || isInhabited == NormalizationResult::False)
+            return; // Ok. Calling an uninhabited type is no-op.
+        else if (!resolver.nonviableOverloads.empty())
         {
-            overload = follow(overload);
-
-            const FunctionType* overloadFn = get<FunctionType>(overload);
-            if (!overloadFn)
+            if (resolver.nonviableOverloads.size() == 1 && !isErrorSuppressing(call->func->location, resolver.nonviableOverloads.front().first))
+                reportErrors(resolver.nonviableOverloads.front().second);
+            else
             {
-                reportError(CannotCallNonFunction{overload}, call->func->location);
-                return;
+                std::string s = "None of the overloads for function that accept ";
+                s += std::to_string(args.head.size());
+                s += " arguments are compatible.";
+                reportError(GenericError{std::move(s)}, call->location);
+            }
+        }
+        else if (!resolver.arityMismatches.empty())
+        {
+            if (resolver.arityMismatches.size() == 1)
+                reportErrors(resolver.arityMismatches.front().second);
+            else
+            {
+                std::string s = "No overload for function accepts ";
+                s += std::to_string(args.head.size());
+                s += " arguments.";
+                reportError(GenericError{std::move(s)}, call->location);
+            }
+        }
+        else if (!resolver.nonFunctions.empty())
+            reportError(CannotCallNonFunction{fnTy}, call->func->location);
+        else
+            LUAU_ASSERT(!"Generating the best possible error from this function call resolution was inexhaustive?");
+
+        if (resolver.arityMismatches.size() > 1 || resolver.nonviableOverloads.size() > 1)
+        {
+            std::string s = "Available overloads: ";
+
+            std::vector<TypeId> overloads;
+            if (resolver.nonviableOverloads.empty())
+            {
+                for (const auto& [ty, p] : resolver.resolution)
+                {
+                    if (p.first == OverloadResolver::TypeIsNotAFunction)
+                        continue;
+
+                    overloads.push_back(ty);
+                }
             }
             else
             {
-                // We may have to instantiate the overload in order for it to typecheck.
-                if (std::optional<TypeId> instantiatedFunctionType = instantiation.substitute(overload))
-                {
-                    overloadFn = get<FunctionType>(*instantiatedFunctionType);
-                }
-                else
-                {
-                    overloadsErrors.emplace_back(std::vector{TypeError{call->func->location, UnificationTooComplex{}}}, overload);
-                    return;
-                }
+                for (const auto& [ty, _] : resolver.nonviableOverloads)
+                    overloads.push_back(ty);
             }
 
-            ErrorVec overloadErrors = visitOverload(call, NotNull{overloadFn}, argLocs, expectedArgTypes, expectedRetType);
-            if (overloadErrors.empty())
-                return;
-
-            bool argMismatch = false;
-            for (auto error : overloadErrors)
+            for (size_t i = 0; i < overloads.size(); ++i)
             {
-                CountMismatch* cm = get<CountMismatch>(error);
-                if (!cm)
-                    continue;
+                if (i > 0)
+                    s += (i == overloads.size() - 1) ? "; and " : "; ";
 
-                if (cm->context == CountMismatch::Arg)
-                {
-                    argMismatch = true;
-                    break;
-                }
+                s += toString(overloads[i]);
             }
 
-            if (!argMismatch)
-                overloadsThatMatchArgCount.push_back(overload);
-
-            overloadsErrors.emplace_back(std::move(overloadErrors), overload);
+            reportError(ExtraInformation{std::move(s)}, call->func->location);
         }
-
-        reportOverloadResolutionErrors(call, overloads, expectedArgTypes, overloadsThatMatchArgCount, overloadsErrors);
     }
 
     void visit(AstExprCall* call)
@@ -1159,53 +1524,114 @@ struct TypeChecker2
 
         if (std::optional<TypeId> strippedUnion = tryStripUnionFromNil(ty))
         {
-            reportError(OptionalValueAccess{ty}, location);
+            switch (shouldSuppressErrors(NotNull{&normalizer}, ty))
+            {
+            case ErrorSuppression::Suppress:
+                break;
+            case ErrorSuppression::NormalizationFailed:
+                reportError(NormalizationTooComplex{}, location);
+                // fallthrough intentional
+            case ErrorSuppression::DoNotSuppress:
+                reportError(OptionalValueAccess{ty}, location);
+            }
+
             return follow(*strippedUnion);
         }
 
         return ty;
     }
 
-    void visitExprName(AstExpr* expr, Location location, const std::string& propName, ValueContext context)
+    void visitExprName(AstExpr* expr, Location location, const std::string& propName, ValueContext context, TypeId astIndexExprTy)
     {
         visit(expr, ValueContext::RValue);
-
         TypeId leftType = stripFromNilAndReport(lookupType(expr), location);
-        checkIndexTypeFromType(leftType, propName, location, context);
+        checkIndexTypeFromType(leftType, propName, context, location, astIndexExprTy);
     }
 
     void visit(AstExprIndexName* indexName, ValueContext context)
     {
-        visitExprName(indexName->expr, indexName->location, indexName->index.value, context);
+        // If we're indexing like _.foo - foo could either be a prop or a string.
+        visitExprName(indexName->expr, indexName->location, indexName->index.value, context, builtinTypes->stringType);
+    }
+
+    void indexExprMetatableHelper(AstExprIndexExpr* indexExpr, const MetatableType* metaTable, TypeId exprType, TypeId indexType)
+    {
+        if (auto tt = get<TableType>(follow(metaTable->table)); tt && tt->indexer)
+            testIsSubtype(indexType, tt->indexer->indexType, indexExpr->index->location);
+        else if (auto mt = get<MetatableType>(follow(metaTable->table)))
+            indexExprMetatableHelper(indexExpr, mt, exprType, indexType);
+        else if (auto tmt = get<TableType>(follow(metaTable->metatable)); tmt && tmt->indexer)
+            testIsSubtype(indexType, tmt->indexer->indexType, indexExpr->index->location);
+        else if (auto mtmt = get<MetatableType>(follow(metaTable->metatable)))
+            indexExprMetatableHelper(indexExpr, mtmt, exprType, indexType);
+        else
+        {
+            LUAU_ASSERT(tt || get<PrimitiveType>(follow(metaTable->table)));
+
+            reportError(CannotExtendTable{exprType, CannotExtendTable::Indexer, "indexer??"}, indexExpr->location);
+        }
     }
 
     void visit(AstExprIndexExpr* indexExpr, ValueContext context)
     {
         if (auto str = indexExpr->index->as<AstExprConstantString>())
         {
+            TypeId astIndexExprType = lookupType(indexExpr->index);
             const std::string stringValue(str->value.data, str->value.size);
-            visitExprName(indexExpr->expr, indexExpr->location, stringValue, context);
+            visitExprName(indexExpr->expr, indexExpr->location, stringValue, context, astIndexExprType);
             return;
         }
 
-        // TODO!
-        visit(indexExpr->expr, ValueContext::LValue);
+        visit(indexExpr->expr, ValueContext::RValue);
         visit(indexExpr->index, ValueContext::RValue);
 
-        NotNull<Scope> scope = stack.back();
-
-        TypeId exprType = lookupType(indexExpr->expr);
-        TypeId indexType = lookupType(indexExpr->index);
+        TypeId exprType = follow(lookupType(indexExpr->expr));
+        TypeId indexType = follow(lookupType(indexExpr->index));
 
         if (auto tt = get<TableType>(exprType))
         {
             if (tt->indexer)
-                reportErrors(tryUnify(scope, indexExpr->index->location, indexType, tt->indexer->indexType));
+                testIsSubtype(indexType, tt->indexer->indexType, indexExpr->index->location);
             else
                 reportError(CannotExtendTable{exprType, CannotExtendTable::Indexer, "indexer??"}, indexExpr->location);
         }
+        else if (auto mt = get<MetatableType>(exprType))
+        {
+            return indexExprMetatableHelper(indexExpr, mt, exprType, indexType);
+        }
+        else if (auto cls = get<ClassType>(exprType))
+        {
+            if (cls->indexer)
+                testIsSubtype(indexType, cls->indexer->indexType, indexExpr->index->location);
+            else
+                reportError(DynamicPropertyLookupOnClassesUnsafe{exprType}, indexExpr->location);
+        }
         else if (get<UnionType>(exprType) && isOptional(exprType))
-            reportError(OptionalValueAccess{exprType}, indexExpr->location);
+        {
+            switch (shouldSuppressErrors(NotNull{&normalizer}, exprType))
+            {
+            case ErrorSuppression::Suppress:
+                break;
+            case ErrorSuppression::NormalizationFailed:
+                reportError(NormalizationTooComplex{}, indexExpr->location);
+                // fallthrough intentional
+            case ErrorSuppression::DoNotSuppress:
+                reportError(OptionalValueAccess{exprType}, indexExpr->location);
+            }
+        }
+        else if (auto exprIntersection = get<IntersectionType>(exprType))
+        {
+            for (TypeId part : exprIntersection)
+            {
+                (void)part;
+            }
+        }
+        else if (get<NeverType>(exprType) || isErrorSuppressing(indexExpr->location, exprType))
+        {
+            // Nothing
+        }
+        else
+            reportError(NotATable{exprType}, indexExpr->location);
     }
 
     void visit(AstExprFunction* fn)
@@ -1215,35 +1641,131 @@ struct TypeChecker2
         visitGenerics(fn->generics, fn->genericPacks);
 
         TypeId inferredFnTy = lookupType(fn);
-        const FunctionType* inferredFtv = get<FunctionType>(inferredFnTy);
-        LUAU_ASSERT(inferredFtv);
+        functionDeclStack.push_back(inferredFnTy);
 
-        // There is no way to write an annotation for the self argument, so we
-        // cannot do anything to check it.
-        auto argIt = begin(inferredFtv->argTypes);
-        if (fn->self)
-            ++argIt;
-
-        for (const auto& arg : fn->args)
+        std::shared_ptr<const NormalizedType> normalizedFnTy = normalizer.normalize(inferredFnTy);
+        if (!normalizedFnTy)
         {
-            if (argIt == end(inferredFtv->argTypes))
-                break;
+            reportError(CodeTooComplex{}, fn->location);
+        }
+        else if (get<ErrorType>(normalizedFnTy->errors))
+        {
+            // Nothing
+        }
+        else if (!normalizedFnTy->hasFunctions())
+        {
+            ice->ice("Internal error: Lambda has non-function type " + toString(inferredFnTy), fn->location);
+        }
+        else
+        {
+            if (1 != normalizedFnTy->functions.parts.size())
+                ice->ice("Unexpected: Lambda has unexpected type " + toString(inferredFnTy), fn->location);
 
-            if (arg->annotation)
+            const FunctionType* inferredFtv = get<FunctionType>(normalizedFnTy->functions.parts.front());
+            LUAU_ASSERT(inferredFtv);
+
+            // There is no way to write an annotation for the self argument, so we
+            // cannot do anything to check it.
+            auto argIt = begin(inferredFtv->argTypes);
+            if (fn->self)
+                ++argIt;
+
+            for (const auto& arg : fn->args)
             {
-                TypeId inferredArgTy = *argIt;
-                TypeId annotatedArgTy = lookupAnnotation(arg->annotation);
+                if (argIt == end(inferredFtv->argTypes))
+                    break;
 
-                if (!isSubtype(inferredArgTy, annotatedArgTy, stack.back()))
+                TypeId inferredArgTy = *argIt;
+
+                if (arg->annotation)
                 {
-                    reportError(TypeMismatch{inferredArgTy, annotatedArgTy}, arg->location);
+                    // we need to typecheck any argument annotations themselves.
+                    visit(arg->annotation);
+
+                    TypeId annotatedArgTy = lookupAnnotation(arg->annotation);
+
+                    testIsSubtype(inferredArgTy, annotatedArgTy, arg->location);
                 }
+
+                // Some Luau constructs can result in an argument type being
+                // reduced to never by inference. In this case, we want to
+                // report an error at the function, instead of reporting an
+                // error at every callsite.
+                if (is<NeverType>(follow(inferredArgTy)))
+                {
+                    // If the annotation simplified to never, we don't want to
+                    // even look at contributors.
+                    bool explicitlyNever = false;
+                    if (arg->annotation)
+                    {
+                        TypeId annotatedArgTy = lookupAnnotation(arg->annotation);
+                        explicitlyNever = is<NeverType>(annotatedArgTy);
+                    }
+
+                    // Not following here is deliberate: the contribution map is
+                    // keyed by type pointer, but that type pointer has, at some
+                    // point, been transmuted to a bound type pointing to never.
+                    if (const auto contributors = module->upperBoundContributors.find(inferredArgTy); contributors && !explicitlyNever)
+                    {
+                        // It's unfortunate that we can't link error messages
+                        // together. For now, this will work.
+                        reportError(
+                            GenericError{format(
+                                "Parameter '%s' has been reduced to never. This function is not callable with any possible value.", arg->name.value
+                            )},
+                            arg->location
+                        );
+                        for (const auto& [site, component] : *contributors)
+                            reportError(
+                                ExtraInformation{
+                                    format("Parameter '%s' is required to be a subtype of '%s' here.", arg->name.value, toString(component).c_str())
+                                },
+                                site
+                            );
+                    }
+                }
+
+                ++argIt;
             }
 
-            ++argIt;
+            // we need to typecheck the vararg annotation, if it exists.
+            if (fn->vararg && fn->varargAnnotation)
+                visit(fn->varargAnnotation);
+
+            bool reachesImplicitReturn = getFallthrough(fn->body) != nullptr;
+            if (reachesImplicitReturn && !allowsNoReturnValues(follow(inferredFtv->retTypes)))
+                reportError(FunctionExitsWithoutReturning{inferredFtv->retTypes}, getEndLocation(fn));
         }
 
         visit(fn->body);
+
+        // we need to typecheck the return annotation itself, if it exists.
+        if (fn->returnAnnotation)
+            visit(*fn->returnAnnotation);
+
+
+        // If the function type has a function annotation, we need to see if we can suggest an annotation
+        if (normalizedFnTy)
+        {
+            const FunctionType* inferredFtv = get<FunctionType>(normalizedFnTy->functions.parts.front());
+            LUAU_ASSERT(inferredFtv);
+
+            TypeFunctionReductionGuesser guesser{NotNull{&module->internalTypes}, builtinTypes, NotNull{&normalizer}};
+            for (TypeId retTy : inferredFtv->retTypes)
+            {
+                if (get<TypeFunctionInstanceType>(follow(retTy)))
+                {
+                    TypeFunctionReductionGuessResult result = guesser.guessTypeFunctionReductionForFunctionExpr(*fn, inferredFtv, retTy);
+                    if (result.shouldRecommendAnnotation)
+                        reportError(
+                            ExplicitFunctionAnnotationRecommended{std::move(result.guessedFunctionAnnotations), result.guessedReturnType},
+                            fn->location
+                        );
+                }
+            }
+        }
+
+        functionDeclStack.pop_back();
     }
 
     void visit(AstExprTable* expr)
@@ -1261,11 +1783,10 @@ struct TypeChecker2
     {
         visit(expr->expr, ValueContext::RValue);
 
-        NotNull<Scope> scope = stack.back();
         TypeId operandType = lookupType(expr->expr);
         TypeId resultType = lookupType(expr);
 
-        if (get<AnyType>(operandType) || get<ErrorType>(operandType) || get<NeverType>(operandType))
+        if (isErrorSuppressing(expr->expr->location, operandType))
             return;
 
         if (auto it = kUnaryOpMetamethods.find(expr->op); it != kUnaryOpMetamethods.end())
@@ -1279,7 +1800,7 @@ struct TypeChecker2
                     {
                         if (expr->op == AstExprUnary::Op::Len)
                         {
-                            reportErrors(tryUnify(scope, expr->location, follow(*ret), builtinTypes->numberType));
+                            testIsSubtype(follow(*ret), builtinTypes->numberType, expr->location);
                         }
                     }
                     else
@@ -1294,17 +1815,14 @@ struct TypeChecker2
                         return;
                     }
 
-                    TypePackId expectedArgs = testArena.addTypePack({operandType});
-                    TypePackId expectedRet = testArena.addTypePack({resultType});
+                    TypePackId expectedArgs = module->internalTypes.addTypePack({operandType});
+                    TypePackId expectedRet = module->internalTypes.addTypePack({resultType});
 
-                    TypeId expectedFunction = testArena.addType(FunctionType{expectedArgs, expectedRet});
+                    TypeId expectedFunction = module->internalTypes.addType(FunctionType{expectedArgs, expectedRet});
 
-                    ErrorVec errors = tryUnify(scope, expr->location, *mm, expectedFunction);
-                    if (!errors.empty())
-                    {
-                        reportError(TypeMismatch{*firstArg, operandType}, expr->location);
+                    bool success = testIsSubtype(*mm, expectedFunction, expr->location);
+                    if (!success)
                         return;
-                    }
                 }
 
                 return;
@@ -1315,7 +1833,10 @@ struct TypeChecker2
         {
             DenseHashSet<TypeId> seen{nullptr};
             int recursionCount = 0;
+            std::shared_ptr<const NormalizedType> nty = normalizer.normalize(operandType);
 
+            if (nty && nty->shouldSuppressErrors())
+                return;
 
             if (!hasLength(operandType, seen, &recursionCount))
             {
@@ -1327,7 +1848,7 @@ struct TypeChecker2
         }
         else if (expr->op == AstExprUnary::Op::Minus)
         {
-            reportErrors(tryUnify(scope, expr->location, operandType, builtinTypes->numberType));
+            testIsSubtype(operandType, builtinTypes->numberType, expr->location);
         }
         else if (expr->op == AstExprUnary::Op::Not)
         {
@@ -1340,8 +1861,8 @@ struct TypeChecker2
 
     TypeId visit(AstExprBinary* expr, AstNode* overrideKey = nullptr)
     {
-        visit(expr->left, ValueContext::LValue);
-        visit(expr->right, ValueContext::LValue);
+        visit(expr->left, ValueContext::RValue);
+        visit(expr->right, ValueContext::RValue);
 
         NotNull<Scope> scope = stack.back();
 
@@ -1349,31 +1870,47 @@ struct TypeChecker2
         bool isComparison = expr->op >= AstExprBinary::Op::CompareEq && expr->op <= AstExprBinary::Op::CompareGe;
         bool isLogical = expr->op == AstExprBinary::Op::And || expr->op == AstExprBinary::Op::Or;
 
-        TypeId leftType = lookupType(expr->left);
-        TypeId rightType = lookupType(expr->right);
+        TypeId leftType = follow(lookupType(expr->left));
+        TypeId rightType = follow(lookupType(expr->right));
+        TypeId expectedResult = follow(lookupType(expr));
+
+        if (get<TypeFunctionInstanceType>(expectedResult))
+        {
+            checkForInternalTypeFunction(expectedResult, expr->location);
+            return expectedResult;
+        }
 
         if (expr->op == AstExprBinary::Op::Or)
         {
-            leftType = stripNil(builtinTypes, testArena, leftType);
+            leftType = stripNil(builtinTypes, module->internalTypes, leftType);
         }
 
-        bool isStringOperation = isString(leftType) && isString(rightType);
+        std::shared_ptr<const NormalizedType> normLeft = normalizer.normalize(leftType);
+        std::shared_ptr<const NormalizedType> normRight = normalizer.normalize(rightType);
 
-        if (get<AnyType>(leftType) || get<ErrorType>(leftType))
+        bool isStringOperation =
+            (normLeft ? normLeft->isSubtypeOfString() : isString(leftType)) && (normRight ? normRight->isSubtypeOfString() : isString(rightType));
+        leftType = follow(leftType);
+        if (get<AnyType>(leftType) || get<ErrorType>(leftType) || get<NeverType>(leftType))
             return leftType;
-        else if (get<AnyType>(rightType) || get<ErrorType>(rightType))
+        else if (get<AnyType>(rightType) || get<ErrorType>(rightType) || get<NeverType>(rightType))
             return rightType;
+        else if ((normLeft && normLeft->shouldSuppressErrors()) || (normRight && normRight->shouldSuppressErrors()))
+            return builtinTypes->anyType; // we can't say anything better if it's error suppressing but not any or error alone.
 
-        if ((get<BlockedType>(leftType) || get<FreeType>(leftType)) && !isEquality && !isLogical)
+        if ((get<BlockedType>(leftType) || get<FreeType>(leftType) || get<GenericType>(leftType)) && !isEquality && !isLogical)
         {
             auto name = getIdentifierOfBaseVar(expr->left);
-            reportError(CannotInferBinaryOperation{expr->op, name,
-                            isComparison ? CannotInferBinaryOperation::OpKind::Comparison : CannotInferBinaryOperation::OpKind::Operation},
-                expr->location);
+            reportError(
+                CannotInferBinaryOperation{
+                    expr->op, name, isComparison ? CannotInferBinaryOperation::OpKind::Comparison : CannotInferBinaryOperation::OpKind::Operation
+                },
+                expr->location
+            );
             return leftType;
         }
 
-        bool typesHaveIntersection = normalizer.isIntersectionInhabited(leftType, rightType);
+        NormalizationResult typesHaveIntersection = normalizer.isIntersectionInhabited(leftType, rightType);
         if (auto it = kBinaryOpMetamethods.find(expr->op); it != kBinaryOpMetamethods.end())
         {
             std::optional<TypeId> leftMt = getMetatable(leftType, builtinTypes);
@@ -1383,7 +1920,8 @@ struct TypeChecker2
 
             if (isEquality && !matches)
             {
-                auto testUnion = [&matches, builtinTypes = this->builtinTypes](const UnionType* utv, std::optional<TypeId> otherMt) {
+                auto testUnion = [&matches, builtinTypes = this->builtinTypes](const UnionType* utv, std::optional<TypeId> otherMt)
+                {
                     for (TypeId option : utv)
                     {
                         if (getMetatable(follow(option), builtinTypes) == otherMt)
@@ -1403,20 +1941,27 @@ struct TypeChecker2
                 {
                     testUnion(utv, leftMt);
                 }
-
-                // If either left or right has no metatable (or both), we need to consider if
-                // there are values in common that could possibly inhabit the type (and thus equality could be considered)
-                if (!leftMt.has_value() || !rightMt.has_value())
-                {
-                    matches = matches || typesHaveIntersection;
-                }
             }
+
+            // If we're working with things that are not tables, the metatable comparisons above are a little excessive
+            // It's ok for one type to have a meta table and the other to not. In that case, we should fall back on
+            // checking if the intersection of the types is inhabited. If `typesHaveIntersection` failed due to limits,
+            // TODO: Maybe add more checks here (e.g. for functions, classes, etc)
+            if (!(get<TableType>(leftType) || get<TableType>(rightType)))
+                if (!leftMt.has_value() || !rightMt.has_value())
+                    matches = matches || typesHaveIntersection != NormalizationResult::False;
 
             if (!matches && isComparison)
             {
-                reportError(GenericError{format("Types %s and %s cannot be compared with %s because they do not have the same metatable",
-                                toString(leftType).c_str(), toString(rightType).c_str(), toString(expr->op).c_str())},
-                    expr->location);
+                reportError(
+                    GenericError{format(
+                        "Types %s and %s cannot be compared with %s because they do not have the same metatable",
+                        toString(leftType).c_str(),
+                        toString(rightType).c_str(),
+                        toString(expr->op).c_str()
+                    )},
+                    expr->location
+                );
 
                 return builtinTypes->errorRecoveryType();
             }
@@ -1436,38 +1981,42 @@ struct TypeChecker2
                 if (overrideKey != nullptr)
                     key = overrideKey;
 
-                TypeId instantiatedMm = module->astOverloadResolvedTypes[key];
-                if (!instantiatedMm)
-                    reportError(CodeTooComplex{}, expr->location);
+                TypeId* selectedOverloadTy = module->astOverloadResolvedTypes.find(key);
+                if (!selectedOverloadTy)
+                {
+                    // reportError(CodeTooComplex{}, expr->location);
+                    // was handled by a type function
+                    return expectedResult;
+                }
 
-                else if (const FunctionType* ftv = get<FunctionType>(follow(instantiatedMm)))
+                else if (const FunctionType* ftv = get<FunctionType>(follow(*selectedOverloadTy)))
                 {
                     TypePackId expectedArgs;
                     // For >= and > we invoke __lt and __le respectively with
                     // swapped argument ordering.
                     if (expr->op == AstExprBinary::Op::CompareGe || expr->op == AstExprBinary::Op::CompareGt)
                     {
-                        expectedArgs = testArena.addTypePack({rightType, leftType});
+                        expectedArgs = module->internalTypes.addTypePack({rightType, leftType});
                     }
                     else
                     {
-                        expectedArgs = testArena.addTypePack({leftType, rightType});
+                        expectedArgs = module->internalTypes.addTypePack({leftType, rightType});
                     }
 
                     TypePackId expectedRets;
                     if (expr->op == AstExprBinary::CompareEq || expr->op == AstExprBinary::CompareNe || expr->op == AstExprBinary::CompareGe ||
                         expr->op == AstExprBinary::CompareGt || expr->op == AstExprBinary::Op::CompareLe || expr->op == AstExprBinary::Op::CompareLt)
                     {
-                        expectedRets = testArena.addTypePack({builtinTypes->booleanType});
+                        expectedRets = module->internalTypes.addTypePack({builtinTypes->booleanType});
                     }
                     else
                     {
-                        expectedRets = testArena.addTypePack({testArena.freshType(scope, TypeLevel{})});
+                        expectedRets = module->internalTypes.addTypePack({module->internalTypes.freshType(scope, TypeLevel{})});
                     }
 
-                    TypeId expectedTy = testArena.addType(FunctionType(expectedArgs, expectedRets));
+                    TypeId expectedTy = module->internalTypes.addType(FunctionType(expectedArgs, expectedRets));
 
-                    reportErrors(tryUnify(scope, expr->location, follow(*mm), expectedTy));
+                    testIsSubtype(follow(*mm), expectedTy, expr->location);
 
                     std::optional<TypeId> ret = first(ftv->retTypes);
                     if (ret)
@@ -1515,17 +2064,29 @@ struct TypeChecker2
                 {
                     if (isComparison)
                     {
-                        reportError(GenericError{format(
-                                        "Types '%s' and '%s' cannot be compared with %s because neither type's metatable has a '%s' metamethod",
-                                        toString(leftType).c_str(), toString(rightType).c_str(), toString(expr->op).c_str(), it->second)},
-                            expr->location);
+                        reportError(
+                            GenericError{format(
+                                "Types '%s' and '%s' cannot be compared with %s because neither type's metatable has a '%s' metamethod",
+                                toString(leftType).c_str(),
+                                toString(rightType).c_str(),
+                                toString(expr->op).c_str(),
+                                it->second
+                            )},
+                            expr->location
+                        );
                     }
                     else
                     {
-                        reportError(GenericError{format(
-                                        "Operator %s is not applicable for '%s' and '%s' because neither type's metatable has a '%s' metamethod",
-                                        toString(expr->op).c_str(), toString(leftType).c_str(), toString(rightType).c_str(), it->second)},
-                            expr->location);
+                        reportError(
+                            GenericError{format(
+                                "Operator %s is not applicable for '%s' and '%s' because neither type's metatable has a '%s' metamethod",
+                                toString(expr->op).c_str(),
+                                toString(leftType).c_str(),
+                                toString(rightType).c_str(),
+                                it->second
+                            )},
+                            expr->location
+                        );
                     }
 
                     return builtinTypes->errorRecoveryType();
@@ -1534,15 +2095,27 @@ struct TypeChecker2
                 {
                     if (isComparison)
                     {
-                        reportError(GenericError{format("Types '%s' and '%s' cannot be compared with %s because neither type has a metatable",
-                                        toString(leftType).c_str(), toString(rightType).c_str(), toString(expr->op).c_str())},
-                            expr->location);
+                        reportError(
+                            GenericError{format(
+                                "Types '%s' and '%s' cannot be compared with %s because neither type has a metatable",
+                                toString(leftType).c_str(),
+                                toString(rightType).c_str(),
+                                toString(expr->op).c_str()
+                            )},
+                            expr->location
+                        );
                     }
                     else
                     {
-                        reportError(GenericError{format("Operator %s is not applicable for '%s' and '%s' because neither type has a metatable",
-                                        toString(expr->op).c_str(), toString(leftType).c_str(), toString(rightType).c_str())},
-                            expr->location);
+                        reportError(
+                            GenericError{format(
+                                "Operator %s is not applicable for '%s' and '%s' because neither type has a metatable",
+                                toString(expr->op).c_str(),
+                                toString(leftType).c_str(),
+                                toString(rightType).c_str()
+                            )},
+                            expr->location
+                        );
                     }
 
                     return builtinTypes->errorRecoveryType();
@@ -1556,38 +2129,54 @@ struct TypeChecker2
         case AstExprBinary::Op::Sub:
         case AstExprBinary::Op::Mul:
         case AstExprBinary::Op::Div:
+        case AstExprBinary::Op::FloorDiv:
         case AstExprBinary::Op::Pow:
         case AstExprBinary::Op::Mod:
-            reportErrors(tryUnify(scope, expr->left->location, leftType, builtinTypes->numberType));
-            reportErrors(tryUnify(scope, expr->right->location, rightType, builtinTypes->numberType));
+            testIsSubtype(leftType, builtinTypes->numberType, expr->left->location);
+            testIsSubtype(rightType, builtinTypes->numberType, expr->right->location);
 
             return builtinTypes->numberType;
         case AstExprBinary::Op::Concat:
-            reportErrors(tryUnify(scope, expr->left->location, leftType, builtinTypes->stringType));
-            reportErrors(tryUnify(scope, expr->right->location, rightType, builtinTypes->stringType));
+            testIsSubtype(leftType, builtinTypes->stringType, expr->left->location);
+            testIsSubtype(rightType, builtinTypes->stringType, expr->right->location);
 
             return builtinTypes->stringType;
         case AstExprBinary::Op::CompareGe:
         case AstExprBinary::Op::CompareGt:
         case AstExprBinary::Op::CompareLe:
         case AstExprBinary::Op::CompareLt:
-            if (isNumber(leftType))
+        {
+            if (normLeft && normLeft->shouldSuppressErrors())
+                return builtinTypes->booleanType;
+
+            // if we're comparing against an uninhabited type, it's unobservable that the comparison did not run
+            if (normLeft && normalizer.isInhabited(normLeft.get()) == NormalizationResult::False)
+                return builtinTypes->booleanType;
+
+            if (normLeft && normLeft->isExactlyNumber())
             {
-                reportErrors(tryUnify(scope, expr->right->location, rightType, builtinTypes->numberType));
-                return builtinTypes->numberType;
+                testIsSubtype(rightType, builtinTypes->numberType, expr->right->location);
+                return builtinTypes->booleanType;
             }
-            else if (isString(leftType))
+
+            if (normLeft && normLeft->isSubtypeOfString())
             {
-                reportErrors(tryUnify(scope, expr->right->location, rightType, builtinTypes->stringType));
-                return builtinTypes->stringType;
+                testIsSubtype(rightType, builtinTypes->stringType, expr->right->location);
+                return builtinTypes->booleanType;
             }
-            else
-            {
-                reportError(GenericError{format("Types '%s' and '%s' cannot be compared with relational operator %s", toString(leftType).c_str(),
-                                toString(rightType).c_str(), toString(expr->op).c_str())},
-                    expr->location);
-                return builtinTypes->errorRecoveryType();
-            }
+
+            reportError(
+                GenericError{format(
+                    "Types '%s' and '%s' cannot be compared with relational operator %s",
+                    toString(leftType).c_str(),
+                    toString(rightType).c_str(),
+                    toString(expr->op).c_str()
+                )},
+                expr->location
+            );
+            return builtinTypes->errorRecoveryType();
+        }
+
         case AstExprBinary::Op::And:
         case AstExprBinary::Op::Or:
         case AstExprBinary::Op::CompareEq:
@@ -1610,14 +2199,39 @@ struct TypeChecker2
         TypeId annotationType = lookupAnnotation(expr->annotation);
         TypeId computedType = lookupType(expr->expr);
 
-        // Note: As an optimization, we try 'number <: number | string' first, as that is the more likely case.
-        if (isSubtype(annotationType, computedType, stack.back()))
+        switch (shouldSuppressErrors(NotNull{&normalizer}, computedType).orElse(shouldSuppressErrors(NotNull{&normalizer}, annotationType)))
+        {
+        case ErrorSuppression::Suppress:
             return;
-
-        if (isSubtype(computedType, annotationType, stack.back()))
+        case ErrorSuppression::NormalizationFailed:
+            reportError(NormalizationTooComplex{}, expr->location);
             return;
+        case ErrorSuppression::DoNotSuppress:
+            break;
+        }
 
-        reportError(TypesAreUnrelated{computedType, annotationType}, expr->location);
+        switch (normalizer.isInhabited(computedType))
+        {
+        case NormalizationResult::True:
+            break;
+        case NormalizationResult::False:
+            return;
+        case NormalizationResult::HitLimits:
+            reportError(NormalizationTooComplex{}, expr->location);
+            return;
+        }
+
+        switch (normalizer.isIntersectionInhabited(computedType, annotationType))
+        {
+        case NormalizationResult::True:
+            return;
+        case NormalizationResult::False:
+            reportError(TypesAreUnrelated{computedType, annotationType}, expr->location);
+            break;
+        case NormalizationResult::HitLimits:
+            reportError(NormalizationTooComplex{}, expr->location);
+            break;
+        }
     }
 
     void visit(AstExprIfElse* expr)
@@ -1653,12 +2267,12 @@ struct TypeChecker2
             return *fst;
         else if (auto ftp = get<FreeTypePack>(pack))
         {
-            TypeId result = testArena.addType(FreeType{ftp->scope});
-            TypePackId freeTail = testArena.addTypePack(FreeTypePack{ftp->scope});
+            TypeId result = module->internalTypes.addType(FreeType{ftp->scope});
+            TypePackId freeTail = module->internalTypes.addTypePack(FreeTypePack{ftp->scope});
 
-            TypePack& resultPack = asMutable(pack)->ty.emplace<TypePack>();
-            resultPack.head.assign(1, result);
-            resultPack.tail = freeTail;
+            TypePack* resultPack = emplaceTypePack<TypePack>(asMutable(pack));
+            resultPack->head.assign(1, result);
+            resultPack->tail = freeTail;
 
             return result;
         }
@@ -1699,6 +2313,10 @@ struct TypeChecker2
 
     void visit(AstType* ty)
     {
+        TypeId* resolvedTy = module->astResolvedTypes.find(ty);
+        if (resolvedTy)
+            checkForTypeFunctionInhabitance(follow(*resolvedTy), ty->location);
+
         if (auto t = ty->as<AstTypeReference>())
             return visit(t);
         else if (auto t = ty->as<AstTypeTable>())
@@ -1717,7 +2335,7 @@ struct TypeChecker2
     {
         // No further validation is necessary in this case. The main logic for
         // _luau_print is contained in lookupAnnotation.
-        if (FFlag::DebugLuauMagicTypes && ty->name == "_luau_print" && ty->parameters.size > 0)
+        if (FFlag::DebugLuauMagicTypes && ty->name == "_luau_print")
             return;
 
         for (const AstTypeOrPack& param : ty->parameters)
@@ -1739,13 +2357,23 @@ struct TypeChecker2
             size_t typesRequired = alias->typeParams.size();
             size_t packsRequired = alias->typePackParams.size();
 
-            bool hasDefaultTypes = std::any_of(alias->typeParams.begin(), alias->typeParams.end(), [](auto&& el) {
-                return el.defaultValue.has_value();
-            });
+            bool hasDefaultTypes = std::any_of(
+                alias->typeParams.begin(),
+                alias->typeParams.end(),
+                [](auto&& el)
+                {
+                    return el.defaultValue.has_value();
+                }
+            );
 
-            bool hasDefaultPacks = std::any_of(alias->typePackParams.begin(), alias->typePackParams.end(), [](auto&& el) {
-                return el.defaultValue.has_value();
-            });
+            bool hasDefaultPacks = std::any_of(
+                alias->typePackParams.begin(),
+                alias->typePackParams.end(),
+                [](auto&& el)
+                {
+                    return el.defaultValue.has_value();
+                }
+            );
 
             if (!ty->hasParameterList)
             {
@@ -1766,6 +2394,7 @@ struct TypeChecker2
                     if (packsProvided != 0)
                     {
                         reportError(GenericError{"Type parameters must come before type pack parameters"}, ty->location);
+                        continue;
                     }
 
                     if (typesProvided < typesRequired)
@@ -1779,9 +2408,11 @@ struct TypeChecker2
                 }
                 else if (p.typePack)
                 {
-                    TypePackId tp = lookupPackAnnotation(p.typePack);
+                    std::optional<TypePackId> tp = lookupPackAnnotation(p.typePack);
+                    if (!tp.has_value())
+                        continue;
 
-                    if (typesProvided < typesRequired && size(tp) == 1 && finite(tp) && first(tp))
+                    if (typesProvided < typesRequired && size(*tp) == 1 && finite(*tp) && first(*tp))
                     {
                         typesProvided += 1;
                     }
@@ -1794,7 +2425,11 @@ struct TypeChecker2
 
             if (extraTypes != 0 && packsProvided == 0)
             {
-                packsProvided += 1;
+                // Extra types are only collected into a pack if a pack is expected
+                if (packsRequired != 0)
+                    packsProvided += 1;
+                else
+                    typesProvided += extraTypes;
             }
 
             for (size_t i = typesProvided; i < typesRequired; ++i)
@@ -1820,13 +2455,15 @@ struct TypeChecker2
 
             if (typesProvided != typesRequired || packsProvided != packsRequired)
             {
-                reportError(IncorrectGenericParameterCount{
-                                /* name */ ty->name.value,
-                                /* typeFun */ *alias,
-                                /* actualParameters */ typesProvided,
-                                /* actualPackParameters */ packsProvided,
-                            },
-                    ty->location);
+                reportError(
+                    IncorrectGenericParameterCount{
+                        /* name */ ty->name.value,
+                        /* typeFun */ *alias,
+                        /* actualParameters */ typesProvided,
+                        /* actualPackParameters */ packsProvided,
+                    },
+                    ty->location
+                );
             }
         }
         else
@@ -1838,7 +2475,8 @@ struct TypeChecker2
                         ty->name.value,
                         SwappedGenericTypeParameter::Kind::Type,
                     },
-                    ty->location);
+                    ty->location
+                );
             }
             else
             {
@@ -1936,7 +2574,8 @@ struct TypeChecker2
                         tp->genericName.value,
                         SwappedGenericTypeParameter::Kind::Pack,
                     },
-                    tp->location);
+                    tp->location
+                );
             }
             else
             {
@@ -1945,94 +2584,163 @@ struct TypeChecker2
         }
     }
 
-    void reduceTypes()
+    struct Reasonings
     {
-        if (FFlag::DebugLuauDontReduceTypes)
-            return;
+        // the list of reasons
+        std::vector<std::string> reasons;
 
-        for (auto [_, scope] : module->scopes)
+        // this should be true if _all_ of the reasons have an error suppressing type, and false otherwise.
+        bool suppressed;
+
+        std::string toString()
         {
-            for (auto& [_, b] : scope->bindings)
+            // DenseHashSet ordering is entirely undefined, so we want to
+            // sort the reasons here to achieve a stable error
+            // stringification.
+            std::sort(reasons.begin(), reasons.end());
+            std::string allReasons;
+            bool first = true;
+            for (const std::string& reason : reasons)
             {
-                if (auto reduced = module->reduction->reduce(b.typeId))
-                    b.typeId = *reduced;
+                if (first)
+                    first = false;
+                else
+                    allReasons += "\n\t";
+
+                allReasons += reason;
             }
 
-            if (auto reduced = module->reduction->reduce(scope->returnType))
-                scope->returnType = *reduced;
+            return allReasons;
+        }
+    };
 
-            if (scope->varargPack)
+    template<typename TID>
+    Reasonings explainReasonings(TID subTy, TID superTy, Location location, const SubtypingResult& r)
+    {
+        if (r.reasoning.empty())
+            return {};
+
+        std::vector<std::string> reasons;
+        bool suppressed = true;
+        for (const SubtypingReasoning& reasoning : r.reasoning)
+        {
+            if (reasoning.subPath.empty() && reasoning.superPath.empty())
+                continue;
+
+            std::optional<TypeOrPack> optSubLeaf = traverse(subTy, reasoning.subPath, builtinTypes);
+            std::optional<TypeOrPack> optSuperLeaf = traverse(superTy, reasoning.superPath, builtinTypes);
+
+            if (!optSubLeaf || !optSuperLeaf)
+                ice->ice("Subtyping test returned a reasoning with an invalid path", location);
+
+            const TypeOrPack& subLeaf = *optSubLeaf;
+            const TypeOrPack& superLeaf = *optSuperLeaf;
+
+            auto subLeafTy = get<TypeId>(subLeaf);
+            auto superLeafTy = get<TypeId>(superLeaf);
+
+            auto subLeafTp = get<TypePackId>(subLeaf);
+            auto superLeafTp = get<TypePackId>(superLeaf);
+
+            if (!subLeafTy && !superLeafTy && !subLeafTp && !superLeafTp)
+                ice->ice("Subtyping test returned a reasoning where one path ends at a type and the other ends at a pack.", location);
+
+            std::string relation = "a subtype of";
+            if (reasoning.variance == SubtypingVariance::Invariant)
+                relation = "exactly";
+            else if (reasoning.variance == SubtypingVariance::Contravariant)
+                relation = "a supertype of";
+
+            std::string reason;
+            if (reasoning.subPath == reasoning.superPath)
+                reason = "at " + toString(reasoning.subPath) + ", " + toString(subLeaf) + " is not " + relation + " " + toString(superLeaf);
+            else
+                reason = "type " + toString(subTy) + toString(reasoning.subPath, /* prefixDot */ true) + " (" + toString(subLeaf) + ") is not " +
+                         relation + " " + toString(superTy) + toString(reasoning.superPath, /* prefixDot */ true) + " (" + toString(superLeaf) + ")";
+
+            reasons.push_back(reason);
+
+            // if we haven't already proved this isn't suppressing, we have to keep checking.
+            if (suppressed)
             {
-                if (auto reduced = module->reduction->reduce(*scope->varargPack))
-                    scope->varargPack = *reduced;
+                if (subLeafTy && superLeafTy)
+                    suppressed &= isErrorSuppressing(location, *subLeafTy) || isErrorSuppressing(location, *superLeafTy);
+                else
+                    suppressed &= isErrorSuppressing(location, *subLeafTp) || isErrorSuppressing(location, *superLeafTp);
             }
-
-            auto reduceMap = [this](auto& map) {
-                for (auto& [_, tf] : map)
-                {
-                    if (auto reduced = module->reduction->reduce(tf))
-                        tf = *reduced;
-                }
-            };
-
-            reduceMap(scope->exportedTypeBindings);
-            reduceMap(scope->privateTypeBindings);
-            reduceMap(scope->privateTypePackBindings);
-            for (auto& [_, space] : scope->importedTypeBindings)
-                reduceMap(space);
         }
 
-        auto reduceOrError = [this](auto& map) {
-            for (auto [ast, t] : map)
-            {
-                if (!t)
-                    continue; // Reminder: this implies that the recursion limit was exceeded.
-                else if (auto reduced = module->reduction->reduce(t))
-                    map[ast] = *reduced;
-                else
-                    reportError(NormalizationTooComplex{}, ast->location);
-            }
-        };
-
-        module->astOriginalResolvedTypes = module->astResolvedTypes;
-
-        // Both [`Module::returnType`] and [`Module::exportedTypeBindings`] are empty here, and
-        // is populated by [`Module::clonePublicInterface`] in the future, so by that point these
-        // two aforementioned fields will only contain types that are irreducible.
-        reduceOrError(module->astTypes);
-        reduceOrError(module->astTypePacks);
-        reduceOrError(module->astExpectedTypes);
-        reduceOrError(module->astOriginalCallTypes);
-        reduceOrError(module->astOverloadResolvedTypes);
-        reduceOrError(module->astResolvedTypes);
-        reduceOrError(module->astResolvedTypePacks);
+        return {std::move(reasons), suppressed};
     }
 
-    template<typename TID>
-    bool isSubtype(TID subTy, TID superTy, NotNull<Scope> scope)
-    {
-        TypeArena arena;
-        Unifier u{NotNull{&normalizer}, Mode::Strict, scope, Location{}, Covariant};
-        u.useScopes = true;
 
-        u.tryUnify(subTy, superTy);
-        const bool ok = u.errors.empty() && u.log.empty();
-        return ok;
+    void explainError(TypeId subTy, TypeId superTy, Location location, const SubtypingResult& result)
+    {
+        switch (shouldSuppressErrors(NotNull{&normalizer}, subTy).orElse(shouldSuppressErrors(NotNull{&normalizer}, superTy)))
+        {
+        case ErrorSuppression::Suppress:
+            return;
+        case ErrorSuppression::NormalizationFailed:
+            reportError(NormalizationTooComplex{}, location);
+        case ErrorSuppression::DoNotSuppress:
+            break;
+        }
+
+        Reasonings reasonings = explainReasonings(subTy, superTy, location, result);
+
+        if (!reasonings.suppressed)
+            reportError(TypeMismatch{superTy, subTy, reasonings.toString()}, location);
     }
 
-    template<typename TID>
-    ErrorVec tryUnify(NotNull<Scope> scope, const Location& location, TID subTy, TID superTy, CountMismatch::Context context = CountMismatch::Arg)
+    void explainError(TypePackId subTy, TypePackId superTy, Location location, const SubtypingResult& result)
     {
-        Unifier u{NotNull{&normalizer}, Mode::Strict, scope, location, Covariant};
-        u.ctx = context;
-        u.useScopes = true;
-        u.tryUnify(subTy, superTy);
+        switch (shouldSuppressErrors(NotNull{&normalizer}, subTy).orElse(shouldSuppressErrors(NotNull{&normalizer}, superTy)))
+        {
+        case ErrorSuppression::Suppress:
+            return;
+        case ErrorSuppression::NormalizationFailed:
+            reportError(NormalizationTooComplex{}, location);
+        case ErrorSuppression::DoNotSuppress:
+            break;
+        }
 
-        return std::move(u.errors);
+        Reasonings reasonings = explainReasonings(subTy, superTy, location, result);
+
+        if (!reasonings.suppressed)
+            reportError(TypePackMismatch{superTy, subTy, reasonings.toString()}, location);
+    }
+
+    bool testIsSubtype(TypeId subTy, TypeId superTy, Location location)
+    {
+        SubtypingResult r = subtyping->isSubtype(subTy, superTy);
+
+        if (r.normalizationTooComplex)
+            reportError(NormalizationTooComplex{}, location);
+
+        if (!r.isSubtype)
+            explainError(subTy, superTy, location, r);
+
+        return r.isSubtype;
+    }
+
+    bool testIsSubtype(TypePackId subTy, TypePackId superTy, Location location)
+    {
+        SubtypingResult r = subtyping->isSubtype(subTy, superTy);
+
+        if (r.normalizationTooComplex)
+            reportError(NormalizationTooComplex{}, location);
+
+        if (!r.isSubtype)
+            explainError(subTy, superTy, location, r);
+
+        return r.isSubtype;
     }
 
     void reportError(TypeErrorData data, const Location& location)
     {
+        if (auto utk = get_if<UnknownProperty>(&data))
+            diagnoseMissingTableKey(utk, data);
+
         module->errors.emplace_back(location, module->name, std::move(data));
 
         if (logger)
@@ -2050,56 +2758,119 @@ struct TypeChecker2
             reportError(std::move(e));
     }
 
-    // If the provided type does not have the named property, report an error.
-    void checkIndexTypeFromType(TypeId tableTy, const std::string& prop, const Location& location, ValueContext context)
+    struct PropertyTypes
     {
-        const NormalizedType* norm = normalizer.normalize(tableTy);
-        if (!norm)
+        // a vector of all the types assigned to the given property.
+        std::vector<TypeId> typesOfProp;
+
+        // a vector of all the types that are missing the given property.
+        std::vector<TypeId> missingProp;
+
+        bool foundOneProp() const
         {
-            reportError(NormalizationTooComplex{}, location);
-            return;
+            return !typesOfProp.empty();
         }
 
-        bool foundOneProp = false;
+        bool noneMissingProp() const
+        {
+            return missingProp.empty();
+        }
+
+        bool foundMissingProp() const
+        {
+            return !missingProp.empty();
+        }
+    };
+
+    /* A helper for checkIndexTypeFromType.
+     *
+     * Returns a pair:
+     * * A boolean indicating that at least one of the constituent types
+     *     contains the prop, and
+     * * A vector of types that do not contain the prop.
+     */
+    PropertyTypes lookupProp(
+        const NormalizedType* norm,
+        const std::string& prop,
+        ValueContext context,
+        const Location& location,
+        TypeId astIndexExprType,
+        std::vector<TypeError>& errors
+    )
+    {
+        std::vector<TypeId> typesOfProp;
         std::vector<TypeId> typesMissingTheProp;
 
-        auto fetch = [&](TypeId ty) {
-            if (!normalizer.isInhabited(ty))
+        // this is `false` if we ever hit the resource limits during any of our uses of `fetch`.
+        bool normValid = true;
+
+        auto fetch = [&](TypeId ty)
+        {
+            NormalizationResult result = normalizer.isInhabited(ty);
+            if (result == NormalizationResult::HitLimits)
+                normValid = false;
+            if (result != NormalizationResult::True)
                 return;
 
-            std::unordered_set<TypeId> seen;
-            bool found = hasIndexTypeFromType(ty, prop, location, seen);
-            foundOneProp |= found;
-            if (!found)
+            DenseHashSet<TypeId> seen{nullptr};
+            PropertyType res = hasIndexTypeFromType(ty, prop, context, location, seen, astIndexExprType, errors);
+
+            if (res.present == NormalizationResult::HitLimits)
+            {
+                normValid = false;
+                return;
+            }
+
+            if (res.present == NormalizationResult::True && res.result)
+                typesOfProp.emplace_back(*res.result);
+
+            if (res.present == NormalizationResult::False)
                 typesMissingTheProp.push_back(ty);
         };
 
-        fetch(norm->tops);
-        fetch(norm->booleans);
+        if (normValid)
+            fetch(norm->tops);
+        if (normValid)
+            fetch(norm->booleans);
 
-        if (FFlag::LuauNegatedClassTypes)
+        if (normValid)
         {
             for (const auto& [ty, _negations] : norm->classes.classes)
             {
                 fetch(ty);
+
+                if (!normValid)
+                    break;
             }
         }
-        else
-        {
-            for (TypeId ty : norm->DEPRECATED_classes)
-                fetch(ty);
-        }
-        fetch(norm->errors);
-        fetch(norm->nils);
-        fetch(norm->numbers);
-        if (!norm->strings.isNever())
+
+        if (normValid)
+            fetch(norm->errors);
+        if (normValid)
+            fetch(norm->nils);
+        if (normValid)
+            fetch(norm->numbers);
+        if (normValid && !norm->strings.isNever())
             fetch(builtinTypes->stringType);
-        fetch(norm->threads);
-        for (TypeId ty : norm->tables)
-            fetch(ty);
-        if (norm->functions.isTop)
+        if (normValid)
+            fetch(norm->threads);
+        if (normValid)
+            fetch(norm->buffers);
+
+        if (normValid)
+        {
+            for (TypeId ty : norm->tables)
+            {
+                fetch(ty);
+
+                if (!normValid)
+                    break;
+            }
+        }
+
+        if (normValid && norm->functions.isTop)
             fetch(builtinTypes->functionType);
-        else if (!norm->functions.isNever())
+        else if (normValid && !norm->functions.isNever())
         {
             if (norm->functions.parts.size() == 1)
                 fetch(norm->functions.parts.front());
@@ -2107,88 +2878,295 @@ struct TypeChecker2
             {
                 std::vector<TypeId> parts;
                 parts.insert(parts.end(), norm->functions.parts.begin(), norm->functions.parts.end());
-                fetch(testArena.addType(IntersectionType{std::move(parts)}));
+                fetch(module->internalTypes.addType(IntersectionType{std::move(parts)}));
             }
-        }
-        for (const auto& [tyvar, intersect] : norm->tyvars)
-        {
-            if (get<NeverType>(intersect->tops))
-            {
-                TypeId ty = normalizer.typeFromNormal(*intersect);
-                fetch(testArena.addType(IntersectionType{{tyvar, ty}}));
-            }
-            else
-                fetch(tyvar);
         }
 
-        if (!typesMissingTheProp.empty())
+        if (normValid)
         {
-            if (foundOneProp)
-                reportError(MissingUnionProperty{tableTy, typesMissingTheProp, prop}, location);
+            for (const auto& [tyvar, intersect] : norm->tyvars)
+            {
+                if (get<NeverType>(intersect->tops))
+                {
+                    TypeId ty = normalizer.typeFromNormal(*intersect);
+                    fetch(module->internalTypes.addType(IntersectionType{{tyvar, ty}}));
+                }
+                else
+                    fetch(follow(tyvar));
+
+                if (!normValid)
+                    break;
+            }
+        }
+
+        return {typesOfProp, typesMissingTheProp};
+    }
+
+    // If the provided type does not have the named property, report an error.
+    void checkIndexTypeFromType(TypeId tableTy, const std::string& prop, ValueContext context, const Location& location, TypeId astIndexExprType)
+    {
+        std::shared_ptr<const NormalizedType> norm = normalizer.normalize(tableTy);
+        if (!norm)
+        {
+            reportError(NormalizationTooComplex{}, location);
+            return;
+        }
+
+        // if the type is error suppressing, we don't actually have any work left to do.
+        if (norm->shouldSuppressErrors())
+            return;
+
+        std::vector<TypeError> dummy;
+        const auto propTypes = lookupProp(norm.get(), prop, context, location, astIndexExprType, module->errors);
+
+        if (propTypes.foundMissingProp())
+        {
+            if (propTypes.foundOneProp())
+                reportError(MissingUnionProperty{tableTy, propTypes.missingProp, prop}, location);
             // For class LValues, we don't want to report an extension error,
             // because classes come into being with full knowledge of their
             // shape. We instead want to report the unknown property error of
             // the `else` branch.
             else if (context == ValueContext::LValue && !get<ClassType>(tableTy))
-                reportError(CannotExtendTable{tableTy, CannotExtendTable::Property, prop}, location);
+            {
+                const auto lvPropTypes = lookupProp(norm.get(), prop, ValueContext::RValue, location, astIndexExprType, dummy);
+                if (lvPropTypes.foundOneProp() && lvPropTypes.noneMissingProp())
+                    reportError(PropertyAccessViolation{tableTy, prop, PropertyAccessViolation::CannotWrite}, location);
+                else if (get<PrimitiveType>(tableTy) || get<FunctionType>(tableTy))
+                    reportError(NotATable{tableTy}, location);
+                else
+                    reportError(CannotExtendTable{tableTy, CannotExtendTable::Property, prop}, location);
+            }
+            else if (context == ValueContext::RValue && !get<ClassType>(tableTy))
+            {
+                const auto rvPropTypes = lookupProp(norm.get(), prop, ValueContext::LValue, location, astIndexExprType, dummy);
+                if (rvPropTypes.foundOneProp() && rvPropTypes.noneMissingProp())
+                    reportError(PropertyAccessViolation{tableTy, prop, PropertyAccessViolation::CannotRead}, location);
+                else
+                    reportError(UnknownProperty{tableTy, prop}, location);
+            }
             else
                 reportError(UnknownProperty{tableTy, prop}, location);
         }
     }
 
-    bool hasIndexTypeFromType(TypeId ty, const std::string& prop, const Location& location, std::unordered_set<TypeId>& seen)
+    struct PropertyType
+    {
+        NormalizationResult present;
+        std::optional<TypeId> result;
+    };
+
+    PropertyType hasIndexTypeFromType(
+        TypeId ty,
+        const std::string& prop,
+        ValueContext context,
+        const Location& location,
+        DenseHashSet<TypeId>& seen,
+        TypeId astIndexExprType,
+        std::vector<TypeError>& errors
+    )
     {
         // If we have already encountered this type, we must assume that some
         // other codepath will do the right thing and signal false if the
         // property is not present.
-        const bool isUnseen = seen.insert(ty).second;
-        if (!isUnseen)
-            return true;
+        if (seen.contains(ty))
+            return {NormalizationResult::True, {}};
+        seen.insert(ty);
 
         if (get<ErrorType>(ty) || get<AnyType>(ty) || get<NeverType>(ty))
-            return true;
+            return {NormalizationResult::True, {ty}};
 
         if (isString(ty))
         {
-            std::optional<TypeId> mtIndex = Luau::findMetatableEntry(builtinTypes, module->errors, builtinTypes->stringType, "__index", location);
+            std::optional<TypeId> mtIndex = Luau::findMetatableEntry(builtinTypes, errors, builtinTypes->stringType, "__index", location);
             LUAU_ASSERT(mtIndex);
             ty = *mtIndex;
         }
 
         if (auto tt = getTableType(ty))
         {
-            if (findTablePropertyRespectingMeta(builtinTypes, module->errors, ty, prop, location))
-                return true;
+            if (auto resTy = findTablePropertyRespectingMeta(builtinTypes, errors, ty, prop, context, location))
+                return {NormalizationResult::True, resTy};
 
-            else if (tt->indexer && isPrim(tt->indexer->indexType, PrimitiveType::String))
-                return true;
+            if (tt->indexer)
+            {
+                TypeId indexType = follow(tt->indexer->indexType);
+                if (isPrim(indexType, PrimitiveType::String))
+                    return {NormalizationResult::True, {tt->indexer->indexResultType}};
+                // If the indexer looks like { [any] : _} - the prop lookup should be allowed!
+                else if (get<AnyType>(indexType) || get<UnknownType>(indexType))
+                    return {NormalizationResult::True, {tt->indexer->indexResultType}};
+            }
 
-            else
-                return false;
+
+            // if we are in a conditional context, we treat the property as present and `unknown` because
+            // we may be _refining_ `tableTy` to include that property. we will want to revisit this a bit
+            // in the future once luau has support for exact tables since this only applies when inexact.
+            return {inConditional(typeContext) ? NormalizationResult::True : NormalizationResult::False, {builtinTypes->unknownType}};
         }
         else if (const ClassType* cls = get<ClassType>(ty))
-            return bool(lookupClassProp(cls, prop));
+        {
+            // If the property doesn't exist on the class, we consult the indexer
+            // We need to check if the type of the index expression foo (x[foo])
+            // is compatible with the indexer's indexType
+            // Construct the intersection and test inhabitedness!
+            if (auto property = lookupClassProp(cls, prop))
+                return {NormalizationResult::True, context == ValueContext::LValue ? property->writeTy : property->readTy};
+            if (cls->indexer)
+            {
+                TypeId inhabitatedTestType = module->internalTypes.addType(IntersectionType{{cls->indexer->indexType, astIndexExprType}});
+                return {normalizer.isInhabited(inhabitatedTestType), {cls->indexer->indexResultType}};
+            }
+            return {NormalizationResult::False, {}};
+        }
         else if (const UnionType* utv = get<UnionType>(ty))
-            return std::all_of(begin(utv), end(utv), [&](TypeId part) {
-                return hasIndexTypeFromType(part, prop, location, seen);
-            });
+        {
+            std::vector<TypeId> parts;
+            parts.reserve(utv->options.size());
+
+            for (TypeId part : utv)
+            {
+                PropertyType result = hasIndexTypeFromType(part, prop, context, location, seen, astIndexExprType, errors);
+
+                if (result.present != NormalizationResult::True)
+                    return {result.present, {}};
+                if (result.result)
+                    parts.emplace_back(*result.result);
+            }
+
+            if (parts.size() == 0)
+                return {NormalizationResult::False, {}};
+
+            if (parts.size() == 1)
+                return {NormalizationResult::True, {parts[0]}};
+
+            TypeId propTy;
+            if (context == ValueContext::LValue)
+                propTy = module->internalTypes.addType(IntersectionType{parts});
+            else
+                propTy = module->internalTypes.addType(UnionType{parts});
+
+            return {NormalizationResult::True, propTy};
+        }
         else if (const IntersectionType* itv = get<IntersectionType>(ty))
-            return std::any_of(begin(itv), end(itv), [&](TypeId part) {
-                return hasIndexTypeFromType(part, prop, location, seen);
-            });
+        {
+            for (TypeId part : itv)
+            {
+                PropertyType result = hasIndexTypeFromType(part, prop, context, location, seen, astIndexExprType, errors);
+                if (result.present != NormalizationResult::False)
+                    return result;
+            }
+
+            return {NormalizationResult::False, {}};
+        }
+        else if (const PrimitiveType* pt = get<PrimitiveType>(ty))
+            return {(inConditional(typeContext) && pt->type == PrimitiveType::Table) ? NormalizationResult::True : NormalizationResult::False, {ty}};
         else
+            return {NormalizationResult::False, {}};
+    }
+
+    void diagnoseMissingTableKey(UnknownProperty* utk, TypeErrorData& data) const
+    {
+        std::string_view sv(utk->key);
+        std::set<Name> candidates;
+
+        auto accumulate = [&](const TableType::Props& props)
+        {
+            for (const auto& [name, ty] : props)
+            {
+                if (sv != name && equalsLower(sv, name))
+                    candidates.insert(name);
+            }
+        };
+
+        if (auto ttv = getTableType(utk->table))
+            accumulate(ttv->props);
+        else if (auto ctv = get<ClassType>(follow(utk->table)))
+        {
+            while (ctv)
+            {
+                accumulate(ctv->props);
+
+                if (!ctv->parent)
+                    break;
+
+                ctv = get<ClassType>(*ctv->parent);
+                LUAU_ASSERT(ctv);
+            }
+        }
+
+        if (!candidates.empty())
+            data = TypeErrorData(UnknownPropButFoundLikeProp{utk->table, utk->key, candidates});
+    }
+
+    bool isErrorSuppressing(Location loc, TypeId ty)
+    {
+        switch (shouldSuppressErrors(NotNull{&normalizer}, ty))
+        {
+        case ErrorSuppression::DoNotSuppress:
             return false;
+        case ErrorSuppression::Suppress:
+            return true;
+        case ErrorSuppression::NormalizationFailed:
+            reportError(NormalizationTooComplex{}, loc);
+            return false;
+        };
+
+        LUAU_ASSERT(false);
+        return false; // UNREACHABLE
+    }
+
+    bool isErrorSuppressing(Location loc1, TypeId ty1, Location loc2, TypeId ty2)
+    {
+        return isErrorSuppressing(loc1, ty1) || isErrorSuppressing(loc2, ty2);
+    }
+
+    bool isErrorSuppressing(Location loc, TypePackId tp)
+    {
+        switch (shouldSuppressErrors(NotNull{&normalizer}, tp))
+        {
+        case ErrorSuppression::DoNotSuppress:
+            return false;
+        case ErrorSuppression::Suppress:
+            return true;
+        case ErrorSuppression::NormalizationFailed:
+            reportError(NormalizationTooComplex{}, loc);
+            return false;
+        };
+
+        LUAU_ASSERT(false);
+        return false; // UNREACHABLE
+    }
+
+    bool isErrorSuppressing(Location loc1, TypePackId tp1, Location loc2, TypePackId tp2)
+    {
+        return isErrorSuppressing(loc1, tp1) || isErrorSuppressing(loc2, tp2);
     }
 };
 
-void check(NotNull<BuiltinTypes> builtinTypes, NotNull<UnifierSharedState> unifierState, DcrLogger* logger, const SourceModule& sourceModule, Module* module)
+void check(
+    NotNull<BuiltinTypes> builtinTypes,
+    NotNull<UnifierSharedState> unifierState,
+    NotNull<TypeCheckLimits> limits,
+    DcrLogger* logger,
+    const SourceModule& sourceModule,
+    Module* module
+)
 {
-    TypeChecker2 typeChecker{builtinTypes, unifierState, logger, &sourceModule, module};
-    typeChecker.reduceTypes();
+    LUAU_TIMETRACE_SCOPE("check", "Typechecking");
+
+    TypeChecker2 typeChecker{builtinTypes, unifierState, limits, logger, &sourceModule, module};
+
     typeChecker.visit(sourceModule.root);
 
+    // if the only error we're producing is one about constraint solving being incomplete, we can silence it.
+    // this means we won't give this warning if types seem totally nonsensical, but there are no other errors.
+    // this is probably, on the whole, a good decision to not annoy users though.
+    if (module->errors.size() == 1 && get<ConstraintSolvingIncompleteError>(module->errors[0]))
+        module->errors.clear();
+
     unfreeze(module->interfaceTypes);
-    copyErrors(module->errors, module->interfaceTypes);
+    copyErrors(module->errors, module->interfaceTypes, builtinTypes);
     freeze(module->interfaceTypes);
 }
 

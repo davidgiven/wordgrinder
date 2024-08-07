@@ -9,32 +9,48 @@
 Proto* luaF_newproto(lua_State* L)
 {
     Proto* f = luaM_newgco(L, Proto, sizeof(Proto), L->activememcat);
+
     luaC_init(L, f, LUA_TPROTO);
-    f->k = NULL;
-    f->sizek = 0;
-    f->p = NULL;
-    f->sizep = 0;
-    f->code = NULL;
-    f->sizecode = 0;
-    f->sizeupvalues = 0;
+
     f->nups = 0;
-    f->upvalues = NULL;
     f->numparams = 0;
     f->is_vararg = 0;
     f->maxstacksize = 0;
-    f->sizelineinfo = 0;
-    f->linegaplog2 = 0;
+    f->flags = 0;
+
+    f->k = NULL;
+    f->code = NULL;
+    f->p = NULL;
+    f->codeentry = NULL;
+
+    f->execdata = NULL;
+    f->exectarget = 0;
+
     f->lineinfo = NULL;
     f->abslineinfo = NULL;
-    f->sizelocvars = 0;
     f->locvars = NULL;
+    f->upvalues = NULL;
     f->source = NULL;
+
     f->debugname = NULL;
     f->debuginsn = NULL;
 
-#if LUA_CUSTOM_EXECUTION
-    f->execdata = NULL;
-#endif
+    f->typeinfo = NULL;
+
+    f->userdata = NULL;
+
+    f->gclist = NULL;
+
+    f->sizecode = 0;
+    f->sizep = 0;
+    f->sizelocvars = 0;
+    f->sizeupvalues = 0;
+    f->sizek = 0;
+    f->sizelineinfo = 0;
+    f->linegaplog2 = 0;
+    f->linedefined = 0;
+    f->bytecodeid = 0;
+    f->sizetypeinfo = 0;
 
     return f;
 }
@@ -155,13 +171,11 @@ void luaF_freeproto(lua_State* L, Proto* f, lua_Page* page)
     if (f->debuginsn)
         luaM_freearray(L, f->debuginsn, f->sizecode, uint8_t, f->memcat);
 
-#if LUA_CUSTOM_EXECUTION
     if (f->execdata)
-    {
-        LUAU_ASSERT(L->global->ecb.destroy);
         L->global->ecb.destroy(L, f);
-    }
-#endif
+
+    if (f->typeinfo)
+        luaM_freearray(L, f->typeinfo, f->sizetypeinfo, uint8_t, f->memcat);
 
     luaM_freegco(L, f, sizeof(Proto), f->memcat, page);
 }

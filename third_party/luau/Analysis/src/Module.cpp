@@ -3,24 +3,19 @@
 
 #include "Luau/Clone.h"
 #include "Luau/Common.h"
-#include "Luau/ConstraintGraphBuilder.h"
+#include "Luau/ConstraintGenerator.h"
 #include "Luau/Normalize.h"
 #include "Luau/RecursionCounter.h"
 #include "Luau/Scope.h"
 #include "Luau/Type.h"
 #include "Luau/TypeInfer.h"
 #include "Luau/TypePack.h"
-#include "Luau/TypeReduction.h"
 #include "Luau/VisitType.h"
 
 #include <algorithm>
 
 LUAU_FASTFLAG(DebugLuauDeferredConstraintResolution);
-LUAU_FASTFLAGVARIABLE(LuauClonePublicInterfaceLess2, false);
-LUAU_FASTFLAG(LuauSubstitutionReentrant);
-LUAU_FASTFLAG(LuauClassTypeVarsInSubstitution);
-LUAU_FASTFLAG(LuauSubstitutionFixMissingFields);
-LUAU_FASTFLAGVARIABLE(LuauCopyExportedTypes, false);
+LUAU_FASTFLAGVARIABLE(LuauSkipEmptyInstantiations, false);
 
 namespace Luau
 {
@@ -29,8 +24,8 @@ static bool contains(Position pos, Comment comment)
 {
     if (comment.location.contains(pos))
         return true;
-    else if (comment.type == Lexeme::BrokenComment &&
-             comment.location.begin <= pos) // Broken comments are broken specifically because they don't have an end
+    else if (comment.type == Lexeme::BrokenComment && comment.location.begin <= pos) // Broken comments are broken specifically because they don't
+                                                                                     // have an end
         return true;
     else if (comment.type == Lexeme::Comment && comment.location.end == pos)
         return true;
@@ -41,9 +36,14 @@ static bool contains(Position pos, Comment comment)
 static bool isWithinComment(const std::vector<Comment>& commentLocations, Position pos)
 {
     auto iter = std::lower_bound(
-        commentLocations.begin(), commentLocations.end(), Comment{Lexeme::Comment, Location{pos, pos}}, [](const Comment& a, const Comment& b) {
+        commentLocations.begin(),
+        commentLocations.end(),
+        Comment{Lexeme::Comment, Location{pos, pos}},
+        [](const Comment& a, const Comment& b)
+        {
             return a.location.end < b.location.end;
-        });
+        }
+    );
 
     if (iter == commentLocations.end())
         return false;
@@ -100,14 +100,43 @@ struct ClonePublicInterface : Substitution
         return tp->owningArena == &module->internalTypes;
     }
 
+    bool ignoreChildrenVisit(TypeId ty) override
+    {
+        if (ty->owningArena != &module->internalTypes)
+            return true;
+
+        return false;
+    }
+
+    bool ignoreChildrenVisit(TypePackId tp) override
+    {
+        if (tp->owningArena != &module->internalTypes)
+            return true;
+
+        return false;
+    }
+
     TypeId clean(TypeId ty) override
     {
         TypeId result = clone(ty);
 
         if (FunctionType* ftv = getMutable<FunctionType>(result))
+        {
+            if (FFlag::LuauSkipEmptyInstantiations && ftv->generics.empty() && ftv->genericPacks.empty())
+            {
+                GenericTypeFinder marker;
+                marker.traverse(result);
+
+                if (!marker.found)
+                    ftv->hasNoFreeOrGenericTypes = true;
+            }
+
             ftv->level = TypeLevel{0, 0};
+        }
         else if (TableType* ttv = getMutable<TableType>(result))
+        {
             ttv->level = TypeLevel{0, 0};
+        }
 
         return result;
     }
@@ -119,8 +148,6 @@ struct ClonePublicInterface : Substitution
 
     TypeId cloneType(TypeId ty)
     {
-        LUAU_ASSERT(FFlag::LuauSubstitutionReentrant && FFlag::LuauSubstitutionFixMissingFields);
-
         std::optional<TypeId> result = substitute(ty);
         if (result)
         {
@@ -135,8 +162,6 @@ struct ClonePublicInterface : Substitution
 
     TypePackId cloneTypePack(TypePackId tp)
     {
-        LUAU_ASSERT(FFlag::LuauSubstitutionReentrant && FFlag::LuauSubstitutionFixMissingFields);
-
         std::optional<TypePackId> result = substitute(tp);
         if (result)
         {
@@ -151,8 +176,6 @@ struct ClonePublicInterface : Substitution
 
     TypeFun cloneTypeFun(const TypeFun& tf)
     {
-        LUAU_ASSERT(FFlag::LuauSubstitutionReentrant && FFlag::LuauSubstitutionFixMissingFields);
-
         std::vector<GenericTypeDefinition> typeParams;
         std::vector<GenericTypePackDefinition> typePackParams;
 
@@ -192,10 +215,7 @@ Module::~Module()
 
 void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter& ice)
 {
-    LUAU_ASSERT(interfaceTypes.types.empty());
-    LUAU_ASSERT(interfaceTypes.typePacks.empty());
-
-    CloneState cloneState;
+    CloneState cloneState{builtinTypes};
 
     ScopePtr moduleScope = getModuleScope();
 
@@ -205,43 +225,28 @@ void Module::clonePublicInterface(NotNull<BuiltinTypes> builtinTypes, InternalEr
     TxnLog log;
     ClonePublicInterface clonePublicInterface{&log, builtinTypes, this};
 
-    if (FFlag::LuauClonePublicInterfaceLess2)
-        returnType = clonePublicInterface.cloneTypePack(returnType);
-    else
-        returnType = clone(returnType, interfaceTypes, cloneState);
+    returnType = clonePublicInterface.cloneTypePack(returnType);
 
     moduleScope->returnType = returnType;
     if (varargPack)
     {
-        if (FFlag::LuauClonePublicInterfaceLess2)
-            varargPack = clonePublicInterface.cloneTypePack(*varargPack);
-        else
-            varargPack = clone(*varargPack, interfaceTypes, cloneState);
+        varargPack = clonePublicInterface.cloneTypePack(*varargPack);
         moduleScope->varargPack = varargPack;
     }
 
     for (auto& [name, tf] : moduleScope->exportedTypeBindings)
     {
-        if (FFlag::LuauClonePublicInterfaceLess2)
-            tf = clonePublicInterface.cloneTypeFun(tf);
-        else
-            tf = clone(tf, interfaceTypes, cloneState);
+        tf = clonePublicInterface.cloneTypeFun(tf);
     }
 
     for (auto& [name, ty] : declaredGlobals)
     {
-        if (FFlag::LuauClonePublicInterfaceLess2)
-            ty = clonePublicInterface.cloneType(ty);
-        else
-            ty = clone(ty, interfaceTypes, cloneState);
+        ty = clonePublicInterface.cloneType(ty);
     }
 
     // Copy external stuff over to Module itself
     this->returnType = moduleScope->returnType;
-    if (FFlag::DebugLuauDeferredConstraintResolution || FFlag::LuauCopyExportedTypes)
-        this->exportedTypeBindings = moduleScope->exportedTypeBindings;
-    else
-        this->exportedTypeBindings = std::move(moduleScope->exportedTypeBindings);
+    this->exportedTypeBindings = moduleScope->exportedTypeBindings;
 }
 
 bool Module::hasModuleScope() const

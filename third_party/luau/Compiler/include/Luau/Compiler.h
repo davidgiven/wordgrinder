@@ -26,6 +26,12 @@ struct CompileOptions
     // 2 - full debug info with local & upvalue names; necessary for debugger
     int debugLevel = 1;
 
+    // type information is used to guide native code generation decisions
+    // information includes testable types for function arguments, locals, upvalues and some temporaries
+    // 0 - generate for native modules
+    // 1 - generate for all modules
+    int typeInfoLevel = 0;
+
     // 0 - no code coverage support
     // 1 - statement coverage
     // 2 - statement and expression coverage (verbose)
@@ -35,8 +41,14 @@ struct CompileOptions
     const char* vectorLib = nullptr;
     const char* vectorCtor = nullptr;
 
+    // vector type name for type tables; disabled by default
+    const char* vectorType = nullptr;
+
     // null-terminated array of globals that are mutable; disables the import optimization for fields accessed through these
-    const char** mutableGlobals = nullptr;
+    const char* const* mutableGlobals = nullptr;
+
+    // null-terminated array of userdata types that will be included in the type information
+    const char* const* userdataTypes = nullptr;
 };
 
 class CompileError : public std::exception
@@ -63,6 +75,10 @@ void compileOrThrow(BytecodeBuilder& bytecode, const std::string& source, const 
 
 // compiles bytecode into a bytecode blob, that either contains the valid bytecode or an encoded error that luau_load can decode
 std::string compile(
-    const std::string& source, const CompileOptions& options = {}, const ParseOptions& parseOptions = {}, BytecodeEncoder* encoder = nullptr);
+    const std::string& source,
+    const CompileOptions& options = {},
+    const ParseOptions& parseOptions = {},
+    BytecodeEncoder* encoder = nullptr
+);
 
 } // namespace Luau

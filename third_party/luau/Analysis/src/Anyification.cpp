@@ -6,13 +6,17 @@
 #include "Luau/Normalize.h"
 #include "Luau/TxnLog.h"
 
-LUAU_FASTFLAG(LuauClassTypeVarsInSubstitution)
-
 namespace Luau
 {
 
-Anyification::Anyification(TypeArena* arena, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter* iceHandler,
-    TypeId anyType, TypePackId anyTypePack)
+Anyification::Anyification(
+    TypeArena* arena,
+    NotNull<Scope> scope,
+    NotNull<BuiltinTypes> builtinTypes,
+    InternalErrorReporter* iceHandler,
+    TypeId anyType,
+    TypePackId anyTypePack
+)
     : Substitution(TxnLog::empty(), arena)
     , scope(scope)
     , builtinTypes(builtinTypes)
@@ -22,8 +26,14 @@ Anyification::Anyification(TypeArena* arena, NotNull<Scope> scope, NotNull<Built
 {
 }
 
-Anyification::Anyification(TypeArena* arena, const ScopePtr& scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter* iceHandler,
-    TypeId anyType, TypePackId anyTypePack)
+Anyification::Anyification(
+    TypeArena* arena,
+    const ScopePtr& scope,
+    NotNull<BuiltinTypes> builtinTypes,
+    InternalErrorReporter* iceHandler,
+    TypeId anyType,
+    TypePackId anyTypePack
+)
     : Anyification(arena, NotNull{scope.get()}, builtinTypes, iceHandler, anyType, anyTypePack)
 {
 }
@@ -78,7 +88,7 @@ TypePackId Anyification::clean(TypePackId tp)
 
 bool Anyification::ignoreChildren(TypeId ty)
 {
-    if (FFlag::LuauClassTypeVarsInSubstitution && get<ClassType>(ty))
+    if (get<ClassType>(ty))
         return true;
 
     return ty->persistent;

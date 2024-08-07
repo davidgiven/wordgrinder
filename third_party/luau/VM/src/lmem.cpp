@@ -53,6 +53,10 @@
  * for each block size there's a page free list that contains pages that have at least one free block
  * (global_State::freegcopages). This free list is used to make sure object allocation is O(1).
  *
+ * When LUAU_ASSERTENABLED is enabled, all non-GCO pages are also linked in a list (global_State::allpages).
+ * Because this list is not strictly required for runtime operations, it is only tracked for the purposes of
+ * debugging. While overhead of linking those pages together is very small, unnecessary operations are avoided.
+ *
  * Compared to GCOs, regular allocations have two important differences: they can be freed in isolation,
  * and they don't start with a GC header. Because of this, each allocation is prefixed with block metadata,
  * which contains the pointer to the page for allocated blocks, and the pointer to the next free block
@@ -98,6 +102,8 @@
  */
 #if defined(__APPLE__)
 #define ABISWITCH(x64, ms32, gcc32) (sizeof(void*) == 8 ? x64 : gcc32)
+#elif defined(__i386__) && defined(__MINGW32__) && !defined(__MINGW64__)
+#define ABISWITCH(x64, ms32, gcc32) (ms32)
 #elif defined(__i386__) && !defined(_MSC_VER)
 #define ABISWITCH(x64, ms32, gcc32) (gcc32)
 #else
@@ -114,12 +120,28 @@ static_assert(sizeof(LuaNode) == ABISWITCH(32, 32, 32), "size mismatch for table
 #endif
 
 static_assert(offsetof(TString, data) == ABISWITCH(24, 20, 20), "size mismatch for string header");
-//static_assert(offsetof(Udata, data) == ABISWITCH(16, 16, 12), "size mismatch for userdata header");
+static_assert(offsetof(Udata, data) == ABISWITCH(16, 16, 12), "size mismatch for userdata header");
 static_assert(sizeof(Table) == ABISWITCH(48, 32, 32), "size mismatch for table header");
+static_assert(offsetof(Buffer, data) == ABISWITCH(8, 8, 8), "size mismatch for buffer header");
 
 const size_t kSizeClasses = LUA_SIZECLASSES;
-const size_t kMaxSmallSize = 512;
-const size_t kPageSize = 16 * 1024 - 24; // slightly under 16KB since that results in less fragmentation due to heap metadata
+
+// Controls the number of entries in SizeClassConfig and define the maximum possible paged allocation size
+// Modifications require updates the SizeClassConfig initialization
+const size_t kMaxSmallSize = 1024;
+
+// Effective limit on object size to use paged allocation
+// Can be modified without additional changes to code, provided it is smaller or equal to kMaxSmallSize
+const size_t kMaxSmallSizeUsed = 1024;
+
+const size_t kLargePageThreshold = 512; // larger pages are used for objects larger than this size to fit more of them into a page
+
+// constant factor to reduce our page sizes by, to increase the chances that pages we allocate will
+// allow external allocators to allocate them without wasting space due to rounding introduced by their heap meta data
+const size_t kExternalAllocatorMetaDataReduction = 24;
+
+const size_t kSmallPageSize = 16 * 1024 - kExternalAllocatorMetaDataReduction;
+const size_t kLargePageSize = 32 * 1024 - kExternalAllocatorMetaDataReduction;
 
 const size_t kBlockHeader = sizeof(double) > sizeof(void*) ? sizeof(double) : sizeof(void*); // suitable for aligning double & void* on all platforms
 const size_t kGCOLinkOffset = (sizeof(GCheader) + sizeof(void*) - 1) & ~(sizeof(void*) - 1); // GCO pages contain freelist links after the GC header
@@ -140,6 +162,7 @@ struct SizeClassConfig
         // - we first allocate sizes classes in multiples of 8
         // - after the first cutoff we allocate size classes in multiples of 16
         // - after the second cutoff we allocate size classes in multiples of 32
+        // - after the third cutoff we allocate size classes in multiples of 64
         // this balances internal fragmentation vs external fragmentation
         for (int size = 8; size < 64; size += 8)
             sizeOfClass[classCount++] = size;
@@ -147,7 +170,10 @@ struct SizeClassConfig
         for (int size = 64; size < 256; size += 16)
             sizeOfClass[classCount++] = size;
 
-        for (int size = 256; size <= 512; size += 32)
+        for (int size = 256; size < 512; size += 32)
+            sizeOfClass[classCount++] = size;
+
+        for (int size = 512; size <= 1024; size += 64)
             sizeOfClass[classCount++] = size;
 
         LUAU_ASSERT(size_t(classCount) <= kSizeClasses);
@@ -166,11 +192,17 @@ struct SizeClassConfig
 const SizeClassConfig kSizeClassConfig;
 
 // size class for a block of size sz; returns -1 for size=0 because empty allocations take no space
-#define sizeclass(sz) (size_t((sz)-1) < kMaxSmallSize ? kSizeClassConfig.classForSize[sz] : -1)
+#define sizeclass(sz) (size_t((sz)-1) < kMaxSmallSizeUsed ? kSizeClassConfig.classForSize[sz] : -1)
 
 // metadata for a block is stored in the first pointer of the block
 #define metadata(block) (*(void**)(block))
 #define freegcolink(block) (*(void**)((char*)block + kGCOLinkOffset))
+
+#if defined(LUAU_ASSERTENABLED)
+#define debugpageset(x) (x)
+#else
+#define debugpageset(x) NULL
+#endif
 
 struct lua_Page
 {
@@ -178,9 +210,9 @@ struct lua_Page
     lua_Page* prev;
     lua_Page* next;
 
-    // list of all gco pages
-    lua_Page* gcolistprev;
-    lua_Page* gcolistnext;
+    // list of all pages
+    lua_Page* listprev;
+    lua_Page* listnext;
 
     int pageSize;  // page size in bytes, including page header
     int blockSize; // block size in bytes, including block header (for non-GCO)
@@ -202,7 +234,7 @@ l_noret luaM_toobig(lua_State* L)
     luaG_runerror(L, "memory allocation error: block too big");
 }
 
-static lua_Page* newpage(lua_State* L, lua_Page** gcopageset, int pageSize, int blockSize, int blockCount)
+static lua_Page* newpage(lua_State* L, lua_Page** pageset, int pageSize, int blockSize, int blockCount)
 {
     global_State* g = L->global;
 
@@ -218,8 +250,8 @@ static lua_Page* newpage(lua_State* L, lua_Page** gcopageset, int pageSize, int 
     page->prev = NULL;
     page->next = NULL;
 
-    page->gcolistprev = NULL;
-    page->gcolistnext = NULL;
+    page->listprev = NULL;
+    page->listnext = NULL;
 
     page->pageSize = pageSize;
     page->blockSize = blockSize;
@@ -231,23 +263,28 @@ static lua_Page* newpage(lua_State* L, lua_Page** gcopageset, int pageSize, int 
     page->freeNext = (blockCount - 1) * blockSize;
     page->busyBlocks = 0;
 
-    if (gcopageset)
+    if (pageset)
     {
-        page->gcolistnext = *gcopageset;
-        if (page->gcolistnext)
-            page->gcolistnext->gcolistprev = page;
-        *gcopageset = page;
+        page->listnext = *pageset;
+        if (page->listnext)
+            page->listnext->listprev = page;
+        *pageset = page;
     }
 
     return page;
 }
 
-static lua_Page* newclasspage(lua_State* L, lua_Page** freepageset, lua_Page** gcopageset, uint8_t sizeClass, bool storeMetadata)
+// this is part of a cold path in newblock and newgcoblock
+// it is marked as noinline to prevent it from being inlined into those functions
+// if it is inlined, then the compiler may determine those functions are "too big" to be profitably inlined, which results in reduced performance
+LUAU_NOINLINE static lua_Page* newclasspage(lua_State* L, lua_Page** freepageset, lua_Page** pageset, uint8_t sizeClass, bool storeMetadata)
 {
-    int blockSize = kSizeClassConfig.sizeOfClass[sizeClass] + (storeMetadata ? kBlockHeader : 0);
-    int blockCount = (kPageSize - offsetof(lua_Page, data)) / blockSize;
+    int sizeOfClass = kSizeClassConfig.sizeOfClass[sizeClass];
+    int pageSize = sizeOfClass > int(kLargePageThreshold) ? kLargePageSize : kSmallPageSize;
+    int blockSize = sizeOfClass + (storeMetadata ? kBlockHeader : 0);
+    int blockCount = (pageSize - offsetof(lua_Page, data)) / blockSize;
 
-    lua_Page* page = newpage(L, gcopageset, kPageSize, blockSize, blockCount);
+    lua_Page* page = newpage(L, pageset, pageSize, blockSize, blockCount);
 
     // prepend a page to page freelist (which is empty because we only ever allocate a new page when it is!)
     LUAU_ASSERT(!freepageset[sizeClass]);
@@ -256,27 +293,27 @@ static lua_Page* newclasspage(lua_State* L, lua_Page** freepageset, lua_Page** g
     return page;
 }
 
-static void freepage(lua_State* L, lua_Page** gcopageset, lua_Page* page)
+static void freepage(lua_State* L, lua_Page** pageset, lua_Page* page)
 {
     global_State* g = L->global;
 
-    if (gcopageset)
+    if (pageset)
     {
         // remove page from alllist
-        if (page->gcolistnext)
-            page->gcolistnext->gcolistprev = page->gcolistprev;
+        if (page->listnext)
+            page->listnext->listprev = page->listprev;
 
-        if (page->gcolistprev)
-            page->gcolistprev->gcolistnext = page->gcolistnext;
-        else if (*gcopageset == page)
-            *gcopageset = page->gcolistnext;
+        if (page->listprev)
+            page->listprev->listnext = page->listnext;
+        else if (*pageset == page)
+            *pageset = page->listnext;
     }
 
     // so long
     (*g->frealloc)(g->ud, page, page->pageSize, 0);
 }
 
-static void freeclasspage(lua_State* L, lua_Page** freepageset, lua_Page** gcopageset, lua_Page* page, uint8_t sizeClass)
+static void freeclasspage(lua_State* L, lua_Page** freepageset, lua_Page** pageset, lua_Page* page, uint8_t sizeClass)
 {
     // remove page from freelist
     if (page->next)
@@ -287,7 +324,7 @@ static void freeclasspage(lua_State* L, lua_Page** freepageset, lua_Page** gcopa
     else if (freepageset[sizeClass] == page)
         freepageset[sizeClass] = page->next;
 
-    freepage(L, gcopageset, page);
+    freepage(L, pageset, page);
 }
 
 static void* newblock(lua_State* L, int sizeClass)
@@ -297,7 +334,7 @@ static void* newblock(lua_State* L, int sizeClass)
 
     // slow path: no page in the freelist, allocate a new one
     if (!page)
-        page = newclasspage(L, g->freepages, NULL, sizeClass, true);
+        page = newclasspage(L, g->freepages, debugpageset(&g->allpages), sizeClass, true);
 
     LUAU_ASSERT(!page->prev);
     LUAU_ASSERT(page->freeList || page->freeNext >= 0);
@@ -418,7 +455,7 @@ static void freeblock(lua_State* L, int sizeClass, void* block)
 
     // if it's the last block in the page, we don't need the page
     if (page->busyBlocks == 0)
-        freeclasspage(L, g->freepages, NULL, page, sizeClass);
+        freeclasspage(L, g->freepages, debugpageset(&g->allpages), page, sizeClass);
 }
 
 static void freegcoblock(lua_State* L, int sizeClass, void* block, lua_Page* page)
@@ -598,9 +635,17 @@ void luaM_getpagewalkinfo(lua_Page* page, char** start, char** end, int* busyBlo
     *blockSize = page->blockSize;
 }
 
-lua_Page* luaM_getnextgcopage(lua_Page* page)
+void luaM_getpageinfo(lua_Page* page, int* pageBlocks, int* busyBlocks, int* blockSize, int* pageSize)
 {
-    return page->gcolistnext;
+    *pageBlocks = (page->pageSize - offsetof(lua_Page, data)) / page->blockSize;
+    *busyBlocks = page->busyBlocks;
+    *blockSize = page->blockSize;
+    *pageSize = page->pageSize;
+}
+
+lua_Page* luaM_getnextpage(lua_Page* page)
+{
+    return page->listnext;
 }
 
 void luaM_visitpage(lua_Page* page, void* context, bool (*visitor)(void* context, lua_Page* page, GCObject* gco))
@@ -637,7 +682,7 @@ void luaM_visitgco(lua_State* L, void* context, bool (*visitor)(void* context, l
 
     for (lua_Page* curr = g->allgcopages; curr;)
     {
-        lua_Page* next = curr->gcolistnext; // block visit might destroy the page
+        lua_Page* next = curr->listnext; // block visit might destroy the page
 
         luaM_visitpage(curr, context, visitor);
 

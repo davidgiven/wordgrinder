@@ -280,7 +280,7 @@ static int readfile_cb(lua_State* L)
         if (i < 0)
             goto error;
 
-        luaL_addlstring(&buffer, b, i, -1);
+        luaL_addlstring(&buffer, b, i);
     }
 
     fclose(fp);

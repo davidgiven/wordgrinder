@@ -55,7 +55,12 @@ class Parser
 {
 public:
     static ParseResult parse(
-        const char* buffer, std::size_t bufferSize, AstNameTable& names, Allocator& allocator, ParseOptions options = ParseOptions());
+        const char* buffer,
+        std::size_t bufferSize,
+        AstNameTable& names,
+        Allocator& allocator,
+        ParseOptions options = ParseOptions()
+    );
 
 private:
     struct Name;
@@ -82,8 +87,8 @@ private:
     // if exp then block {elseif exp then block} [else block] end |
     // for Name `=' exp `,' exp [`,' exp] do block end |
     // for namelist in explist do block end |
-    // function funcname funcbody |
-    // local function Name funcbody |
+    // [attributes] function funcname funcbody |
+    // [attributes] local function Name funcbody |
     // local namelist [`=' explist]
     // laststat ::= return [explist] | break
     AstStat* parseStat();
@@ -114,11 +119,25 @@ private:
     AstExpr* parseFunctionName(Location start, bool& hasself, AstName& debugname);
 
     // function funcname funcbody
-    AstStat* parseFunctionStat();
+    LUAU_FORCEINLINE AstStat* parseFunctionStat(const AstArray<AstAttr*>& attributes = {nullptr, 0});
+
+    std::pair<bool, AstAttr::Type> validateAttribute(const char* attributeName, const TempVector<AstAttr*>& attributes);
+
+    // attribute ::= '@' NAME
+    void parseAttribute(TempVector<AstAttr*>& attribute);
+
+    // attributes ::= {attribute}
+    AstArray<AstAttr*> parseAttributes();
+
+    // attributes local function Name funcbody
+    // attributes function funcname funcbody
+    // attributes `declare function' Name`(' [parlist] `)' [`:` Type]
+    // declare Name '{' Name ':' attributes `(' [parlist] `)' [`:` Type] '}'
+    AstStat* parseAttributeStat();
 
     // local function Name funcbody |
     // local namelist [`=' explist]
-    AstStat* parseLocal();
+    AstStat* parseLocal(const AstArray<AstAttr*>& attributes);
 
     // return [explist]
     AstStat* parseReturn();
@@ -126,11 +145,14 @@ private:
     // type Name `=' Type
     AstStat* parseTypeAlias(const Location& start, bool exported);
 
+    // type function Name ... end
+    AstStat* parseTypeFunction(const Location& start);
+
     AstDeclaredClassProp parseDeclaredClassMethod();
 
     // `declare global' Name: Type |
     // `declare function' Name`(' [parlist] `)' [`:` Type]
-    AstStat* parseDeclaration(const Location& start);
+    AstStat* parseDeclaration(const Location& start, const AstArray<AstAttr*>& attributes);
 
     // varlist `=' explist
     AstStat* parseAssignment(AstExpr* initial);
@@ -143,7 +165,12 @@ private:
     // funcbodyhead ::= `(' [namelist [`,' `...'] | `...'] `)' [`:` Type]
     // funcbody ::= funcbodyhead block end
     std::pair<AstExprFunction*, AstLocal*> parseFunctionBody(
-        bool hasself, const Lexeme& matchFunction, const AstName& debugname, const Name* localName);
+        bool hasself,
+        const Lexeme& matchFunction,
+        const AstName& debugname,
+        const Name* localName,
+        const AstArray<AstAttr*>& attributes
+    );
 
     // explist ::= {exp `,'} exp
     void parseExprList(TempVector<AstExpr*>& result);
@@ -174,17 +201,24 @@ private:
     std::optional<AstTypeList> parseOptionalReturnType();
     std::pair<Location, AstTypeList> parseReturnType();
 
-    AstTableIndexer* parseTableIndexer();
+    AstTableIndexer* parseTableIndexer(AstTableAccess access, std::optional<Location> accessLocation);
 
-    AstTypeOrPack parseFunctionType(bool allowPack);
-    AstType* parseFunctionTypeTail(const Lexeme& begin, AstArray<AstGenericType> generics, AstArray<AstGenericTypePack> genericPacks,
-        AstArray<AstType*> params, AstArray<std::optional<AstArgumentName>> paramNames, AstTypePack* varargAnnotation);
+    AstTypeOrPack parseFunctionType(bool allowPack, const AstArray<AstAttr*>& attributes);
+    AstType* parseFunctionTypeTail(
+        const Lexeme& begin,
+        const AstArray<AstAttr*>& attributes,
+        AstArray<AstGenericType> generics,
+        AstArray<AstGenericTypePack> genericPacks,
+        AstArray<AstType*> params,
+        AstArray<std::optional<AstArgumentName>> paramNames,
+        AstTypePack* varargAnnotation
+    );
 
-    AstType* parseTableType();
-    AstTypeOrPack parseSimpleType(bool allowPack);
+    AstType* parseTableType(bool inDeclarationContext = false);
+    AstTypeOrPack parseSimpleType(bool allowPack, bool inDeclarationContext = false);
 
     AstTypeOrPack parseTypeOrPack();
-    AstType* parseType();
+    AstType* parseType(bool inDeclarationContext = false);
 
     AstTypePack* parseTypePack();
     AstTypePack* parseVariadicArgumentTypePack();
@@ -219,7 +253,7 @@ private:
     // asexp -> simpleexp [`::' Type]
     AstExpr* parseAssertionExpr();
 
-    // simpleexp -> NUMBER | STRING | NIL | true | false | ... | constructor | FUNCTION body | primaryexp
+    // simpleexp -> NUMBER | STRING | NIL | true | false | ... | constructor | [attributes] FUNCTION body | primaryexp
     AstExpr* parseSimpleExpr();
 
     // args ::=  `(' [explist] `)' | tableconstructor | String
@@ -300,8 +334,13 @@ private:
 
     void reportNameError(const char* context);
 
-    AstStatError* reportStatError(const Location& location, const AstArray<AstExpr*>& expressions, const AstArray<AstStat*>& statements,
-        const char* format, ...) LUAU_PRINTF_ATTR(5, 6);
+    AstStatError* reportStatError(
+        const Location& location,
+        const AstArray<AstExpr*>& expressions,
+        const AstArray<AstStat*>& statements,
+        const char* format,
+        ...
+    ) LUAU_PRINTF_ATTR(5, 6);
     AstExprError* reportExprError(const Location& location, const AstArray<AstExpr*>& expressions, const char* format, ...) LUAU_PRINTF_ATTR(4, 5);
     AstTypeError* reportTypeError(const Location& location, const AstArray<AstType*>& types, const char* format, ...) LUAU_PRINTF_ATTR(4, 5);
     // `parseErrorLocation` is associated with the parser error
@@ -392,6 +431,7 @@ private:
 
     std::vector<unsigned int> matchRecoveryStopOnToken;
 
+    std::vector<AstAttr*> scratchAttr;
     std::vector<AstStat*> scratchStat;
     std::vector<AstArray<char>> scratchString;
     std::vector<AstExpr*> scratchExpr;
