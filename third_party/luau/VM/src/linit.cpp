@@ -14,6 +14,7 @@ static const luaL_Reg lualibs[] = {
     {LUA_DBLIBNAME, luaopen_debug},
     {LUA_UTF8LIBNAME, luaopen_utf8},
     {LUA_BITLIBNAME, luaopen_bit32},
+    {LUA_BUFFERLIBNAME, luaopen_buffer},
     {NULL, NULL},
 };
 
@@ -42,9 +43,15 @@ void luaL_sandbox(lua_State* L)
 
     // set all builtin metatables to read-only
     lua_pushliteral(L, "");
-    lua_getmetatable(L, -1);
-    lua_setreadonly(L, -1, true);
-    lua_pop(L, 2);
+    if (lua_getmetatable(L, -1))
+    {
+        lua_setreadonly(L, -1, true);
+        lua_pop(L, 2);
+    }
+    else
+    {
+        lua_pop(L, 1);
+    }
 
     // set globals to readonly and activate safeenv since the env is immutable
     lua_setreadonly(L, LUA_GLOBALSINDEX, true);

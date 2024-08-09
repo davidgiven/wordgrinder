@@ -15,7 +15,7 @@ class BytecodeEncoder
 public:
     virtual ~BytecodeEncoder() {}
 
-    virtual uint8_t encodeOp(uint8_t op) = 0;
+    virtual void encode(uint32_t* data, size_t count) = 0;
 };
 
 class BytecodeBuilder
@@ -47,13 +47,14 @@ public:
     BytecodeBuilder(BytecodeEncoder* encoder = 0);
 
     uint32_t beginFunction(uint8_t numparams, bool isvararg = false);
-    void endFunction(uint8_t maxstacksize, uint8_t numupvalues);
+    void endFunction(uint8_t maxstacksize, uint8_t numupvalues, uint8_t flags = 0);
 
     void setMainFunction(uint32_t fid);
 
     int32_t addConstantNil();
     int32_t addConstantBoolean(bool value);
     int32_t addConstantNumber(double value);
+    int32_t addConstantVector(float x, float y, float z, float w);
     int32_t addConstantString(StringRef value);
     int32_t addImport(uint32_t iid);
     int32_t addConstantTable(const TableShape& shape);
@@ -74,6 +75,13 @@ public:
     void foldJumps();
     void expandJumps();
 
+    void setFunctionTypeInfo(std::string value);
+    void pushLocalTypeInfo(LuauBytecodeType type, uint8_t reg, uint32_t startpc, uint32_t endpc);
+    void pushUpvalTypeInfo(LuauBytecodeType type);
+
+    uint32_t addUserdataType(const char* name);
+    void useUserdataType(uint32_t index);
+
     void setDebugFunctionName(StringRef name);
     void setDebugFunctionLineDefined(int line);
     void setDebugLine(int line);
@@ -81,6 +89,7 @@ public:
     void pushDebugUpval(StringRef name);
 
     size_t getInstructionCount() const;
+    size_t getTotalInstructionCount() const;
     uint32_t getDebugPC() const;
 
     void addDebugRemark(const char* format, ...) LUAU_PRINTF_ATTR(2, 3);
@@ -94,6 +103,7 @@ public:
         Dump_Source = 1 << 2,
         Dump_Locals = 1 << 3,
         Dump_Remarks = 1 << 4,
+        Dump_Types = 1 << 5,
     };
 
     void setDumpFlags(uint32_t flags)
@@ -118,6 +128,7 @@ public:
     std::string dumpFunction(uint32_t id) const;
     std::string dumpEverything() const;
     std::string dumpSourceRemarks() const;
+    std::string dumpTypeInfo() const;
 
     void annotateInstruction(std::string& result, uint32_t fid, uint32_t instpos) const;
 
@@ -132,6 +143,7 @@ public:
     static std::string getError(const std::string& message);
 
     static uint8_t getVersion();
+    static uint8_t getTypeEncodingVersion();
 
 private:
     struct Constant
@@ -141,6 +153,7 @@ private:
             Type_Nil,
             Type_Boolean,
             Type_Number,
+            Type_Vector,
             Type_String,
             Type_Import,
             Type_Table,
@@ -152,6 +165,7 @@ private:
         {
             bool valueBoolean;
             double valueNumber;
+            float valueVector[4];
             unsigned int valueString; // index into string table
             uint32_t valueImport;     // 10-10-10-2 encoded import id
             uint32_t valueTable;      // index into tableShapes[]
@@ -162,12 +176,14 @@ private:
     struct ConstantKey
     {
         Constant::Type type;
-        // Note: this stores value* from Constant; when type is Number_Double, this stores the same bits as double does but in uint64_t.
+        // Note: this stores value* from Constant; when type is Type_Number, this stores the same bits as double does but in uint64_t.
+        // For Type_Vector, x and y are stored in 'value' and z and w are stored in 'extra'.
         uint64_t value;
+        uint64_t extra = 0;
 
         bool operator==(const ConstantKey& key) const
         {
-            return type == key.type && value == key.value;
+            return type == key.type && value == key.value && extra == key.extra;
         }
     };
 
@@ -186,6 +202,7 @@ private:
         std::string dump;
         std::string dumpname;
         std::vector<int> dumpinstoffs;
+        std::string typeinfo;
     };
 
     struct DebugLocal
@@ -200,6 +217,26 @@ private:
     struct DebugUpval
     {
         unsigned int name;
+    };
+
+    struct TypedLocal
+    {
+        LuauBytecodeType type;
+        uint8_t reg;
+        uint32_t startpc;
+        uint32_t endpc;
+    };
+
+    struct TypedUpval
+    {
+        LuauBytecodeType type;
+    };
+
+    struct UserdataType
+    {
+        std::string name;
+        uint32_t nameRef = 0;
+        bool used = false;
     };
 
     struct Jump
@@ -227,6 +264,7 @@ private:
     uint32_t currentFunction = ~0u;
     uint32_t mainFunction = ~0u;
 
+    size_t totalInstructionCount = 0;
     std::vector<uint32_t> insns;
     std::vector<int> lines;
     std::vector<Constant> constants;
@@ -246,6 +284,11 @@ private:
     std::vector<DebugLocal> debugLocals;
     std::vector<DebugUpval> debugUpvals;
 
+    std::vector<TypedLocal> typedLocals;
+    std::vector<TypedUpval> typedUpvals;
+
+    std::vector<UserdataType> userdataTypes;
+
     DenseHashMap<StringRef, unsigned int, StringRefHash> stringTable;
     std::vector<StringRef> debugStrings;
 
@@ -259,6 +302,8 @@ private:
     std::vector<std::string> dumpSource;
     std::vector<std::pair<int, std::string>> dumpRemarks;
 
+    std::string tempTypeInfo;
+
     std::string (BytecodeBuilder::*dumpFunctionPtr)(std::vector<int>&) const = nullptr;
 
     void validate() const;
@@ -269,12 +314,14 @@ private:
     void dumpConstant(std::string& result, int k) const;
     void dumpInstruction(const uint32_t* opcode, std::string& output, int targetLabel) const;
 
-    void writeFunction(std::string& ss, uint32_t id) const;
+    void writeFunction(std::string& ss, uint32_t id, uint8_t flags);
     void writeLineInfo(std::string& ss) const;
     void writeStringTable(std::string& ss) const;
 
     int32_t addConstant(const ConstantKey& key, const Constant& value);
     unsigned int addStringTableEntry(StringRef value);
+
+    const char* tryGetUserdataTypeName(LuauBytecodeType type) const;
 };
 
 } // namespace Luau

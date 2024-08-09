@@ -4,7 +4,7 @@
 
 #include "Luau/NotNull.h"
 #include "Luau/Substitution.h"
-#include "Luau/Type.h"
+#include "Luau/TypeFwd.h"
 
 #include <memory>
 
@@ -19,10 +19,22 @@ using ScopePtr = std::shared_ptr<Scope>;
 // A substitution which replaces free types by any
 struct Anyification : Substitution
 {
-    Anyification(TypeArena* arena, NotNull<Scope> scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter* iceHandler, TypeId anyType,
-        TypePackId anyTypePack);
-    Anyification(TypeArena* arena, const ScopePtr& scope, NotNull<BuiltinTypes> builtinTypes, InternalErrorReporter* iceHandler, TypeId anyType,
-        TypePackId anyTypePack);
+    Anyification(
+        TypeArena* arena,
+        NotNull<Scope> scope,
+        NotNull<BuiltinTypes> builtinTypes,
+        InternalErrorReporter* iceHandler,
+        TypeId anyType,
+        TypePackId anyTypePack
+    );
+    Anyification(
+        TypeArena* arena,
+        const ScopePtr& scope,
+        NotNull<BuiltinTypes> builtinTypes,
+        InternalErrorReporter* iceHandler,
+        TypeId anyType,
+        TypePackId anyTypePack
+    );
     NotNull<Scope> scope;
     NotNull<BuiltinTypes> builtinTypes;
     InternalErrorReporter* iceHandler;

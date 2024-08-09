@@ -16,16 +16,17 @@ namespace Luau
 namespace CodeGen
 {
 
-struct AssemblyOptions;
+struct HostIrHooks;
 
 struct IrBuilder
 {
-    IrBuilder();
+    IrBuilder(const HostIrHooks& hostHooks);
 
     void buildFunctionIr(Proto* proto);
 
     void rebuildBytecodeBasicBlocks(Proto* proto);
     void translateInst(LuauOpcode op, const Instruction* pc, int i);
+    void handleFastcallFallback(IrOp fallbackOrUndef, const Instruction* pc, int i);
 
     bool isInternalBlock(IrOp block);
     void beginBlock(IrOp block);
@@ -38,7 +39,6 @@ struct IrBuilder
 
     IrOp undef();
 
-    IrOp constBool(bool value);
     IrOp constInt(int value);
     IrOp constUint(unsigned value);
     IrOp constDouble(double value);
@@ -54,6 +54,7 @@ struct IrBuilder
     IrOp inst(IrCmd cmd, IrOp a, IrOp b, IrOp c, IrOp d);
     IrOp inst(IrCmd cmd, IrOp a, IrOp b, IrOp c, IrOp d, IrOp e);
     IrOp inst(IrCmd cmd, IrOp a, IrOp b, IrOp c, IrOp d, IrOp e, IrOp f);
+    IrOp inst(IrCmd cmd, IrOp a, IrOp b, IrOp c, IrOp d, IrOp e, IrOp f, IrOp g);
 
     IrOp block(IrBlockKind kind); // Requested kind can be ignored if we are in an outlined sequence
     IrOp blockAtInst(uint32_t index);
@@ -62,16 +63,33 @@ struct IrBuilder
     IrOp vmConst(uint32_t index);
     IrOp vmUpvalue(uint8_t index);
 
+    IrOp vmExit(uint32_t pcpos);
+
+    const HostIrHooks& hostHooks;
+
     bool inTerminatedBlock = false;
+
+    bool interruptRequested = false;
 
     bool activeFastcallFallback = false;
     IrOp fastcallFallbackReturn;
+
+    // Force builder to skip source commands
+    int cmdSkipTarget = -1;
 
     IrFunction function;
 
     uint32_t activeBlockIdx = ~0u;
 
     std::vector<uint32_t> instIndexToBlock; // Block index at the bytecode instruction
+
+    struct LoopInfo
+    {
+        IrOp step;
+        int startpc = 0;
+    };
+
+    std::vector<LoopInfo> numericLoopStack;
 
     // Similar to BytecodeBuilder, duplicate constants are removed used the same method
     struct ConstantKey

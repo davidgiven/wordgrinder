@@ -104,6 +104,11 @@ public:
         return status;
     }
 
+    const lua_State* getThread() const
+    {
+        return L;
+    }
+
 private:
     lua_State* L;
     int status;
@@ -120,7 +125,12 @@ int luaD_rawrunprotected(lua_State* L, Pfunc f, void* ud)
     }
     catch (lua_exception& e)
     {
-        // lua_exception means that luaD_throw was called and an exception object is on stack if status is ERRRUN
+        // It is assumed/required that the exception caught here was thrown from the same Luau state.
+        // If this assert fires, it indicates a lua_exception was not properly caught and propagated
+        // to the exception handler for a different Luau state. Report this issue to the Luau team if
+        // you need more information or assistance resolving this assert.
+        LUAU_ASSERT(e.getThread() == L);
+
         status = e.getStatus();
     }
     catch (std::exception& e)
@@ -229,12 +239,14 @@ void luaD_checkCstack(lua_State* L)
 ** When returns, all the results are on the stack, starting at the original
 ** function position.
 */
-void luaD_call(lua_State* L, StkId func, int nResults)
+void luaD_call(lua_State* L, StkId func, int nresults)
 {
     if (++L->nCcalls >= LUAI_MAXCCALLS)
         luaD_checkCstack(L);
 
-    if (luau_precall(L, func, nResults) == PCRLUA)
+    ptrdiff_t old_func = savestack(L, func);
+
+    if (luau_precall(L, func, nresults) == PCRLUA)
     {                                        // is a Lua function?
         L->ci->flags |= LUA_CALLINFO_RETURN; // luau_execute will stop after returning from the stack frame
 
@@ -247,6 +259,9 @@ void luaD_call(lua_State* L, StkId func, int nResults)
         if (!oldactive)
             L->isactive = false;
     }
+
+    if (nresults != LUA_MULTRET)
+        L->top = restorestack(L, old_func) + nresults;
 
     L->nCcalls--;
     luaC_checkGC(L);
@@ -402,7 +417,7 @@ static void resume_handle(lua_State* L, void* ud)
     L->ci = restoreci(L, old_ci);
 
     // close eventual pending closures; this means it's now safe to restore stack
-    luaF_close(L, L->base);
+    luaF_close(L, L->ci->base);
 
     // finish cont call and restore stack to previous ci top
     luau_poscall(L, L->top - n);
@@ -571,11 +586,13 @@ int luaD_pcall(lua_State* L, Pfunc func, void* u, ptrdiff_t old_top, ptrdiff_t e
         if (!oldactive)
             L->isactive = false;
 
+        bool yieldable = L->nCcalls <= L->baseCcalls; // Inlined logic from 'lua_isyieldable' to avoid potential for an out of line call.
+
         // restore nCcalls before calling the debugprotectederror callback which may rely on the proper value to have been restored.
         L->nCcalls = oldnCcalls;
 
         // an error occurred, check if we have a protected error callback
-        if (L->global->cb.debugprotectederror)
+        if (yieldable && L->global->cb.debugprotectederror)
         {
             L->global->cb.debugprotectederror(L);
 

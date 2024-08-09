@@ -4,7 +4,9 @@
 #include "Luau/AssemblyBuilderA64.h"
 #include "Luau/UnwindBuilder.h"
 
-#include "CustomExecUtils.h"
+#include "BitUtils.h"
+#include "CodeGenContext.h"
+#include "CodeGenUtils.h"
 #include "NativeState.h"
 #include "EmitCommonA64.h"
 
@@ -29,6 +31,23 @@ static void emitExit(AssemblyBuilderA64& build, bool continueInVm)
     build.mov(x0, continueInVm);
     build.ldr(x1, mem(rNativeContext, offsetof(NativeContext, gateExit)));
     build.br(x1);
+}
+
+static void emitUpdatePcForExit(AssemblyBuilderA64& build)
+{
+    // x0 = pcpos * sizeof(Instruction)
+    build.add(x0, rCode, x0);
+    build.ldr(x1, mem(rState, offsetof(lua_State, ci)));
+    build.str(x0, mem(x1, offsetof(CallInfo, savedpc)));
+}
+
+static void emitClearNativeFlag(AssemblyBuilderA64& build)
+{
+    build.ldr(x0, mem(rState, offsetof(lua_State, ci)));
+    build.ldr(w1, mem(x0, offsetof(CallInfo, flags)));
+    build.mov(w2, ~LUA_CALLINFO_NATIVE);
+    build.and_(w1, w1, w2);
+    build.str(w1, mem(x0, offsetof(CallInfo, flags)));
 }
 
 static void emitInterrupt(AssemblyBuilderA64& build)
@@ -79,41 +98,102 @@ static void emitInterrupt(AssemblyBuilderA64& build)
     build.br(x0);
 }
 
-static void emitReentry(AssemblyBuilderA64& build, ModuleHelpers& helpers)
+static void emitContinueCall(AssemblyBuilderA64& build, ModuleHelpers& helpers)
 {
     // x0 = closure object to reentry (equal to clvalue(L->ci->func))
 
-    // If the fallback requested an exit, we need to do this right away
-    build.cbz(x0, helpers.exitNoContinueVm);
-
-    emitUpdateBase(build);
+    // If the fallback yielded, we need to do this right away
+    // note: it's slightly cheaper to check x0 LSB; a valid Closure pointer must be aligned to 8 bytes
+    CODEGEN_ASSERT(CALL_FALLBACK_YIELD == 1);
+    build.tbnz(x0, 0, helpers.exitNoContinueVm);
 
     // Need to update state of the current function before we jump away
     build.ldr(x1, mem(x0, offsetof(Closure, l.p))); // cl->l.p aka proto
 
+    build.ldr(x2, mem(x1, offsetof(Proto, exectarget)));
+    build.cbz(x2, helpers.exitContinueVm);
+
     build.mov(rClosure, x0);
-    build.ldr(rConstants, mem(x1, offsetof(Proto, k))); // proto->k
-    build.ldr(rCode, mem(x1, offsetof(Proto, code)));   // proto->code
+
+    CODEGEN_ASSERT(offsetof(Proto, code) == offsetof(Proto, k) + 8);
+    build.ldp(rConstants, rCode, mem(x1, offsetof(Proto, k))); // proto->k, proto->code
+
+    build.br(x2);
+}
+
+void emitReturn(AssemblyBuilderA64& build, ModuleHelpers& helpers)
+{
+    // x1 = res
+    // w2 = number of written values
+
+    // x0 = ci
+    build.ldr(x0, mem(rState, offsetof(lua_State, ci)));
+    // w3 = ci->nresults
+    build.ldr(w3, mem(x0, offsetof(CallInfo, nresults)));
+
+    Label skipResultCopy;
+
+    // Fill the rest of the expected results (nresults - written) with 'nil'
+    build.cmp(w2, w3);
+    build.b(ConditionA64::GreaterEqual, skipResultCopy);
+
+    // TODO: cmp above could compute this and flags using subs
+    build.sub(w2, w3, w2); // counter = nresults - written
+    build.mov(w4, LUA_TNIL);
+
+    Label repeatNilLoop = build.setLabel();
+    build.str(w4, mem(x1, offsetof(TValue, tt)));
+    build.add(x1, x1, sizeof(TValue));
+    build.sub(w2, w2, 1);
+    build.cbnz(w2, repeatNilLoop);
+
+    build.setLabel(skipResultCopy);
+
+    // x2 = cip = ci - 1
+    build.sub(x2, x0, sizeof(CallInfo));
+
+    // res = cip->top when nresults >= 0
+    Label skipFixedRetTop;
+    build.tbnz(w3, 31, skipFixedRetTop);
+    build.ldr(x1, mem(x2, offsetof(CallInfo, top))); // res = cip->top
+    build.setLabel(skipFixedRetTop);
+
+    // Update VM state (ci, base, top)
+    build.str(x2, mem(rState, offsetof(lua_State, ci)));      // L->ci = cip
+    build.ldr(rBase, mem(x2, offsetof(CallInfo, base)));      // sync base = L->base while we have a chance
+    build.str(rBase, mem(rState, offsetof(lua_State, base))); // L->base = cip->base
+
+    build.str(x1, mem(rState, offsetof(lua_State, top))); // L->top = res
+
+    // Unlikely, but this might be the last return from VM
+    build.ldr(w4, mem(x0, offsetof(CallInfo, flags)));
+    build.tbnz(w4, countrz(LUA_CALLINFO_RETURN), helpers.exitNoContinueVm);
+
+    // Continue in interpreter if function has no native data
+    build.ldr(w4, mem(x2, offsetof(CallInfo, flags)));
+    build.tbz(w4, countrz(LUA_CALLINFO_NATIVE), helpers.exitContinueVm);
+
+    // Need to update state of the current function before we jump away
+    build.ldr(rClosure, mem(x2, offsetof(CallInfo, func)));
+    build.ldr(rClosure, mem(rClosure, offsetof(TValue, value.gc)));
+
+    build.ldr(x1, mem(rClosure, offsetof(Closure, l.p))); // cl->l.p aka proto
+
+    CODEGEN_ASSERT(offsetof(Proto, code) == offsetof(Proto, k) + 8);
+    build.ldp(rConstants, rCode, mem(x1, offsetof(Proto, k))); // proto->k, proto->code
 
     // Get instruction index from instruction pointer
     // To get instruction index from instruction pointer, we need to divide byte offset by 4
     // But we will actually need to scale instruction index by 4 back to byte offset later so it cancels out
-    // Note that we're computing negative offset here (code-savedpc) so that we can add it to NativeProto address, as we use reverse indexing
-    build.ldr(x2, mem(rState, offsetof(lua_State, ci))); // L->ci
-    build.ldr(x2, mem(x2, offsetof(CallInfo, savedpc))); // L->ci->savedpc
-    build.sub(x2, rCode, x2);
-
-    // We need to check if the new function can be executed natively
-    // TODO: This can be done earlier in the function flow, to reduce the JIT->VM transition penalty
-    build.ldr(x1, mem(x1, offsetofProtoExecData));
-    build.cbz(x1, helpers.exitContinueVm);
+    build.ldr(x2, mem(x2, offsetof(CallInfo, savedpc))); // cip->savedpc
+    build.sub(x2, x2, rCode);
 
     // Get new instruction location and jump to it
-    LUAU_ASSERT(offsetof(NativeProto, instOffsets) == 0);
-    build.ldr(w2, mem(x1, x2));
-    build.ldr(x1, mem(x1, offsetof(NativeProto, instBase)));
-    build.add(x1, x1, x2);
-    build.br(x1);
+    CODEGEN_ASSERT(offsetof(Proto, exectarget) == offsetof(Proto, execdata) + 8);
+    build.ldp(x3, x4, mem(x1, offsetof(Proto, execdata)));
+    build.ldr(w2, mem(x3, x2));
+    build.add(x4, x4, x2);
+    build.br(x4);
 }
 
 static EntryLocations buildEntryFunction(AssemblyBuilderA64& build, UnwindBuilder& unwind)
@@ -123,9 +203,6 @@ static EntryLocations buildEntryFunction(AssemblyBuilderA64& build, UnwindBuilde
     // Arguments: x0 = lua_State*, x1 = Proto*, x2 = native code pointer to jump to, x3 = NativeContext*
 
     locations.start = build.setLabel();
-    unwind.startFunction();
-
-    unwind.allocStack(8); // TODO: this is just a hack to make UnwindBuilder assertions cooperate
 
     // prologue
     build.sub(sp, sp, kStackSize);
@@ -135,18 +212,23 @@ static EntryLocations buildEntryFunction(AssemblyBuilderA64& build, UnwindBuilde
     build.stp(x19, x20, mem(sp, 16));
     build.stp(x21, x22, mem(sp, 32));
     build.stp(x23, x24, mem(sp, 48));
+    build.str(x25, mem(sp, 64));
 
     build.mov(x29, sp); // this is only necessary if we maintain frame pointers, which we do in the JIT for now
 
     locations.prologueEnd = build.setLabel();
 
+    uint32_t prologueSize = build.getLabelOffset(locations.prologueEnd) - build.getLabelOffset(locations.start);
+
     // Setup native execution environment
     build.mov(rState, x0);
     build.mov(rNativeContext, x3);
+    build.ldr(rGlobalState, mem(x0, offsetof(lua_State, global)));
 
     build.ldr(rBase, mem(x0, offsetof(lua_State, base))); // L->base
-    build.ldr(rConstants, mem(x1, offsetof(Proto, k)));   // proto->k
-    build.ldr(rCode, mem(x1, offsetof(Proto, code)));     // proto->code
+
+    CODEGEN_ASSERT(offsetof(Proto, code) == offsetof(Proto, k) + 8);
+    build.ldp(rConstants, rCode, mem(x1, offsetof(Proto, k))); // proto->k, proto->code
 
     build.ldr(x9, mem(x0, offsetof(lua_State, ci)));          // L->ci
     build.ldr(x9, mem(x9, offsetof(CallInfo, func)));         // L->ci->func
@@ -159,6 +241,7 @@ static EntryLocations buildEntryFunction(AssemblyBuilderA64& build, UnwindBuilde
     locations.epilogueStart = build.setLabel();
 
     // Cleanup and exit
+    build.ldr(x25, mem(sp, 64));
     build.ldp(x23, x24, mem(sp, 48));
     build.ldp(x21, x22, mem(sp, 32));
     build.ldp(x19, x20, mem(sp, 16));
@@ -168,17 +251,19 @@ static EntryLocations buildEntryFunction(AssemblyBuilderA64& build, UnwindBuilde
     build.ret();
 
     // Our entry function is special, it spans the whole remaining code area
-    unwind.finishFunction(build.getLabelOffset(locations.start), kFullBlockFuncton);
+    unwind.startFunction();
+    unwind.prologueA64(prologueSize, kStackSize, {x29, x30, x19, x20, x21, x22, x23, x24, x25});
+    unwind.finishFunction(build.getLabelOffset(locations.start), kFullBlockFunction);
 
     return locations;
 }
 
-bool initHeaderFunctions(NativeState& data)
+bool initHeaderFunctions(BaseCodeGenContext& codeGenContext)
 {
     AssemblyBuilderA64 build(/* logText= */ false);
-    UnwindBuilder& unwind = *data.unwindBuilder.get();
+    UnwindBuilder& unwind = *codeGenContext.unwindBuilder.get();
 
-    unwind.startInfo();
+    unwind.startInfo(UnwindBuilder::A64);
 
     EntryLocations entryLocations = buildEntryFunction(build, unwind);
 
@@ -186,13 +271,20 @@ bool initHeaderFunctions(NativeState& data)
 
     unwind.finishInfo();
 
-    LUAU_ASSERT(build.data.empty());
+    CODEGEN_ASSERT(build.data.empty());
 
     uint8_t* codeStart = nullptr;
-    if (!data.codeAllocator.allocate(build.data.data(), int(build.data.size()), reinterpret_cast<const uint8_t*>(build.code.data()),
-            int(build.code.size() * sizeof(build.code[0])), data.gateData, data.gateDataSize, codeStart))
+    if (!codeGenContext.codeAllocator.allocate(
+            build.data.data(),
+            int(build.data.size()),
+            reinterpret_cast<const uint8_t*>(build.code.data()),
+            int(build.code.size() * sizeof(build.code[0])),
+            codeGenContext.gateData,
+            codeGenContext.gateDataSize,
+            codeStart
+        ))
     {
-        LUAU_ASSERT(!"failed to create entry function");
+        CODEGEN_ASSERT(!"Failed to create entry function");
         return false;
     }
 
@@ -200,8 +292,8 @@ bool initHeaderFunctions(NativeState& data)
     // specified by the unwind information of the entry function
     unwind.setBeginOffset(build.getLabelOffset(entryLocations.prologueEnd));
 
-    data.context.gateEntry = codeStart + build.getLabelOffset(entryLocations.start);
-    data.context.gateExit = codeStart + build.getLabelOffset(entryLocations.epilogueStart);
+    codeGenContext.context.gateEntry = codeStart + build.getLabelOffset(entryLocations.start);
+    codeGenContext.context.gateExit = codeStart + build.getLabelOffset(entryLocations.epilogueStart);
 
     return true;
 }
@@ -209,24 +301,39 @@ bool initHeaderFunctions(NativeState& data)
 void assembleHelpers(AssemblyBuilderA64& build, ModuleHelpers& helpers)
 {
     if (build.logText)
+        build.logAppend("; updatePcAndContinueInVm\n");
+    build.setLabel(helpers.updatePcAndContinueInVm);
+    emitUpdatePcForExit(build);
+
+    if (build.logText)
+        build.logAppend("; exitContinueVmClearNativeFlag\n");
+    build.setLabel(helpers.exitContinueVmClearNativeFlag);
+    emitClearNativeFlag(build);
+
+    if (build.logText)
         build.logAppend("; exitContinueVm\n");
-    helpers.exitContinueVm = build.setLabel();
+    build.setLabel(helpers.exitContinueVm);
     emitExit(build, /* continueInVm */ true);
 
     if (build.logText)
         build.logAppend("; exitNoContinueVm\n");
-    helpers.exitNoContinueVm = build.setLabel();
+    build.setLabel(helpers.exitNoContinueVm);
     emitExit(build, /* continueInVm */ false);
 
     if (build.logText)
-        build.logAppend("; reentry\n");
-    helpers.reentry = build.setLabel();
-    emitReentry(build, helpers);
+        build.logAppend("; interrupt\n");
+    build.setLabel(helpers.interrupt);
+    emitInterrupt(build);
 
     if (build.logText)
-        build.logAppend("; interrupt\n");
-    helpers.interrupt = build.setLabel();
-    emitInterrupt(build);
+        build.logAppend("; return\n");
+    build.setLabel(helpers.return_);
+    emitReturn(build, helpers);
+
+    if (build.logText)
+        build.logAppend("; continueCall\n");
+    build.setLabel(helpers.continueCall);
+    emitContinueCall(build, helpers);
 }
 
 } // namespace A64

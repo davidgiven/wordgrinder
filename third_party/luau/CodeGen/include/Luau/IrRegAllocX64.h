@@ -12,6 +12,9 @@ namespace Luau
 {
 namespace CodeGen
 {
+
+struct LoweringStats;
+
 namespace X64
 {
 
@@ -33,11 +36,13 @@ struct IrSpillX64
 
 struct IrRegAllocX64
 {
-    IrRegAllocX64(AssemblyBuilderX64& build, IrFunction& function);
+    IrRegAllocX64(AssemblyBuilderX64& build, IrFunction& function, LoweringStats* stats);
 
     RegisterX64 allocReg(SizeX64 size, uint32_t instIdx);
     RegisterX64 allocRegOrReuse(SizeX64 size, uint32_t instIdx, std::initializer_list<IrOp> oprefs);
     RegisterX64 takeReg(RegisterX64 reg, uint32_t instIdx);
+
+    bool canTakeReg(RegisterX64 reg) const;
 
     void freeReg(RegisterX64 reg);
     void freeLastUseReg(IrInst& target, uint32_t instIdx);
@@ -68,6 +73,7 @@ struct IrRegAllocX64
 
     AssemblyBuilderX64& build;
     IrFunction& function;
+    LoweringStats* stats = nullptr;
 
     uint32_t currInstIdx = ~0u;
 
@@ -75,6 +81,7 @@ struct IrRegAllocX64
     std::array<uint32_t, 16> gprInstUsers;
     std::array<bool, 16> freeXmmMap;
     std::array<uint32_t, 16> xmmInstUsers;
+    uint8_t usableXmmRegCount = 0;
 
     std::bitset<256> usedSpillSlots;
     unsigned maxUsedSlot = 0;
@@ -92,6 +99,7 @@ struct ScopedRegX64
     ScopedRegX64(const ScopedRegX64&) = delete;
     ScopedRegX64& operator=(const ScopedRegX64&) = delete;
 
+    void take(RegisterX64 reg);
     void alloc(SizeX64 size);
     void free();
 

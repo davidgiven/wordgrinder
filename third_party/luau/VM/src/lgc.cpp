@@ -10,6 +10,7 @@
 #include "ldo.h"
 #include "lmem.h"
 #include "ludata.h"
+#include "lbuffer.h"
 
 #include <string.h>
 
@@ -275,6 +276,11 @@ static void reallymarkobject(global_State* g, GCObject* o)
         g->gray = o;
         break;
     }
+    case LUA_TBUFFER:
+    {
+        gray2black(o); // buffers are never gray
+        return;
+    }
     case LUA_TPROTO:
     {
         gco2p(o)->gclist = g->gray;
@@ -498,8 +504,9 @@ static size_t propagatemark(global_State* g)
         Proto* p = gco2p(o);
         g->gray = p->gclist;
         traverseproto(g, p);
+
         return sizeof(Proto) + sizeof(Instruction) * p->sizecode + sizeof(Proto*) * p->sizep + sizeof(TValue) * p->sizek + p->sizelineinfo +
-               sizeof(LocVar) * p->sizelocvars + sizeof(TString*) * p->sizeupvalues;
+               sizeof(LocVar) * p->sizelocvars + sizeof(TString*) * p->sizeupvalues + p->sizetypeinfo;
     }
     default:
         LUAU_ASSERT(0);
@@ -617,6 +624,9 @@ static void freeobj(lua_State* L, GCObject* o, lua_Page* page)
         break;
     case LUA_TUSERDATA:
         luaU_freeudata(L, gco2u(o), page);
+        break;
+    case LUA_TBUFFER:
+        luaB_freebuffer(L, gco2buf(o), page);
         break;
     default:
         LUAU_ASSERT(0);
@@ -920,7 +930,7 @@ static size_t gcstep(lua_State* L, size_t limit)
     {
         while (g->sweepgcopage && cost < limit)
         {
-            lua_Page* next = luaM_getnextgcopage(g->sweepgcopage); // page sweep might destroy the page
+            lua_Page* next = luaM_getnextpage(g->sweepgcopage); // page sweep might destroy the page
 
             int steps = sweepgcopage(L, g->sweepgcopage);
 

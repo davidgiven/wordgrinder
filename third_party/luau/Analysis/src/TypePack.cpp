@@ -6,6 +6,8 @@
 
 #include <stdexcept>
 
+LUAU_FASTFLAG(DebugLuauDeferredConstraintResolution);
+
 namespace Luau
 {
 
@@ -255,16 +257,26 @@ bool areEqual(SeenSet& seen, const TypePackVar& lhs, const TypePackVar& rhs)
 
 TypePackId follow(TypePackId tp)
 {
-    return follow(tp, [](TypePackId t) {
-        return t;
-    });
+    return follow(
+        tp,
+        nullptr,
+        [](const void*, TypePackId t)
+        {
+            return t;
+        }
+    );
 }
 
-TypePackId follow(TypePackId tp, std::function<TypePackId(TypePackId)> mapper)
+TypePackId follow(TypePackId tp, const void* context, TypePackId (*mapper)(const void*, TypePackId))
 {
-    auto advance = [&mapper](TypePackId ty) -> std::optional<TypePackId> {
-        if (const Unifiable::Bound<TypePackId>* btv = get<Unifiable::Bound<TypePackId>>(mapper(ty)))
+    auto advance = [context, mapper](TypePackId ty) -> std::optional<TypePackId>
+    {
+        TypePackId mapped = mapper(context, ty);
+
+        if (const Unifiable::Bound<TypePackId>* btv = get<Unifiable::Bound<TypePackId>>(mapped))
             return btv->boundTo;
+        else if (const TypePack* tp = get<TypePack>(mapped); tp && tp->head.empty())
+            return tp->tail;
         else
             return std::nullopt;
     };
@@ -274,6 +286,9 @@ TypePackId follow(TypePackId tp, std::function<TypePackId(TypePackId)> mapper)
         cycleTester = *a;
     else
         return tp;
+
+    if (!advance(cycleTester)) // Short circuit traversal for the rather common case when advance(advance(t)) == null
+        return cycleTester;
 
     while (true)
     {
@@ -454,6 +469,13 @@ bool containsNever(TypePackId tp)
     }
 
     return false;
+}
+
+template<>
+LUAU_NOINLINE Unifiable::Bound<TypePackId>* emplaceTypePack<BoundTypePack>(TypePackVar* ty, TypePackId& tyArg)
+{
+    LUAU_ASSERT(ty != follow(tyArg));
+    return &ty->ty.emplace<BoundTypePack>(tyArg);
 }
 
 } // namespace Luau

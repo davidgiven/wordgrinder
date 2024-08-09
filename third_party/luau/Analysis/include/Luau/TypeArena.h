@@ -9,11 +9,15 @@
 
 namespace Luau
 {
+struct Module;
 
 struct TypeArena
 {
     TypedAllocator<Type> types;
     TypedAllocator<TypePackVar> typePacks;
+
+    // Owning module, if any
+    Module* owningModule = nullptr;
 
     void clear();
 
@@ -44,6 +48,11 @@ struct TypeArena
     {
         return addTypePack(TypePackVar(std::move(tp)));
     }
+
+    TypeId addTypeFunction(const TypeFunction& function, std::initializer_list<TypeId> types);
+    TypeId addTypeFunction(const TypeFunction& function, std::vector<TypeId> typeArguments, std::vector<TypePackId> packArguments = {});
+    TypePackId addTypePackFunction(const TypePackFunction& function, std::initializer_list<TypeId> types);
+    TypePackId addTypePackFunction(const TypePackFunction& function, std::vector<TypeId> typeArguments, std::vector<TypePackId> packArguments = {});
 };
 
 void freeze(TypeArena& arena);

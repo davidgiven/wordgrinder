@@ -16,10 +16,10 @@ using SeenTypePacks = std::unordered_map<TypePackId, TypePackId>;
 
 struct CloneState
 {
+    NotNull<BuiltinTypes> builtinTypes;
+
     SeenTypes seenTypes;
     SeenTypePacks seenTypePacks;
-
-    int recursionCount = 0;
 };
 
 TypePackId clone(TypePackId tp, TypeArena& dest, CloneState& cloneState);

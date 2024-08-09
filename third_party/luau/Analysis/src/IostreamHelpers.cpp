@@ -1,6 +1,7 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #include "Luau/IostreamHelpers.h"
 #include "Luau/ToString.h"
+#include "Luau/TypePath.h"
 
 namespace Luau
 {
@@ -113,6 +114,8 @@ static void errorToString(std::ostream& stream, const T& err)
         stream << "GenericError { " << err.message << " }";
     else if constexpr (std::is_same_v<T, InternalError>)
         stream << "InternalError { " << err.message << " }";
+    else if constexpr (std::is_same_v<T, ConstraintSolvingIncompleteError>)
+        stream << "ConstraintSolvingIncompleteError {}";
     else if constexpr (std::is_same_v<T, CannotCallNonFunction>)
         stream << "CannotCallNonFunction { " << toString(err.ty) << " }";
     else if constexpr (std::is_same_v<T, ExtraInformation>)
@@ -192,13 +195,74 @@ static void errorToString(std::ostream& stream, const T& err)
         stream << "TypePackMismatch { wanted = '" + toString(err.wantedTp) + "', given = '" + toString(err.givenTp) + "' }";
     else if constexpr (std::is_same_v<T, DynamicPropertyLookupOnClassesUnsafe>)
         stream << "DynamicPropertyLookupOnClassesUnsafe { " << toString(err.ty) << " }";
+    else if constexpr (std::is_same_v<T, UninhabitedTypeFunction>)
+        stream << "UninhabitedTypeFunction { " << toString(err.ty) << " }";
+    else if constexpr (std::is_same_v<T, ExplicitFunctionAnnotationRecommended>)
+    {
+        std::string recArgs = "[";
+        for (auto [s, t] : err.recommendedArgs)
+            recArgs += " " + s + ": " + toString(t);
+        recArgs += " ]";
+        stream << "ExplicitFunctionAnnotationRecommended { recommmendedReturn = '" + toString(err.recommendedReturn) +
+                      "', recommmendedArgs = " + recArgs + "}";
+    }
+    else if constexpr (std::is_same_v<T, UninhabitedTypePackFunction>)
+        stream << "UninhabitedTypePackFunction { " << toString(err.tp) << " }";
+    else if constexpr (std::is_same_v<T, WhereClauseNeeded>)
+        stream << "WhereClauseNeeded { " << toString(err.ty) << " }";
+    else if constexpr (std::is_same_v<T, PackWhereClauseNeeded>)
+        stream << "PackWhereClauseNeeded { " << toString(err.tp) << " }";
+    else if constexpr (std::is_same_v<T, CheckedFunctionCallError>)
+        stream << "CheckedFunctionCallError { expected = '" << toString(err.expected) << "', passed = '" << toString(err.passed)
+               << "', checkedFunctionName = " << err.checkedFunctionName << ", argumentIndex = " << std::to_string(err.argumentIndex) << " }";
+    else if constexpr (std::is_same_v<T, NonStrictFunctionDefinitionError>)
+        stream << "NonStrictFunctionDefinitionError { functionName = '" + err.functionName + "', argument = '" + err.argument +
+                      "', argumentType = '" + toString(err.argumentType) + "' }";
+    else if constexpr (std::is_same_v<T, PropertyAccessViolation>)
+        stream << "PropertyAccessViolation { table = " << toString(err.table) << ", prop = '" << err.key << "', context = " << err.context << " }";
+    else if constexpr (std::is_same_v<T, CheckedFunctionIncorrectArgs>)
+        stream << "CheckedFunction {  functionName = '" + err.functionName + ", expected = " + std::to_string(err.expected) +
+                      ", actual = " + std::to_string(err.actual) + "}";
+    else if constexpr (std::is_same_v<T, UnexpectedTypeInSubtyping>)
+        stream << "UnexpectedTypeInSubtyping {  ty = '" + toString(err.ty) + "' }";
+    else if constexpr (std::is_same_v<T, UnexpectedTypePackInSubtyping>)
+        stream << "UnexpectedTypePackInSubtyping {  tp = '" + toString(err.tp) + "' }";
+    else if constexpr (std::is_same_v<T, CannotAssignToNever>)
+    {
+        stream << "CannotAssignToNever { rvalueType = '" << toString(err.rhsType) << "', reason = '" << err.reason << "', cause = { ";
+
+        bool first = true;
+        for (TypeId ty : err.cause)
+        {
+            if (first)
+                first = false;
+            else
+                stream << ", ";
+
+            stream << "'" << toString(ty) << "'";
+        }
+
+        stream << " } } ";
+    }
     else
         static_assert(always_false_v<T>, "Non-exhaustive type switch");
 }
 
+std::ostream& operator<<(std::ostream& stream, const CannotAssignToNever::Reason& reason)
+{
+    switch (reason)
+    {
+    case CannotAssignToNever::Reason::PropertyNarrowed:
+        return stream << "PropertyNarrowed";
+    default:
+        return stream << "UnknownReason";
+    }
+}
+
 std::ostream& operator<<(std::ostream& stream, const TypeErrorData& data)
 {
-    auto cb = [&](const auto& e) {
+    auto cb = [&](const auto& e)
+    {
         return errorToString(stream, e);
     };
     visit(cb, data);
@@ -224,5 +288,35 @@ std::ostream& operator<<(std::ostream& stream, const TypePackVar& tv)
 {
     return stream << toString(tv);
 }
+
+std::ostream& operator<<(std::ostream& stream, TypeId ty)
+{
+    // we commonly use a null pointer when a type may not be present; we need to
+    // account for that here.
+    if (!ty)
+        return stream << "<nullptr>";
+
+    return stream << toString(ty);
+}
+
+std::ostream& operator<<(std::ostream& stream, TypePackId tp)
+{
+    // we commonly use a null pointer when a type may not be present; we need to
+    // account for that here.
+    if (!tp)
+        return stream << "<nullptr>";
+
+    return stream << toString(tp);
+}
+
+namespace TypePath
+{
+
+std::ostream& operator<<(std::ostream& stream, const Path& path)
+{
+    return stream << toString(path);
+}
+
+} // namespace TypePath
 
 } // namespace Luau

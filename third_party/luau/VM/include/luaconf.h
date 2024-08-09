@@ -101,9 +101,14 @@
 #define LUA_UTAG_LIMIT 128
 #endif
 
+// number of valid Lua lightuserdata tags
+#ifndef LUA_LUTAG_LIMIT
+#define LUA_LUTAG_LIMIT 128
+#endif
+
 // upper bound for number of size classes used by page allocator
 #ifndef LUA_SIZECLASSES
-#define LUA_SIZECLASSES 32
+#define LUA_SIZECLASSES 40
 #endif
 
 // available number of separate memory categories
@@ -119,11 +124,6 @@
 // maximum number of captures supported by pattern matching
 #ifndef LUA_MAXCAPTURES
 #define LUA_MAXCAPTURES 32
-#endif
-
-// enables callbacks to redirect code execution from Luau VM to a custom implementation
-#ifndef LUA_CUSTOM_EXECUTION
-#define LUA_CUSTOM_EXECUTION 0
 #endif
 
 // }==================================================================
@@ -143,6 +143,8 @@
         long l; \
     }
 
+#ifndef LUA_VECTOR_SIZE
 #define LUA_VECTOR_SIZE 3 // must be 3 or 4
+#endif
 
 #define LUA_EXTRA_SIZE (LUA_VECTOR_SIZE - 2)

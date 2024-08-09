@@ -6,7 +6,7 @@ namespace Luau
 namespace CodeGen
 {
 
-struct NativeState;
+class BaseCodeGenContext;
 struct ModuleHelpers;
 
 namespace X64
@@ -14,7 +14,7 @@ namespace X64
 
 class AssemblyBuilderX64;
 
-bool initHeaderFunctions(NativeState& data);
+bool initHeaderFunctions(BaseCodeGenContext& codeGenContext);
 void assembleHelpers(AssemblyBuilderX64& build, ModuleHelpers& helpers);
 
 } // namespace X64

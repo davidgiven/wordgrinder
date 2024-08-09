@@ -23,11 +23,10 @@
 #define GCSsweep 4
 
 /*
-** macro to tell when main invariant (white objects cannot point to black
-** ones) must be kept. During a collection, the sweep
-** phase may break the invariant, as objects turned white may point to
-** still-black objects. The invariant is restored when sweep ends and
-** all objects are white again.
+** The main invariant of the garbage collector, while marking objects,
+** is that a black object can never point to a white one. This invariant
+** is not being enforced during a sweep phase, and is restored when sweep
+** ends.
 */
 #define keepinvariant(g) ((g)->gcstate == GCSpropagate || (g)->gcstate == GCSpropagateagain || (g)->gcstate == GCSatomic)
 
@@ -73,10 +72,12 @@
 
 #define luaC_white(g) cast_to(uint8_t, ((g)->currentwhite) & WHITEBITS)
 
+#define luaC_needsGC(L) (L->global->totalbytes >= L->global->GCthreshold)
+
 #define luaC_checkGC(L) \
     { \
         condhardstacktests(luaD_reallocstack(L, L->stacksize - EXTRA_STACK)); \
-        if (L->global->totalbytes >= L->global->GCthreshold) \
+        if (luaC_needsGC(L)) \
         { \
             condhardmemtests(luaC_validate(L), 1); \
             luaC_step(L, true); \
@@ -134,5 +135,11 @@ LUAI_FUNC void luaC_barriertable(lua_State* L, Table* t, GCObject* v);
 LUAI_FUNC void luaC_barrierback(lua_State* L, GCObject* o, GCObject** gclist);
 LUAI_FUNC void luaC_validate(lua_State* L);
 LUAI_FUNC void luaC_dump(lua_State* L, void* file, const char* (*categoryName)(lua_State* L, uint8_t memcat));
+LUAI_FUNC void luaC_enumheap(
+    lua_State* L,
+    void* context,
+    void (*node)(void* context, void* ptr, uint8_t tt, uint8_t memcat, size_t size, const char* name),
+    void (*edge)(void* context, void* from, void* to, const char* name)
+);
 LUAI_FUNC int64_t luaC_allocationrate(lua_State* L);
 LUAI_FUNC const char* luaC_statename(int state);

@@ -4,7 +4,7 @@
 #include "Luau/AssemblyBuilderX64.h"
 #include "Luau/UnwindBuilder.h"
 
-#include "CustomExecUtils.h"
+#include "CodeGenContext.h"
 #include "NativeState.h"
 #include "EmitCommonX64.h"
 
@@ -17,10 +17,24 @@
  * | rdx home space | (unused)
  * | rcx home space | (unused)
  * | return address |
- * | ... saved non-volatile registers ... <-- rsp + kStackSize + kLocalsSize
- * | unused         | for 16 byte alignment of the stack
+ * | ... saved non-volatile registers ... <-- rsp + kStackSizeFull
+ * |   alignment    |
+ * | xmm9 non-vol   |
+ * | xmm9 cont.     |
+ * | xmm8 non-vol   |
+ * | xmm8 cont.     |
+ * | xmm7 non-vol   |
+ * | xmm7 cont.     |
+ * | xmm6 non-vol   |
+ * | xmm6 cont.     |
+ * | spill slot 5   |
+ * | spill slot 4   |
+ * | spill slot 3   |
+ * | spill slot 2   |
+ * | spill slot 1   | <-- rsp + kStackOffsetToSpillSlots
+ * | sTemporarySlot |
  * | sCode          |
- * | sClosure       | <-- rsp + kStackSize
+ * | sClosure       | <-- rsp + kStackOffsetToLocals
  * | argument 6     | <-- rsp + 40
  * | argument 5     | <-- rsp + 32
  * | r9 home space  |
@@ -57,43 +71,68 @@ static EntryLocations buildEntryFunction(AssemblyBuilderX64& build, UnwindBuilde
     locations.start = build.setLabel();
     unwind.startFunction();
 
-    // Save common non-volatile registers
-    build.push(rbp);
-    unwind.save(rbp);
+    RegisterX64 rArg1 = (build.abi == ABIX64::Windows) ? rcx : rdi;
+    RegisterX64 rArg2 = (build.abi == ABIX64::Windows) ? rdx : rsi;
+    RegisterX64 rArg3 = (build.abi == ABIX64::Windows) ? r8 : rdx;
+    RegisterX64 rArg4 = (build.abi == ABIX64::Windows) ? r9 : rcx;
 
+    // Save common non-volatile registers
     if (build.abi == ABIX64::SystemV)
     {
+        // We need to use a standard rbp-based frame setup for debuggers to work with JIT code
+        build.push(rbp);
         build.mov(rbp, rsp);
-        unwind.setupFrameReg(rbp, 0);
     }
 
     build.push(rbx);
-    unwind.save(rbx);
     build.push(r12);
-    unwind.save(r12);
     build.push(r13);
-    unwind.save(r13);
     build.push(r14);
-    unwind.save(r14);
     build.push(r15);
-    unwind.save(r15);
 
     if (build.abi == ABIX64::Windows)
     {
         // Save non-volatile registers that are specific to Windows x64 ABI
         build.push(rdi);
-        unwind.save(rdi);
         build.push(rsi);
-        unwind.save(rsi);
 
-        // TODO: once we start using non-volatile SIMD registers on Windows, we will save those here
+        // On Windows, rbp is available as a general-purpose non-volatile register and this might be freed up
+        build.push(rbp);
     }
 
-    // Allocate stack space (reg home area + local data)
-    build.sub(rsp, kStackSize + kLocalsSize);
-    unwind.allocStack(kStackSize + kLocalsSize);
+    // Allocate stack space
+    uint8_t usableXmmRegCount = getXmmRegisterCount(build.abi);
+    unsigned xmmStorageSize = getNonVolXmmStorageSize(build.abi, usableXmmRegCount);
+    unsigned fullStackSize = getFullStackSize(build.abi, usableXmmRegCount);
+
+    build.sub(rsp, fullStackSize);
+
+    OperandX64 xmmStorageOffset = rsp + (fullStackSize - (kStackAlign + xmmStorageSize));
+
+    // On Windows, we have to save non-volatile xmm registers
+    std::vector<RegisterX64> savedXmmRegs;
+
+    if (build.abi == ABIX64::Windows)
+    {
+        if (usableXmmRegCount > kWindowsFirstNonVolXmmReg)
+            savedXmmRegs.reserve(usableXmmRegCount - kWindowsFirstNonVolXmmReg);
+
+        for (uint8_t i = kWindowsFirstNonVolXmmReg, offset = 0; i < usableXmmRegCount; i++, offset += 16)
+        {
+            RegisterX64 xmmReg = RegisterX64{SizeX64::xmmword, i};
+            build.vmovaps(xmmword[xmmStorageOffset + offset], xmmReg);
+            savedXmmRegs.push_back(xmmReg);
+        }
+    }
 
     locations.prologueEnd = build.setLabel();
+
+    uint32_t prologueSize = build.getLabelOffset(locations.prologueEnd) - build.getLabelOffset(locations.start);
+
+    if (build.abi == ABIX64::SystemV)
+        unwind.prologueX64(prologueSize, fullStackSize, /* setupFrame= */ true, {rbx, r12, r13, r14, r15}, {});
+    else if (build.abi == ABIX64::Windows)
+        unwind.prologueX64(prologueSize, fullStackSize, /* setupFrame= */ false, {rbx, r12, r13, r14, r15, rdi, rsi, rbp}, savedXmmRegs);
 
     // Setup native execution environment
     build.mov(rState, rArg1);
@@ -113,11 +152,19 @@ static EntryLocations buildEntryFunction(AssemblyBuilderX64& build, UnwindBuilde
     // Even though we jumped away, we will return here in the end
     locations.epilogueStart = build.setLabel();
 
-    // Cleanup and exit
-    build.add(rsp, kStackSize + kLocalsSize);
+    // Epilogue and exit
+    if (build.abi == ABIX64::Windows)
+    {
+        // xmm registers are restored before the official epilogue that has to start with 'add rsp/lea rsp'
+        for (uint8_t i = kWindowsFirstNonVolXmmReg, offset = 0; i < usableXmmRegCount; i++, offset += 16)
+            build.vmovaps(RegisterX64{SizeX64::xmmword, i}, xmmword[xmmStorageOffset + offset]);
+    }
+
+    build.add(rsp, fullStackSize);
 
     if (build.abi == ABIX64::Windows)
     {
+        build.pop(rbp);
         build.pop(rsi);
         build.pop(rdi);
     }
@@ -127,21 +174,24 @@ static EntryLocations buildEntryFunction(AssemblyBuilderX64& build, UnwindBuilde
     build.pop(r13);
     build.pop(r12);
     build.pop(rbx);
-    build.pop(rbp);
+
+    if (build.abi == ABIX64::SystemV)
+        build.pop(rbp);
+
     build.ret();
 
     // Our entry function is special, it spans the whole remaining code area
-    unwind.finishFunction(build.getLabelOffset(locations.start), kFullBlockFuncton);
+    unwind.finishFunction(build.getLabelOffset(locations.start), kFullBlockFunction);
 
     return locations;
 }
 
-bool initHeaderFunctions(NativeState& data)
+bool initHeaderFunctions(BaseCodeGenContext& codeGenContext)
 {
     AssemblyBuilderX64 build(/* logText= */ false);
-    UnwindBuilder& unwind = *data.unwindBuilder.get();
+    UnwindBuilder& unwind = *codeGenContext.unwindBuilder.get();
 
-    unwind.startInfo();
+    unwind.startInfo(UnwindBuilder::X64);
 
     EntryLocations entryLocations = buildEntryFunction(build, unwind);
 
@@ -149,13 +199,20 @@ bool initHeaderFunctions(NativeState& data)
 
     unwind.finishInfo();
 
-    LUAU_ASSERT(build.data.empty());
+    CODEGEN_ASSERT(build.data.empty());
 
     uint8_t* codeStart = nullptr;
-    if (!data.codeAllocator.allocate(
-            build.data.data(), int(build.data.size()), build.code.data(), int(build.code.size()), data.gateData, data.gateDataSize, codeStart))
+    if (!codeGenContext.codeAllocator.allocate(
+            build.data.data(),
+            int(build.data.size()),
+            build.code.data(),
+            int(build.code.size()),
+            codeGenContext.gateData,
+            codeGenContext.gateDataSize,
+            codeStart
+        ))
     {
-        LUAU_ASSERT(!"failed to create entry function");
+        CODEGEN_ASSERT(!"Failed to create entry function");
         return false;
     }
 
@@ -163,8 +220,8 @@ bool initHeaderFunctions(NativeState& data)
     // specified by the unwind information of the entry function
     unwind.setBeginOffset(build.getLabelOffset(entryLocations.prologueEnd));
 
-    data.context.gateEntry = codeStart + build.getLabelOffset(entryLocations.start);
-    data.context.gateExit = codeStart + build.getLabelOffset(entryLocations.epilogueStart);
+    codeGenContext.context.gateEntry = codeStart + build.getLabelOffset(entryLocations.start);
+    codeGenContext.context.gateExit = codeStart + build.getLabelOffset(entryLocations.epilogueStart);
 
     return true;
 }
@@ -172,19 +229,34 @@ bool initHeaderFunctions(NativeState& data)
 void assembleHelpers(X64::AssemblyBuilderX64& build, ModuleHelpers& helpers)
 {
     if (build.logText)
+        build.logAppend("; updatePcAndContinueInVm\n");
+    build.setLabel(helpers.updatePcAndContinueInVm);
+    emitUpdatePcForExit(build);
+
+    if (build.logText)
+        build.logAppend("; exitContinueVmClearNativeFlag\n");
+    build.setLabel(helpers.exitContinueVmClearNativeFlag);
+    emitClearNativeFlag(build);
+
+    if (build.logText)
         build.logAppend("; exitContinueVm\n");
-    helpers.exitContinueVm = build.setLabel();
+    build.setLabel(helpers.exitContinueVm);
     emitExit(build, /* continueInVm */ true);
 
     if (build.logText)
         build.logAppend("; exitNoContinueVm\n");
-    helpers.exitNoContinueVm = build.setLabel();
+    build.setLabel(helpers.exitNoContinueVm);
     emitExit(build, /* continueInVm */ false);
 
     if (build.logText)
-        build.logAppend("; continueCallInVm\n");
-    helpers.continueCallInVm = build.setLabel();
-    emitContinueCallInVm(build);
+        build.logAppend("; interrupt\n");
+    build.setLabel(helpers.interrupt);
+    emitInterrupt(build);
+
+    if (build.logText)
+        build.logAppend("; return\n");
+    build.setLabel(helpers.return_);
+    emitReturn(build, helpers);
 }
 
 } // namespace X64
