@@ -1,27 +1,25 @@
-from os.path import basename, join
 from build.ab import (
-    ABException,
-    List,
     Rule,
     Targets,
     TargetsMap,
     filenameof,
-    filenamesmatchingof,
     filenamesof,
     flatten,
-    normalrule,
-    bubbledattrsof,
+    simplerule,
+)
+from build.utils import (
+    filenamesmatchingof,
     stripext,
     targetswithtraitsof,
+    collectattrs,
 )
 from os.path import *
-from types import SimpleNamespace
 
 
 class Toolchain:
     label = ""
     cfile = ["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
-    cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CXXFLAGS) {cflags}"]
+    cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
     clibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(AR) cqs {outs[0]} {ins}"]
     cprogram = ["$(CC) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"]
@@ -31,7 +29,7 @@ class Toolchain:
 class HostToolchain:
     label = "HOST "
     cfile = ["$(HOSTCC) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
-    cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCXXFLAGS) {cflags}"]
+    cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
     clibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
     cxxlibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
     cprogram = ["$(HOSTCC) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
@@ -39,16 +37,18 @@ class HostToolchain:
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
-    outleaf = stripext(basename(filenameof(srcs[0]))) + suffix
+    outleaf = "=" + stripext(basename(filenameof(srcs[0]))) + suffix
 
-    normalrule(
+    cflags = collectattrs(targets=deps, name="caller_cflags", initial=cflags)
+
+    t = simplerule(
         replaces=self,
         ins=srcs,
         deps=deps,
         outs=[outleaf],
         label=label,
         commands=commands,
-        cflags=cflags + bubbledattrsof(deps, "caller_cflags"),
+        args={"cflags": cflags},
     )
 
 
@@ -58,7 +58,7 @@ def cfile(
     name,
     srcs: Targets = None,
     deps: Targets = None,
-    cflags: List = [],
+    cflags=[],
     suffix=".o",
     toolchain=Toolchain,
     commands=None,
@@ -77,7 +77,7 @@ def cxxfile(
     name,
     srcs: Targets = None,
     deps: Targets = None,
-    cflags: List = [],
+    cflags=[],
     suffix=".o",
     toolchain=Toolchain,
     commands=None,
@@ -92,7 +92,11 @@ def cxxfile(
     )
 
 
-def findsources(name, srcs, deps, cflags, toolchain, filerule):
+def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
+    headers = filenamesmatchingof(srcs, "*.h")
+    cflags = cflags + ["-I" + dirname(h) for h in headers]
+    deps = deps + headers
+
     objs = []
     for s in flatten(srcs):
         objs += [
@@ -102,17 +106,16 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule):
                 deps=deps,
                 cflags=cflags,
                 toolchain=toolchain,
+                cwd=cwd,
             )
-            for f in filenamesof(s)
+            for f in filenamesof([s])
             if f.endswith(".c")
             or f.endswith(".cc")
             or f.endswith(".cpp")
             or f.endswith(".S")
             or f.endswith(".s")
-            or f.endswith(".mm")
-            or f.endswith(".m")
         ]
-        if any(f.endswith(".o") for f in filenamesof(s)):
+        if any(f.endswith(".o") for f in filenamesof([s])):
             objs += [s]
 
     return objs
@@ -123,7 +126,7 @@ def cheaders(
     self,
     name,
     hdrs: TargetsMap = None,
-    caller_cflags: List = None,
+    caller_cflags=[],
     deps: Targets = None,
 ):
     cs = []
@@ -131,27 +134,24 @@ def cheaders(
     outs = []
     i = 0
     for dest, src in hdrs.items():
-        s = filenamesof(src)
-        if len(s) != 1:
-            raise ABException(
-                "the target of a header must return exactly one file"
-            )
+        s = filenamesof([src])
+        assert (
+            len(s) == 1
+        ), "the target of a header must return exactly one file"
 
         cs += ["cp {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
-        outs += [dest]
+        outs += ["=" + dest]
         i = i + 1
 
-    r = normalrule(
+    r = simplerule(
         replaces=self,
         ins=ins,
         outs=outs,
         commands=cs,
         deps=deps,
         label="CHEADERS",
+        args={"caller_cflags": caller_cflags + ["-I" + self.dir]},
     )
-    r.materialise()
-    self.attr.caller_cflags = caller_cflags + ["-I" + r.attr.objdir]
-    self.bubbleattr("caller_cflags", deps)
 
 
 def libraryimpl(
@@ -189,27 +189,32 @@ def libraryimpl(
         deps = deps + [hr]
 
     objs = findsources(
-        name,
+        self.localname,
         srcs,
         targetswithtraitsof(deps, "cheaders"),
-        cflags + bubbledattrsof(deps, "caller_cflags"),
+        cflags,
         toolchain,
         kind,
+        self.cwd,
     )
 
-    normalrule(
+    simplerule(
         replaces=self,
         ins=objs,
-        outs=[basename(name) + ".a"],
+        outs=[f"={self.localname}.a"],
         label=label,
         commands=commands,
+        args={
+            "caller_cflags": collectattrs(
+                targets=deps + ([hr] if hr else []), name="caller_cflags"
+            ),
+            "caller_ldflags": collectattrs(
+                targets=deps, name="caller_ldflags", initial=caller_ldflags
+            ),
+        },
+        traits={"cheaders"},
     )
     self.outs = self.outs + (hr.outs if hr else [])
-
-    self.traits.add("cheaders")
-    self.attr.caller_ldflags = caller_ldflags
-    self.bubbleattr("caller_ldflags", deps)
-    self.bubbleattr("caller_cflags", deps)
 
 
 @Rule
@@ -219,10 +224,10 @@ def clibrary(
     srcs: Targets = None,
     deps: Targets = None,
     hdrs: TargetsMap = None,
-    caller_cflags: List = [],
-    caller_ldflags: List = [],
-    cflags: List = [],
-    ldflags: List = [],
+    caller_cflags=[],
+    caller_ldflags=[],
+    cflags=[],
+    ldflags=[],
     toolchain=Toolchain,
     commands=None,
     label=None,
@@ -256,10 +261,10 @@ def cxxlibrary(
     srcs: Targets = None,
     deps: Targets = None,
     hdrs: TargetsMap = None,
-    caller_cflags: List = [],
-    caller_ldflags: List = [],
-    cflags: List = [],
-    ldflags: List = [],
+    caller_cflags=[],
+    caller_ldflags=[],
+    cflags=[],
+    ldflags=[],
     toolchain=Toolchain,
     commands=None,
     label=None,
@@ -299,18 +304,22 @@ def programimpl(
     kind,
 ):
     ars = filenamesmatchingof(deps, "*.a")
-    deps = deps + filenamesmatchingof(srcs, "*.h")
-    ldflags = ldflags + bubbledattrsof(deps, "caller_ldflags")
 
-    cfiles = findsources(name, srcs, deps, cflags, toolchain, filerule)
-    normalrule(
+    cfiles = findsources(
+        self.localname, srcs, deps, cflags, toolchain, filerule, self.cwd
+    )
+    simplerule(
         replaces=self,
         ins=cfiles + ars + ars,
-        outs=[basename(name) + "$(EXT)"],
+        outs=[f"={self.localname}$(EXT)"],
         deps=deps,
         label=toolchain.label + label,
         commands=commands,
-        ldflags=ldflags,
+        args={
+            "ldflags": collectattrs(
+                targets=deps, name="caller_ldflags", initial=ldflags
+            )
+        },
     )
 
 
@@ -320,8 +329,8 @@ def cprogram(
     name,
     srcs: Targets = None,
     deps: Targets = None,
-    cflags: List = [],
-    ldflags: List = [],
+    cflags=[],
+    ldflags=[],
     toolchain=Toolchain,
     commands=None,
     label="CLINK",
@@ -351,8 +360,8 @@ def cxxprogram(
     name,
     srcs: Targets = None,
     deps: Targets = None,
-    cflags: List = [],
-    ldflags: List = [],
+    cflags=[],
+    ldflags=[],
     toolchain=Toolchain,
     commands=None,
     label="CXXLINK",

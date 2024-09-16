@@ -1,136 +1,81 @@
-from collections.abc import Iterable, Sequence
 from os.path import *
-from types import SimpleNamespace
+from pathlib import Path
+from typing import Iterable
 import argparse
+import builtins
+from copy import copy
 import functools
 import importlib
 import importlib.abc
 import importlib.util
+from importlib.machinery import (
+    SourceFileLoader,
+    PathFinder,
+    ModuleSpec,
+)
 import inspect
-import re
-import sys
-import builtins
 import string
-import fnmatch
-import traceback
+import sys
 
-defaultGlobals = {}
-targets = {}
-unmaterialisedTargets = set()
-materialisingStack = []
-outputFp = None
+verbose = False
+quiet = False
 cwdStack = [""]
+targets = {}
+unmaterialisedTargets = {}  # dict, not set, to get consistent ordering
+materialisingStack = []
+defaultGlobals = {}
 
 sys.path += ["."]
 old_import = builtins.__import__
 
 
-def new_import(name, *args, **kwargs):
-    if name not in sys.modules:
-        path = name.replace(".", "/") + ".py"
-        if isfile(path):
-            sys.stderr.write(f"loading {path}\n")
-            loader = importlib.machinery.SourceFileLoader(name, path)
+class PathFinderImpl(PathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if not path:
+            path = ["."]
+        if len(path) != 1:
+            return None
 
-            spec = importlib.util.spec_from_loader(
-                name, loader, origin="built-in"
+        try:
+            path = relpath(path[0])
+        except ValueError:
+            return None
+
+        realpath = fullname.replace(".", "/")
+        buildpath = realpath + ".py"
+        if isfile(buildpath):
+            spec = importlib.util.spec_from_file_location(
+                name=fullname,
+                location=buildpath,
+                loader=BuildFileLoaderImpl(fullname=fullname, path=buildpath),
+                submodule_search_locations=[],
             )
-            module = importlib.util.module_from_spec(spec)
-            sys.modules[name] = module
-            cwdStack.append(dirname(path))
-            spec.loader.exec_module(module)
-            cwdStack.pop()
-
-    return old_import(name, *args, **kwargs)
+            return spec
+        if isdir(realpath):
+            return ModuleSpec(fullname, None, origin=realpath, is_package=True)
+        return None
 
 
-builtins.__import__ = new_import
+class BuildFileLoaderImpl(SourceFileLoader):
+    def exec_module(self, module):
+        sourcepath = relpath(module.__file__)
+
+        if not quiet:
+            print("loading", sourcepath)
+        cwdStack.append(dirname(sourcepath))
+        super(SourceFileLoader, self).exec_module(module)
+        cwdStack.pop()
+
+
+sys.meta_path.insert(0, PathFinderImpl())
 
 
 class ABException(BaseException):
     pass
 
 
-class Invocation:
-    name = None
-    callback = None
-    types = None
-    ins = None
-    outs = None
-    binding = None
-    traits = None
-    attr = None
-    attrdeps = None
-
-    def __init__(self):
-        self.attr = SimpleNamespace()
-        self.attrdeps = SimpleNamespace()
-        self.traits = set()
-
-    def __eq__(self, other):
-        return self.name is other.name
-
-    def __hash__(self):
-        return id(self.name)
-
-    def materialise(self, replacing=False):
-        if self in unmaterialisedTargets:
-            if not replacing and (self in materialisingStack):
-                print("Found dependency cycle:")
-                for i in materialisingStack:
-                    print(f"  {i.name}")
-                print(f"  {self.name}")
-                sys.exit(1)
-
-            materialisingStack.append(self)
-
-            # Perform type conversion to the declared rule parameter types.
-
-            try:
-                self.args = {}
-                for k, v in self.binding.arguments.items():
-                    if k != "kwargs":
-                        t = self.types.get(k, None)
-                        if t:
-                            v = t(v).convert(self)
-                        self.args[k] = v
-                    else:
-                        for kk, vv in v.items():
-                            t = self.types.get(kk, None)
-                            if t:
-                                vv = t(vv).convert(self)
-                            self.args[kk] = vv
-
-                # Actually call the callback.
-
-                cwdStack.append(self.cwd)
-                self.callback(**self.args)
-                cwdStack.pop()
-            except BaseException as e:
-                print(f"Error materialising {self}: {self.callback}")
-                print(f"Arguments: {self.args}")
-                raise e
-
-            if self.outs is None:
-                raise ABException(f"{self.name} didn't set self.outs")
-
-            if self in unmaterialisedTargets:
-                unmaterialisedTargets.remove(self)
-
-            materialisingStack.pop()
-
-    def bubbleattr(self, attr, xs):
-        xs = targetsof(xs, cwd=self.cwd)
-        a = set()
-        if hasattr(self.attrdeps, attr):
-            a = getattr(self.attrdeps, attr)
-
-        for x in xs:
-            a.add(x)
-        setattr(self.attrdeps, attr, a)
-
-    def __repr__(self):
-        return "'%s'" % self.name
+def error(message):
+    raise ABException(message)
 
 
 def Rule(func):
@@ -139,303 +84,356 @@ def Rule(func):
     @functools.wraps(func)
     def wrapper(*, name=None, replaces=None, **kwargs):
         cwd = None
-        if name:
-            if ("+" in name) and not name.startswith("+"):
-                (cwd, _) = name.split("+", 1)
+        if "cwd" in kwargs:
+            cwd = kwargs["cwd"]
+            del kwargs["cwd"]
+
         if not cwd:
-            cwd = cwdStack[-1]
+            if replaces:
+                cwd = replaces.cwd
+            else:
+                cwd = cwdStack[-1]
 
         if name:
-            i = Invocation()
-            if name.startswith("./"):
-                name = join(cwd, name)
-            elif "+" not in name:
-                name = join(cwd, "+" + name)
+            if name[0] != "+":
+                name = "+" + name
+            t = Target(cwd, join(cwd, name))
 
-            i.name = name
-            i.localname = name.split("+")[-1]
-
-            if name in targets:
-                raise ABException(f"target {i.name} has already been defined")
-            targets[name] = i
+            assert (
+                t.name not in targets
+            ), f"target {t.name} has already been defined"
+            targets[t.name] = t
         elif replaces:
-            i = replaces
-            name = i.name
+            t = replaces
         else:
             raise ABException("you must supply either 'name' or 'replaces'")
 
-        i.cwd = cwd
-        i.sentinel = "$(OBJ)/.sentinels/" + name + ".mark"
-        i.types = func.__annotations__
-        i.callback = func
-        i.traits.add(func.__name__)
+        t.cwd = cwd
+        t.types = func.__annotations__
+        t.callback = func
+        t.traits.add(func.__name__)
+        if "args" in kwargs:
+            t.args |= kwargs["args"]
+            del kwargs["args"]
+        if "traits" in kwargs:
+            t.traits |= kwargs["traits"]
+            del kwargs["traits"]
 
-        i.binding = sig.bind(name=name, self=i, **kwargs)
-        i.binding.apply_defaults()
+        t.binding = sig.bind(name=name, self=t, **kwargs)
+        t.binding.apply_defaults()
 
-        unmaterialisedTargets.add(i)
+        unmaterialisedTargets[t] = None
         if replaces:
-            i.materialise(replacing=True)
-        return i
+            t.materialise(replacing=True)
+        return t
 
     defaultGlobals[func.__name__] = wrapper
     return wrapper
 
 
-class Type:
-    def __init__(self, value):
-        self.value = value
-
-
-class List(Type):
-    def convert(self, invocation):
-        value = self.value
-        if not value:
-            return []
-        if type(value) is str:
-            return [value]
-        return list(value)
-
-
-class Targets(Type):
-    def convert(self, invocation):
-        value = self.value
-        if not value:
-            return []
-        if type(value) is str:
-            value = [value]
-        if type(value) is list:
-            value = targetsof(value, cwd=invocation.cwd)
-        return value
-
-
-class Target(Type):
-    def convert(self, invocation):
-        value = self.value
-        if not value:
-            return None
-        return targetof(value, cwd=invocation.cwd)
-
-
-class TargetsMap(Type):
-    def convert(self, invocation):
-        value = self.value
-        if not value:
-            return {}
-        if type(value) is dict:
-            return {
-                k: targetof(v, cwd=invocation.cwd) for k, v in value.items()
-            }
-        raise ABException(f"wanted a dict of targets, got a {type(value)}")
-
-
-def flatten(*xs):
-    def recurse(xs):
-        for x in xs:
-            if isinstance(x, Iterable) and not isinstance(x, (str, bytes)):
-                yield from recurse(x)
-            else:
-                yield x
-
-    return list(recurse(xs))
-
-
-def fileinvocation(s):
-    i = Invocation()
-    i.name = s
-    i.outs = [s]
-    targets[s] = i
-    return i
-
-
-def targetof(s, cwd=None):
-    if isinstance(s, Invocation):
-        s.materialise()
-        return s
-
-    if type(s) != str:
-        raise ABException("parameter of targetof is not a single target")
-
-    if s in targets:
-        t = targets[s]
-        t.materialise()
-        return t
-
-    if s.startswith("."):
-        if cwd == None:
-            raise ABException(
-                "relative target names can't be used in targetof without supplying cwd"
-            )
-        if s.startswith(".+"):
-            s = cwd + s[1:]
-        elif s.startswith("./"):
-            s = normpath(join(cwd, s))
-
-    elif s.endswith("/"):
-        return fileinvocation(s)
-    elif s.startswith("$"):
-        return fileinvocation(s)
-
-    if "+" not in s:
-        if isdir(s):
-            s = s + "+" + basename(s)
-        else:
-            return fileinvocation(s)
-
-    (path, target) = s.split("+", 2)
-    s = join(path, "+" + target)
-    loadbuildfile(join(path, "build.py"))
-    if not s in targets:
-        raise ABException(
-            f"build file at {path} doesn't contain +{target} when trying to resolve {s}"
-        )
-    i = targets[s]
-    i.materialise()
-    return i
-
-
-def targetsof(*xs, cwd=None):
-    return flatten([targetof(x, cwd) for x in flatten(xs)])
-
-
-def filenamesof(*xs):
-    s = []
-    for t in flatten(xs):
-        if type(t) == str:
-            t = normpath(t)
-            s += [t]
-        else:
-            s += [f for f in [normpath(f) for f in filenamesof(t.outs)]]
-    return s
-
-
-def filenamesmatchingof(xs, pattern):
-    return fnmatch.filter(filenamesof(xs), pattern)
-
-
-def targetswithtraitsof(xs, trait):
-    return [target for target in targetsof(xs) if trait in target.traits]
-
-
-def targetnamesof(*xs):
-    s = []
-    for x in flatten(xs):
-        if type(x) == str:
-            x = normpath(x)
-            if x not in s:
-                s += [x]
-        else:
-            if x.name not in s:
-                s += [x.name]
-    return s
-
-
-def filenameof(x):
-    xs = filenamesof(x)
-    if len(xs) != 1:
-        raise ABException("expected a single item")
-    return xs[0]
-
-
-def bubbledattrsof(x, attr):
-    x = targetsof(x)
-    alltargets = set()
-    pending = set(x) if isinstance(x, Iterable) else {x}
-    while pending:
-        t = pending.pop()
-        if t not in alltargets:
-            alltargets.add(t)
-            if hasattr(t.attrdeps, attr):
-                pending.update(getattr(t.attrdeps, attr))
-
-    values = []
-    for t in alltargets:
-        if hasattr(t.attr, attr):
-            values += getattr(t.attr, attr)
-    return values
-
-
-def stripext(path):
-    return splitext(path)[0]
-
-
-def emit(*args):
-    outputFp.write(" ".join(flatten(args)))
-    outputFp.write("\n")
-
-
-def templateexpand(s, invocation):
-    class Formatter(string.Formatter):
-        def get_field(self, name, a1, a2):
-            return (
-                eval(name, invocation.callback.__globals__, invocation.args),
-                False,
-            )
-
-        def format_field(self, value, format_spec):
-            if type(self) == str:
-                return value
-            return " ".join(
-                [templateexpand(f, invocation) for f in filenamesof(value)]
-            )
-
-    return Formatter().format(s)
-
-
-def emitter_rule(rule, ins, outs, deps=[]):
-    emit("")
-    emit(".PHONY:", rule.name)
-    emit(rule.name, ":", rule.sentinel)
-
-    emit(
-        rule.sentinel,
-        # filenamesof(outs) if outs else [],
-        ":",
-        filenamesof(ins),
-        filenamesof(deps),
+def _isiterable(xs):
+    return isinstance(xs, Iterable) and not isinstance(
+        xs, (str, bytes, bytearray)
     )
 
 
-def emitter_endrule(rule, outs):
-    emit("\t$(hide) mkdir -p", dirname(rule.sentinel))
-    emit("\t$(hide) touch", rule.sentinel)
+class Target:
+    def __init__(self, cwd, name):
+        if verbose:
+            print("rule('%s', cwd='%s'" % (name, cwd))
+        self.name = name
+        self.localname = self.name.rsplit("+")[-1]
+        self.traits = set()
+        self.dir = join("$(OBJ)", name)
+        self.ins = []
+        self.outs = []
+        self.materialised = False
+        self.args = {}
 
-    for f in filenamesof(outs):
-        emit(".SECONDARY:", f)
-        emit(f, ":", rule.sentinel, ";")
+    def __eq__(self, other):
+        return self.name is other.name
+
+    def __hash__(self):
+        return id(self)
+
+    def __repr__(self):
+        return f"Target('{self.name}')"
+
+    def templateexpand(selfi, s):
+        class Formatter(string.Formatter):
+            def get_field(self, name, a1, a2):
+                return (
+                    eval(name, selfi.callback.__globals__, selfi.args),
+                    False,
+                )
+
+            def format_field(self, value, format_spec):
+                if not value:
+                    return ""
+                if type(value) == str:
+                    return value
+                if _isiterable(value):
+                    value = list(value)
+                if type(value) != list:
+                    value = [value]
+                return " ".join(
+                    [selfi.templateexpand(f) for f in filenamesof(value)]
+                )
+
+        return Formatter().format(s)
+
+    def materialise(self, replacing=False):
+        if self not in unmaterialisedTargets:
+            return
+
+        if not replacing and self in materialisingStack:
+            print("Found dependency cycle:")
+            for i in materialisingStack:
+                print(f"  {i.name}")
+            print(f"  {self.name}")
+            sys.exit(1)
+        materialisingStack.append(self)
+
+        # Perform type conversion to the declared rule parameter types.
+
+        try:
+            for k, v in self.binding.arguments.items():
+                if k != "kwargs":
+                    t = self.types.get(k, None)
+                    if t:
+                        v = t.convert(v, self)
+                    self.args[k] = copy(v)
+                else:
+                    for kk, vv in v.items():
+                        t = self.types.get(kk, None)
+                        if t:
+                            vv = t.convert(v, self)
+                        self.args[kk] = copy(vv)
+            self.args["name"] = self.name
+            self.args["dir"] = self.dir
+            self.args["self"] = self
+
+            # Actually call the callback.
+
+            cwdStack.append(self.cwd)
+            if "kwargs" in self.binding.arguments.keys():
+                # If the caller wants kwargs, return all arguments except the standard ones.
+                cbargs = {
+                    k: v for k, v in self.args.items() if k not in {"dir"}
+                }
+            else:
+                # Otherwise, just call the callback with the ones it asks for.
+                cbargs = {}
+                for k in self.binding.arguments.keys():
+                    if k != "kwargs":
+                        try:
+                            cbargs[k] = self.args[k]
+                        except KeyError:
+                            error(
+                                f"invocation of {self} failed because {k} isn't an argument"
+                            )
+            self.callback(**cbargs)
+            cwdStack.pop()
+        except BaseException as e:
+            print(f"Error materialising {self}: {self.callback}")
+            print(f"Arguments: {self.args}")
+            raise e
+
+        if self.outs is None:
+            raise ABException(f"{self.name} didn't set self.outs")
+
+        if self in unmaterialisedTargets:
+            del unmaterialisedTargets[self]
+        materialisingStack.pop()
+        self.materialised = True
+
+    def convert(value, target):
+        if not value:
+            return None
+        return target.targetof(value)
+
+    def targetof(self, value):
+        if isinstance(value, str) and (value[0] == "="):
+            value = join(self.dir, value[1:])
+
+        return targetof(value, self.cwd)
 
 
-def emitter_label(s):
-    emit("\t$(hide)", "$(ECHO)", s)
+def _filetarget(value, cwd):
+    if value in targets:
+        return targets[value]
+
+    t = Target(cwd, value)
+    t.outs = [value]
+    targets[value] = t
+    return t
 
 
-def emitter_exec(cs):
-    for c in cs:
-        emit("\t$(hide)", c)
+def targetof(value, cwd=None):
+    if not cwd:
+        cwd = cwdStack[-1]
+    if isinstance(value, Path):
+        value = value.as_posix()
+    if isinstance(value, Target):
+        t = value
+    else:
+        assert (
+            value[0] != "="
+        ), "can only use = for targets associated with another target"
+
+        if value.startswith("."):
+            # Check for local rule.
+            if value.startswith(".+"):
+                value = normpath(join(cwd, value[1:]))
+            # Check for local path.
+            elif value.startswith("./"):
+                value = normpath(join(cwd, value))
+        # Explicit directories are always raw files.
+        elif value.endswith("/"):
+            return _filetarget(value, cwd)
+        # Anything starting with a variable expansion is always a raw file.
+        elif value.startswith("$"):
+            return _filetarget(value, cwd)
+
+        # If this is not a rule lookup...
+        if "+" not in value:
+            # ...and if the value is pointing at a directory without a trailing /,
+            # it's a shorthand rule lookup.
+            if isdir(value):
+                value = value + "+" + basename(value)
+            # Otherwise it's an absolute file.
+            else:
+                return _filetarget(value, cwd)
+
+        # At this point we have the fully qualified name of a rule.
+
+        (path, target) = value.rsplit("+", 1)
+        value = join(path, "+" + target)
+        if value not in targets:
+            # Load the new build file.
+
+            path = join(path, "build.py")
+            loadbuildfile(path)
+            assert (
+                value in targets
+            ), f"build file at '{path}' doesn't contain '+{target}' when trying to resolve '{value}'"
+
+        t = targets[value]
+
+    t.materialise()
+    return t
 
 
-def unmake(*ss):
-    return [
-        re.sub(r"\$\(([^)]*)\)", r"$\1", s) for s in flatten(filenamesof(ss))
-    ]
+class Targets:
+    def convert(value, target):
+        if not value:
+            return []
+        assert _isiterable(value), "cannot convert non-list to Targets"
+        return [target.targetof(x) for x in flatten(value)]
+
+
+class TargetsMap:
+    def convert(value, target):
+        if not value:
+            return {}
+        output = {k: target.targetof(v) for k, v in value.items()}
+        for k, v in output.items():
+            assert (
+                len(filenamesof([v])) == 1
+            ), f"targets of a TargetsMap used as an argument of {target} with key '{k}' must contain precisely one output file, but was {filenamesof([v])}"
+        return output
+
+
+def loadbuildfile(filename):
+    filename = filename.replace("/", ".").removesuffix(".py")
+    builtins.__import__(filename)
+
+
+def flatten(items):
+    def generate(xs):
+        for x in xs:
+            if _isiterable(x):
+                yield from generate(x)
+            else:
+                yield x
+
+    return list(generate(items))
+
+
+def targetnamesof(items):
+    assert _isiterable(items), "argument of filenamesof is not a collection"
+
+    return [t.name for t in items]
+
+
+def filenamesof(items):
+    assert _isiterable(items), "argument of filenamesof is not a collection"
+
+    def generate(xs):
+        for x in xs:
+            if isinstance(x, Target):
+                yield from generate(x.outs)
+            else:
+                yield x
+
+    return list(generate(items))
+
+
+def filenameof(x):
+    xs = filenamesof(x.outs)
+    assert (
+        len(xs) == 1
+    ), f"tried to use filenameof() on {x} which does not have exactly one output: {x.outs}"
+    return xs[0]
+
+
+def emit(*args):
+    outputFp.write(" ".join(args))
+    outputFp.write("\n")
+
+
+def emit_rule(name, ins, outs, cmds=[], label=None):
+    fins = filenamesof(ins)
+    fouts = filenamesof(outs)
+    nonobjs = [f for f in fouts if not f.startswith("$(OBJ)")]
+
+    emit("")
+    if nonobjs:
+        emit("clean::")
+        emit("\t$(hide) rm -f", *nonobjs)
+
+    emit(".PHONY:", name)
+    if outs:
+        emit(name, ":", *fouts)
+        if cmds:
+            emit(*fouts, "&:", *fins)
+        else:
+            emit(*fouts, ":", *fins)
+
+        if label:
+            emit("\t$(hide)", "$(ECHO)", label)
+        for c in cmds:
+            emit("\t$(hide)", c)
+    else:
+        assert len(cmds) == 0, "rules with no outputs cannot have commands"
+        emit(name, ":", *fins)
+
+    emit("")
 
 
 @Rule
 def simplerule(
     self,
     name,
-    ins: Targets = None,
-    outs: List = [],
-    deps: Targets = None,
-    commands: List = [],
+    ins: Targets = [],
+    outs: Targets = [],
+    deps: Targets = [],
+    commands=[],
     label="RULE",
-    **kwargs,
 ):
     self.ins = ins
     self.outs = outs
     self.deps = deps
-    emitter_rule(self, ins + deps, outs)
-    emitter_label(templateexpand("{label} {name}", self))
 
     dirs = []
     cs = []
@@ -447,100 +445,69 @@ def simplerule(
         cs = [("mkdir -p %s" % dir) for dir in dirs]
 
     for c in commands:
-        cs += [templateexpand(c, self)]
+        cs += [self.templateexpand(c)]
 
-    emitter_exec(cs)
-    emitter_endrule(self, outs)
-
-
-@Rule
-def normalrule(
-    self,
-    name=None,
-    ins: Targets = None,
-    deps: Targets = None,
-    outs: List = [],
-    label="RULE",
-    objdir=None,
-    commands: List = [],
-    **kwargs,
-):
-    objdir = objdir or join("$(OBJ)", name)
-
-    self.attr.objdir = objdir
-    simplerule(
-        replaces=self,
-        ins=ins,
-        deps=deps,
-        outs=[join(objdir, f) for f in outs],
-        label=label,
-        commands=commands,
-        **kwargs,
+    emit_rule(
+        name=self.name,
+        ins=ins + deps,
+        outs=outs,
+        label=self.templateexpand("{label} {name}"),
+        cmds=cs,
     )
 
 
 @Rule
-def export(self, name=None, items: TargetsMap = {}, deps: Targets = None):
-    cs = []
-    self.ins = []
-    self.outs = []
+def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
+    ins = []
+    outs = []
     for dest, src in items.items():
-        destf = filenameof(dest)
-        dir = dirname(destf)
+        dest = self.targetof(dest)
+        outs += [dest]
 
-        srcs = filenamesof(src)
-        if len(srcs) != 1:
-            raise ABException(
-                "a dependency of an export must have exactly one output file"
-            )
+        destf = filenameof(dest)
+
+        srcs = filenamesof([src])
+        assert (
+            len(srcs) == 1
+        ), "a dependency of an exported file must have exactly one output file"
 
         subrule = simplerule(
-            name=self.name + "/+" + destf,
+            name=f"{self.localname}/{destf}",
+            cwd=self.cwd,
             ins=[srcs[0]],
             outs=[destf],
             commands=["cp %s %s" % (srcs[0], destf)],
             label="CP",
         )
         subrule.materialise()
-        emit("clean::")
-        emit("\t$(hide) rm -f", destf)
 
-        self.ins += [subrule]
-
-    emitter_rule(
-        self,
-        self.ins,
-        self.outs,
-        [(d.outs if d.outs else d.sentinel) for d in deps],
+    simplerule(
+        replaces=self,
+        ins=outs + deps,
+        outs=["=sentinel"],
+        commands=["touch {outs[0]}"],
+        label="EXPORT",
     )
-    emitter_endrule(self, self.outs)
-
-
-def loadbuildfile(filename):
-    filename = filename.replace("/", ".").removesuffix(".py")
-    builtins.__import__(filename)
-
-
-def load(filename):
-    loadbuildfile(filename)
-    callerglobals = inspect.stack()[1][0].f_globals
-    for k, v in defaultGlobals.items():
-        callerglobals[k] = v
 
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("-q", "--quiet", action="store_true")
     parser.add_argument("-o", "--output")
     parser.add_argument("files", nargs="+")
-    parser.add_argument("-t", "--targets", action="append")
     args = parser.parse_args()
-    if not args.targets:
-        raise ABException("no targets supplied")
+
+    global verbose
+    verbose = args.verbose
+
+    global quiet
+    quiet = args.quiet
 
     global outputFp
     outputFp = open(args.output, "wt")
 
-    for k in ("Rule", "Targets", "load", "filenamesof", "stripext"):
+    for k in ["Rule"]:
         defaultGlobals[k] = globals()[k]
 
     global __name__
@@ -550,12 +517,9 @@ def main():
     for f in args.files:
         loadbuildfile(f)
 
-    for t in flatten([a.split(",") for a in args.targets]):
-        (path, target) = t.split("+", 2)
-        s = join(path, "+" + target)
-        if s not in targets:
-            raise ABException("target %s is not defined" % s)
-        targets[s].materialise()
+    while unmaterialisedTargets:
+        t = next(iter(unmaterialisedTargets))
+        t.materialise()
     emit("AB_LOADED = 1\n")
 
 

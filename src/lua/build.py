@@ -1,4 +1,4 @@
-from build.ab import normalrule
+from build.ab import simplerule
 from tools.build import multibin
 
 SRCS = [
@@ -63,10 +63,10 @@ multibin(
     srcs=SRCS,
 )
 
-normalrule(
+simplerule(
     name="typecheck",
     ins=["tools+typechecker", "./_types.d.lua"] + SRCS,
-    outs=["stamp"],
+    outs=["=stamp"],
     label="TYPECHECK",
     commands=["{ins[0]} -t {ins[1]} " + " ".join(SRCS)],
 )

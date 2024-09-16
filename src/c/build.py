@@ -22,7 +22,7 @@ cxxlibrary(
         "-DCMARK_STATIC_DEFINE",
         "-I.",
     ],
-    caller_cflags=f"-DFILEFORMAT={FILEFORMAT}",
+    caller_cflags=[f"-DFILEFORMAT={FILEFORMAT}"],
     deps=[
         ".+fmt",
         ".+libcmark",

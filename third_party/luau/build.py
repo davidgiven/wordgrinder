@@ -247,5 +247,5 @@ cxxprogram(
         "./CLI/FileUtils.cpp",
         "./CLI/Flags.cpp",
     ],
-    deps=["+luau"],
+    deps=[".+luau"],
 )

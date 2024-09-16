@@ -1,13 +1,13 @@
-from build.ab import normalrule, Rule, Target
+from build.ab import simplerule, Rule, Target
 from config import DATE, VERSION
 
 
 @Rule
-def manpage(self, name, outfile, date, version, src: Target):
-    normalrule(
+def manpage(self, name, date, version, src: Target):
+    simplerule(
         replaces=self,
         ins=[src],
-        outs=[outfile],
+        outs=[f"={self.localname}"],
         commands=[
             "sed 's/@@@DATE@@@/"
             + date
@@ -21,7 +21,6 @@ def manpage(self, name, outfile, date, version, src: Target):
 
 manpage(
     name="xwordgrinder.1",
-    outfile="xwordgrinder.1",
     date=DATE,
     version=VERSION,
     src="wordgrinder.man",
@@ -29,7 +28,6 @@ manpage(
 
 manpage(
     name="wordgrinder.1",
-    outfile="wordgrinder.1",
     date=DATE,
     version=VERSION,
     src="xwordgrinder.man",
