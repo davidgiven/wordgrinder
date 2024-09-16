@@ -24,8 +24,6 @@ jobs:
     - name: brew
       run: |
         brew install pkg-config glfw3 python3 cmark fmt coreutils make
-        brew link --overwrite python3
-        python3 -m pip install --upgrade Pillow
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
@@ -63,7 +61,7 @@ jobs:
         wsl sh -c 'zip -9 wordgrinder-windows.zip wordgrinder/bin/*.exe'
 
     - name: upload
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}.${{ github.sha }}
         path: wordgrinder-windows.zip
