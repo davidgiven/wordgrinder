@@ -1,12 +1,12 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #pragma once
 
-#include "Luau/Common.h"
+#include <initializer_list>
 #include <new>
 #include <type_traits>
-#include <initializer_list>
-#include <stddef.h>
 #include <utility>
+
+#include <stddef.h>
 
 namespace Luau
 {
@@ -43,6 +43,9 @@ private:
 
 public:
     using first_alternative = typename First<Ts...>::type;
+
+    template<typename T>
+    static constexpr bool is_part_of_v = std::disjunction_v<typename std::is_same<std::decay_t<Ts>, T>...>;
 
     Variant()
     {
@@ -236,8 +239,9 @@ auto visit(Visitor&& vis, const Variant<Ts...>& var)
     static_assert(std::conjunction_v<std::is_invocable<Visitor, Ts>...>, "visitor must accept every alternative as an argument");
 
     using Result = std::invoke_result_t<Visitor, typename Variant<Ts...>::first_alternative>;
-    static_assert(std::conjunction_v<std::is_same<Result, std::invoke_result_t<Visitor, Ts>>...>,
-        "visitor result type must be consistent between alternatives");
+    static_assert(
+        std::conjunction_v<std::is_same<Result, std::invoke_result_t<Visitor, Ts>>...>, "visitor result type must be consistent between alternatives"
+    );
 
     if constexpr (std::is_same_v<Result, void>)
     {
@@ -263,8 +267,9 @@ auto visit(Visitor&& vis, Variant<Ts...>& var)
     static_assert(std::conjunction_v<std::is_invocable<Visitor, Ts&>...>, "visitor must accept every alternative as an argument");
 
     using Result = std::invoke_result_t<Visitor, typename Variant<Ts...>::first_alternative&>;
-    static_assert(std::conjunction_v<std::is_same<Result, std::invoke_result_t<Visitor, Ts&>>...>,
-        "visitor result type must be consistent between alternatives");
+    static_assert(
+        std::conjunction_v<std::is_same<Result, std::invoke_result_t<Visitor, Ts&>>...>, "visitor result type must be consistent between alternatives"
+    );
 
     if constexpr (std::is_same_v<Result, void>)
     {

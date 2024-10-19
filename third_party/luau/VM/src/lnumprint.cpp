@@ -361,6 +361,9 @@ char* luai_num2str(char* buf, double n)
 
         char* exp = trimzero(buf + declen + 1);
 
+        if (exp[-1] == '.')
+            exp--;
+
         return printexp(exp, dot - 1);
     }
 }

@@ -69,6 +69,7 @@ typedef struct CallInfo
 
 #define LUA_CALLINFO_RETURN (1 << 0) // should the interpreter return after returning from this callinfo? first frame must have this set
 #define LUA_CALLINFO_HANDLE (1 << 1) // should the error thrown during execution get handled by continuation from this callinfo? func must be C
+#define LUA_CALLINFO_NATIVE (1 << 2) // should this function be executed using execution callback for native code
 
 #define curr_func(L) (clvalue(L->ci->func))
 #define ci_func(ci) (clvalue((ci)->func))
@@ -153,7 +154,9 @@ struct lua_ExecutionCallbacks
     void (*close)(lua_State* L);                 // called when global VM state is closed
     void (*destroy)(lua_State* L, Proto* proto); // called when function is destroyed
     int (*enter)(lua_State* L, Proto* proto);    // called when function is about to start/resume (when execdata is present), return 0 to exit VM
-    void (*setbreakpoint)(lua_State* L, Proto* proto, int line); // called when a breakpoint is set in a function
+    void (*disable)(lua_State* L, Proto* proto); // called when function has to be switched from native to bytecode in the debugger
+    size_t (*getmemorysize)(lua_State* L, Proto* proto); // called to request the size of memory associated with native part of the Proto
+    uint8_t (*gettypemapping)(lua_State* L, const char* str, size_t len); // called to get the userdata type index
 };
 
 /*
@@ -186,7 +189,8 @@ typedef struct global_State
 
     struct lua_Page* freepages[LUA_SIZECLASSES]; // free page linked list for each size class for non-collectable objects
     struct lua_Page* freegcopages[LUA_SIZECLASSES]; // free page linked list for each size class for collectable objects
-    struct lua_Page* allgcopages; // page linked list with all pages for all classes
+    struct lua_Page* allpages; // page linked list with all pages for all non-collectable object classes (available with LUAU_ASSERTENABLED)
+    struct lua_Page* allgcopages; // page linked list with all pages for all collectable object classes
     struct lua_Page* sweepgcopage; // position of the sweep in `allgcopages'
 
     size_t memcatbytes[LUA_MEMORY_CATEGORIES]; // total amount of memory used by each memory category
@@ -210,11 +214,12 @@ typedef struct global_State
 
     lua_Callbacks cb;
 
-#if LUA_CUSTOM_EXECUTION
     lua_ExecutionCallbacks ecb;
-#endif
 
     void (*udatagc[LUA_UTAG_LIMIT])(lua_State*, void*); // for each userdata tag, a gc callback to be called immediately before freeing memory
+    Table* udatamt[LUA_LUTAG_LIMIT]; // metatables for tagged userdata
+
+    TString* lightuserdataname[LUA_LUTAG_LIMIT]; // names for tagged lightuserdata
 
     GCStats gcstats;
 
@@ -284,6 +289,7 @@ union GCObject
     struct Proto p;
     struct UpVal uv;
     struct lua_State th; // thread
+    struct Buffer buf;
 };
 
 // macros to convert a GCObject into a specific value
@@ -294,6 +300,7 @@ union GCObject
 #define gco2p(o) check_exp((o)->gch.tt == LUA_TPROTO, &((o)->p))
 #define gco2uv(o) check_exp((o)->gch.tt == LUA_TUPVAL, &((o)->uv))
 #define gco2th(o) check_exp((o)->gch.tt == LUA_TTHREAD, &((o)->th))
+#define gco2buf(o) check_exp((o)->gch.tt == LUA_TBUFFER, &((o)->buf))
 
 // macro to convert any Lua object into a GCObject
 #define obj2gco(v) check_exp(iscollectable(v), cast_to(GCObject*, (v) + 0))

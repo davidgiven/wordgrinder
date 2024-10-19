@@ -4,8 +4,6 @@
 #include "Luau/UnwindBuilder.h"
 
 #include "CodeGenUtils.h"
-#include "CustomExecUtils.h"
-#include "Fallbacks.h"
 
 #include "lbuiltins.h"
 #include "lgc.h"
@@ -16,105 +14,97 @@
 #include <math.h>
 #include <string.h>
 
-#define CODEGEN_SET_FALLBACK(op) data.context.fallback[op] = {execute_##op}
-
 namespace Luau
 {
 namespace CodeGen
 {
 
-constexpr unsigned kBlockSize = 4 * 1024 * 1024;
-constexpr unsigned kMaxTotalSize = 256 * 1024 * 1024;
-
-NativeState::NativeState()
-    : codeAllocator(kBlockSize, kMaxTotalSize)
+void initFunctions(NativeContext& context)
 {
-}
+    static_assert(sizeof(context.luauF_table) == sizeof(luauF_table), "fastcall tables are not of the same length");
+    memcpy(context.luauF_table, luauF_table, sizeof(luauF_table));
 
-NativeState::~NativeState() = default;
+    context.luaV_lessthan = luaV_lessthan;
+    context.luaV_lessequal = luaV_lessequal;
+    context.luaV_equalval = luaV_equalval;
 
-void initFallbackTable(NativeState& data)
-{
-    // When fallback is completely removed, remove it from includeInsts list in lvmexecute_split.py
-    CODEGEN_SET_FALLBACK(LOP_NEWCLOSURE);
-    CODEGEN_SET_FALLBACK(LOP_NAMECALL);
-    CODEGEN_SET_FALLBACK(LOP_FORGPREP);
-    CODEGEN_SET_FALLBACK(LOP_GETVARARGS);
-    CODEGEN_SET_FALLBACK(LOP_DUPCLOSURE);
-    CODEGEN_SET_FALLBACK(LOP_PREPVARARGS);
-    CODEGEN_SET_FALLBACK(LOP_BREAK);
-    CODEGEN_SET_FALLBACK(LOP_SETLIST);
+    context.luaV_doarithadd = luaV_doarithimpl<TM_ADD>;
+    context.luaV_doarithsub = luaV_doarithimpl<TM_SUB>;
+    context.luaV_doarithmul = luaV_doarithimpl<TM_MUL>;
+    context.luaV_doarithdiv = luaV_doarithimpl<TM_DIV>;
+    context.luaV_doarithidiv = luaV_doarithimpl<TM_IDIV>;
+    context.luaV_doarithmod = luaV_doarithimpl<TM_MOD>;
+    context.luaV_doarithpow = luaV_doarithimpl<TM_POW>;
+    context.luaV_doarithunm = luaV_doarithimpl<TM_UNM>;
 
-    // Fallbacks that are called from partial implementation of an instruction
-    // TODO: these fallbacks should be replaced with special functions that exclude the (redundantly executed) fast path from the fallback
-    CODEGEN_SET_FALLBACK(LOP_GETGLOBAL);
-    CODEGEN_SET_FALLBACK(LOP_SETGLOBAL);
-    CODEGEN_SET_FALLBACK(LOP_GETTABLEKS);
-    CODEGEN_SET_FALLBACK(LOP_SETTABLEKS);
-}
+    context.luaV_dolen = luaV_dolen;
+    context.luaV_gettable = luaV_gettable;
+    context.luaV_settable = luaV_settable;
+    context.luaV_getimport = luaV_getimport;
+    context.luaV_concat = luaV_concat;
 
-void initHelperFunctions(NativeState& data)
-{
-    static_assert(sizeof(data.context.luauF_table) == sizeof(luauF_table), "fastcall tables are not of the same length");
-    memcpy(data.context.luauF_table, luauF_table, sizeof(luauF_table));
+    context.luaH_getn = luaH_getn;
+    context.luaH_new = luaH_new;
+    context.luaH_clone = luaH_clone;
+    context.luaH_resizearray = luaH_resizearray;
+    context.luaH_setnum = luaH_setnum;
 
-    data.context.luaV_lessthan = luaV_lessthan;
-    data.context.luaV_lessequal = luaV_lessequal;
-    data.context.luaV_equalval = luaV_equalval;
-    data.context.luaV_doarith = luaV_doarith;
-    data.context.luaV_dolen = luaV_dolen;
-    data.context.luaV_prepareFORN = luaV_prepareFORN;
-    data.context.luaV_gettable = luaV_gettable;
-    data.context.luaV_settable = luaV_settable;
-    data.context.luaV_getimport = luaV_getimport;
-    data.context.luaV_concat = luaV_concat;
+    context.luaC_barriertable = luaC_barriertable;
+    context.luaC_barrierf = luaC_barrierf;
+    context.luaC_barrierback = luaC_barrierback;
+    context.luaC_step = luaC_step;
 
-    data.context.luaH_getn = luaH_getn;
-    data.context.luaH_new = luaH_new;
-    data.context.luaH_clone = luaH_clone;
-    data.context.luaH_resizearray = luaH_resizearray;
+    context.luaF_close = luaF_close;
+    context.luaF_findupval = luaF_findupval;
+    context.luaF_newLclosure = luaF_newLclosure;
 
-    data.context.luaC_barriertable = luaC_barriertable;
-    data.context.luaC_barrierf = luaC_barrierf;
-    data.context.luaC_barrierback = luaC_barrierback;
-    data.context.luaC_step = luaC_step;
+    context.luaT_gettm = luaT_gettm;
+    context.luaT_objtypenamestr = luaT_objtypenamestr;
 
-    data.context.luaF_close = luaF_close;
+    context.libm_exp = exp;
+    context.libm_pow = pow;
+    context.libm_fmod = fmod;
+    context.libm_log = log;
+    context.libm_log2 = log2;
+    context.libm_log10 = log10;
+    context.libm_ldexp = ldexp;
+    context.libm_round = round;
+    context.libm_frexp = frexp;
+    context.libm_modf = modf;
 
-    data.context.luaT_gettm = luaT_gettm;
-    data.context.luaT_objtypenamestr = luaT_objtypenamestr;
+    context.libm_asin = asin;
+    context.libm_sin = sin;
+    context.libm_sinh = sinh;
+    context.libm_acos = acos;
+    context.libm_cos = cos;
+    context.libm_cosh = cosh;
+    context.libm_atan = atan;
+    context.libm_atan2 = atan2;
+    context.libm_tan = tan;
+    context.libm_tanh = tanh;
 
-    data.context.libm_exp = exp;
-    data.context.libm_pow = pow;
-    data.context.libm_fmod = fmod;
-    data.context.libm_log = log;
-    data.context.libm_log2 = log2;
-    data.context.libm_log10 = log10;
-    data.context.libm_ldexp = ldexp;
-    data.context.libm_round = round;
-    data.context.libm_frexp = frexp;
-    data.context.libm_modf = modf;
+    context.forgLoopTableIter = forgLoopTableIter;
+    context.forgLoopNodeIter = forgLoopNodeIter;
+    context.forgLoopNonTableFallback = forgLoopNonTableFallback;
+    context.forgPrepXnextFallback = forgPrepXnextFallback;
+    context.callProlog = callProlog;
+    context.callEpilogC = callEpilogC;
+    context.newUserdata = newUserdata;
 
-    data.context.libm_asin = asin;
-    data.context.libm_sin = sin;
-    data.context.libm_sinh = sinh;
-    data.context.libm_acos = acos;
-    data.context.libm_cos = cos;
-    data.context.libm_cosh = cosh;
-    data.context.libm_atan = atan;
-    data.context.libm_atan2 = atan2;
-    data.context.libm_tan = tan;
-    data.context.libm_tanh = tanh;
+    context.callFallback = callFallback;
 
-    data.context.forgLoopTableIter = forgLoopTableIter;
-    data.context.forgLoopNodeIter = forgLoopNodeIter;
-    data.context.forgLoopNonTableFallback = forgLoopNonTableFallback;
-    data.context.forgPrepXnextFallback = forgPrepXnextFallback;
-    data.context.callProlog = callProlog;
-    data.context.callEpilogC = callEpilogC;
+    context.executeGETGLOBAL = executeGETGLOBAL;
+    context.executeSETGLOBAL = executeSETGLOBAL;
+    context.executeGETTABLEKS = executeGETTABLEKS;
+    context.executeSETTABLEKS = executeSETTABLEKS;
 
-    data.context.callFallback = callFallback;
-    data.context.returnFallback = returnFallback;
+    context.executeNAMECALL = executeNAMECALL;
+    context.executeFORGPREP = executeFORGPREP;
+    context.executeGETVARARGSMultRet = executeGETVARARGSMultRet;
+    context.executeGETVARARGSConst = executeGETVARARGSConst;
+    context.executeDUPCLOSURE = executeDUPCLOSURE;
+    context.executePREPVARARGS = executePREPVARARGS;
+    context.executeSETLIST = executeSETLIST;
 }
 
 } // namespace CodeGen

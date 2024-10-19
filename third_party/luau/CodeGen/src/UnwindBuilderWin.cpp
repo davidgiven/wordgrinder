@@ -31,7 +31,10 @@ size_t UnwindBuilderWin::getBeginOffset() const
     return beginOffset;
 }
 
-void UnwindBuilderWin::startInfo() {}
+void UnwindBuilderWin::startInfo(Arch arch)
+{
+    CODEGEN_ASSERT(arch == X64);
+}
 
 void UnwindBuilderWin::startFunction()
 {
@@ -50,45 +53,6 @@ void UnwindBuilderWin::startFunction()
     // rax has register index 0, which in Windows unwind info means that frame register is not used
     frameReg = X64::rax;
     frameRegOffset = 0;
-
-    // Return address was pushed by calling the function
-    stackOffset = 8;
-}
-
-void UnwindBuilderWin::spill(int espOffset, X64::RegisterX64 reg)
-{
-    prologSize += 5; // REX.W mov [rsp + imm8], reg
-}
-
-void UnwindBuilderWin::save(X64::RegisterX64 reg)
-{
-    prologSize += 2; // REX.W push reg
-    stackOffset += 8;
-    unwindCodes.push_back({prologSize, UWOP_PUSH_NONVOL, reg.index});
-}
-
-void UnwindBuilderWin::allocStack(int size)
-{
-    LUAU_ASSERT(size >= 8 && size <= 128 && size % 8 == 0);
-
-    prologSize += 4; // REX.W sub rsp, imm8
-    stackOffset += size;
-    unwindCodes.push_back({prologSize, UWOP_ALLOC_SMALL, uint8_t((size - 8) / 8)});
-}
-
-void UnwindBuilderWin::setupFrameReg(X64::RegisterX64 reg, int espOffset)
-{
-    LUAU_ASSERT(espOffset < 256 && espOffset % 16 == 0);
-
-    frameReg = reg;
-    frameRegOffset = uint8_t(espOffset / 16);
-
-    if (espOffset != 0)
-        prologSize += 5; // REX.W lea rbp, [rsp + imm8]
-    else
-        prologSize += 3; // REX.W mov rbp, rsp
-
-    unwindCodes.push_back({prologSize, UWOP_SET_FPREG, frameRegOffset});
 }
 
 void UnwindBuilderWin::finishFunction(uint32_t beginOffset, uint32_t endOffset)
@@ -97,9 +61,7 @@ void UnwindBuilderWin::finishFunction(uint32_t beginOffset, uint32_t endOffset)
     unwindFunctions.back().endOffset = endOffset;
 
     // Windows unwind code count is stored in uint8_t, so we can't have more
-    LUAU_ASSERT(unwindCodes.size() < 256);
-
-    LUAU_ASSERT(stackOffset % 16 == 0 && "stack has to be aligned to 16 bytes after prologue");
+    CODEGEN_ASSERT(unwindCodes.size() < 256);
 
     UnwindInfoWin info;
     info.version = 1;
@@ -107,22 +69,22 @@ void UnwindBuilderWin::finishFunction(uint32_t beginOffset, uint32_t endOffset)
     info.prologsize = prologSize;
     info.unwindcodecount = uint8_t(unwindCodes.size());
 
-    LUAU_ASSERT(frameReg.index < 16);
+    CODEGEN_ASSERT(frameReg.index < 16);
     info.framereg = frameReg.index;
 
-    LUAU_ASSERT(frameRegOffset < 16);
+    CODEGEN_ASSERT(frameRegOffset < 16);
     info.frameregoff = frameRegOffset;
 
-    LUAU_ASSERT(rawDataPos + sizeof(info) <= rawData + kRawDataLimit);
+    CODEGEN_ASSERT(rawDataPos + sizeof(info) <= rawData + kRawDataLimit);
     memcpy(rawDataPos, &info, sizeof(info));
     rawDataPos += sizeof(info);
 
     if (!unwindCodes.empty())
     {
         // Copy unwind codes in reverse order
-        // Some unwind codes take up two array slots, but we don't use those atm
+        // Some unwind codes take up two array slots, we write those in reverse order
         uint8_t* unwindCodePos = rawDataPos + sizeof(UnwindCodeWin) * (unwindCodes.size() - 1);
-        LUAU_ASSERT(unwindCodePos <= rawData + kRawDataLimit);
+        CODEGEN_ASSERT(unwindCodePos <= rawData + kRawDataLimit);
 
         for (size_t i = 0; i < unwindCodes.size(); i++)
         {
@@ -137,22 +99,112 @@ void UnwindBuilderWin::finishFunction(uint32_t beginOffset, uint32_t endOffset)
     if (unwindCodes.size() % 2 != 0)
         rawDataPos += sizeof(UnwindCodeWin);
 
-    LUAU_ASSERT(rawDataPos <= rawData + kRawDataLimit);
+    CODEGEN_ASSERT(rawDataPos <= rawData + kRawDataLimit);
 }
 
 void UnwindBuilderWin::finishInfo() {}
 
-size_t UnwindBuilderWin::getSize() const
+void UnwindBuilderWin::prologueA64(uint32_t prologueSize, uint32_t stackSize, std::initializer_list<A64::RegisterA64> regs)
+{
+    CODEGEN_ASSERT(!"Not implemented");
+}
+
+void UnwindBuilderWin::prologueX64(
+    uint32_t prologueSize,
+    uint32_t stackSize,
+    bool setupFrame,
+    std::initializer_list<X64::RegisterX64> gpr,
+    const std::vector<X64::RegisterX64>& simd
+)
+{
+    CODEGEN_ASSERT(stackSize > 0 && stackSize < 4096 && stackSize % 8 == 0);
+    CODEGEN_ASSERT(prologueSize < 256);
+
+    unsigned int stackOffset = 8; // Return address was pushed by calling the function
+    unsigned int prologueOffset = 0;
+
+    if (setupFrame)
+    {
+        // push rbp
+        stackOffset += 8;
+        prologueOffset += 2;
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_PUSH_NONVOL, X64::rbp.index});
+
+        // mov rbp, rsp
+        prologueOffset += 3;
+        frameReg = X64::rbp;
+        frameRegOffset = 0;
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_SET_FPREG, frameRegOffset});
+    }
+
+    // push reg
+    for (X64::RegisterX64 reg : gpr)
+    {
+        CODEGEN_ASSERT(reg.size == X64::SizeX64::qword);
+
+        stackOffset += 8;
+        prologueOffset += 2;
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_PUSH_NONVOL, reg.index});
+    }
+
+    // If frame pointer is used, simd register storage is not implemented, it will require reworking store offsets
+    CODEGEN_ASSERT(!setupFrame || simd.size() == 0);
+
+    unsigned int simdStorageSize = unsigned(simd.size()) * 16;
+
+    // It's the responsibility of the caller to provide simd register storage in 'stackSize', including alignment to 16 bytes
+    if (!simd.empty() && stackOffset % 16 == 8)
+        simdStorageSize += 8;
+
+    // sub rsp, stackSize
+    if (stackSize <= 128)
+    {
+        stackOffset += stackSize;
+        prologueOffset += stackSize == 128 ? 7 : 4;
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_ALLOC_SMALL, uint8_t((stackSize - 8) / 8)});
+    }
+    else
+    {
+        // This command can handle allocations up to 512K-8 bytes, but that potentially requires stack probing
+        CODEGEN_ASSERT(stackSize < 4096);
+
+        stackOffset += stackSize;
+        prologueOffset += 7;
+
+        uint16_t encodedOffset = stackSize / 8;
+        unwindCodes.push_back(UnwindCodeWin());
+        memcpy(&unwindCodes.back(), &encodedOffset, sizeof(encodedOffset));
+
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_ALLOC_LARGE, 0});
+    }
+
+    // It's the responsibility of the caller to provide simd register storage in 'stackSize'
+    unsigned int xmmStoreOffset = stackSize - simdStorageSize;
+
+    // vmovaps [rsp+n], xmm
+    for (X64::RegisterX64 reg : simd)
+    {
+        CODEGEN_ASSERT(reg.size == X64::SizeX64::xmmword);
+        CODEGEN_ASSERT(xmmStoreOffset % 16 == 0 && "simd stores have to be performed to aligned locations");
+
+        prologueOffset += xmmStoreOffset >= 128 ? 10 : 7;
+        unwindCodes.push_back({uint8_t(xmmStoreOffset / 16), 0, 0});
+        unwindCodes.push_back({uint8_t(prologueOffset), UWOP_SAVE_XMM128, reg.index});
+        xmmStoreOffset += 16;
+    }
+
+    CODEGEN_ASSERT(stackOffset % 16 == 0);
+    CODEGEN_ASSERT(prologueOffset == prologueSize);
+
+    this->prologSize = prologueSize;
+}
+
+size_t UnwindBuilderWin::getUnwindInfoSize(size_t blockSize) const
 {
     return sizeof(UnwindFunctionWin) * unwindFunctions.size() + size_t(rawDataPos - rawData);
 }
 
-size_t UnwindBuilderWin::getFunctionCount() const
-{
-    return unwindFunctions.size();
-}
-
-void UnwindBuilderWin::finalize(char* target, size_t offset, void* funcAddress, size_t funcSize) const
+size_t UnwindBuilderWin::finalize(char* target, size_t offset, void* funcAddress, size_t blockSize) const
 {
     // Copy adjusted function information
     for (UnwindFunctionWin func : unwindFunctions)
@@ -161,8 +213,8 @@ void UnwindBuilderWin::finalize(char* target, size_t offset, void* funcAddress, 
         func.beginOffset += uint32_t(offset);
 
         // Whole block is a part of a 'single function'
-        if (func.endOffset == kFullBlockFuncton)
-            func.endOffset = uint32_t(funcSize);
+        if (func.endOffset == kFullBlockFunction)
+            func.endOffset = uint32_t(blockSize);
         else
             func.endOffset += uint32_t(offset);
 
@@ -174,6 +226,8 @@ void UnwindBuilderWin::finalize(char* target, size_t offset, void* funcAddress, 
 
     // Copy unwind codes
     memcpy(target, rawData, size_t(rawDataPos - rawData));
+
+    return unwindFunctions.size();
 }
 
 } // namespace CodeGen

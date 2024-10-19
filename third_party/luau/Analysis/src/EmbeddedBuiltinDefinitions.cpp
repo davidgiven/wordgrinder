@@ -4,68 +4,69 @@
 namespace Luau
 {
 
-static const std::string kBuiltinDefinitionLuaSrc = R"BUILTIN_SRC(
+static const std::string kBuiltinDefinitionLuaSrcChecked = R"BUILTIN_SRC(
 
 declare bit32: {
-    band: (...number) -> number,
-    bor: (...number) -> number,
-    bxor: (...number) -> number,
-    btest: (number, ...number) -> boolean,
-    rrotate: (x: number, disp: number) -> number,
-    lrotate: (x: number, disp: number) -> number,
-    lshift: (x: number, disp: number) -> number,
-    arshift: (x: number, disp: number) -> number,
-    rshift: (x: number, disp: number) -> number,
-    bnot: (x: number) -> number,
-    extract: (n: number, field: number, width: number?) -> number,
-    replace: (n: number, v: number, field: number, width: number?) -> number,
-    countlz: (n: number) -> number,
-    countrz: (n: number) -> number,
+    band: @checked (...number) -> number,
+    bor: @checked (...number) -> number,
+    bxor: @checked (...number) -> number,
+    btest: @checked (number, ...number) -> boolean,
+    rrotate: @checked (x: number, disp: number) -> number,
+    lrotate: @checked (x: number, disp: number) -> number,
+    lshift: @checked (x: number, disp: number) -> number,
+    arshift: @checked (x: number, disp: number) -> number,
+    rshift: @checked (x: number, disp: number) -> number,
+    bnot: @checked (x: number) -> number,
+    extract: @checked (n: number, field: number, width: number?) -> number,
+    replace: @checked (n: number, v: number, field: number, width: number?) -> number,
+    countlz: @checked (n: number) -> number,
+    countrz: @checked (n: number) -> number,
+    byteswap: @checked (n: number) -> number,
 }
 
 declare math: {
-    frexp: (n: number) -> (number, number),
-    ldexp: (s: number, e: number) -> number,
-    fmod: (x: number, y: number) -> number,
-    modf: (n: number) -> (number, number),
-    pow: (x: number, y: number) -> number,
-    exp: (n: number) -> number,
+    frexp: @checked (n: number) -> (number, number),
+    ldexp: @checked (s: number, e: number) -> number,
+    fmod: @checked (x: number, y: number) -> number,
+    modf: @checked (n: number) -> (number, number),
+    pow: @checked (x: number, y: number) -> number,
+    exp: @checked (n: number) -> number,
 
-    ceil: (n: number) -> number,
-    floor: (n: number) -> number,
-    abs: (n: number) -> number,
-    sqrt: (n: number) -> number,
+    ceil: @checked (n: number) -> number,
+    floor: @checked (n: number) -> number,
+    abs: @checked (n: number) -> number,
+    sqrt: @checked (n: number) -> number,
 
-    log: (n: number, base: number?) -> number,
-    log10: (n: number) -> number,
+    log: @checked (n: number, base: number?) -> number,
+    log10: @checked (n: number) -> number,
 
-    rad: (n: number) -> number,
-    deg: (n: number) -> number,
+    rad: @checked (n: number) -> number,
+    deg: @checked (n: number) -> number,
 
-    sin: (n: number) -> number,
-    cos: (n: number) -> number,
-    tan: (n: number) -> number,
-    sinh: (n: number) -> number,
-    cosh: (n: number) -> number,
-    tanh: (n: number) -> number,
-    atan: (n: number) -> number,
-    acos: (n: number) -> number,
-    asin: (n: number) -> number,
-    atan2: (y: number, x: number) -> number,
+    sin: @checked (n: number) -> number,
+    cos: @checked (n: number) -> number,
+    tan: @checked (n: number) -> number,
+    sinh: @checked (n: number) -> number,
+    cosh: @checked (n: number) -> number,
+    tanh: @checked (n: number) -> number,
+    atan: @checked (n: number) -> number,
+    acos: @checked (n: number) -> number,
+    asin: @checked (n: number) -> number,
+    atan2: @checked (y: number, x: number) -> number,
 
-    min: (number, ...number) -> number,
-    max: (number, ...number) -> number,
+    min: @checked (number, ...number) -> number,
+    max: @checked (number, ...number) -> number,
 
     pi: number,
     huge: number,
 
-    randomseed: (seed: number) -> (),
-    random: (number?, number?) -> number,
+    randomseed: @checked (seed: number) -> (),
+    random: @checked (number?, number?) -> number,
 
-    sign: (n: number) -> number,
-    clamp: (n: number, min: number, max: number) -> number,
-    noise: (x: number, y: number?, z: number?) -> number,
-    round: (n: number) -> number,
+    sign: @checked (n: number) -> number,
+    clamp: @checked (n: number, min: number, max: number) -> number,
+    noise: @checked (x: number, y: number?, z: number?) -> number,
+    round: @checked (n: number) -> number,
 }
 
 type DateTypeArg = {
@@ -92,14 +93,14 @@ type DateTypeResult = {
 
 declare os: {
     time: (time: DateTypeArg?) -> number,
-    date: (formatString: string?, time: number?) -> DateTypeResult | string,
+    date: ((formatString: "*t" | "!*t", time: number?) -> DateTypeResult) & ((formatString: string?, time: number?) -> string),
     difftime: (t2: DateTypeResult | number, t1: DateTypeResult | number) -> number,
     clock: () -> number,
 }
 
-declare function require(target: any): any
+@checked declare function require(target: any): any
 
-declare function getfenv(target: any): { [string]: any }
+@checked declare function getfenv(target: any): { [string]: any }
 
 declare _G: any
 declare _VERSION: string
@@ -141,18 +142,17 @@ declare function select<A...>(i: string | number, ...: A...): ...any
 -- (nil, string).
 declare function loadstring<A...>(src: string, chunkname: string?): (((A...) -> any)?, string?)
 
-declare function newproxy(mt: boolean?): any
+@checked declare function newproxy(mt: boolean?): any
 
 declare coroutine: {
     create: <A..., R...>(f: (A...) -> R...) -> thread,
     resume: <A..., R...>(co: thread, A...) -> (boolean, R...),
     running: () -> thread,
-    status: (co: thread) -> "dead" | "running" | "normal" | "suspended",
-    -- FIXME: This technically returns a function, but we can't represent this yet.
-    wrap: <A..., R...>(f: (A...) -> R...) -> any,
+    status: @checked (co: thread) -> "dead" | "running" | "normal" | "suspended",
+    wrap: <A..., R...>(f: (A...) -> R...) -> ((A...) -> R...),
     yield: <A..., R...>(A...) -> R...,
     isyieldable: () -> boolean,
-    close: (co: thread) -> (boolean, any)
+    close: @checked (co: thread) -> (boolean, any)
 }
 
 declare table: {
@@ -183,22 +183,51 @@ declare debug: {
 }
 
 declare utf8: {
-    char: (...number) -> string,
+    char: @checked (...number) -> string,
     charpattern: string,
-    codes: (str: string) -> ((string, number) -> (number, number), string, number),
-    codepoint: (str: string, i: number?, j: number?) -> ...number,
-    len: (s: string, i: number?, j: number?) -> (number?, number?),
-    offset: (s: string, n: number?, i: number?) -> number,
+    codes: @checked (str: string) -> ((string, number) -> (number, number), string, number),
+    codepoint: @checked (str: string, i: number?, j: number?) -> ...number,
+    len: @checked (s: string, i: number?, j: number?) -> (number?, number?),
+    offset: @checked (s: string, n: number?, i: number?) -> number,
 }
 
 -- Cannot use `typeof` here because it will produce a polytype when we expect a monotype.
 declare function unpack<V>(tab: {V}, i: number?, j: number?): ...V
 
+
+--- Buffer API
+declare buffer: {
+    create: @checked (size: number) -> buffer,
+    fromstring: @checked (str: string) -> buffer,
+    tostring: @checked (b: buffer) -> string,
+    len: @checked (b: buffer) -> number,
+    copy: @checked (target: buffer, targetOffset: number, source: buffer, sourceOffset: number?, count: number?) -> (),
+    fill: @checked (b: buffer, offset: number, value: number, count: number?) -> (),
+    readi8: @checked (b: buffer, offset: number) -> number,
+    readu8: @checked (b: buffer, offset: number) -> number,
+    readi16: @checked (b: buffer, offset: number) -> number,
+    readu16: @checked (b: buffer, offset: number) -> number,
+    readi32: @checked (b: buffer, offset: number) -> number,
+    readu32: @checked (b: buffer, offset: number) -> number,
+    readf32: @checked (b: buffer, offset: number) -> number,
+    readf64: @checked (b: buffer, offset: number) -> number,
+    writei8: @checked (b: buffer, offset: number, value: number) -> (),
+    writeu8: @checked (b: buffer, offset: number, value: number) -> (),
+    writei16: @checked (b: buffer, offset: number, value: number) -> (),
+    writeu16: @checked (b: buffer, offset: number, value: number) -> (),
+    writei32: @checked (b: buffer, offset: number, value: number) -> (),
+    writeu32: @checked (b: buffer, offset: number, value: number) -> (),
+    writef32: @checked (b: buffer, offset: number, value: number) -> (),
+    writef64: @checked (b: buffer, offset: number, value: number) -> (),
+    readstring: @checked (b: buffer, offset: number, count: number) -> string,
+    writestring: @checked (b: buffer, offset: number, value: string, count: number?) -> (),
+}
+
 )BUILTIN_SRC";
 
 std::string getBuiltinDefinitionSource()
 {
-    std::string result = kBuiltinDefinitionLuaSrc;
+    std::string result = kBuiltinDefinitionLuaSrcChecked;
     return result;
 }
 

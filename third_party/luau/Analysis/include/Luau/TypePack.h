@@ -1,25 +1,27 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #pragma once
 
-#include "Luau/Type.h"
 #include "Luau/Unifiable.h"
 #include "Luau/Variant.h"
+#include "Luau/TypeFwd.h"
+#include "Luau/NotNull.h"
+#include "Luau/Common.h"
 
 #include <optional>
 #include <set>
+#include <vector>
 
 namespace Luau
 {
 
 struct TypeArena;
+struct TypePackFunction;
 struct TxnLog;
 
 struct TypePack;
 struct VariadicTypePack;
 struct BlockedTypePack;
-
-struct TypePackVar;
-using TypePackId = const TypePackVar*;
+struct TypeFunctionInstanceTypePack;
 
 struct FreeTypePack
 {
@@ -50,10 +52,10 @@ struct GenericTypePack
 };
 
 using BoundTypePack = Unifiable::Bound<TypePackId>;
-
 using ErrorTypePack = Unifiable::Error;
 
-using TypePackVariant = Unifiable::Variant<TypePackId, FreeTypePack, GenericTypePack, TypePack, VariadicTypePack, BlockedTypePack>;
+using TypePackVariant =
+    Unifiable::Variant<TypePackId, FreeTypePack, GenericTypePack, TypePack, VariadicTypePack, BlockedTypePack, TypeFunctionInstanceTypePack>;
 
 /* A TypePack is a rope-like string of TypeIds.  We use this structure to encode
  * notions like packs of unknown length and packs of any length, as well as more
@@ -80,7 +82,20 @@ struct BlockedTypePack
     BlockedTypePack();
     size_t index;
 
+    struct Constraint* owner = nullptr;
+
     static size_t nextIndex;
+};
+
+/**
+ * Analogous to a TypeFunctionInstanceType.
+ */
+struct TypeFunctionInstanceTypePack
+{
+    NotNull<const TypePackFunction> function;
+
+    std::vector<TypeId> typeArguments;
+    std::vector<TypePackId> packArguments;
 };
 
 struct TypePackVar
@@ -169,7 +184,7 @@ using SeenSet = std::set<std::pair<const void*, const void*>>;
 bool areEqual(SeenSet& seen, const TypePackVar& lhs, const TypePackVar& rhs);
 
 TypePackId follow(TypePackId tp);
-TypePackId follow(TypePackId tp, std::function<TypePackId(TypePackId)> mapper);
+TypePackId follow(TypePackId t, const void* context, TypePackId (*mapper)(const void*, TypePackId));
 
 size_t size(TypePackId tp, TxnLog* log = nullptr);
 bool finite(TypePackId tp, TxnLog* log = nullptr);
@@ -217,5 +232,19 @@ bool isVariadic(TypePackId tp, const TxnLog& log);
 bool isVariadicTail(TypePackId tp, const TxnLog& log, bool includeHiddenVariadics = false);
 
 bool containsNever(TypePackId tp);
+
+/*
+ * Use this to change the kind of a particular type pack.
+ *
+ * LUAU_NOINLINE so that the calling frame doesn't have to pay the stack storage for the new variant.
+ */
+template<typename T, typename... Args>
+LUAU_NOINLINE T* emplaceTypePack(TypePackVar* ty, Args&&... args)
+{
+    return &ty->ty.emplace<T>(std::forward<Args>(args)...);
+}
+
+template<>
+LUAU_NOINLINE Unifiable::Bound<TypePackId>* emplaceTypePack<BoundTypePack>(TypePackVar* ty, TypePackId& tyArg);
 
 } // namespace Luau

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Luau/Common.h"
+#include "Luau/DenseHash.h"
 #include "Luau/Label.h"
 #include "Luau/ConditionX64.h"
 #include "Luau/OperandX64.h"
@@ -84,6 +85,7 @@ public:
     void test(OperandX64 lhs, OperandX64 rhs);
     void lea(OperandX64 lhs, OperandX64 rhs);
     void setcc(ConditionX64 cond, OperandX64 op);
+    void cmov(ConditionX64 cond, RegisterX64 lhs, OperandX64 rhs);
 
     void push(OperandX64 op);
     void pop(OperandX64 op);
@@ -97,10 +99,14 @@ public:
     void call(Label& label);
     void call(OperandX64 op);
 
+    void lea(RegisterX64 lhs, Label& label);
+
     void int3();
+    void ud2();
 
     void bsr(RegisterX64 dst, OperandX64 src);
     void bsf(RegisterX64 dst, OperandX64 src);
+    void bswap(RegisterX64 dst);
 
     // Code alignment
     void nop(uint32_t length = 1);
@@ -113,13 +119,18 @@ public:
     void vaddss(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
     void vsubsd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vsubps(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vmulsd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vmulps(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vdivsd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vdivps(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
+    void vandps(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vandpd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vandnpd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
     void vxorpd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vorps(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vorpd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
     void vucomisd(OperandX64 src1, OperandX64 src2);
@@ -127,6 +138,7 @@ public:
     void vcvttsd2si(OperandX64 dst, OperandX64 src);
     void vcvtsi2sd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
     void vcvtsd2ss(OperandX64 dst, OperandX64 src1, OperandX64 src2);
+    void vcvtss2sd(OperandX64 dst, OperandX64 src1, OperandX64 src2);
 
     void vroundsd(OperandX64 dst, OperandX64 src1, OperandX64 src2, RoundingModeX64 roundingMode); // inexact
 
@@ -152,6 +164,8 @@ public:
 
     void vblendvpd(RegisterX64 dst, RegisterX64 src1, OperandX64 mask, RegisterX64 src3);
 
+    void vpshufps(RegisterX64 dst, RegisterX64 src1, OperandX64 src2, uint8_t shuffle);
+    void vpinsrd(RegisterX64 dst, RegisterX64 src1, OperandX64 src2, uint8_t offset);
 
     // Run final checks
     bool finalize();
@@ -165,14 +179,16 @@ public:
     // Extracts code offset (in bytes) from label
     uint32_t getLabelOffset(const Label& label)
     {
-        LUAU_ASSERT(label.location != ~0u);
+        CODEGEN_ASSERT(label.location != ~0u);
         return label.location;
     }
 
     // Constant allocation (uses rip-relative addressing)
+    OperandX64 i32(int32_t value);
     OperandX64 i64(int64_t value);
     OperandX64 f32(float value);
     OperandX64 f64(double value);
+    OperandX64 u32x4(uint32_t x, uint32_t y, uint32_t z, uint32_t w);
     OperandX64 f32x4(float x, float y, float z, float w);
     OperandX64 f64x2(double x, double y);
     OperandX64 bytes(const void* ptr, size_t size, size_t align = 8);
@@ -180,6 +196,8 @@ public:
     void logAppend(const char* fmt, ...) LUAU_PRINTF_ATTR(2, 3);
 
     uint32_t getCodeSize() const;
+
+    unsigned getInstructionCount() const;
 
     // Resulting data and code that need to be copied over one after the other
     // The *end* of 'data' has to be aligned to 16 bytes, this will also align 'code'
@@ -194,8 +212,19 @@ public:
 
 private:
     // Instruction archetypes
-    void placeBinary(const char* name, OperandX64 lhs, OperandX64 rhs, uint8_t codeimm8, uint8_t codeimm, uint8_t codeimmImm8, uint8_t code8rev,
-        uint8_t coderev, uint8_t code8, uint8_t code, uint8_t opreg);
+    void placeBinary(
+        const char* name,
+        OperandX64 lhs,
+        OperandX64 rhs,
+        uint8_t codeimm8,
+        uint8_t codeimm,
+        uint8_t codeimmImm8,
+        uint8_t code8rev,
+        uint8_t coderev,
+        uint8_t code8,
+        uint8_t code,
+        uint8_t opreg
+    );
     void placeBinaryRegMemAndImm(OperandX64 lhs, OperandX64 rhs, uint8_t code8, uint8_t code, uint8_t codeImm8, uint8_t opreg);
     void placeBinaryRegAndRegMem(OperandX64 lhs, OperandX64 rhs, uint8_t code8, uint8_t code);
     void placeBinaryRegMemAndReg(OperandX64 lhs, OperandX64 rhs, uint8_t code8, uint8_t code);
@@ -210,7 +239,16 @@ private:
     void placeAvx(const char* name, OperandX64 dst, OperandX64 src, uint8_t code, uint8_t coderev, bool setW, uint8_t mode, uint8_t prefix);
     void placeAvx(const char* name, OperandX64 dst, OperandX64 src1, OperandX64 src2, uint8_t code, bool setW, uint8_t mode, uint8_t prefix);
     void placeAvx(
-        const char* name, OperandX64 dst, OperandX64 src1, OperandX64 src2, uint8_t imm8, uint8_t code, bool setW, uint8_t mode, uint8_t prefix);
+        const char* name,
+        OperandX64 dst,
+        OperandX64 src1,
+        OperandX64 src2,
+        uint8_t imm8,
+        uint8_t code,
+        bool setW,
+        uint8_t mode,
+        uint8_t prefix
+    );
 
     // Instruction components
     void placeRegAndModRegMem(OperandX64 lhs, OperandX64 rhs, int32_t extraCodeBytes = 0);
@@ -222,6 +260,7 @@ private:
     void placeVex(OperandX64 dst, OperandX64 src1, OperandX64 src2, bool setW, uint8_t mode, uint8_t prefix);
     void placeImm8Or32(int32_t imm);
     void placeImm8(int32_t imm);
+    void placeImm16(int16_t imm);
     void placeImm32(int32_t imm);
     void placeImm64(int64_t imm);
     void placeLabel(Label& label);
@@ -241,6 +280,7 @@ private:
     LUAU_NOINLINE void log(const char* opcode, OperandX64 op1, OperandX64 op2, OperandX64 op3, OperandX64 op4);
     LUAU_NOINLINE void log(Label label);
     LUAU_NOINLINE void log(const char* opcode, Label label);
+    LUAU_NOINLINE void log(const char* opcode, RegisterX64 reg, Label label);
     void log(OperandX64 op);
 
     const char* getSizeName(SizeX64 size) const;
@@ -250,12 +290,17 @@ private:
     std::vector<Label> pendingLabels;
     std::vector<uint32_t> labelLocations;
 
+    DenseHashMap<uint32_t, int32_t> constCache32;
+    DenseHashMap<uint64_t, int32_t> constCache64;
+
     bool finalized = false;
 
     size_t dataPos = 0;
 
     uint8_t* codePos = nullptr;
     uint8_t* codeEnd = nullptr;
+
+    unsigned instructionCount = 0;
 };
 
 } // namespace X64

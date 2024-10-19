@@ -56,7 +56,7 @@ public:
     void eor(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2, int shift = 0);
     void bic(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2, int shift = 0);
     void tst(RegisterA64 src1, RegisterA64 src2, int shift = 0);
-    void mvn(RegisterA64 dst, RegisterA64 src);
+    void mvn_(RegisterA64 dst, RegisterA64 src);
 
     // Bitwise with immediate
     // Note: immediate must have a single contiguous sequence of 1 bits set of length 1..31
@@ -72,6 +72,7 @@ public:
     void ror(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2);
     void clz(RegisterA64 dst, RegisterA64 src);
     void rbit(RegisterA64 dst, RegisterA64 src);
+    void rev(RegisterA64 dst, RegisterA64 src);
 
     // Shifts with immediates
     // Note: immediate value must be in [0, 31] or [0, 63] range based on register type
@@ -79,6 +80,12 @@ public:
     void lsr(RegisterA64 dst, RegisterA64 src1, uint8_t src2);
     void asr(RegisterA64 dst, RegisterA64 src1, uint8_t src2);
     void ror(RegisterA64 dst, RegisterA64 src1, uint8_t src2);
+
+    // Bitfields
+    void ubfiz(RegisterA64 dst, RegisterA64 src, uint8_t f, uint8_t w);
+    void ubfx(RegisterA64 dst, RegisterA64 src, uint8_t f, uint8_t w);
+    void sbfiz(RegisterA64 dst, RegisterA64 src, uint8_t f, uint8_t w);
+    void sbfx(RegisterA64 dst, RegisterA64 src, uint8_t f, uint8_t w);
 
     // Load
     // Note: paired loads are currently omitted for simplicity
@@ -118,12 +125,12 @@ public:
     // Address of code (label)
     void adr(RegisterA64 dst, Label& label);
 
-    // Floating-point scalar moves
+    // Floating-point scalar/vector moves
     // Note: constant must be compatible with immediate floating point moves (see isFmovSupported)
     void fmov(RegisterA64 dst, RegisterA64 src);
     void fmov(RegisterA64 dst, double src);
 
-    // Floating-point scalar math
+    // Floating-point scalar/vector math
     void fabs(RegisterA64 dst, RegisterA64 src);
     void fadd(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2);
     void fdiv(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2);
@@ -131,6 +138,11 @@ public:
     void fneg(RegisterA64 dst, RegisterA64 src);
     void fsqrt(RegisterA64 dst, RegisterA64 src);
     void fsub(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2);
+
+    // Vector component manipulation
+    void ins_4s(RegisterA64 dst, RegisterA64 src, uint8_t index);
+    void ins_4s(RegisterA64 dst, uint8_t dstIndex, RegisterA64 src, uint8_t srcIndex);
+    void dup_4s(RegisterA64 dst, RegisterA64 src, uint8_t index);
 
     // Floating-point rounding and conversions
     void frinta(RegisterA64 dst, RegisterA64 src);
@@ -151,6 +163,8 @@ public:
     void fcmpz(RegisterA64 src);
     void fcsel(RegisterA64 dst, RegisterA64 src1, RegisterA64 src2, ConditionA64 cond);
 
+    void udf();
+
     // Run final checks
     bool finalize();
 
@@ -163,13 +177,15 @@ public:
     // Extracts code offset (in bytes) from label
     uint32_t getLabelOffset(const Label& label)
     {
-        LUAU_ASSERT(label.location != ~0u);
+        CODEGEN_ASSERT(label.location != ~0u);
         return label.location * 4;
     }
 
     void logAppend(const char* fmt, ...) LUAU_PRINTF_ATTR(2, 3);
 
     uint32_t getCodeSize() const;
+
+    unsigned getInstructionCount() const;
 
     // Resulting data and code that need to be copied over one after the other
     // The *end* of 'data' has to be aligned to 16 bytes, this will also align 'code'
@@ -199,7 +215,7 @@ private:
     void placeR1(const char* name, RegisterA64 dst, RegisterA64 src, uint32_t op);
     void placeI12(const char* name, RegisterA64 dst, RegisterA64 src1, int src2, uint8_t op);
     void placeI16(const char* name, RegisterA64 dst, int src, uint8_t op, int shift = 0);
-    void placeA(const char* name, RegisterA64 dst, AddressA64 src, uint8_t op, uint8_t size, int sizelog);
+    void placeA(const char* name, RegisterA64 dst, AddressA64 src, uint16_t opsize, int sizelog);
     void placeB(const char* name, Label& label, uint8_t op);
     void placeBC(const char* name, Label& label, uint8_t op, uint8_t cond);
     void placeBCR(const char* name, Label& label, uint8_t op, RegisterA64 cond);
@@ -212,7 +228,9 @@ private:
     void placeFCMP(const char* name, RegisterA64 src1, RegisterA64 src2, uint8_t op, uint8_t opc);
     void placeFMOV(const char* name, RegisterA64 dst, double src, uint32_t op);
     void placeBM(const char* name, RegisterA64 dst, RegisterA64 src1, uint32_t src2, uint8_t op);
-    void placeBFM(const char* name, RegisterA64 dst, RegisterA64 src1, uint8_t src2, uint8_t op, int immr, int imms);
+    void placeBFM(const char* name, RegisterA64 dst, RegisterA64 src1, int src2, uint8_t op, int immr, int imms);
+    void placeER(const char* name, RegisterA64 dst, RegisterA64 src1, RegisterA64 src2, uint8_t op, int shift);
+    void placeVR(const char* name, RegisterA64 dst, RegisterA64 src1, RegisterA64 src2, uint16_t op, uint8_t op2);
 
     void place(uint32_t word);
 

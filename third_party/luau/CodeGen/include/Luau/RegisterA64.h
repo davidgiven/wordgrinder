@@ -1,7 +1,7 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #pragma once
 
-#include "Luau/Common.h"
+#include "Luau/CodeGenCommon.h"
 
 #include <stdint.h>
 
@@ -40,23 +40,11 @@ struct RegisterA64
 
 constexpr RegisterA64 castReg(KindA64 kind, RegisterA64 reg)
 {
-    LUAU_ASSERT(kind != reg.kind);
-    LUAU_ASSERT(kind != KindA64::none && reg.kind != KindA64::none);
-    LUAU_ASSERT((kind == KindA64::w || kind == KindA64::x) == (reg.kind == KindA64::w || reg.kind == KindA64::x));
+    CODEGEN_ASSERT(kind != reg.kind);
+    CODEGEN_ASSERT(kind != KindA64::none && reg.kind != KindA64::none);
+    CODEGEN_ASSERT((kind == KindA64::w || kind == KindA64::x) == (reg.kind == KindA64::w || reg.kind == KindA64::x));
 
     return RegisterA64{kind, reg.index};
-}
-
-// This is equivalent to castReg(KindA64::x), but is separate because it implies different semantics
-// Specifically, there are cases when it's useful to treat a wN register as an xN register *after* it has been assigned a value
-// Since all A64 instructions that write to wN implicitly zero the top half, this works when we need zero extension semantics
-// Crucially, this is *not* safe on an ABI boundary - an int parameter in wN register may have anything in its top half in certain cases
-// However, as long as our codegen doesn't use 32-bit truncation by using castReg x=>w, we can safely rely on this.
-constexpr RegisterA64 zextReg(RegisterA64 reg)
-{
-    LUAU_ASSERT(reg.kind == KindA64::w);
-
-    return RegisterA64{KindA64::x, reg.index};
 }
 
 constexpr RegisterA64 noreg{KindA64::none, 0};

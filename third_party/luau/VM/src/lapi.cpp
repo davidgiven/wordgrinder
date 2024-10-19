@@ -11,6 +11,7 @@
 #include "ludata.h"
 #include "lvm.h"
 #include "lnumutils.h"
+#include "lbuffer.h"
 
 #include <string.h>
 
@@ -38,7 +39,7 @@ const char* lua_ident = "$Lua: Lua 5.1.4 Copyright (C) 1994-2008 Lua.org, PUC-Ri
                         "$Authors: R. Ierusalimschy, L. H. de Figueiredo & W. Celes $\n"
                         "$URL: www.lua.org $\n";
 
-const char* luau_ident = "$Luau: Copyright (C) 2019-2022 Roblox Corporation $\n"
+const char* luau_ident = "$Luau: Copyright (C) 2019-2023 Roblox Corporation $\n"
                          "$URL: luau-lang.org $\n";
 
 #define api_checknelems(L, n) api_check(L, (n) <= (L->top - L->base))
@@ -483,6 +484,8 @@ int lua_objlen(lua_State* L, int idx)
         return tsvalue(o)->len;
     case LUA_TUSERDATA:
         return uvalue(o)->len;
+    case LUA_TBUFFER:
+        return bufvalue(o)->len;
     case LUA_TTABLE:
         return luaH_getn(hvalue(o));
     default:
@@ -500,6 +503,12 @@ void* lua_tolightuserdata(lua_State* L, int idx)
 {
     StkId o = index2addr(L, idx);
     return (!ttislightuserdata(o)) ? NULL : pvalue(o);
+}
+
+void* lua_tolightuserdatatagged(lua_State* L, int idx, int tag)
+{
+    StkId o = index2addr(L, idx);
+    return (!ttislightuserdata(o) || lightuserdatatag(o) != tag) ? NULL : pvalue(o);
 }
 
 void* lua_touserdata(lua_State* L, int idx)
@@ -527,10 +536,33 @@ int lua_userdatatag(lua_State* L, int idx)
     return -1;
 }
 
+int lua_lightuserdatatag(lua_State* L, int idx)
+{
+    StkId o = index2addr(L, idx);
+    if (ttislightuserdata(o))
+        return lightuserdatatag(o);
+    return -1;
+}
+
 lua_State* lua_tothread(lua_State* L, int idx)
 {
     StkId o = index2addr(L, idx);
     return (!ttisthread(o)) ? NULL : thvalue(o);
+}
+
+void* lua_tobuffer(lua_State* L, int idx, size_t* len)
+{
+    StkId o = index2addr(L, idx);
+
+    if (!ttisbuffer(o))
+        return NULL;
+
+    Buffer* b = bufvalue(o);
+
+    if (len)
+        *len = b->len;
+
+    return b->data;
 }
 
 const void* lua_topointer(lua_State* L, int idx)
@@ -538,20 +570,12 @@ const void* lua_topointer(lua_State* L, int idx)
     StkId o = index2addr(L, idx);
     switch (ttype(o))
     {
-    case LUA_TSTRING:
-        return tsvalue(o);
-    case LUA_TTABLE:
-        return hvalue(o);
-    case LUA_TFUNCTION:
-        return clvalue(o);
-    case LUA_TTHREAD:
-        return thvalue(o);
     case LUA_TUSERDATA:
         return uvalue(o)->data;
     case LUA_TLIGHTUSERDATA:
         return pvalue(o);
     default:
-        return NULL;
+        return iscollectable(o) ? gcvalue(o) : NULL;
     }
 }
 
@@ -655,9 +679,10 @@ void lua_pushboolean(lua_State* L, int b)
     api_incr_top(L);
 }
 
-void lua_pushlightuserdata(lua_State* L, void* p)
+void lua_pushlightuserdatatagged(lua_State* L, void* p, int tag)
 {
-    setpvalue(L->top, p);
+    api_check(L, unsigned(tag) < LUA_LUTAG_LIMIT);
+    setpvalue(L->top, p, tag);
     api_incr_top(L);
 }
 
@@ -1271,6 +1296,16 @@ void* lua_newuserdatadtor(lua_State* L, size_t sz, void (*dtor)(void*))
     return u->data;
 }
 
+void* lua_newbuffer(lua_State* L, size_t sz)
+{
+    luaC_checkGC(L);
+    luaC_threadbarrier(L);
+    Buffer* b = luaB_newbuffer(L, sz);
+    setbufvalue(L, L->top, b);
+    api_incr_top(L);
+    return b->data;
+}
+
 static const char* aux_upvalue(StkId fi, int n, TValue** val)
 {
     Closure* f;
@@ -1392,6 +1427,51 @@ lua_Destructor lua_getuserdatadtor(lua_State* L, int tag)
     return L->global->udatagc[tag];
 }
 
+void lua_setuserdatametatable(lua_State* L, int tag, int idx)
+{
+    api_check(L, unsigned(tag) < LUA_UTAG_LIMIT);
+    api_check(L, !L->global->udatamt[tag]); // reassignment not supported
+    StkId o = index2addr(L, idx);
+    api_check(L, ttistable(o));
+    L->global->udatamt[tag] = hvalue(o);
+    L->top--;
+}
+
+void lua_getuserdatametatable(lua_State* L, int tag)
+{
+    api_check(L, unsigned(tag) < LUA_UTAG_LIMIT);
+    luaC_threadbarrier(L);
+
+    if (Table* h = L->global->udatamt[tag])
+    {
+        sethvalue(L, L->top, h);
+    }
+    else
+    {
+        setnilvalue(L->top);
+    }
+
+    api_incr_top(L);
+}
+
+void lua_setlightuserdataname(lua_State* L, int tag, const char* name)
+{
+    api_check(L, unsigned(tag) < LUA_LUTAG_LIMIT);
+    api_check(L, !L->global->lightuserdataname[tag]); // renaming not supported
+    if (!L->global->lightuserdataname[tag])
+    {
+        L->global->lightuserdataname[tag] = luaS_new(L, name);
+        luaS_fix(L->global->lightuserdataname[tag]); // never collect these names
+    }
+}
+
+const char* lua_getlightuserdataname(lua_State* L, int tag)
+{
+    api_check(L, unsigned(tag) < LUA_LUTAG_LIMIT);
+    const TString* name = L->global->lightuserdataname[tag];
+    return name ? getstr(name) : nullptr;
+}
+
 void lua_clonefunction(lua_State* L, int idx)
 {
     luaC_checkGC(L);
@@ -1431,4 +1511,12 @@ size_t lua_totalbytes(lua_State* L, int category)
 {
     api_check(L, category < LUA_MEMORY_CATEGORIES);
     return category < 0 ? L->global->totalbytes : L->global->memcatbytes[category];
+}
+
+lua_Alloc lua_getallocf(lua_State* L, void** ud)
+{
+    lua_Alloc f = L->global->frealloc;
+    if (ud)
+        *ud = L->global->ud;
+    return f;
 }

@@ -35,6 +35,10 @@ int lua_getargument(lua_State* L, int level, int n)
         return 0;
 
     CallInfo* ci = L->ci - level;
+    // changing tables in native functions externally may invalidate safety contracts wrt table state (metatable/size/readonly)
+    if (ci->flags & LUA_CALLINFO_NATIVE)
+        return 0;
+
     Proto* fp = getluaproto(ci);
     int res = 0;
 
@@ -60,9 +64,13 @@ int lua_getargument(lua_State* L, int level, int n)
 const char* lua_getlocal(lua_State* L, int level, int n)
 {
     if (unsigned(level) >= unsigned(L->ci - L->base_ci))
-        return 0;
+        return NULL;
 
     CallInfo* ci = L->ci - level;
+    // changing tables in native functions externally may invalidate safety contracts wrt table state (metatable/size/readonly)
+    if (ci->flags & LUA_CALLINFO_NATIVE)
+        return NULL;
+
     Proto* fp = getluaproto(ci);
     const LocVar* var = fp ? luaF_getlocal(fp, n, currentpc(L, ci)) : NULL;
     if (var)
@@ -77,9 +85,13 @@ const char* lua_getlocal(lua_State* L, int level, int n)
 const char* lua_setlocal(lua_State* L, int level, int n)
 {
     if (unsigned(level) >= unsigned(L->ci - L->base_ci))
-        return 0;
+        return NULL;
 
     CallInfo* ci = L->ci - level;
+    // changing registers in native functions externally may invalidate safety contracts wrt register type tags
+    if (ci->flags & LUA_CALLINFO_NATIVE)
+        return NULL;
+
     Proto* fp = getluaproto(ci);
     const LocVar* var = fp ? luaF_getlocal(fp, n, currentpc(L, ci)) : NULL;
     if (var)
@@ -174,8 +186,16 @@ int lua_getinfo(lua_State* L, int level, const char* what, lua_Debug* ar)
     CallInfo* ci = NULL;
     if (level < 0)
     {
-        const TValue* func = luaA_toobject(L, level);
-        api_check(L, ttisfunction(func));
+        // element has to be within stack
+        if (-level > L->top - L->base)
+            return 0;
+
+        StkId func = L->top + level;
+
+        // and it has to be a function
+        if (!ttisfunction(func))
+            return 0;
+
         f = clvalue(func);
     }
     else if (unsigned(level) < unsigned(L->ci - L->base_ci))
@@ -310,18 +330,25 @@ l_noret luaG_runerrorL(lua_State* L, const char* fmt, ...)
     vsnprintf(result, sizeof(result), fmt, argp);
     va_end(argp);
 
+    lua_rawcheckstack(L, 1);
+
     pusherror(L, result);
     luaD_throw(L, LUA_ERRRUN);
 }
 
 void luaG_pusherror(lua_State* L, const char* error)
 {
+    lua_rawcheckstack(L, 1);
+
     pusherror(L, error);
 }
 
 void luaG_breakpoint(lua_State* L, Proto* p, int line, bool enable)
 {
-    if (p->lineinfo)
+    void (*ondisable)(lua_State*, Proto*) = L->global->ecb.disable;
+
+    // since native code doesn't support breakpoints, we would need to update all call frames with LUAU_CALLINFO_NATIVE that refer to p
+    if (p->lineinfo && (ondisable || !p->execdata))
     {
         for (int i = 0; i < p->sizecode; ++i)
         {
@@ -347,10 +374,10 @@ void luaG_breakpoint(lua_State* L, Proto* p, int line, bool enable)
             p->code[i] |= op;
             LUAU_ASSERT(LUAU_INSN_OP(p->code[i]) == op);
 
-#if LUA_CUSTOM_EXECUTION
-            if (L->global->ecb.setbreakpoint)
-                L->global->ecb.setbreakpoint(L, p, i);
-#endif
+            // currently we don't restore native code when breakpoint is disabled.
+            // this will be addressed in the future.
+            if (enable && p->execdata && ondisable)
+                ondisable(L, p);
 
             // note: this is important!
             // we only patch the *first* instruction in each proto that's attributed to a given line
@@ -386,6 +413,15 @@ int luaG_getline(Proto* p, int pc)
     return p->abslineinfo[pc >> p->linegaplog2] + p->lineinfo[pc];
 }
 
+int luaG_isnative(lua_State* L, int level)
+{
+    if (unsigned(level) >= unsigned(L->ci - L->base_ci))
+        return 0;
+
+    CallInfo* ci = L->ci - level;
+    return (ci->flags & LUA_CALLINFO_NATIVE) != 0 ? 1 : 0;
+}
+
 void lua_singlestep(lua_State* L, int enabled)
 {
     L->singlestep = bool(enabled);
@@ -410,11 +446,11 @@ static int getmaxline(Proto* p)
     return result;
 }
 
-// Find the line number with instructions. If the provided line doesn't have any instruction, it should return the next line number with
-// instructions.
+// Find the line number with instructions. If the provided line doesn't have any instruction, it should return the next valid line number.
 static int getnextline(Proto* p, int line)
 {
     int closest = -1;
+
     if (p->lineinfo)
     {
         for (int i = 0; i < p->sizecode; ++i)
@@ -423,23 +459,25 @@ static int getnextline(Proto* p, int line)
             if (LUAU_INSN_OP(p->code[i]) == LOP_PREPVARARGS)
                 continue;
 
-            int current = luaG_getline(p, i);
-            if (current >= line)
-            {
-                closest = current;
-                break;
-            }
+            int candidate = luaG_getline(p, i);
+
+            if (candidate == line)
+                return line;
+
+            if (candidate > line && (closest == -1 || candidate < closest))
+                closest = candidate;
         }
     }
 
     for (int i = 0; i < p->sizep; ++i)
     {
-        // Find the closest line number to the intended one.
         int candidate = getnextline(p->p[i], line);
-        if (closest == -1 || (candidate >= line && candidate < closest))
-        {
+
+        if (candidate == line)
+            return line;
+
+        if (candidate > line && (closest == -1 || candidate < closest))
             closest = candidate;
-        }
     }
 
     return closest;
@@ -451,14 +489,12 @@ int lua_breakpoint(lua_State* L, int funcindex, int line, int enabled)
     api_check(L, ttisfunction(func) && !clvalue(func)->isC);
 
     Proto* p = clvalue(func)->l.p;
-    // Find line number to add the breakpoint to.
+
+    // set the breakpoint to the next closest line with valid instructions
     int target = getnextline(p, line);
 
     if (target != -1)
-    {
-        // Add breakpoint on the exact line
         luaG_breakpoint(L, p, target, bool(enabled));
-    }
 
     return target;
 }

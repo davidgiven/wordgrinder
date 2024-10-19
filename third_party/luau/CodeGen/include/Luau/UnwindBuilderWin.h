@@ -44,21 +44,23 @@ public:
     void setBeginOffset(size_t beginOffset) override;
     size_t getBeginOffset() const override;
 
-    void startInfo() override;
-
+    void startInfo(Arch arch) override;
     void startFunction() override;
-    void spill(int espOffset, X64::RegisterX64 reg) override;
-    void save(X64::RegisterX64 reg) override;
-    void allocStack(int size) override;
-    void setupFrameReg(X64::RegisterX64 reg, int espOffset) override;
     void finishFunction(uint32_t beginOffset, uint32_t endOffset) override;
-
     void finishInfo() override;
 
-    size_t getSize() const override;
-    size_t getFunctionCount() const override;
+    void prologueA64(uint32_t prologueSize, uint32_t stackSize, std::initializer_list<A64::RegisterA64> regs) override;
+    void prologueX64(
+        uint32_t prologueSize,
+        uint32_t stackSize,
+        bool setupFrame,
+        std::initializer_list<X64::RegisterX64> gpr,
+        const std::vector<X64::RegisterX64>& simd
+    ) override;
 
-    void finalize(char* target, size_t offset, void* funcAddress, size_t funcSize) const override;
+    size_t getUnwindInfoSize(size_t blockSize = 0) const override;
+
+    size_t finalize(char* target, size_t offset, void* funcAddress, size_t blockSize) const override;
 
 private:
     size_t beginOffset = 0;
@@ -75,7 +77,6 @@ private:
     uint8_t prologSize = 0;
     X64::RegisterX64 frameReg = X64::noreg;
     uint8_t frameRegOffset = 0;
-    uint32_t stackOffset = 0;
 };
 
 } // namespace CodeGen

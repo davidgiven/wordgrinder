@@ -26,10 +26,16 @@ static int db_info(lua_State* L)
 {
     int arg;
     lua_State* L1 = getthread(L, &arg);
+    int l1top = 0;
 
-    // If L1 != L, L1 can be in any state, and therefore there are no guarantees about its stack space
+    // if L1 != L, L1 can be in any state, and therefore there are no guarantees about its stack space
     if (L != L1)
-        lua_rawcheckstack(L1, 1); // for 'f' option
+    {
+        // for 'f' option, we reserve one slot and we also record the stack top
+        lua_rawcheckstack(L1, 1);
+
+        l1top = lua_gettop(L1);
+    }
 
     int level;
     if (lua_isnumber(L, arg + 1))
@@ -59,7 +65,13 @@ static int db_info(lua_State* L)
         if (unsigned(*it - 'a') < 26)
         {
             if (occurs[*it - 'a'])
+            {
+                // restore stack state of another thread as 'f' option might not have been visited yet
+                if (L != L1)
+                    lua_settop(L1, l1top);
+
                 luaL_argerror(L, arg + 2, "duplicate option");
+            }
             occurs[*it - 'a'] = true;
         }
 
@@ -110,7 +122,7 @@ static int db_traceback(lua_State* L)
     int level = luaL_optinteger(L, arg + 2, (L == L1) ? 1 : 0);
     luaL_argcheck(L, level >= 0, arg + 2, "level can't be negative");
 
-    luaL_Buffer buf;
+    luaL_Strbuf buf;
     luaL_buffinit(L, &buf);
 
     if (msg)
@@ -137,7 +149,7 @@ static int db_traceback(lua_State* L)
                 *--lineptr = '0' + (r % 10);
 
             luaL_addchar(&buf, ':');
-            luaL_addlstring(&buf, lineptr, lineend - lineptr, -1);
+            luaL_addlstring(&buf, lineptr, lineend - lineptr);
         }
 
         if (ar.name)

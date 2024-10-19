@@ -26,6 +26,10 @@ static bool constantsEqual(const Constant& la, const Constant& ra)
     case Constant::Type_Number:
         return ra.type == Constant::Type_Number && la.valueNumber == ra.valueNumber;
 
+    case Constant::Type_Vector:
+        return ra.type == Constant::Type_Vector && la.valueVector[0] == ra.valueVector[0] && la.valueVector[1] == ra.valueVector[1] &&
+               la.valueVector[2] == ra.valueVector[2] && la.valueVector[3] == ra.valueVector[3];
+
     case Constant::Type_String:
         return ra.type == Constant::Type_String && la.stringLength == ra.stringLength && memcmp(la.valueString, ra.valueString, la.stringLength) == 0;
 
@@ -101,6 +105,14 @@ static void foldBinary(Constant& result, AstExprBinary::Op op, const Constant& l
         {
             result.type = Constant::Type_Number;
             result.valueNumber = la.valueNumber / ra.valueNumber;
+        }
+        break;
+
+    case AstExprBinary::FloorDiv:
+        if (la.type == Constant::Type_Number && ra.type == Constant::Type_Number)
+        {
+            result.type = Constant::Type_Number;
+            result.valueNumber = floor(la.valueNumber / ra.valueNumber);
         }
         break;
 
@@ -197,17 +209,24 @@ struct ConstantVisitor : AstVisitor
     DenseHashMap<AstLocal*, Constant>& locals;
 
     const DenseHashMap<AstExprCall*, int>* builtins;
+    bool foldMathK = false;
 
     bool wasEmpty = false;
 
     std::vector<Constant> builtinArgs;
 
-    ConstantVisitor(DenseHashMap<AstExpr*, Constant>& constants, DenseHashMap<AstLocal*, Variable>& variables,
-        DenseHashMap<AstLocal*, Constant>& locals, const DenseHashMap<AstExprCall*, int>* builtins)
+    ConstantVisitor(
+        DenseHashMap<AstExpr*, Constant>& constants,
+        DenseHashMap<AstLocal*, Variable>& variables,
+        DenseHashMap<AstLocal*, Constant>& locals,
+        const DenseHashMap<AstExprCall*, int>* builtins,
+        bool foldMathK
+    )
         : constants(constants)
         , variables(variables)
         , locals(locals)
         , builtins(builtins)
+        , foldMathK(foldMathK)
     {
         // since we do a single pass over the tree, if the initial state was empty we don't need to clear out old entries
         wasEmpty = constants.empty() && locals.empty();
@@ -296,6 +315,14 @@ struct ConstantVisitor : AstVisitor
         else if (AstExprIndexName* expr = node->as<AstExprIndexName>())
         {
             analyze(expr->expr);
+
+            if (foldMathK)
+            {
+                if (AstExprGlobal* eg = expr->expr->as<AstExprGlobal>(); eg && eg->name == "math")
+                {
+                    result = foldBuiltinMath(expr->index);
+                }
+            }
         }
         else if (AstExprIndexExpr* expr = node->as<AstExprIndexExpr>())
         {
@@ -436,10 +463,16 @@ struct ConstantVisitor : AstVisitor
     }
 };
 
-void foldConstants(DenseHashMap<AstExpr*, Constant>& constants, DenseHashMap<AstLocal*, Variable>& variables,
-    DenseHashMap<AstLocal*, Constant>& locals, const DenseHashMap<AstExprCall*, int>* builtins, AstNode* root)
+void foldConstants(
+    DenseHashMap<AstExpr*, Constant>& constants,
+    DenseHashMap<AstLocal*, Variable>& variables,
+    DenseHashMap<AstLocal*, Constant>& locals,
+    const DenseHashMap<AstExprCall*, int>* builtins,
+    bool foldMathK,
+    AstNode* root
+)
 {
-    ConstantVisitor visitor{constants, variables, locals, builtins};
+    ConstantVisitor visitor{constants, variables, locals, builtins, foldMathK};
     root->visit(&visitor);
 }
 

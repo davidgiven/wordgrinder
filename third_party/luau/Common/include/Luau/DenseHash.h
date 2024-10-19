@@ -3,6 +3,7 @@
 
 #include "Luau/Common.h"
 
+#include <stddef.h>
 #include <functional>
 #include <utility>
 #include <type_traits>
@@ -33,7 +34,7 @@ public:
     class const_iterator;
     class iterator;
 
-    DenseHashTable(const Key& empty_key, size_t buckets = 0)
+    explicit DenseHashTable(const Key& empty_key, size_t buckets = 0)
         : data(nullptr)
         , capacity(0)
         , count(0)
@@ -119,12 +120,12 @@ public:
         return *this;
     }
 
-    void clear()
+    void clear(size_t thresholdToDestroy = 32)
     {
         if (count == 0)
             return;
 
-        if (capacity > 32)
+        if (capacity > thresholdToDestroy)
         {
             destroy();
         }
@@ -282,6 +283,12 @@ public:
     class const_iterator
     {
     public:
+        using value_type = Item;
+        using reference = Item&;
+        using pointer = Item*;
+        using difference_type = ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+
         const_iterator()
             : set(0)
             , index(0)
@@ -341,6 +348,12 @@ public:
     class iterator
     {
     public:
+        using value_type = MutableItem;
+        using reference = MutableItem&;
+        using pointer = MutableItem*;
+        using difference_type = ptrdiff_t;
+        using iterator_category = std::forward_iterator_tag;
+
         iterator()
             : set(0)
             , index(0)
@@ -477,7 +490,7 @@ public:
     typedef typename Impl::const_iterator const_iterator;
     typedef typename Impl::iterator iterator;
 
-    DenseHashSet(const Key& empty_key, size_t buckets = 0)
+    explicit DenseHashSet(const Key& empty_key, size_t buckets = 0)
         : impl(empty_key, buckets)
     {
     }
@@ -532,6 +545,25 @@ public:
     {
         return impl.end();
     }
+
+    bool operator==(const DenseHashSet<Key, Hash, Eq>& other) const
+    {
+        if (size() != other.size())
+            return false;
+
+        for (const Key& k : *this)
+        {
+            if (!other.contains(k))
+                return false;
+        }
+
+        return true;
+    }
+
+    bool operator!=(const DenseHashSet<Key, Hash, Eq>& other) const
+    {
+        return !(*this == other);
+    }
 };
 
 // This is a faster alternative of unordered_map, but it does not implement the same interface (i.e. it does not support erasing and has
@@ -546,14 +578,14 @@ public:
     typedef typename Impl::const_iterator const_iterator;
     typedef typename Impl::iterator iterator;
 
-    DenseHashMap(const Key& empty_key, size_t buckets = 0)
+    explicit DenseHashMap(const Key& empty_key, size_t buckets = 0)
         : impl(empty_key, buckets)
     {
     }
 
-    void clear()
+    void clear(size_t thresholdToDestroy = 32)
     {
-        impl.clear();
+        impl.clear(thresholdToDestroy);
     }
 
     // Note: this reference is invalidated by any insert operation (i.e. operator[])
@@ -582,6 +614,22 @@ public:
     bool contains(const Key& key) const
     {
         return impl.find(key) != 0;
+    }
+
+    std::pair<Value&, bool> try_insert(const Key& key, const Value& value)
+    {
+        impl.rehash_if_full(key);
+
+        size_t before = impl.size();
+        std::pair<Key, Value>* slot = impl.insert_unsafe(key);
+
+        // Value is fresh if container count has increased
+        bool fresh = impl.size() > before;
+
+        if (fresh)
+            slot->second = value;
+
+        return std::make_pair(std::ref(slot->second), fresh);
     }
 
     size_t size() const

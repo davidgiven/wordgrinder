@@ -2,8 +2,12 @@
 #pragma once
 
 #include "Luau/Location.h"
+#include "Luau/NotNull.h"
 #include "Luau/Type.h"
 #include "Luau/Variant.h"
+#include "Luau/Ast.h"
+
+#include <set>
 
 namespace Luau
 {
@@ -190,6 +194,11 @@ struct InternalError
     bool operator==(const InternalError& rhs) const;
 };
 
+struct ConstraintSolvingIncompleteError
+{
+    bool operator==(const ConstraintSolvingIncompleteError& rhs) const;
+};
+
 struct CannotCallNonFunction
 {
     TypeId ty;
@@ -318,6 +327,7 @@ struct TypePackMismatch
 {
     TypePackId wantedTp;
     TypePackId givenTp;
+    std::string reason;
 
     bool operator==(const TypePackMismatch& rhs) const;
 };
@@ -329,12 +339,164 @@ struct DynamicPropertyLookupOnClassesUnsafe
     bool operator==(const DynamicPropertyLookupOnClassesUnsafe& rhs) const;
 };
 
-using TypeErrorData = Variant<TypeMismatch, UnknownSymbol, UnknownProperty, NotATable, CannotExtendTable, OnlyTablesCanHaveMethods,
-    DuplicateTypeDefinition, CountMismatch, FunctionDoesNotTakeSelf, FunctionRequiresSelf, OccursCheckFailed, UnknownRequire,
-    IncorrectGenericParameterCount, SyntaxError, CodeTooComplex, UnificationTooComplex, UnknownPropButFoundLikeProp, GenericError, InternalError,
-    CannotCallNonFunction, ExtraInformation, DeprecatedApiUsed, ModuleHasCyclicDependency, IllegalRequire, FunctionExitsWithoutReturning,
-    DuplicateGenericParameter, CannotInferBinaryOperation, MissingProperties, SwappedGenericTypeParameter, OptionalValueAccess, MissingUnionProperty,
-    TypesAreUnrelated, NormalizationTooComplex, TypePackMismatch, DynamicPropertyLookupOnClassesUnsafe>;
+struct UninhabitedTypeFunction
+{
+    TypeId ty;
+
+    bool operator==(const UninhabitedTypeFunction& rhs) const;
+};
+
+struct ExplicitFunctionAnnotationRecommended
+{
+    std::vector<std::pair<std::string, TypeId>> recommendedArgs;
+    TypeId recommendedReturn;
+    bool operator==(const ExplicitFunctionAnnotationRecommended& rhs) const;
+};
+
+struct UninhabitedTypePackFunction
+{
+    TypePackId tp;
+
+    bool operator==(const UninhabitedTypePackFunction& rhs) const;
+};
+
+struct WhereClauseNeeded
+{
+    TypeId ty;
+
+    bool operator==(const WhereClauseNeeded& rhs) const;
+};
+
+struct PackWhereClauseNeeded
+{
+    TypePackId tp;
+
+    bool operator==(const PackWhereClauseNeeded& rhs) const;
+};
+
+struct CheckedFunctionCallError
+{
+    TypeId expected;
+    TypeId passed;
+    std::string checkedFunctionName;
+    // TODO: make this a vector<argumentIndices>
+    size_t argumentIndex;
+    bool operator==(const CheckedFunctionCallError& rhs) const;
+};
+
+struct NonStrictFunctionDefinitionError
+{
+    std::string functionName;
+    std::string argument;
+    TypeId argumentType;
+    bool operator==(const NonStrictFunctionDefinitionError& rhs) const;
+};
+
+struct PropertyAccessViolation
+{
+    TypeId table;
+    Name key;
+
+    enum
+    {
+        CannotRead,
+        CannotWrite
+    } context;
+
+    bool operator==(const PropertyAccessViolation& rhs) const;
+};
+
+struct CheckedFunctionIncorrectArgs
+{
+    std::string functionName;
+    size_t expected;
+    size_t actual;
+    bool operator==(const CheckedFunctionIncorrectArgs& rhs) const;
+};
+
+struct CannotAssignToNever
+{
+    // type of the rvalue being assigned
+    TypeId rhsType;
+
+    // Originating type.
+    std::vector<TypeId> cause;
+
+    enum class Reason
+    {
+        // when assigning to a property in a union of tables, the properties type
+        // is narrowed to the intersection of its type in each variant.
+        PropertyNarrowed,
+    };
+
+    Reason reason;
+
+    bool operator==(const CannotAssignToNever& rhs) const;
+};
+
+struct UnexpectedTypeInSubtyping
+{
+    TypeId ty;
+
+    bool operator==(const UnexpectedTypeInSubtyping& rhs) const;
+};
+
+struct UnexpectedTypePackInSubtyping
+{
+    TypePackId tp;
+
+    bool operator==(const UnexpectedTypePackInSubtyping& rhs) const;
+};
+
+using TypeErrorData = Variant<
+    TypeMismatch,
+    UnknownSymbol,
+    UnknownProperty,
+    NotATable,
+    CannotExtendTable,
+    OnlyTablesCanHaveMethods,
+    DuplicateTypeDefinition,
+    CountMismatch,
+    FunctionDoesNotTakeSelf,
+    FunctionRequiresSelf,
+    OccursCheckFailed,
+    UnknownRequire,
+    IncorrectGenericParameterCount,
+    SyntaxError,
+    CodeTooComplex,
+    UnificationTooComplex,
+    UnknownPropButFoundLikeProp,
+    GenericError,
+    InternalError,
+    ConstraintSolvingIncompleteError,
+    CannotCallNonFunction,
+    ExtraInformation,
+    DeprecatedApiUsed,
+    ModuleHasCyclicDependency,
+    IllegalRequire,
+    FunctionExitsWithoutReturning,
+    DuplicateGenericParameter,
+    CannotAssignToNever,
+    CannotInferBinaryOperation,
+    MissingProperties,
+    SwappedGenericTypeParameter,
+    OptionalValueAccess,
+    MissingUnionProperty,
+    TypesAreUnrelated,
+    NormalizationTooComplex,
+    TypePackMismatch,
+    DynamicPropertyLookupOnClassesUnsafe,
+    UninhabitedTypeFunction,
+    UninhabitedTypePackFunction,
+    WhereClauseNeeded,
+    PackWhereClauseNeeded,
+    CheckedFunctionCallError,
+    NonStrictFunctionDefinitionError,
+    PropertyAccessViolation,
+    CheckedFunctionIncorrectArgs,
+    UnexpectedTypeInSubtyping,
+    UnexpectedTypePackInSubtyping,
+    ExplicitFunctionAnnotationRecommended>;
 
 struct TypeErrorSummary
 {
@@ -403,7 +565,7 @@ std::string toString(const TypeError& error, TypeErrorToStringOptions options);
 bool containsParseErrorName(const TypeError& error);
 
 // Copy any types named in the error into destArena.
-void copyErrors(ErrorVec& errors, struct TypeArena& destArena);
+void copyErrors(ErrorVec& errors, struct TypeArena& destArena, NotNull<BuiltinTypes> builtinTypes);
 
 // Internal Compiler Error
 struct InternalErrorReporter

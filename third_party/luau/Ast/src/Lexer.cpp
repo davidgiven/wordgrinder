@@ -1,10 +1,13 @@
 // This file is part of the Luau programming language and is licensed under MIT License; see LICENSE.txt for details
 #include "Luau/Lexer.h"
 
+#include "Luau/Common.h"
 #include "Luau/Confusables.h"
 #include "Luau/StringUtils.h"
 
 #include <limits.h>
+
+LUAU_FASTFLAGVARIABLE(LuauLexerLookaheadRemembersBraceType, false)
 
 namespace Luau
 {
@@ -89,8 +92,10 @@ Lexeme::Lexeme(const Location& location, Type type, const char* data, size_t siz
     , length(unsigned(size))
     , data(data)
 {
-    LUAU_ASSERT(type == RawString || type == QuotedString || type == InterpStringBegin || type == InterpStringMid || type == InterpStringEnd ||
-                type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment);
+    LUAU_ASSERT(
+        type == RawString || type == QuotedString || type == InterpStringBegin || type == InterpStringMid || type == InterpStringEnd ||
+        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment
+    );
 }
 
 Lexeme::Lexeme(const Location& location, Type type, const char* name)
@@ -99,11 +104,21 @@ Lexeme::Lexeme(const Location& location, Type type, const char* name)
     , length(0)
     , name(name)
 {
-    LUAU_ASSERT(type == Name || (type >= Reserved_BEGIN && type < Lexeme::Reserved_END));
+    LUAU_ASSERT(type == Name || type == Attribute || (type >= Reserved_BEGIN && type < Lexeme::Reserved_END));
 }
 
-static const char* kReserved[] = {"and", "break", "do", "else", "elseif", "end", "false", "for", "function", "if", "in", "local", "nil", "not", "or",
-    "repeat", "return", "then", "true", "until", "while"};
+unsigned int Lexeme::getLength() const
+{
+    LUAU_ASSERT(
+        type == RawString || type == QuotedString || type == InterpStringBegin || type == InterpStringMid || type == InterpStringEnd ||
+        type == InterpStringSimple || type == BrokenInterpDoubleBrace || type == Number || type == Comment || type == BlockComment
+    );
+
+    return length;
+}
+
+static const char* kReserved[] = {"and",   "break", "do",  "else", "elseif", "end",    "false", "for",  "function", "if",   "in",
+                                  "local", "nil",   "not", "or",   "repeat", "return", "then",  "true", "until",    "while"};
 
 std::string Lexeme::toString() const
 {
@@ -136,6 +151,9 @@ std::string Lexeme::toString() const
     case DoubleColon:
         return "'::'";
 
+    case FloorDiv:
+        return "'//'";
+
     case AddAssign:
         return "'+='";
 
@@ -147,6 +165,9 @@ std::string Lexeme::toString() const
 
     case DivAssign:
         return "'/='";
+
+    case FloorDivAssign:
+        return "'//='";
 
     case ModAssign:
         return "'%='";
@@ -181,6 +202,9 @@ std::string Lexeme::toString() const
 
     case Comment:
         return "comment";
+
+    case Attribute:
+        return name ? format("'%s'", name) : "attribute";
 
     case BrokenString:
         return "malformed string";
@@ -269,7 +293,7 @@ std::pair<AstName, Lexeme::Type> AstNameTable::getOrAddWithType(const char* name
     nameData[length] = 0;
 
     const_cast<Entry&>(entry).value = AstName(nameData);
-    const_cast<Entry&>(entry).type = Lexeme::Name;
+    const_cast<Entry&>(entry).type = (name[0] == '@' ? Lexeme::Attribute : Lexeme::Name);
 
     return std::make_pair(entry.value, entry.type);
 }
@@ -373,7 +397,7 @@ const Lexeme& Lexer::next(bool skipComments, bool updatePrevLocation)
     {
         // consume whitespace before the token
         while (isSpace(peekch()))
-            consume();
+            consumeAny();
 
         if (updatePrevLocation)
             prevLocation = lexeme.location;
@@ -400,6 +424,8 @@ Lexeme Lexer::lookahead()
     unsigned int currentLineOffset = lineOffset;
     Lexeme currentLexeme = lexeme;
     Location currentPrevLocation = prevLocation;
+    size_t currentBraceStackSize = braceStack.size();
+    BraceType currentBraceType = braceStack.empty() ? BraceType::Normal : braceStack.back();
 
     Lexeme result = next();
 
@@ -408,6 +434,13 @@ Lexeme Lexer::lookahead()
     lineOffset = currentLineOffset;
     lexeme = currentLexeme;
     prevLocation = currentPrevLocation;
+    if (FFlag::LuauLexerLookaheadRemembersBraceType)
+    {
+        if (braceStack.size() < currentBraceStackSize)
+            braceStack.push_back(currentBraceType);
+        else if (braceStack.size() > currentBraceStackSize)
+            braceStack.pop_back();
+    }
 
     return result;
 }
@@ -438,7 +471,17 @@ Position Lexer::position() const
     return Position(line, offset - lineOffset);
 }
 
+LUAU_FORCEINLINE
 void Lexer::consume()
+{
+    // consume() assumes current character is known to not be a newline; use consumeAny if this is not guaranteed
+    LUAU_ASSERT(!isNewline(buffer[offset]));
+
+    offset++;
+}
+
+LUAU_FORCEINLINE
+void Lexer::consumeAny()
 {
     if (isNewline(buffer[offset]))
     {
@@ -524,7 +567,7 @@ Lexeme Lexer::readLongString(const Position& start, int sep, Lexeme::Type ok, Le
         }
         else
         {
-            consume();
+            consumeAny();
         }
     }
 
@@ -540,7 +583,7 @@ void Lexer::readBackslashInString()
     case '\r':
         consume();
         if (peekch() == '\n')
-            consume();
+            consumeAny();
         break;
 
     case 0:
@@ -549,11 +592,11 @@ void Lexer::readBackslashInString()
     case 'z':
         consume();
         while (isSpace(peekch()))
-            consume();
+            consumeAny();
         break;
 
     default:
-        consume();
+        consumeAny();
     }
 }
 
@@ -681,7 +724,7 @@ Lexeme Lexer::readNumber(const Position& start, unsigned int startOffset)
 
 std::pair<AstName, Lexeme::Type> Lexer::readName()
 {
-    LUAU_ASSERT(isAlpha(peekch()) || peekch() == '_');
+    LUAU_ASSERT(isAlpha(peekch()) || peekch() == '_' || peekch() == '@');
 
     unsigned int startOffset = offset;
 
@@ -878,15 +921,31 @@ Lexeme Lexer::readNext()
             return Lexeme(Location(start, 1), '+');
 
     case '/':
+    {
         consume();
 
-        if (peekch() == '=')
+        char ch = peekch();
+
+        if (ch == '=')
         {
             consume();
             return Lexeme(Location(start, 2), Lexeme::DivAssign);
         }
+        else if (ch == '/')
+        {
+            consume();
+
+            if (peekch() == '=')
+            {
+                consume();
+                return Lexeme(Location(start, 3), Lexeme::FloorDivAssign);
+            }
+            else
+                return Lexeme(Location(start, 2), Lexeme::FloorDiv);
+        }
         else
             return Lexeme(Location(start, 1), '/');
+    }
 
     case '*':
         consume();
@@ -939,13 +998,20 @@ Lexeme Lexer::readNext()
     case ';':
     case ',':
     case '#':
+    case '?':
+    case '&':
+    case '|':
     {
         char ch = peekch();
         consume();
 
         return Lexeme(Location(start, 1), ch);
     }
-
+    case '@':
+    {
+        std::pair<AstName, Lexeme::Type> attribute = readName();
+        return Lexeme(Location(start, position()), Lexeme::Attribute, attribute.first.value);
+    }
     default:
         if (isDigit(peekch()))
         {

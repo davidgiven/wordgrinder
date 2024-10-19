@@ -69,6 +69,11 @@ static int getBuiltinFunctionId(const Builtin& builtin, const CompileOptions& op
     if (builtin.isGlobal("setmetatable"))
         return LBF_SETMETATABLE;
 
+    if (builtin.isGlobal("tonumber"))
+        return LBF_TONUMBER;
+    if (builtin.isGlobal("tostring"))
+        return LBF_TOSTRING;
+
     if (builtin.object == "math")
     {
         if (builtin.method == "abs")
@@ -161,6 +166,8 @@ static int getBuiltinFunctionId(const Builtin& builtin, const CompileOptions& op
             return LBF_BIT32_COUNTLZ;
         if (builtin.method == "countrz")
             return LBF_BIT32_COUNTRZ;
+        if (builtin.method == "byteswap")
+            return LBF_BIT32_BYTESWAP;
     }
 
     if (builtin.object == "string")
@@ -181,6 +188,36 @@ static int getBuiltinFunctionId(const Builtin& builtin, const CompileOptions& op
             return LBF_TABLE_INSERT;
         if (builtin.method == "unpack")
             return LBF_TABLE_UNPACK;
+    }
+
+    if (builtin.object == "buffer")
+    {
+        if (builtin.method == "readi8")
+            return LBF_BUFFER_READI8;
+        if (builtin.method == "readu8")
+            return LBF_BUFFER_READU8;
+        if (builtin.method == "writei8" || builtin.method == "writeu8")
+            return LBF_BUFFER_WRITEU8;
+        if (builtin.method == "readi16")
+            return LBF_BUFFER_READI16;
+        if (builtin.method == "readu16")
+            return LBF_BUFFER_READU16;
+        if (builtin.method == "writei16" || builtin.method == "writeu16")
+            return LBF_BUFFER_WRITEU16;
+        if (builtin.method == "readi32")
+            return LBF_BUFFER_READI32;
+        if (builtin.method == "readu32")
+            return LBF_BUFFER_READU32;
+        if (builtin.method == "writei32" || builtin.method == "writeu32")
+            return LBF_BUFFER_WRITEU32;
+        if (builtin.method == "readf32")
+            return LBF_BUFFER_READF32;
+        if (builtin.method == "writef32")
+            return LBF_BUFFER_WRITEF32;
+        if (builtin.method == "readf64")
+            return LBF_BUFFER_READF64;
+        if (builtin.method == "writef64")
+            return LBF_BUFFER_WRITEF64;
     }
 
     if (options.vectorCtor)
@@ -209,8 +246,12 @@ struct BuiltinVisitor : AstVisitor
 
     const CompileOptions& options;
 
-    BuiltinVisitor(DenseHashMap<AstExprCall*, int>& result, const DenseHashMap<AstName, Global>& globals,
-        const DenseHashMap<AstLocal*, Variable>& variables, const CompileOptions& options)
+    BuiltinVisitor(
+        DenseHashMap<AstExprCall*, int>& result,
+        const DenseHashMap<AstName, Global>& globals,
+        const DenseHashMap<AstLocal*, Variable>& variables,
+        const CompileOptions& options
+    )
         : result(result)
         , globals(globals)
         , variables(variables)
@@ -237,8 +278,13 @@ struct BuiltinVisitor : AstVisitor
     }
 };
 
-void analyzeBuiltins(DenseHashMap<AstExprCall*, int>& result, const DenseHashMap<AstName, Global>& globals,
-    const DenseHashMap<AstLocal*, Variable>& variables, const CompileOptions& options, AstNode* root)
+void analyzeBuiltins(
+    DenseHashMap<AstExprCall*, int>& result,
+    const DenseHashMap<AstName, Global>& globals,
+    const DenseHashMap<AstLocal*, Variable>& variables,
+    const CompileOptions& options,
+    AstNode* root
+)
 {
     BuiltinVisitor visitor{result, globals, variables, options};
     root->visit(&visitor);
@@ -252,16 +298,15 @@ BuiltinInfo getBuiltinInfo(int bfid)
         return {-1, -1};
 
     case LBF_ASSERT:
-        return {-1, -1};
-        ; // assert() returns all values when first value is truthy
+        return {-1, -1}; // assert() returns all values when first value is truthy
 
     case LBF_MATH_ABS:
     case LBF_MATH_ACOS:
     case LBF_MATH_ASIN:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_ATAN2:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_ATAN:
     case LBF_MATH_CEIL:
@@ -270,19 +315,19 @@ BuiltinInfo getBuiltinInfo(int bfid)
     case LBF_MATH_DEG:
     case LBF_MATH_EXP:
     case LBF_MATH_FLOOR:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_FMOD:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_FREXP:
-        return {1, 2};
+        return {1, 2, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_LDEXP:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_LOG10:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_LOG:
         return {-1, 1}; // 1 or 2 parameters
@@ -292,10 +337,10 @@ BuiltinInfo getBuiltinInfo(int bfid)
         return {-1, 1}; // variadic
 
     case LBF_MATH_MODF:
-        return {1, 2};
+        return {1, 2, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_POW:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_RAD:
     case LBF_MATH_SINH:
@@ -303,16 +348,16 @@ BuiltinInfo getBuiltinInfo(int bfid)
     case LBF_MATH_SQRT:
     case LBF_MATH_TANH:
     case LBF_MATH_TAN:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_BIT32_ARSHIFT:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_BIT32_BAND:
         return {-1, 1}; // variadic
 
     case LBF_BIT32_BNOT:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_BIT32_BOR:
     case LBF_BIT32_BXOR:
@@ -324,14 +369,14 @@ BuiltinInfo getBuiltinInfo(int bfid)
 
     case LBF_BIT32_LROTATE:
     case LBF_BIT32_LSHIFT:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_BIT32_REPLACE:
         return {-1, 1}; // 3 or 4 parameters
 
     case LBF_BIT32_RROTATE:
     case LBF_BIT32_RSHIFT:
-        return {2, 1};
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_TYPE:
         return {1, 1};
@@ -343,7 +388,7 @@ BuiltinInfo getBuiltinInfo(int bfid)
         return {-1, 1}; // variadic
 
     case LBF_STRING_LEN:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_TYPEOF:
         return {1, 1};
@@ -352,11 +397,11 @@ BuiltinInfo getBuiltinInfo(int bfid)
         return {-1, 1}; // 2 or 3 parameters
 
     case LBF_MATH_CLAMP:
-        return {3, 1};
+        return {3, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_MATH_SIGN:
     case LBF_MATH_ROUND:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_RAWSET:
         return {3, 1};
@@ -376,23 +421,49 @@ BuiltinInfo getBuiltinInfo(int bfid)
 
     case LBF_BIT32_COUNTLZ:
     case LBF_BIT32_COUNTRZ:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_SELECT_VARARG:
         return {-1, -1}; // variadic
 
     case LBF_RAWLEN:
-        return {1, 1};
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_BIT32_EXTRACTK:
-        return {3, 1};
+        return {3, 1, BuiltinInfo::Flag_NoneSafe};
 
     case LBF_GETMETATABLE:
         return {1, 1};
 
     case LBF_SETMETATABLE:
         return {2, 1};
-    };
+
+    case LBF_TONUMBER:
+        return {-1, 1}; // 1 or 2 parameters
+
+    case LBF_TOSTRING:
+        return {1, 1};
+
+    case LBF_BIT32_BYTESWAP:
+        return {1, 1, BuiltinInfo::Flag_NoneSafe};
+
+    case LBF_BUFFER_READI8:
+    case LBF_BUFFER_READU8:
+    case LBF_BUFFER_READI16:
+    case LBF_BUFFER_READU16:
+    case LBF_BUFFER_READI32:
+    case LBF_BUFFER_READU32:
+    case LBF_BUFFER_READF32:
+    case LBF_BUFFER_READF64:
+        return {2, 1, BuiltinInfo::Flag_NoneSafe};
+
+    case LBF_BUFFER_WRITEU8:
+    case LBF_BUFFER_WRITEU16:
+    case LBF_BUFFER_WRITEU32:
+    case LBF_BUFFER_WRITEF32:
+    case LBF_BUFFER_WRITEF64:
+        return {3, 0, BuiltinInfo::Flag_NoneSafe};
+    }
 
     LUAU_UNREACHABLE();
 }
