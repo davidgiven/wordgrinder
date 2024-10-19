@@ -3,57 +3,75 @@ from types import SimpleNamespace
 import os
 import subprocess
 
-emit(
-    """
-PKG_CONFIG ?= pkg-config
-PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
 
-HOST_PKG_CONFIG ?= pkg-config
-HOST_PACKAGES := $(shell $(HOST_PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
-"""
-)
+class _PkgConfig:
+    package_present = set()
+    package_properties = {}
+    pkgconfig = None
+
+    def __init__(self, cmd):
+        assert cmd, "no pkg-config environment variable supplied"
+        self.pkgconfig = cmd
+
+        r = subprocess.run(f"{cmd} --list-all", shell=True, capture_output=True)
+        ps = r.stdout.decode("utf-8")
+        self.package_present = {l.split(" ", 1)[0] for l in ps.splitlines()}
+
+    def has_package(self, name):
+        return name in self.package_present
+
+    def get_property(self, name, flag):
+        p = f"{name}.{flag}"
+        if p not in self.package_properties:
+            r = subprocess.run(
+                f"{self.pkgconfig} {flag} {name}",
+                shell=True,
+                capture_output=True,
+            )
+            self.package_properties[p] = r.stdout.decode("utf-8").strip()
+        return self.package_properties[p]
 
 
-def _package(self, name, package, fallback, prefix=""):
-    emit(f"ifeq ($(filter {package}, $({prefix}PACKAGES)),)")
-    if fallback:
-        emit(f"{prefix}PACKAGE_DEPS_{package} := ", *filenamesof([fallback]))
-        emit(
-            f"{prefix}PACKAGE_CFLAGS_{package} :=",
-            *fallback.args.get("caller_cflags", []),
-        )
-        emit(
-            f"{prefix}PACKAGE_LDFLAGS_{package} := ",
-            *fallback.args.get("caller_ldflags", []),
-            f"$(filter %.a, $({prefix}PACKAGE_DEPS_{package}))",
-        )
-    else:
-        emit(f"$(error Required package '{package}' not installed.)")
-    emit("else")
-    emit(
-        f"{prefix}PACKAGE_CFLAGS_{package} := $(shell $({prefix}PKG_CONFIG) --cflags {package})"
-    )
-    emit(
-        f"{prefix}PACKAGE_LDFLAGS_{package} := $(shell $({prefix}PKG_CONFIG) --libs {package})"
-    )
-    emit(f"{prefix}PACKAGE_DEPS_{package} :=")
-    emit("endif")
-    emit(f"{self.name}:")
+TargetPkgConfig = _PkgConfig(os.getenv("PKG_CONFIG"))
+HostPkgConfig = _PkgConfig(os.getenv("HOST_PKG_CONFIG"))
 
-    self.args["caller_cflags"] = [f"$({prefix}PACKAGE_CFLAGS_{package})"]
-    self.args["caller_ldflags"] = [f"$({prefix}PACKAGE_LDFLAGS_{package})"]
-    self.traits.add("clibrary")
-    self.traits.add("cheaders")
 
-    self.ins = []
-    self.outs = [f"$({prefix}PACKAGE_DEPS_{package})"]
+def _package(self, name, package, fallback, pkgconfig):
+    if pkgconfig.has_package(package):
+        cflags = pkgconfig.get_property(package, "--cflags")
+        ldflags = pkgconfig.get_property(package, "--libs")
+
+        if cflags:
+            self.args["caller_cflags"] = [cflags]
+        if ldflags:
+            self.args["caller_ldflags"] = [ldflags]
+        self.traits.add("clibrary")
+        self.traits.add("cheaders")
+        return
+
+    assert (
+        fallback
+    ), f"Required package '{package}' not installed when materialising target '{name}'"
+
+    if "cheader_deps" in fallback.args:
+        self.args["cheader_deps"] = fallback.args["cheader_deps"]
+    if "clibrary_deps" in fallback.args:
+        self.args["clibrary_deps"] = fallback.args["clibrary_deps"]
+    if "cheader_files" in fallback.args:
+        self.args["cheader_files"] = fallback.args["cheader_files"]
+    if "clibrary_files" in fallback.args:
+        self.args["clibrary_files"] = fallback.args["clibrary_files"]
+    self.ins = fallback.ins
+    self.outs = fallback.outs
+    self.deps = fallback.deps
+    self.traits = fallback.traits
 
 
 @Rule
 def package(self, name, package=None, fallback: Target = None):
-    _package(self, name, package, fallback)
+    _package(self, name, package, fallback, TargetPkgConfig)
 
 
 @Rule
 def hostpackage(self, name, package=None, fallback: Target = None):
-    _package(self, name, package, fallback, "HOST_")
+    _package(self, name, package, fallback, HostPkgConfig)

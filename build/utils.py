@@ -8,8 +8,8 @@ from build.ab import (
     error,
     simplerule,
 )
-from os.path import relpath, splitext, join, basename
-from glob import glob
+from os.path import relpath, splitext, join, basename, isfile
+from glob import iglob
 import fnmatch
 import itertools
 
@@ -30,7 +30,7 @@ def collectattrs(*, targets, name, initial=[]):
     s = set(initial)
     for a in [t.args.get(name, []) for t in targets]:
         s.update(a)
-    return list(s)
+    return sorted(s)
 
 
 def itemsof(pattern, root=None, cwd=None):
@@ -43,9 +43,10 @@ def itemsof(pattern, root=None, cwd=None):
     root = join(cwd, root)
 
     result = {}
-    for f in glob(pattern, recursive=True):
+    for f in iglob(pattern, recursive=True):
         try:
-            result[relpath(f, root)] = f
+            if isfile(f):
+                result[relpath(f, root)] = f
         except ValueError:
             error(f"file '{f}' is not in root '{root}'")
     return result

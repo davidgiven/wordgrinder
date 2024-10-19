@@ -6,45 +6,70 @@ from build.ab import (
     filenamesof,
     flatten,
     simplerule,
+    emit,
 )
-from build.utils import (
-    filenamesmatchingof,
-    stripext,
-    targetswithtraitsof,
-    collectattrs,
-)
+from build.utils import filenamesmatchingof, stripext, collectattrs
 from os.path import *
+
+emit(
+    """
+ifeq ($(OSX),no)
+HOSTSTARTGROUP ?= -Wl,--start-group
+HOSTENDGROUP ?= -Wl,--end-group
+endif
+STARTGROUP ?= $(HOSTSTARTGROUP)
+ENDGROUP ?= $(HOSTENDGROUP)
+"""
+)
 
 
 class Toolchain:
     label = ""
     cfile = ["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
     cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
-    clibrary = ["$(AR) cqs {outs[0]} {ins}"]
-    cxxlibrary = ["$(AR) cqs {outs[0]} {ins}"]
-    cprogram = ["$(CC) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"]
-    cxxprogram = ["$(CXX) -o {outs[0]} {ins} {ldflags} $(LDFLAGS)"]
+    clibrary = ["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"]
+    cxxlibrary = ["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"]
+    cprogram = [
+        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+    ]
+    cxxprogram = [
+        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+    ]
 
 
 class HostToolchain:
     label = "HOST "
     cfile = ["$(HOSTCC) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
     cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
-    clibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
-    cxxlibrary = ["$(HOSTAR) cqs {outs[0]} {ins}"]
-    cprogram = ["$(HOSTCC) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
-    cxxprogram = ["$(HOSTCXX) -o {outs[0]} {ins} {ldflags} $(HOSTLDFLAGS)"]
+    clibrary = ["rm -f {outs[0]} && $(HOSTAR) cqs {outs[0]} {ins}"]
+    cxxlibrary = ["rm -f {outs[0]} && $(HOSTAR) cqs {outs[0]} {ins}"]
+    cprogram = [
+        "$(HOSTCC) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
+    ]
+    cxxprogram = [
+        "$(HOSTCXX) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
+    ]
+
+
+def _indirect(deps, name):
+    r = set()
+    for d in deps:
+        r.update(d.args.get(name, {d}))
+    return r
 
 
 def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
     outleaf = "=" + stripext(basename(filenameof(srcs[0]))) + suffix
 
-    cflags = collectattrs(targets=deps, name="caller_cflags", initial=cflags)
+    hdr_deps = _indirect(deps, "cheader_deps")
+    cflags = collectattrs(
+        targets=hdr_deps, name="caller_cflags", initial=cflags
+    )
 
     t = simplerule(
         replaces=self,
         ins=srcs,
-        deps=deps,
+        deps=sorted(_indirect(hdr_deps, "cheader_files")),
         outs=[outleaf],
         label=label,
         commands=commands,
@@ -93,9 +118,9 @@ def cxxfile(
 
 
 def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
-    headers = filenamesmatchingof(srcs, "*.h")
-    cflags = cflags + ["-I" + dirname(h) for h in headers]
-    deps = deps + headers
+    for f in filenamesof(srcs):
+        if f.endswith(".h") or f.endswith(".hh"):
+            cflags = cflags + [f"-I{dirname(f)}"]
 
     objs = []
     for s in flatten(srcs):
@@ -104,7 +129,7 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
                 name=join(name, f.removeprefix("$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
-                cflags=cflags,
+                cflags=sorted(set(cflags)),
                 toolchain=toolchain,
                 cwd=cwd,
             )
@@ -119,39 +144,6 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
             objs += [s]
 
     return objs
-
-
-@Rule
-def cheaders(
-    self,
-    name,
-    hdrs: TargetsMap = None,
-    caller_cflags=[],
-    deps: Targets = None,
-):
-    cs = []
-    ins = list(hdrs.values())
-    outs = []
-    i = 0
-    for dest, src in hdrs.items():
-        s = filenamesof([src])
-        assert (
-            len(s) == 1
-        ), "the target of a header must return exactly one file"
-
-        cs += ["cp {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
-        outs += ["=" + dest]
-        i = i + 1
-
-    r = simplerule(
-        replaces=self,
-        ins=ins,
-        outs=outs,
-        commands=cs,
-        deps=deps,
-        label="CHEADERS",
-        args={"caller_cflags": caller_cflags + ["-I" + self.dir]},
-    )
 
 
 def libraryimpl(
@@ -169,52 +161,65 @@ def libraryimpl(
     label,
     kind,
 ):
+    hdr_deps = _indirect(deps, "cheader_deps") | {self}
+    lib_deps = _indirect(deps, "clibrary_deps") | {self}
+
     hr = None
-    if hdrs and not srcs:
-        cheaders(
-            replaces=self,
-            hdrs=hdrs,
-            deps=targetswithtraitsof(deps, "cheaders"),
-            caller_cflags=caller_cflags,
-        )
-        return
+    hf = []
+    ar = None
     if hdrs:
-        hr = cheaders(
-            name=self.localname + "_hdrs",
-            hdrs=hdrs,
-            deps=targetswithtraitsof(deps, "cheaders"),
-            caller_cflags=caller_cflags,
+        cs = []
+        ins = hdrs.values()
+        outs = []
+        i = 0
+        for dest, src in hdrs.items():
+            s = filenamesof([src])
+            assert (
+                len(s) == 1
+            ), "the target of a header must return exactly one file"
+
+            cs += ["$(CP) {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
+            outs += ["=" + dest]
+            i = i + 1
+
+        hr = simplerule(
+            name=f"{self.localname}_hdr",
+            ins=ins,
+            outs=outs,
+            commands=cs,
+            label="CHEADERS",
         )
         hr.materialise()
-        deps = deps + [hr]
+        hf = [f"-I{hr.dir}"]
 
-    objs = findsources(
-        self.localname,
-        srcs,
-        targetswithtraitsof(deps, "cheaders"),
-        cflags,
-        toolchain,
-        kind,
-        self.cwd,
-    )
+    if srcs:
+        objs = findsources(
+            self.localname,
+            srcs,
+            deps + ([hr] if hr else []),
+            cflags + hf,
+            toolchain,
+            kind,
+            self.cwd,
+        )
 
-    simplerule(
-        replaces=self,
-        ins=objs,
-        outs=[f"={self.localname}.a"],
-        label=label,
-        commands=commands,
-        args={
-            "caller_cflags": collectattrs(
-                targets=deps + ([hr] if hr else []), name="caller_cflags"
-            ),
-            "caller_ldflags": collectattrs(
-                targets=deps, name="caller_ldflags", initial=caller_ldflags
-            ),
-        },
-        traits={"cheaders"},
-    )
-    self.outs = self.outs + (hr.outs if hr else [])
+        ar = simplerule(
+            name=f"{self.localname}_lib",
+            ins=objs,
+            outs=[f"={self.localname}.a"],
+            label=label,
+            commands=commands,
+        )
+        ar.materialise()
+
+    self.outs = ([hr] if hr else []) + ([ar] if ar else [])
+    self.deps = self.outs
+    self.args["cheader_deps"] = hdr_deps
+    self.args["clibrary_deps"] = lib_deps
+    self.args["cheader_files"] = [hr] if hr else []
+    self.args["clibrary_files"] = [ar] if ar else []
+    self.args["caller_cflags"] = caller_cflags + hf
+    self.args["caller_ldflags"] = caller_ldflags
 
 
 @Rule
@@ -268,11 +273,12 @@ def cxxlibrary(
     toolchain=Toolchain,
     commands=None,
     label=None,
+    cxxfilerule=cxxfile,
 ):
     if not label:
         label = toolchain.label + "LIB"
     if not commands:
-        commands = toolchain.clibrary
+        commands = toolchain.cxxlibrary
     libraryimpl(
         self,
         name,
@@ -286,7 +292,7 @@ def cxxlibrary(
         toolchain,
         commands,
         label,
-        cxxfile,
+        cxxfilerule,
     )
 
 
@@ -303,21 +309,28 @@ def programimpl(
     filerule,
     kind,
 ):
-    ars = filenamesmatchingof(deps, "*.a")
-
     cfiles = findsources(
         self.localname, srcs, deps, cflags, toolchain, filerule, self.cwd
     )
+
+    lib_deps = set()
+    for d in deps:
+        lib_deps.update(d.args.get("clibrary_deps", {d}))
+    libs = sorted(filenamesmatchingof(lib_deps, "*.a"))
+    ldflags = collectattrs(
+        targets=lib_deps, name="caller_ldflags", initial=ldflags
+    )
+
     simplerule(
         replaces=self,
-        ins=cfiles + ars + ars,
+        ins=cfiles + libs,
         outs=[f"={self.localname}$(EXT)"],
-        deps=deps,
+        deps=sorted(_indirect(lib_deps, "clibrary_files")),
         label=toolchain.label + label,
         commands=commands,
         args={
             "ldflags": collectattrs(
-                targets=deps, name="caller_ldflags", initial=ldflags
+                targets=lib_deps, name="caller_ldflags", initial=ldflags
             )
         },
     )
@@ -334,8 +347,6 @@ def cprogram(
     toolchain=Toolchain,
     commands=None,
     label="CLINK",
-    cfilerule=cfile,
-    cfilekind="cprogram",
 ):
     if not commands:
         commands = toolchain.cprogram
@@ -349,8 +360,8 @@ def cprogram(
         toolchain,
         commands,
         label,
-        cfilerule,
-        cfilekind,
+        cfile,
+        "cprogram",
     )
 
 
