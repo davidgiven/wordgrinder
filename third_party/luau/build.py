@@ -6,9 +6,7 @@ import sys
 
 def _compute_header_name(f):
     parts = list(f.relative_to("third_party/luau").parts)
-    del parts[0]
-    del parts[0]
-    return "/".join(parts)
+    return "/".join(parts[2:])
 
 
 LUAU_SRCS = [
@@ -51,7 +49,7 @@ cxxlibrary(
     },
 )
 
-cxxlibrary(name="luau", srcs=LUAU_SRCS, deps=".+luau-hdrs")
+cxxlibrary(name="luau", srcs=LUAU_SRCS, deps=[".+luau-hdrs"])
 
 cxxprogram(
     name="analyse",
