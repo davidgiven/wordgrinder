@@ -93,7 +93,7 @@ make_wordgrinder(
     "wordgrinder-glfw-osx",
     deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_osx"],
     cflags=["-DFRONTEND=glfw"],
-    ldflags=["-framework", "Cocoa", "-framework", "OpenGL"],
+    ldflags=["-framework Cocoa", "-framework OpenGL"],
 )
 
 make_wordgrinder(

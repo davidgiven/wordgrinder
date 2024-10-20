@@ -134,7 +134,9 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
                 cwd=cwd,
             )
             for f in filenamesof([s])
-            if f.endswith(".c")
+            if f.endswith(".m")
+            or f.endswith(".mm")
+            or f.endswith(".c")
             or f.endswith(".cc")
             or f.endswith(".cpp")
             or f.endswith(".S")
