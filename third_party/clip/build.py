@@ -1,7 +1,7 @@
 from build.c import cxxlibrary
 from build.pkg import package
+from config import HAS_XWORDGRINDER
 
-package(name="xcb", package="xcb")
 cxxlibrary(name="clip_common", srcs=["./clip.cpp", "./image.cpp"])
 
 cxxlibrary(
@@ -11,12 +11,14 @@ cxxlibrary(
     deps=[".+clip_common"],
 )
 
-cxxlibrary(
-    name="clip_x11",
-    srcs=["./clip_x11.cpp"],
-    hdrs={"clip.h": "./clip.h"},
-    deps=[".+clip_common", ".+xcb"],
-)
+if HAS_XWORDGRINDER:
+    package(name="xcb", package="xcb")
+    cxxlibrary(
+        name="clip_x11",
+        srcs=["./clip_x11.cpp"],
+        hdrs={"clip.h": "./clip.h"},
+        deps=[".+clip_common", ".+xcb"],
+    )
 
 cxxlibrary(
     name="clip_osx",

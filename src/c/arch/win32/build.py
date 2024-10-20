@@ -1,4 +1,4 @@
-from build.ab import normalrule
+from build.ab import simplerule
 from build.c import clibrary
 from build.windows import windres, makensis
 from config import VERSION
@@ -16,18 +16,18 @@ clibrary(
     srcs=[".+rc"],
 )
 
-normalrule(
+simplerule(
     name="wordgrinder-stripped",
     ins=["src/c+wordgrinder-wincon"],
-    outs=["wordgrinder-stripped.exe"],
+    outs=["=wordgrinder-stripped.exe"],
     commands=["strip {ins[0]} -o {outs[0]}"],
     label="STRIP"
 )
 
-normalrule(
+simplerule(
     name="wordgrinder-windows-stripped",
     ins=["src/c+wordgrinder-glfw-windows"],
-    outs=["wordgrinder-windows-stripped.exe"],
+    outs=["=wordgrinder-windows-stripped.exe"],
     commands=["strip {ins[0]} -o {outs[0]}"],
     label="STRIP"
 )

@@ -1,6 +1,7 @@
+from build.ab import simplerule
 from build.c import cxxprogram, cxxlibrary
 from build.pkg import package
-from config import FILEFORMAT
+from config import FILEFORMAT, HAS_OSX, HAS_NCURSES, HAS_XWORDGRINDER
 
 package(name="libcmark", package="libcmark", fallback="third_party/cmark")
 package(name="fmt", package="fmt", fallback="third_party/fmt")
@@ -22,7 +23,7 @@ cxxlibrary(
         "-DCMARK_STATIC_DEFINE",
         "-I.",
     ],
-    caller_cflags=f"-DFILEFORMAT={FILEFORMAT}",
+    caller_cflags=[f"-DFILEFORMAT={FILEFORMAT}"],
     deps=[
         ".+fmt",
         ".+libcmark",
@@ -56,15 +57,16 @@ def make_wordgrinder(name, deps=[], cflags=[], ldflags=[]):
     )
 
 
-make_wordgrinder(
-    "wordgrinder-ncurses",
-    deps=[
-        "src/c/arch/ncurses",
-        "third_party/clip+clip_none",
-        "third_party/wcwidth",
-    ],
-    cflags=["-DFRONTEND=ncurses"],
-)
+if HAS_NCURSES:
+    make_wordgrinder(
+        "wordgrinder-ncurses",
+        deps=[
+            "src/c/arch/ncurses",
+            "third_party/clip+clip_none",
+            "third_party/wcwidth",
+        ],
+        cflags=["-DFRONTEND=ncurses"],
+    )
 
 make_wordgrinder(
     "wordgrinder-wincon",
@@ -83,18 +85,52 @@ make_wordgrinder(
     ],
 )
 
-make_wordgrinder(
-    "wordgrinder-glfw-x11",
-    deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_x11"],
-    cflags=["-DFRONTEND=glfw"],
-)
+if HAS_XWORDGRINDER:
+    make_wordgrinder(
+        "wordgrinder-glfw-x11",
+        deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_x11"],
+        cflags=["-DFRONTEND=glfw"],
+    )
 
-make_wordgrinder(
-    "wordgrinder-glfw-osx",
-    deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_osx"],
-    cflags=["-DFRONTEND=glfw"],
-    ldflags=["-framework", "Cocoa", "-framework", "OpenGL"],
-)
+if HAS_OSX:
+    make_wordgrinder(
+        "wordgrinder-glfw-osx",
+        deps=["src/c/arch/glfw", "third_party/libstb", "third_party/clip+clip_osx"],
+        cflags=["-DFRONTEND=glfw"],
+        ldflags=["-framework Cocoa", "-framework OpenGL"],
+    )
+
+    simplerule(
+        name="wordgrinder_pkg",
+        ins=[".+wordgrinder_app"],
+        outs=["=wordgrinder-component.pkg"],
+        commands=[
+            "pkgbuild --quiet --install-location /Applications --component {ins[0]} {outs[0]}"
+        ],
+        label="PKGBUILD",
+    )
+
+    simplerule(
+        name="wordgrinder_app",
+        ins=[
+            ".+wordgrinder-glfw-osx",
+            "extras+wordgrinder_icns",
+            "extras/WordGrinder.app.template/",
+        ],
+        outs=["=wordgrinder.app"],
+        commands=[
+            "rm -rf {outs[0]}",
+            "cp -a {ins[2]} {outs[0]}",
+            "touch {outs[0]}",
+            "cp {ins[0]} {outs[0]}/Contents/MacOS/wordgrinder",
+            "mkdir -p {outs[0]}/Contents/Resources",
+            "cp {ins[1]} {outs[0]}/Contents/Resources/wordgrinder.icns",
+            "dylibbundler -of -x {outs[0]}/Contents/MacOS/wordgrinder -b -d {outs[0]}/Contents/libs -cd > /dev/null",
+            "cp $$(brew --prefix fmt)/LICENSE* {outs[0]}/Contents/libs/fmt.rst",
+            "cp $$(brew --prefix glfw)/LICENSE* {outs[0]}/Contents/libs/glfw.md",
+        ],
+        label="MKAPP",
+    )
 
 make_wordgrinder(
     "wordgrinder-glfw-windows",
