@@ -1,7 +1,7 @@
 from build.ab import simplerule
 from build.c import cxxprogram, cxxlibrary
 from build.pkg import package
-from config import FILEFORMAT, HAS_OSX
+from config import FILEFORMAT, HAS_OSX, HAS_NCURSES
 
 package(name="libcmark", package="libcmark", fallback="third_party/cmark")
 package(name="fmt", package="fmt", fallback="third_party/fmt")
@@ -57,15 +57,16 @@ def make_wordgrinder(name, deps=[], cflags=[], ldflags=[]):
     )
 
 
-make_wordgrinder(
-    "wordgrinder-ncurses",
-    deps=[
-        "src/c/arch/ncurses",
-        "third_party/clip+clip_none",
-        "third_party/wcwidth",
-    ],
-    cflags=["-DFRONTEND=ncurses"],
-)
+if HAS_NCURSES:
+    make_wordgrinder(
+        "wordgrinder-ncurses",
+        deps=[
+            "src/c/arch/ncurses",
+            "third_party/clip+clip_none",
+            "third_party/wcwidth",
+        ],
+        cflags=["-DFRONTEND=ncurses"],
+    )
 
 make_wordgrinder(
     "wordgrinder-wincon",
