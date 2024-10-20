@@ -21,14 +21,22 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+
     - name: brew
       run: |
         brew install pkg-config glfw3 python3 cmark fmt coreutils make
         brew link --overwrite python3
         brew install pillow
+
     - name: make
       run: |
         gmake -j$(nproc) BUILDTYPE=osx
+
+    - name: upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}.${{ github.sha }}
+        path: bin/WordGrinder-0.9-setup.pkg
 
   build-windows:
     runs-on: windows-latest

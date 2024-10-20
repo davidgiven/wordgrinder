@@ -1,5 +1,4 @@
-BUILDTYPE ?= unset
-ifeq ($(BUILDTYPE),unset)
+ifeq ($(BUILDTYPE),)
     buildtype_Darwin = osx
     buildtype_Haiku = haiku
     BUILDTYPE := $(buildtype_$(shell uname -s ))

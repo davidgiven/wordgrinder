@@ -1,6 +1,7 @@
+from build.ab import simplerule
 from build.c import cxxprogram, cxxlibrary
 from build.pkg import package
-from config import FILEFORMAT
+from config import FILEFORMAT, HAS_OSX
 
 package(name="libcmark", package="libcmark", fallback="third_party/cmark")
 package(name="fmt", package="fmt", fallback="third_party/fmt")
@@ -95,6 +96,39 @@ make_wordgrinder(
     cflags=["-DFRONTEND=glfw"],
     ldflags=["-framework Cocoa", "-framework OpenGL"],
 )
+
+if HAS_OSX:
+    simplerule(
+        name="wordgrinder_pkg",
+        ins=[".+wordgrinder_app"],
+        outs=["=wordgrinder-component.pkg"],
+        commands=[
+            "pkgbuild --quiet --install-location /Applications --component {ins[0]} {outs[0]}"
+        ],
+        label="PKGBUILD",
+    )
+
+    simplerule(
+        name="wordgrinder_app",
+        ins=[
+            ".+wordgrinder-glfw-osx",
+            "extras+wordgrinder_icns",
+            "extras/WordGrinder.app.template/",
+        ],
+        outs=["=wordgrinder.app"],
+        commands=[
+            "rm -rf {outs[0]}",
+            "cp -a {ins[2]} {outs[0]}",
+            "touch {outs[0]}",
+            "cp {ins[0]} {outs[0]}/Contents/MacOS/wordgrinder",
+            "mkdir -p {outs[0]}/Contents/Resources",
+            "cp {ins[1]} {outs[0]}/Contents/Resources/wordgrinder.icns",
+            "dylibbundler -of -x {outs[0]}/Contents/MacOS/wordgrinder -b -d {outs[0]}/Contents/libs -cd > /dev/null",
+            "cp $$(brew --prefix fmt)/LICENSE* {outs[0]}/Contents/libs/fmt.rst",
+            "cp $$(brew --prefix glfw)/LICENSE* {outs[0]}/Contents/libs/glfw.md",
+        ],
+        label="MKAPP",
+    )
 
 make_wordgrinder(
     "wordgrinder-glfw-windows",

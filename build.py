@@ -39,6 +39,11 @@ export(
             else {}
         )
         | (
+            {f"bin/WordGrinder-{VERSION}-setup.pkg": "src/c+wordgrinder_pkg"}
+            if BUILDTYPE == "osx"
+            else {}
+        )
+        | (
             {f"bin/xwordgrinder.1": "extras+xwordgrinder.1"}
             if BUILDTYPE in {"unix", "osx"}
             else {}
