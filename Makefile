@@ -4,11 +4,7 @@ ifeq ($(BUILDTYPE),unset)
     buildtype_Haiku = haiku
     BUILDTYPE := $(buildtype_$(shell uname -s ))
 	ifeq ($(BUILDTYPE),)
-		ifneq ($(wildcard /proc/sys/fs/binfmt_misc/WSLInterop),)
-			BUILDTYPE := windows
-		else
-			BUILDTYPE := unix
-		endif
+		BUILDTYPE := unix
 	endif
 endif
 export BUILDTYPE
