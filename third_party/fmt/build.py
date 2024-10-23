@@ -1,4 +1,4 @@
-from build.c import cxxlibrary, HostToolchain
+from build.c import cxxlibrary
 
 cxxlibrary(
     name="fmt",
