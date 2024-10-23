@@ -33,7 +33,6 @@ class _PkgConfig:
 
 
 TargetPkgConfig = _PkgConfig(os.getenv("PKG_CONFIG"))
-HostPkgConfig = _PkgConfig(os.getenv("HOST_PKG_CONFIG"))
 
 
 def _package(self, name, package, fallback, pkgconfig):
@@ -70,8 +69,3 @@ def _package(self, name, package, fallback, pkgconfig):
 @Rule
 def package(self, name, package=None, fallback: Target = None):
     _package(self, name, package, fallback, TargetPkgConfig)
-
-
-@Rule
-def hostpackage(self, name, package=None, fallback: Target = None):
-    _package(self, name, package, fallback, HostPkgConfig)

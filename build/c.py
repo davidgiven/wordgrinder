@@ -14,41 +14,11 @@ from os.path import *
 emit(
     """
 ifeq ($(OSX),no)
-HOSTSTARTGROUP ?= -Wl,--start-group
-HOSTENDGROUP ?= -Wl,--end-group
+STARTGROUP ?= -Wl,--start-group
+ENDGROUP ?= -Wl,--end-group
 endif
-STARTGROUP ?= $(HOSTSTARTGROUP)
-ENDGROUP ?= $(HOSTENDGROUP)
 """
 )
-
-
-class Toolchain:
-    label = ""
-    cfile = ["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
-    cxxfile = ["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"]
-    clibrary = ["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"]
-    cxxlibrary = ["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"]
-    cprogram = [
-        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
-    ]
-    cxxprogram = [
-        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
-    ]
-
-
-class HostToolchain:
-    label = "HOST "
-    cfile = ["$(HOSTCC) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
-    cxxfile = ["$(HOSTCXX) -c -o {outs[0]} {ins[0]} $(HOSTCFLAGS) {cflags}"]
-    clibrary = ["rm -f {outs[0]} && $(HOSTAR) cqs {outs[0]} {ins}"]
-    cxxlibrary = ["rm -f {outs[0]} && $(HOSTAR) cqs {outs[0]} {ins}"]
-    cprogram = [
-        "$(HOSTCC) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
-    ]
-    cxxprogram = [
-        "$(HOSTCXX) -o {outs[0]} $(HOSTSTARTGROUP) {ins} {ldflags} $(HOSTLDFLAGS) $(HOSTENDGROUP)"
-    ]
 
 
 def _indirect(deps, name):
@@ -85,14 +55,9 @@ def cfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    toolchain=Toolchain,
-    commands=None,
-    label=None,
+    commands=["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    label="CC",
 ):
-    if not label:
-        label = toolchain.label + "CC"
-    if not commands:
-        commands = toolchain.cfile
     cfileimpl(self, name, srcs, deps, suffix, commands, label, "cfile", cflags)
 
 
@@ -104,20 +69,15 @@ def cxxfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    toolchain=Toolchain,
-    commands=None,
-    label=None,
+    commands=["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    label="CXX",
 ):
-    if not label:
-        label = toolchain.label + "CXX"
-    if not commands:
-        commands = toolchain.cxxfile
     cfileimpl(
         self, name, srcs, deps, suffix, commands, label, "cxxfile", cflags
     )
 
 
-def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
+def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
         if f.endswith(".h") or f.endswith(".hh"):
             cflags = cflags + [f"-I{dirname(f)}"]
@@ -130,13 +90,10 @@ def findsources(name, srcs, deps, cflags, toolchain, filerule, cwd):
                 srcs=[f],
                 deps=deps,
                 cflags=sorted(set(cflags)),
-                toolchain=toolchain,
                 cwd=cwd,
             )
             for f in filenamesof([s])
-            if f.endswith(".m")
-            or f.endswith(".mm")
-            or f.endswith(".c")
+            if f.endswith(".c")
             or f.endswith(".cc")
             or f.endswith(".cpp")
             or f.endswith(".S")
@@ -158,7 +115,6 @@ def libraryimpl(
     caller_ldflags,
     cflags,
     ldflags,
-    toolchain,
     commands,
     label,
     kind,
@@ -200,7 +156,6 @@ def libraryimpl(
             srcs,
             deps + ([hr] if hr else []),
             cflags + hf,
-            toolchain,
             kind,
             self.cwd,
         )
@@ -235,15 +190,10 @@ def clibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    toolchain=Toolchain,
-    commands=None,
-    label=None,
+    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    label="LIB",
     cfilerule=cfile,
 ):
-    if not label:
-        label = toolchain.label + "LIB"
-    if not commands:
-        commands = toolchain.clibrary
     libraryimpl(
         self,
         name,
@@ -254,7 +204,6 @@ def clibrary(
         caller_ldflags,
         cflags,
         ldflags,
-        toolchain,
         commands,
         label,
         cfilerule,
@@ -272,15 +221,10 @@ def cxxlibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    toolchain=Toolchain,
-    commands=None,
-    label=None,
+    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    label="CXXLIB",
     cxxfilerule=cxxfile,
 ):
-    if not label:
-        label = toolchain.label + "LIB"
-    if not commands:
-        commands = toolchain.cxxlibrary
     libraryimpl(
         self,
         name,
@@ -291,7 +235,6 @@ def cxxlibrary(
         caller_ldflags,
         cflags,
         ldflags,
-        toolchain,
         commands,
         label,
         cxxfilerule,
@@ -305,15 +248,12 @@ def programimpl(
     deps,
     cflags,
     ldflags,
-    toolchain,
     commands,
     label,
     filerule,
     kind,
 ):
-    cfiles = findsources(
-        self.localname, srcs, deps, cflags, toolchain, filerule, self.cwd
-    )
+    cfiles = findsources(self.localname, srcs, deps, cflags, filerule, self.cwd)
 
     lib_deps = set()
     for d in deps:
@@ -328,7 +268,7 @@ def programimpl(
         ins=cfiles + libs,
         outs=[f"={self.localname}$(EXT)"],
         deps=sorted(_indirect(lib_deps, "clibrary_files")),
-        label=toolchain.label + label,
+        label=label,
         commands=commands,
         args={
             "ldflags": collectattrs(
@@ -346,12 +286,11 @@ def cprogram(
     deps: Targets = None,
     cflags=[],
     ldflags=[],
-    toolchain=Toolchain,
-    commands=None,
+    commands=[
+        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+    ],
     label="CLINK",
 ):
-    if not commands:
-        commands = toolchain.cprogram
     programimpl(
         self,
         name,
@@ -359,7 +298,6 @@ def cprogram(
         deps,
         cflags,
         ldflags,
-        toolchain,
         commands,
         label,
         cfile,
@@ -375,12 +313,11 @@ def cxxprogram(
     deps: Targets = None,
     cflags=[],
     ldflags=[],
-    toolchain=Toolchain,
-    commands=None,
+    commands=[
+        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+    ],
     label="CXXLINK",
 ):
-    if not commands:
-        commands = toolchain.cxxprogram
     programimpl(
         self,
         name,
@@ -388,7 +325,6 @@ def cxxprogram(
         deps,
         cflags,
         ldflags,
-        toolchain,
         commands,
         label,
         cxxfile,

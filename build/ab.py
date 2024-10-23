@@ -420,7 +420,15 @@ def emit_rule(name, ins, outs, cmds=[], label=None):
     emit(".PHONY:", name, into=lines)
     if outs:
         emit(name, ":", *fouts, into=lines)
-        emit(*fouts, "&:" if len(fouts) > 1 else ":", *fins, "\x01", into=lines)
+        if len(fouts) == 1:
+            emit(*fouts, ":", *fins, "\x01", into=lines)
+        else:
+            emit("ifeq ($(MAKE4.3),yes)", into=lines)
+            emit(*fouts, "&:", *fins, "\x01", into=lines)
+            emit("else", into=lines)
+            emit(*(fouts[1:]), ":", fouts[0], into=lines)
+            emit(fouts[0], ":", *fins, "\x01", into=lines)
+            emit("endif", into=lines)
 
         if label:
             emit("\t$(hide)", "$(ECHO) $(PROGRESSINFO)", label, into=lines)
