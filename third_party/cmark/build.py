@@ -15,7 +15,6 @@ clibrary(
         "./src/inlines.c",
         "./src/iterator.c",
         "./src/latex.c",
-        "./src/main.c",
         "./src/man.c",
         "./src/node.c",
         "./src/references.c",
