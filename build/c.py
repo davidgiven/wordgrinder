@@ -20,15 +20,21 @@ endif
 """
 )
 
+def _combine(list1, list2):
+    r = list(list1)
+    for i in list2:
+        if i not in r:
+            r.append(i)
+    return r
 
 def _indirect(deps, name):
-    r = set()
+    r = []
     for d in deps:
-        r.update(d.args.get(name, {d}))
+        r = _combine(r, d.args.get(name, [d]))
     return r
 
 
-def cfileimpl(self, name, srcs, deps, suffix, commands, label, kind, cflags):
+def cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags):
     outleaf = "=" + stripext(basename(filenameof(srcs[0]))) + suffix
 
     hdr_deps = _indirect(deps, "cheader_deps")
@@ -58,7 +64,7 @@ def cfile(
     commands=["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
     label="CC",
 ):
-    cfileimpl(self, name, srcs, deps, suffix, commands, label, "cfile", cflags)
+    cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
 
 
 @Rule
@@ -72,9 +78,7 @@ def cxxfile(
     commands=["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
     label="CXX",
 ):
-    cfileimpl(
-        self, name, srcs, deps, suffix, commands, label, "cxxfile", cflags
-    )
+    cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
 
 
 def findsources(name, srcs, deps, cflags, filerule, cwd):
@@ -117,10 +121,10 @@ def libraryimpl(
     ldflags,
     commands,
     label,
-    kind,
+    filerule,
 ):
-    hdr_deps = _indirect(deps, "cheader_deps") | {self}
-    lib_deps = _indirect(deps, "clibrary_deps") | {self}
+    hdr_deps = _combine(_indirect(deps, "cheader_deps"), [self])
+    lib_deps = _combine(_indirect(deps, "clibrary_deps"), [self])
 
     hr = None
     hf = []
@@ -156,7 +160,7 @@ def libraryimpl(
             srcs,
             deps + ([hr] if hr else []),
             cflags + hf,
-            kind,
+            filerule,
             self.cwd,
         )
 
@@ -251,14 +255,13 @@ def programimpl(
     commands,
     label,
     filerule,
-    kind,
 ):
     cfiles = findsources(self.localname, srcs, deps, cflags, filerule, self.cwd)
 
-    lib_deps = set()
+    lib_deps = []
     for d in deps:
-        lib_deps.update(d.args.get("clibrary_deps", {d}))
-    libs = sorted(filenamesmatchingof(lib_deps, "*.a"))
+        lib_deps = _combine(lib_deps, d.args.get("clibrary_deps", {d}))
+    libs = filenamesmatchingof(lib_deps, "*.a")
     ldflags = collectattrs(
         targets=lib_deps, name="caller_ldflags", initial=ldflags
     )
@@ -267,7 +270,7 @@ def programimpl(
         replaces=self,
         ins=cfiles + libs,
         outs=[f"={self.localname}$(EXT)"],
-        deps=sorted(_indirect(lib_deps, "clibrary_files")),
+        deps=_indirect(lib_deps, "clibrary_files"),
         label=label,
         commands=commands,
         args={
@@ -290,6 +293,7 @@ def cprogram(
         "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CLINK",
+    cfilerule=cfile,
 ):
     programimpl(
         self,
@@ -300,8 +304,7 @@ def cprogram(
         ldflags,
         commands,
         label,
-        cfile,
-        "cprogram",
+        cfilerule,
     )
 
 
@@ -317,6 +320,7 @@ def cxxprogram(
         "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CXXLINK",
+    cxxfilerule=cxxfile,
 ):
     programimpl(
         self,
@@ -327,6 +331,5 @@ def cxxprogram(
         ldflags,
         commands,
         label,
-        cxxfile,
-        "cxxprogram",
+        cxxfilerule,
     )
