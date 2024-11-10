@@ -10,9 +10,10 @@ r = simplerule(
     ],
     commands=[
         "curl -Ls https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.bin.WIN32.zip -o {dir}/glfw.zip",
-        "cd {dir} && unzip -q glfw.zip",
+        "cd {dir} && unzip -DD -o -q glfw.zip",
     ],
     label="CURLLIBRARY",
     traits={"clibrary", "cheaders"},
-    args={"caller_cflags": ["-I{dir}/glfw-3.4.bin.WIN32/include"]},
 )
+r.args["caller_cflags"] = [f"-I{r.dir}/glfw-3.4.bin.WIN32/include"]
+r.args["cheader_deps"] = [r]
