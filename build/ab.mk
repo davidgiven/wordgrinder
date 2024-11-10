@@ -61,13 +61,12 @@ PROGRESSINFO = "[$(ruleindex)/$(rulecount)]$(eval ruleindex := $(shell expr $(ru
 endif
 
 PKG_CONFIG_HASHES = $(OBJ)/.pkg-config-hashes/target-$(word 1, $(shell $(PKG_CONFIG) --list-all | md5sum))
-HOST_PKG_CONFIG_HASHES = $(OBJ)/.pkg-config-hashes/host-$(word 1, $(shell $(HOST_PKG_CONFIG) --list-all | md5sum))
 
-$(OBJ)/build.mk : $(PKG_CONFIG_HASHES) $(HOST_PKG_CONFIG_HASHES)
-$(PKG_CONFIG_HASHES) $(HOST_PKG_CONFIG_HASHES) &:
-	$(hide) rm -rf $(OBJ)/.pkg-config-hashes
+$(OBJ)/build.mk : $(PKG_CONFIG_HASHES)
+$(PKG_CONFIG_HASHES):
 	$(hide) mkdir -p $(OBJ)/.pkg-config-hashes
-	$(hide) touch $(PKG_CONFIG_HASHES) $(HOST_PKG_CONFIG_HASHES)
+	$(hide) rm -rf $(OBJ)/.pkg-config-hashes/target-*
+	$(hide) touch $(PKG_CONFIG_HASHES)
 
 include $(OBJ)/build.mk
 

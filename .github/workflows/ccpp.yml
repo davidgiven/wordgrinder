@@ -38,6 +38,24 @@ jobs:
         name: ${{ github.event.repository.name }}.osx.${{ github.sha }}
         path: bin/WordGrinder-0.9-setup.pkg
 
+  build-haiku:
+    runs-on: ubuntu-latest
+    container: 'docker.io/hectorm/qemu-haiku:latest'
+    steps:
+      - name: vmstart
+        run: 'container-init & timeout 600 vmshell exit 0'
+
+      - name: pkgman
+        run: 'vmshell pkgman install -y make glfw_devel pkgconfig zlib_devel ncurses6_devel vim gcc pillow_python310'
+
+      - uses: 'actions/checkout@main'
+
+      - name: "copy to VM"
+        run: 'vmshell mkdir ./src/; tar -cf - ./ | vmshell tar -xf - -C ./src/'
+
+      - name: build
+        run: 'vmshell make -C ./src/ -j1'
+
   build-windows:
     runs-on: windows-latest
 
