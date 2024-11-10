@@ -1,4 +1,12 @@
-export BUILDTYPE ?= unix
+ifeq ($(BUILDTYPE),)
+    buildtype_Darwin = osx
+    buildtype_Haiku = haiku
+    BUILDTYPE := $(buildtype_$(shell uname -s ))
+	ifeq ($(BUILDTYPE),)
+		BUILDTYPE := unix
+	endif
+endif
+export BUILDTYPE
 
 ifeq ($(BUILDTYPE),windows)
 	MINGW = i686-w64-mingw32-

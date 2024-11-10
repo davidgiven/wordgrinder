@@ -4,7 +4,8 @@ from tools.build import multibin
 from config import HAS_OSX, HAS_HAIKU, IS_WINDOWS
 
 package(name="libglfw3", package="glfw3", fallback="src/c/glfw-fallback")
-package(name="opengl", package="opengl")
+if not (IS_WINDOWS or HAS_OSX or HAS_HAIKU):
+    package(name="opengl", package="opengl")
 
 multibin(
     name="font_table",

@@ -1,4 +1,4 @@
-from build.ab import normalrule, Rule, Target, export
+from build.ab import simplerule, Rule, Target, export
 from config import TEST_BINARY
 
 TESTS = [
@@ -78,10 +78,10 @@ TESTS = [
 
 @Rule
 def test(self, name, exe: Target = None):
-    normalrule(
+    simplerule(
         replaces=self,
         ins=["./" + self.localname + ".lua", exe],
-        outs=["log"],
+        outs=["=log"],
         commands=[
             "{ins[1]} --lua {ins[0]} >{outs} 2>&1 || (cat {outs} && rm -f {outs} && false)"
         ],

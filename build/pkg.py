@@ -1,81 +1,71 @@
-from build.ab import Rule, emit, Target, bubbledattrsof, filenamesof
+from build.ab import Rule, emit, Target, filenamesof
 from types import SimpleNamespace
 import os
 import subprocess
 
-emit(
-    """
-PKG_CONFIG ?= pkg-config
-PACKAGES := $(shell $(PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
 
-HOST_PKG_CONFIG ?= pkg-config
-HOST_PACKAGES := $(shell $(HOST_PKG_CONFIG) --list-all | cut -d' ' -f1 | sort)
-"""
-)
+class _PkgConfig:
+    package_present = set()
+    package_properties = {}
+    pkgconfig = None
+
+    def __init__(self, cmd):
+        assert cmd, "no pkg-config environment variable supplied"
+        self.pkgconfig = cmd
+
+        r = subprocess.run(f"{cmd} --list-all", shell=True, capture_output=True)
+        ps = r.stdout.decode("utf-8")
+        self.package_present = {l.split(" ", 1)[0] for l in ps.splitlines()}
+
+    def has_package(self, name):
+        return name in self.package_present
+
+    def get_property(self, name, flag):
+        p = f"{name}.{flag}"
+        if p not in self.package_properties:
+            r = subprocess.run(
+                f"{self.pkgconfig} {flag} {name}",
+                shell=True,
+                capture_output=True,
+            )
+            self.package_properties[p] = r.stdout.decode("utf-8").strip()
+        return self.package_properties[p]
+
+
+TargetPkgConfig = _PkgConfig(os.getenv("PKG_CONFIG"))
+
+
+def _package(self, name, package, fallback, pkgconfig):
+    if pkgconfig.has_package(package):
+        cflags = pkgconfig.get_property(package, "--cflags")
+        ldflags = pkgconfig.get_property(package, "--libs")
+
+        if cflags:
+            self.args["caller_cflags"] = [cflags]
+        if ldflags:
+            self.args["caller_ldflags"] = [ldflags]
+        self.traits.add("clibrary")
+        self.traits.add("cheaders")
+        return
+
+    assert (
+        fallback
+    ), f"Required package '{package}' not installed when materialising target '{name}'"
+
+    if "cheader_deps" in fallback.args:
+        self.args["cheader_deps"] = fallback.args["cheader_deps"]
+    if "clibrary_deps" in fallback.args:
+        self.args["clibrary_deps"] = fallback.args["clibrary_deps"]
+    if "cheader_files" in fallback.args:
+        self.args["cheader_files"] = fallback.args["cheader_files"]
+    if "clibrary_files" in fallback.args:
+        self.args["clibrary_files"] = fallback.args["clibrary_files"]
+    self.ins = fallback.ins
+    self.outs = fallback.outs
+    self.deps = fallback.deps
+    self.traits = fallback.traits
 
 
 @Rule
 def package(self, name, package=None, fallback: Target = None):
-    emit("ifeq ($(filter %s, $(PACKAGES)),)" % package)
-    if fallback:
-        emit(f"PACKAGE_DEPS_{package} := ", filenamesof(fallback))
-        emit(
-            f"PACKAGE_CFLAGS_{package} :=",
-            bubbledattrsof(fallback, "caller_cflags"),
-        )
-        emit(
-            f"PACKAGE_LDFLAGS_{package} := ",
-            bubbledattrsof(fallback, "caller_ldflags"),
-            f"$(filter %.a, $(PACKAGE_DEPS_{package}))",
-        )
-    else:
-        emit(f"$(error Required package '{package}' not installed.)")
-    emit("else")
-    emit(
-        f"PACKAGE_CFLAGS_{package} := $(shell $(PKG_CONFIG) --cflags {package})"
-    )
-    emit(
-        f"PACKAGE_LDFLAGS_{package} := $(shell $(PKG_CONFIG) --libs {package})"
-    )
-    emit(f"PACKAGE_DEPS_{package} :=")
-    emit("endif")
-
-    self.attr.caller_cflags = [f"$(PACKAGE_CFLAGS_{package})"]
-    self.attr.caller_ldflags = [f"$(PACKAGE_LDFLAGS_{package})"]
-    self.traits.add("clibrary")
-    self.traits.add("cheaders")
-
-    self.ins = []
-    self.outs = [f"$(PACKAGE_DEPS_{package})"]
-
-
-@Rule
-def hostpackage(self, name, package=None, fallback: Target = None):
-    emit("ifeq ($(filter %s, $(HOST_PACKAGES)),)" % package)
-    if fallback:
-        emit(
-            f"HOST_PACKAGE_CFLAGS_{package} :=",
-            bubbledattrsof(fallback, "caller_cflags"),
-        )
-        emit(
-            f"HOST_PACKAGE_LDFLAGS_{package} := ",
-            bubbledattrsof(fallback, "caller_ldflags"),
-        )
-        emit(f"HOST_PACKAGE_DEP_{package} := ", fallback.name)
-    else:
-        emit(f"$(error Required host package '{package}' not installed.)")
-    emit("else")
-    emit(
-        f"HOST_PACKAGE_CFLAGS_{package} := $(shell $(HOST_PKG_CONFIG) --cflags {package})"
-    )
-    emit(
-        f"HOST_PACKAGE_LDFLAGS_{package} := $(shell $(HOST_PKG_CONFIG) --libs {package})"
-    )
-    emit(f"HOST_PACKAGE_DEP_{package} := ")
-    emit("endif")
-
-    self.attr.caller_cflags = [f"$(HOST_PACKAGE_CFLAGS_{package})"]
-    self.attr.caller_ldflags = [f"$(HOST_PACKAGE_LDFLAGS_{package})"]
-
-    self.ins = []
-    self.outs = [f"$(HOST_PACKAGE_DEP_{package})"]
+    _package(self, name, package, fallback, TargetPkgConfig)

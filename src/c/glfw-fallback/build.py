@@ -1,20 +1,19 @@
-from build.ab import normalrule
+from build.ab import simplerule
 
-r = normalrule(
+r = simplerule(
     name="glfw-fallback",
     ins=[],
     outs=[
-        "glfw-3.4.bin.WIN32/include/GLFW/glfw3.h",
-        "glfw-3.4.bin.WIN32/include/GLFW/glfw3native.h",
-        "glfw-3.4.bin.WIN32/lib-mingw-w64/libglfw3.a",
+        "=glfw-3.4.bin.WIN32/include/GLFW/glfw3.h",
+        "=glfw-3.4.bin.WIN32/include/GLFW/glfw3native.h",
+        "=glfw-3.4.bin.WIN32/lib-mingw-w64/libglfw3.a",
     ],
     commands=[
-        "curl -Ls https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.bin.WIN32.zip -o {self.attr.objdir}/glfw.zip",
-        "cd {self.attr.objdir} && unzip -q glfw.zip",
+        "curl -Ls https://github.com/glfw/glfw/releases/download/3.4/glfw-3.4.bin.WIN32.zip -o {dir}/glfw.zip",
+        "cd {dir} && unzip -DD -o -q glfw.zip",
     ],
     label="CURLLIBRARY",
+    traits={"clibrary", "cheaders"},
 )
-r.traits.add("clibrary")
-r.traits.add("cheaders")
-r.materialise()
-r.attr.caller_cflags = ["-I" + r.attr.objdir + "/glfw-3.4.bin.WIN32/include"]
+r.args["caller_cflags"] = [f"-I{r.dir}/glfw-3.4.bin.WIN32/include"]
+r.args["cheader_deps"] = [r]
