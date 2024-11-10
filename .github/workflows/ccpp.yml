@@ -35,7 +35,7 @@ jobs:
     - name: upload
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}.${{ github.sha }}
+        name: ${{ github.event.repository.name }}.osx.${{ github.sha }}
         path: bin/WordGrinder-0.9-setup.pkg
 
   build-windows:
@@ -73,6 +73,6 @@ jobs:
     - name: upload
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ github.event.repository.name }}.${{ github.sha }}
+        name: ${{ github.event.repository.name }}.windows.${{ github.sha }}
         path: wordgrinder-windows.zip
 
