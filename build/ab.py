@@ -32,7 +32,8 @@ old_import = builtins.__import__
 
 class PathFinderImpl(PathFinder):
     def find_spec(self, fullname, path, target=None):
-        if not path:
+        # The second test here is needed for Python 3.9.
+        if not path or not path[0]:
             path = ["."]
         if len(path) != 1:
             return None
