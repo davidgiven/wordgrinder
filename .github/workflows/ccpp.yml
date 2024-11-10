@@ -46,7 +46,7 @@ jobs:
         run: 'container-init & timeout 600 vmshell exit 0'
 
       - name: pkgman
-        run: 'vmshell pkgman install -y make glfw-devel'
+        run: 'vmshell pkgman install -y make glfw_devel pkgconfig zlib_devel ncurses6_devel vim gcc pillow_python310'
 
       - uses: 'actions/checkout@main'
 
