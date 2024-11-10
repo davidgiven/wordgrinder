@@ -32,7 +32,8 @@ old_import = builtins.__import__
 
 class PathFinderImpl(PathFinder):
     def find_spec(self, fullname, path, target=None):
-        if not path:
+        # The second test here is needed for Python 3.9.
+        if not path or not path[0]:
             path = ["."]
         if len(path) != 1:
             return None
@@ -114,7 +115,7 @@ def Rule(func):
         t.callback = func
         t.traits.add(func.__name__)
         if "args" in kwargs:
-            t.args |= kwargs["args"]
+            t.args.update(kwargs["args"])
             del kwargs["args"]
         if "traits" in kwargs:
             t.traits |= kwargs["traits"]
@@ -354,8 +355,15 @@ class TargetsMap:
         return output
 
 
+def _removesuffix(self, suffix):
+    # suffix='' should not call self[:-0].
+    if suffix and self.endswith(suffix):
+        return self[:-len(suffix)]
+    else:
+        return self[:]
+
 def loadbuildfile(filename):
-    filename = filename.replace("/", ".").removesuffix(".py")
+    filename = _removesuffix(filename.replace("/", "."), ".py")
     builtins.__import__(filename)
 
 
