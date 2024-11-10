@@ -54,7 +54,7 @@ jobs:
         run: 'vmshell mkdir ./src/; tar -cf - ./ | vmshell tar -xf - -C ./src/'
 
       - name: build
-        run: 'vmshell make -C ./src/ -j1 V=1'
+        run: 'vmshell make -C ./src/'
 
   build-windows:
     runs-on: windows-latest
