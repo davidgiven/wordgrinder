@@ -217,14 +217,16 @@ function WordProcessor(filename)
     local oldmb = false
     local oldmx, oldmy
     local function handle_mouse_event(m)
-        if m.b and not oldmb then
-            oldmx = m.x
-            oldmy = m.y
-            Cmd.UnsetMark()
-            Cmd.GotoXYPosition(m.x, m.y)
-            Cmd.SetMark()
-        else
-            Cmd.GotoXYPosition(m.x, m.y)
+        if m.b then
+            if not oldmb then
+                oldmx = m.x
+                oldmy = m.y
+                Cmd.UnsetMark()
+                Cmd.GotoXYPosition(m.x, m.y)
+                Cmd.SetMark()
+            else
+                Cmd.GotoXYPosition(m.x, m.y)
+            end
         end
         if not m.b and oldmb and (m.x == oldmx) and (m.y == oldmy) then
             Cmd.UnsetMark();
