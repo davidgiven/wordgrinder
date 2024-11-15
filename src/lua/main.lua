@@ -39,6 +39,8 @@ HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE") or "."
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
 
+local LAST_RECENT_FILE = {}
+
 -- Determine the installation directory (Windows only).
 
 if (ARCH == "windows") then
@@ -164,7 +166,11 @@ function WordProcessor(filename)
     RedrawScreen()
 
     if filename then
-        if not Cmd.LoadDocumentSet(filename) then
+        if filename == LAST_RECENT_FILE then
+            local r = GlobalSettings.recents or ({} :: {string})
+            filename = r[1] or nil
+        end
+        if filename and not Cmd.LoadDocumentSet(filename) then
             -- As a special case, if we tried to load a document from the command line and it
             -- doesn't exist, then we prime the document name so that saving the file is easy.
             documentSet.name = filename
@@ -393,16 +399,26 @@ the program starts up (but after any --lua files). It defaults to:
             return 1
         end
 
-        local function do_filename(fn)
+        local function check_file_not_specified()
             if filename then
                 CLIError("you may only specify one filename")
             end
+        end
+
+        local function do_filename(fn)
+            check_file_not_specified()
             filename = fn
             return 1
         end
 
         local function do_8bit(opt)
             SetUnicode(false)
+            return 0
+        end
+
+        local function do_recent(opt)
+            check_file_not_specified()
+            filename = LAST_RECENT_FILE
             return 0
         end
 
@@ -420,6 +436,8 @@ the program starts up (but after any --lua files). It defaults to:
             ["convert"]    = do_convert,
             ["config"]     = do_config,
             ["8"]          = do_8bit,
+            ["r"]          = do_recent,
+            ["recent"]     = do_recent,
             [FILENAME_ARG] = do_filename,
             [UNKNOWN_ARG]  = unrecognisedarg,
         }
@@ -430,6 +448,7 @@ the program starts up (but after any --lua files). It defaults to:
     end
 
     if filename and
+            (filename ~= LAST_RECENT_FILE) and
             not filename:find("^/") and
             not filename:find("^[a-zA-Z]:[/\\]") then
         filename = GetCwd() .. "/" .. filename

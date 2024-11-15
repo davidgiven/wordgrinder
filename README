@@ -171,7 +171,7 @@ Changed the cursor shape for visibility. Use the system clipboard where
 possible. Added mouse support. Switch interpreters from Lua to Luau, and
 refactor _all_ the code to be type safe in strict mode, finding and fixing so
 many minor bugs along the way. The document index is now written to files
-correctly.
+correctly. `--recent` allows loading the last edited document.
 
 WordGrinder 0.8: 2020-10-13: started out as a bugfix release but then I got
 carried away. New features: a paragraph style for numbered bulletpoints; more
