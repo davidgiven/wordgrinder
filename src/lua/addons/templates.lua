@@ -62,3 +62,33 @@ function Cmd.CreateDocumentSetFromTemplate(): (boolean, string?)
 	return r, e
 end
 
+-----------------------------------------------------------------------------
+-- Create a new document set from the default template. If there isn't one,
+-- you get a vanilla blank document set.
+
+function Cmd.LoadDefaultTemplate()
+	if not ConfirmDocumentErasure() then
+		return false
+	end
+
+	ResetDocumentSet()
+	local templatename = GlobalSettings.directories.templates.."/default.wg"
+	local r, e = wg.readfile(templatename)
+	if r then
+		d, e = LoadFromString(r)
+		if d then
+			local fileformat = d.fileformat or 1
+			if fileformat ~= FILEFORMAT then
+				NonmodalMessage("Cannot load default template: please update it.")
+			else
+				Cmd.LoadDocumentSet(templatename)
+			end
+		else
+			NonmodalMessage("Cannot load default template.")
+		end
+	end
+
+	documentSet.name = ""
+	return r, e
+end
+

@@ -165,6 +165,7 @@ function WordProcessor(filename)
     ResizeScreen()
     RedrawScreen()
 
+    Cmd.LoadDefaultTemplate()
     if filename then
         if filename == LAST_RECENT_FILE then
             local r = GlobalSettings.recents or ({} :: {string})

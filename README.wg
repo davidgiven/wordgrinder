@@ -35,7 +35,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.1.sticky_selection: false
 .documents.1.sw: 2
 .documents.1.viewmode: 1
-.documents.1.wordcount: 4035
+.documents.1.wordcount: 4108
 .documents.2.co: 1
 .documents.2.cp: 1
 .documents.2.cw: 1
@@ -53,7 +53,7 @@ WordGrinder dumpfile v3: this is a text file; diff me!
 .documents.3.viewmode: 2
 .documents.3.wordcount: 173
 .fileformat: 8
-.findtext: "clip"
+.findtext: "template"
 .idletime: 3
 .menu.accelerators.BACKSPACE: "ZDPC"
 .menu.accelerators.DELETE: "ZDNC"
@@ -212,8 +212,9 @@ H2 Templates
 P You may save a WordGrinder file as a template using File→Save as template. These files get set in a special (configurable) template directory. When creating a new document with File→Create from template, the template will be loaded but the current document will not be set. This means that when saving, you’ll be prompted for a filename in the normal way.
 P Templates may contain anything which can be saved into a document set, including content, multiple subdocuments, keyboard bindings, local settings, etc. Use templates if you have a particular set of bindings you like and want them automatically set up for any new document.
 P The directory in which templates are stored is configured via File→Global Settings→Directories.
+P If you have a template called default.wg, then it will be loaded on start or through File→New document set. This allows you to save any default settings (such as keybindings) that you want new documents to have.
 H2 Menu customisation
-P You can change any of the keyboard shortcuts assigned to menu items. These are then saved as part of the document set, so each WordGrinder file takes its keyboard configuration with it.
+P You can change any of the keyboard shortcuts assigned to menu items. These are then saved as part of the document set, so each WordGrinder file takes its keyboard configuration with it. You can also save keyboard shortcuts to templates; see the section above for information about those.
 P To do this, open the menu, navigate to the entry you want to change, and then press CTRL+V followed by the key you want to bind. You can’t bind keys used to type text into your document (e.g. A). You also can’t bind a key that’s already in use elsewhere. You can remove a binding by navigating to the appropriate menu item and pressing CTRL+X. Watch the status bar while a menu’s open for reminders.
 P All WordGrinder keybindings (except ESC, and menu and dialogue navigation) appear on the menus, so they’re all configurable. Things like the cursor keys appear in the Navigation menu.
 P If you get irrecoverably confused, you can reset all the keybindings by opening a menu and doing CTRL+R.
@@ -251,7 +252,7 @@ L This generates an ASCII Troff file suitable for use with the ms macro package.
 L Non-ASCII characters are encoded using the \[char1234] mechanism, which means that if you’re lucky enough to have a version of groff modern enough to handle proper Unicode, it should all work. If you don’t, then characters in the ISO-8859-1 range will probably work, and all others will be ignored. (I don’t use the \[u1234] idiom because this causes groff 1.18.1 to crash horribly when exporting this document. Blame the groff team; they’ve been promising real UTF-8 for years now.)
 L Unfortunately the troff format has some limitations which means that switching from one character style to another sometimes involves inserting a space. Please get in touch if you know how to get around this.
 H2 Manually configuring WordGrinder
-P Nearly all WordGrinder configuration options are automatically saved with your document set. Menu bindings, settings, etc; you can change them through the user interface and they’ll be saved into the file and reloaded later. The rare system-wide configuration options can be found in File→Global Settings.
+P Nearly all WordGrinder configuration options are automatically saved with your document set. Menu bindings, settings, etc; you can change them through the user interface and they’ll be saved into the file and reloaded later. You can also save to the default.wg template if you want these settings to be used automatically for new documents. The rare system-wide configuration options can be found in File→Global Settings.
 P However, there is also a mechanism for allowing these settings to be overridden. I use this to have different keybindings on machines with different keyboards. It is currently very clunky and under development, and so may change without notice.
 P To use, run this command:
 Q wordgrinder --help

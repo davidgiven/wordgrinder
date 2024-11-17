@@ -659,16 +659,6 @@ function Cmd.TerminateProgram()
 	return false
 end
 
-function Cmd.CreateBlankDocumentSet()
-	if ConfirmDocumentErasure() then
-		ResetDocumentSet()
-		QueueRedraw()
-		return true
-	end
-
-	return false
-end
-
 function Cmd.ChangeParagraphStyle(style)
 	if not documentStyles[style] then
 		ModalMessage("Unknown paragraph style", "Sorry! I don't recognise that style. (This user interface will be improved.)")
