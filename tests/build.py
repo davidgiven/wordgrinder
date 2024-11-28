@@ -18,6 +18,7 @@ TESTS = [
     "filesystem",
     "find-and-replace",
     "get-style-from-word",
+    "heading-styles",
     "immutable-paragraphs",
     "import-from-html",
     "import-from-markdown",

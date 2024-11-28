@@ -33,6 +33,7 @@ type DocumentStyle = {
 	list: boolean?,
 	firstindent: number?,
 	numbered: boolean?,
+	nextstyle: string?
 }
 
 type DocumentStyles = {[number | string]: DocumentStyle}
@@ -275,24 +276,28 @@ function UpdateDocumentStyles()
 			name = "H1",
 			above = 3,
 			below = 1,
+			nextstyle = "P",
 		},
 		{
 			desc = "Heading #2",
 			name = "H2",
 			above = 2,
 			below = 1,
+			nextstyle = "P",
 		},
 		{
 			desc = "Heading #3",
 			name = "H3",
 			above = 1,
 			below = 1,
+			nextstyle = "P",
 		},
 		{
 			desc = "Heading #4",
 			name = "H4",
 			above = 1,
 			below = 1,
+			nextstyle = "P",
 		},
 		{
 			desc = "Indented text",

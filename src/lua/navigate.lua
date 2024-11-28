@@ -393,7 +393,8 @@ function Cmd.SplitCurrentParagraph()
 	local cp, cw = currentDocument.cp, currentDocument.cw
 	local paragraph = currentDocument[cp]
 	local p1 = CreateParagraph(paragraph.style, paragraph:sub(1, cw-1))
-	local p2 = CreateParagraph(paragraph.style, paragraph:sub(cw))
+	local p2style = documentStyles[p1.style].nextstyle or p1.style
+	local p2 = CreateParagraph(p2style, paragraph:sub(cw))
 
 	currentDocument[cp] = p2
 	currentDocument:insertParagraphBefore(p1, cp)
@@ -654,16 +655,6 @@ end
 function Cmd.TerminateProgram()
 	if ConfirmDocumentErasure() then
 		wg.exit(0)
-	end
-
-	return false
-end
-
-function Cmd.CreateBlankDocumentSet()
-	if ConfirmDocumentErasure() then
-		ResetDocumentSet()
-		QueueRedraw()
-		return true
 	end
 
 	return false

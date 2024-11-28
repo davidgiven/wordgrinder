@@ -70,10 +70,14 @@ for use when importing or exporting WordGrinder files.
 Sets the name of the user config file.
 
 .TP
-.B \-8\
+.B -8
 Forces 8-bit ISO-8859-1 mode. No Unicode drawing characters are used and
 non-ISO-8859-1 characters are drawn as question marks.
 
+.TP
+.B --recent
+On startup, loads the most recent file edited by WordGrinder. If there is no
+most recent file, you get an empty document.
 
 .SH CONFIGURATION
 
