@@ -393,7 +393,7 @@ function Cmd.SplitCurrentParagraph()
 	local cp, cw = currentDocument.cp, currentDocument.cw
 	local paragraph = currentDocument[cp]
 	local p1 = CreateParagraph(paragraph.style, paragraph:sub(1, cw-1))
-	local p2style = documentStyles[p1.style].nextstyle or "P"
+	local p2style = documentStyles[p1.style].nextstyle or p1.style
 	local p2 = CreateParagraph(p2style, paragraph:sub(cw))
 
 	currentDocument[cp] = p2
