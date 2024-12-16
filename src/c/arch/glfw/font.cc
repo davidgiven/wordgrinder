@@ -15,7 +15,7 @@ extern const FileDescriptor font_table[];
 class Font
 {
 public:
-    virtual ~Font(){};
+    virtual ~Font() {};
 
 public:
     uint8_t* data;
@@ -31,15 +31,15 @@ public:
 class DynamicFont : public Font
 {
 public:
-	DynamicFont(FILE* fp)
-	{
+    DynamicFont(FILE* fp)
+    {
         (void)fseek(fp, 0, SEEK_END);
         unsigned len = ftell(fp);
         (void)fseek(fp, 0, SEEK_SET);
 
         data = new uint8_t[len];
         fread(data, 1, len, fp);
-	}
+    }
 
     ~DynamicFont()
     {
@@ -53,27 +53,27 @@ struct Page
     stbtt_pack_context ctx;
     GLuint texture;
 
-	Page()
-	{
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    Page()
+    {
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-		stbtt_PackBegin(&ctx,
-			&textureData[0],
-			PAGE_WIDTH,
-			PAGE_HEIGHT,
-			PAGE_WIDTH,
-			1,
-			NULL);
-	}
+        stbtt_PackBegin(&ctx,
+            &textureData[0],
+            PAGE_WIDTH,
+            PAGE_HEIGHT,
+            PAGE_WIDTH,
+            1,
+            NULL);
+    }
 
-	~Page()
-	{
-		stbtt_PackEnd(&ctx);
-		glDeleteTextures(1, &texture);
-	}
+    ~Page()
+    {
+        stbtt_PackEnd(&ctx);
+        glDeleteTextures(1, &texture);
+    }
 };
 
 struct CharData
@@ -136,19 +136,19 @@ void loadFonts()
 
 void unloadFonts()
 {
-	fonts.clear();
+    fonts.clear();
 }
 
 static Page* addPage()
 {
-	pages.push_back(std::make_unique<Page>());
-	return pages.back().get();
+    pages.push_back(std::make_unique<Page>());
+    return pages.back().get();
 }
 
 void flushFontCache()
 {
-	pages.clear();
-	chardata.clear();
+    pages.clear();
+    chardata.clear();
 }
 
 static int rawRender(Font& font, Page* page, CharData& cd, uni_t c)
@@ -181,8 +181,8 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         style |= ITALIC;
 
     uint32_t key = c | (style << 24);
-	auto [it, inserted] = chardata.emplace(key, CharData{});
-	auto& cd = it->second;
+    auto [it, inserted] = chardata.emplace(key, CharData{});
+    auto& cd = it->second;
     if (inserted)
     {
         Page* page = pages.empty() ? addPage() : pages.back().get();
@@ -191,7 +191,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
         if (!font)
             return;
 
-		cd.key = key;
+        cd.key = key;
 
         /* First try rendering into the current page. If that fails, the
          * page is full and we need a new one. */
@@ -202,7 +202,7 @@ static void renderTtfChar(uni_t c, uint8_t attrs, float x, float y)
             if (!rawRender(*font, page, cd, c))
             {
                 printf("Unrenderable codepoint %d\n", c);
-				pages.pop_back();
+                pages.pop_back();
                 return;
             }
         }
@@ -245,6 +245,14 @@ void printChar(const cell_t* cell, float x, float y)
 {
     GLfloat* fg = (GLfloat*)&cell->fg;
     GLfloat* bg = (GLfloat*)&cell->bg;
+    GLfloat nfg[3];
+    if (cell->attr & DPY_DIM)
+    {
+        constexpr float ALPHA = 0.4;
+        for (int i = 0; i < 3; i++)
+            nfg[i] = fg[i] * ALPHA + bg[i] * (1.0 - ALPHA);
+        fg = &nfg[0];
+    }
 
     /* Draw background. */
 
