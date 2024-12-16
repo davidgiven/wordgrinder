@@ -196,7 +196,7 @@ local GlobalSettingsMenu = CreateMenu("Global settings",
 
 local FileMenu = CreateMenu("File",
 {
-	E("FN",         "N", "New document set",          nil,         Cmd.CreateBlankDocumentSet),
+	E("FN",         "N", "New document set",          nil,         Cmd.LoadDefaultTemplate),
 	E("FO",         "O", "Load document set...",      nil,         Cmd.LoadDocumentSet),
 	E("FS",         "S", "Save document set",         "^S",        Cmd.SaveCurrentDocument),
 	E("FA",         "A", "Save document set as...",   nil,         Cmd.SaveCurrentDocumentAs),
