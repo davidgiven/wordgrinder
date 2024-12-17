@@ -70,6 +70,7 @@ TESTS = [
     "weirdness-styling-unicode",
     "weirdness-upgrade-0.6-with-clipboard",
     "weirdness-word-left-from-end-of-line",
+    "weirdness-word-left-on-first-word-in-doc",
     "weirdness-word-right-to-last-word-in-doc",
     "windows-installdir",
     "word",
