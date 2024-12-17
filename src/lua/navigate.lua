@@ -88,15 +88,15 @@ function Cmd.GotoNextParagraphW()
 end
 
 function Cmd.GotoPreviousWord()
-	if (currentDocument.cw == 1) then
-		QueueRedraw()
-		return false
-	end
-
 	if Cmd.GotoPreviousChar() then
 		-- If that worked, we weren't at the beginning of the word.
 		currentDocument.co = 1
 	else
+		if (currentDocument.cw == 1) then
+			QueueRedraw()
+			return false
+		end
+
 		currentDocument.cw = currentDocument.cw - 1
 		currentDocument.co = 1
 	end
