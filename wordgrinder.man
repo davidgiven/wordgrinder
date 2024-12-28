@@ -75,6 +75,11 @@ Forces 8-bit ISO-8859-1 mode. No Unicode drawing characters are used and
 non-ISO-8859-1 characters are drawn as question marks.
 
 .TP
+.B --no-ncurses-colour
+Forces ncurses not to enable colour support, even if the terminal claims it has
+it. This is intended for use when the terminal's colour support is broken.
+
+.TP
 .B --recent
 On startup, loads the most recent file edited by WordGrinder. If there is no
 most recent file, you get an empty document.
