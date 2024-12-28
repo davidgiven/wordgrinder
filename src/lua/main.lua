@@ -423,6 +423,10 @@ the program starts up (but after any --lua files). It defaults to:
             return 0
         end
 
+        local function do_nothing(arg)
+            return 0
+        end
+
         local function unrecognisedarg(arg: string)
             CLIError("unrecognised option '", arg, "' --- try --help for help")
             assert(false)
@@ -439,6 +443,7 @@ the program starts up (but after any --lua files). It defaults to:
             ["8"]          = do_8bit,
             ["r"]          = do_recent,
             ["recent"]     = do_recent,
+            ["no-ncurses-colour"] = do_nothing,
             [FILENAME_ARG] = do_filename,
             [UNKNOWN_ARG]  = unrecognisedarg,
         }

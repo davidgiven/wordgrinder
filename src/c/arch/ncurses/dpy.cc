@@ -19,6 +19,7 @@
 static bool use_italics = false;
 #endif
 
+static bool enable_colours = true;
 static bool use_colours = false;
 static int currentAttr = 0;
 static short currentPair = 0;
@@ -32,13 +33,23 @@ typedef struct
 static std::vector<colour_t> colours;
 static std::vector<pair_t> colourPairs;
 
-void dpy_init(const char* argv[]) {}
+void dpy_init(const char* argv[])
+{
+    while (*argv)
+    {
+        if (strcmp(*argv, "--no-ncurses-colour") == 0)
+            enable_colours = false;
+        if (strcmp(*argv, "--") == 0)
+            break;
+        argv++;
+    }
+}
 
 void dpy_start(void)
 {
     initscr();
 
-    use_colours = has_colors() && can_change_color();
+    use_colours = enable_colours && has_colors() && can_change_color();
     if (use_colours)
         start_color();
 
@@ -62,8 +73,8 @@ void dpy_start(void)
 
 void dpy_shutdown(void)
 {
-	colours.clear();
-	colourPairs.clear();
+    colours.clear();
+    colourPairs.clear();
     endwin();
 }
 
@@ -144,7 +155,7 @@ static uint8_t lookup_colour(const colour_t* colour)
     }
 
     uint8_t id = colours.size() + FIRST_COLOUR_ID;
-	colours.emplace_back(*colour);
+    colours.emplace_back(*colour);
     init_color(id, colour->r * 1000.0, colour->g * 1000.0, colour->b * 1000.0);
     return id;
 }
@@ -169,7 +180,7 @@ void dpy_setcolour(const colour_t* fg, const colour_t* bg)
     }
 
     currentPair = colourPairs.size() + FIRST_PAIR_ID;
-	colourPairs.emplace_back(pair_t{fgc, bgc});
+    colourPairs.emplace_back(pair_t{fgc, bgc});
 
     init_pair(currentPair, fgc, bgc);
     update_attrs();
