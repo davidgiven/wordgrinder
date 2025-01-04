@@ -18,7 +18,7 @@ do
 		if (ARCH == "windows") then
 			return assert(WINDOWS_INSTALL_DIR) .. "/Dictionaries/"
 		else
-			return "/etc/dictionaries-common/words"
+			return DEFAULT_DICTIONARY_PATH
 		end
 	end
 
