@@ -9,7 +9,7 @@ local function unset(s)
 	return a
 end
 
-SetSystemDictionaryForTesting({"lower", "UPPER"})
+SetSystemDictionaryForTesting({"lower", "UPPER", "there's"})
 
 Cmd.InsertStringIntoWord("fnord")
 Cmd.AddToUserDictionary()
@@ -38,6 +38,11 @@ FireEvent("DrawWord", payload)
 AssertTableEquals({"fnord.", 0, 0},
 	{payload.word, payload.cstyle, payload.ostyle})
 
+local payload = { word="There’s", cstyle=0, ostyle=0 }
+FireEvent("DrawWord", payload)
+AssertTableEquals({"There’s", wg.DIM, 0},
+	{payload.word, payload.cstyle, payload.ostyle})
+
 local payload = { word="notfound", cstyle=0, ostyle=0 }
 FireEvent("DrawWord", payload)
 AssertTableEquals({"notfound", wg.DIM, 0},
@@ -58,6 +63,11 @@ AssertEquals(true, IsWordMisspelt("Upper", false))
 
 AssertEquals(false, IsWordMisspelt("UPPER", true))
 AssertEquals(false, IsWordMisspelt("UPPER", false))
+
+AssertEquals(false, IsWordMisspelt("there’s", false))
+AssertEquals(true, IsWordMisspelt("There’s", false))
+AssertEquals(false, IsWordMisspelt("there’s", true))
+AssertEquals(false, IsWordMisspelt("There’s", true))
 
 documentSet.addons.spellchecker.useuserdictionary = true
 documentSet.addons.spellchecker.usesystemdictionary = true
