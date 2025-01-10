@@ -70,11 +70,19 @@ static void key_cb(
     if (action == GLFW_RELEASE)
         return;
 
+    int ascii = 0;
+    if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
+    {
+        const char* name = glfwGetKeyName(key, scancode);
+        if (name)
+            ascii = toupper(name[0]);
+    }
+
     if (mods & GLFW_MOD_CONTROL)
     {
-        if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
+        if (ascii)
         {
-            keyboardQueue.push_back(-((key - GLFW_KEY_A + 1) | VKM_CTRLASCII));
+            keyboardQueue.push_back(-((ascii - 'A' + 1) | VKM_CTRLASCII));
             return;
         }
         if (key == GLFW_KEY_SPACE)
@@ -118,10 +126,10 @@ static void key_cb(
 
             return;
         }
-        if ((key >= GLFW_KEY_A) && (key <= GLFW_KEY_Z))
+        if (ascii)
         {
             keyboardQueue.push_back(-GLFW_KEY_ESCAPE);
-            keyboardQueue.push_back('A' + (key - GLFW_KEY_A));
+            keyboardQueue.push_back(ascii);
             return;
         }
     }
@@ -339,7 +347,7 @@ void dpy_sync(void)
     int sh = h / fontHeight;
     if (!screen || (screenWidth != sw) || (screenHeight != sh))
     {
-        delete [] screen;
+        delete[] screen;
         screenWidth = sw;
         screenHeight = sh;
         screen = new cell_t[screenWidth * screenHeight];
