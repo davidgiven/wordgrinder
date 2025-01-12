@@ -9,22 +9,23 @@ local table_concat = table.concat
 
 local import_table =
 {
-	["wg"] = Cmd.LoadDocumentSet,
-	["odt"] = Cmd.ImportODTFile,
 	["html"] = Cmd.ImportHTMLFile,
-	["txt"] = Cmd.ImportTextFile 
+	["md"] = Cmd.ImportMarkdownFile,
+	["odt"] = Cmd.ImportODTFile,
+	["txt"] = Cmd.ImportTextFile,
+	["wg"] = Cmd.LoadDocumentSet,
 }
 
 local export_table =
 {
-	["wg"] = Cmd.SaveCurrentDocumentAs,
-	["odt"] = Cmd.ExportODTFile,
 	["html"] = Cmd.ExportHTMLFile,
-	["tr"] = Cmd.ExportTroffFile,
-	["tex"] = Cmd.ExportLatexFile, 
-	["txt"] = Cmd.ExportTextFile,
 	["md"] = Cmd.ExportMarkdownFile,
+	["odt"] = Cmd.ExportODTFile,
 	["org"] = Cmd.ExportOrgFile,
+	["tex"] = Cmd.ExportLatexFile, 
+	["tr"] = Cmd.ExportTroffFile,
+	["txt"] = Cmd.ExportTextFile,
+	["wg"] = Cmd.SaveCurrentDocumentAs,
 --	["rtf"] = Cmd.ExportRTFFile,
 }
 
