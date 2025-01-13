@@ -56,6 +56,9 @@ AssertEquals(false, IsWordMisspelt("Lower", true))
 AssertEquals(false, IsWordMisspelt("lower", false))
 AssertEquals(true, IsWordMisspelt("Lower", false))
 
+AssertEquals(true, IsWordMisspelt("LOWER", true))
+AssertEquals(true, IsWordMisspelt("LOWER", false))
+
 AssertEquals(true, IsWordMisspelt("upper", true))
 AssertEquals(true, IsWordMisspelt("Upper", true))
 AssertEquals(true, IsWordMisspelt("upper", false))

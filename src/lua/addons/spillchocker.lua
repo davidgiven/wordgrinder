@@ -96,7 +96,7 @@ function GetUserDictionary(): {[string]: string}
 		for _, p in ipairs(d) do
 			if (p.style == "V") then
 				local w = GetWordSimpleText(p[1])
-				c[w:lower()] = w
+				c[w] = w
 			end
 		end
 		user_dictionary_cache = c
@@ -118,7 +118,7 @@ function GetSystemDictionary(): {[string]: string}
 			if data then
 				local fp = CreateIStream(data)
 				for s in fp:lines() do
-					c[s:lower()] = s
+					c[s] = s
 				end
 			else
 				NonmodalMessage("Failed to load system dictionary: "
@@ -136,7 +136,7 @@ function SetSystemDictionaryForTesting(array)
 	system_dictionary_cache = c
 
 	for _, w in ipairs(array) do
-		c[w:lower()] = w
+		c[w] = w
 	end
 end
 
@@ -156,9 +156,10 @@ function IsWordMisspelt(word, firstword)
 		local sci = scs:lower()
 		if (sci == "")
 			or (not sci:find("[a-zA-Z]"))
-			or (#sci < 3)
-			or (systemdict[sci] == scs)
-			or (userdict[sci] == scs)
+			-- If the capitalisation matches.
+			or (systemdict[scs] == scs)
+			or (userdict[scs] == scs)
+			-- If the capitalisation does not match, but this is the first word of a sentence.
 			or (firstword and OnlyFirstCharIsUppercase(scs) and (systemdict[sci] == sci))
 			or (firstword and OnlyFirstCharIsUppercase(scs) and (userdict[sci] == sci))
 		then
@@ -178,7 +179,8 @@ function Cmd.AddToUserDictionary()
 
 	if (word ~= "") then
 		if (not GetUserDictionary()[word]) and
-				(not GetSystemDictionary()[word]) then
+			(not GetSystemDictionary()[word])
+		then
 			local d = get_user_dictionary_document()
 			d:appendParagraph(CreateParagraph("V", word))
 			documentSet:touch()
