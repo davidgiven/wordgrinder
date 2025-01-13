@@ -202,7 +202,7 @@ LB Italicised text
 LB Underlined text
 LB Bold text
 LB And any combinations of the above
-P That’s all. To apply them, select some text and then use Style→Italic (CTRL+I) or Style→Underline (CTRL+B) to apply. To remove styles, use Style→Plain (CTRL+O). When you type type new text, it will always appear unstyled (even if in the middle of a styled word).
+P That’s all. To apply them, select some text and then use Style→Italic (CTRL+I) or Style→Underline (CTRL+U) to apply. To remove styles, use Style→Plain (CTRL+O). When you type type new text, it will always appear unstyled (even if in the middle of a styled word).
 P Tip: to type a new word in a particular character style, make sure nothing’s selected, press CTRL+I, CTRL+B or CTRL+U to toggle the insertion state (look down at the right hand side of the status bar), and then type.
 H3 Paragraph styles
 P WordGrinder supports a number of paragraph styles. See Style→Paragraph Styles (CTRL+P) for the list. Each style applies to a complete paragraph. If you want to see what style each paragraph has set, use Style→Set Margin Mode→Show Paragraph Styles. The style names will be displayed in the left-hand margin.
