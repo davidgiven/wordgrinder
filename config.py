@@ -19,3 +19,5 @@ if IS_WINDOWS:
     TEST_BINARY = "src/c/+wordgrinder-wincon"
 else:
     TEST_BINARY = "src/c/+wordgrinder-ncurses"
+
+DEFAULT_DICTIONARY_PATH = "/usr/share/dict/words"

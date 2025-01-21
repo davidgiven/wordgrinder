@@ -36,6 +36,17 @@ declare function WantTerminators(): boolean
 declare function NonmodalMessage(s: string)
 declare function QueueRedraw()
 
+declare HOME: string
+declare CONFIGDIR: string
+declare FRONTEND: string
+declare DEBUG: boolean
+declare VERSION: string
+declare FILEFORMAT: number
+declare ARCH: string
+declare HOME: string
+declare WINDOWS_INSTALL_DIR: string?
+declare DEFAULT_DICTIONARY_PATH: string
+
 declare Cmd: {[string]: any}
 Cmd = {}
 
