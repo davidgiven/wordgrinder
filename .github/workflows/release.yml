@@ -60,6 +60,7 @@ jobs:
         assets: | 
           wordgrinder-*.tar.xz
           WordGrinder-*-setup.exe
+        fail-if-no-assets: false
 
     - name: date
       run: |
@@ -109,6 +110,7 @@ jobs:
         tag: dev
         assets: | 
           WordGrinder-*-setup.pkg
+        fail-if-no-assets: false
 
     - name: date
       run: |
