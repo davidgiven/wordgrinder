@@ -61,6 +61,10 @@ jobs:
           wordgrinder-*.tar.xz
           WordGrinder-*-setup.exe
 
+    - name: date
+      run: |
+        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+
     - name: release
       uses: softprops/action-gh-release@v1
       with:
@@ -72,10 +76,12 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
+  release-macos:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        path: 'wordgrinder'
 
     - name: brew
       run: |
@@ -103,6 +109,10 @@ jobs:
         tag: dev
         assets: | 
           WordGrinder-*-setup.pkg
+
+    - name: date
+      run: |
+        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
 
     - name: release
       uses: softprops/action-gh-release@v1
