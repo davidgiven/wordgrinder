@@ -152,7 +152,7 @@ function WordProcessor(filename: string? | {any})
     end
 
     wg.initscreen()
-	FireEvent("ScreenInitialised")
+    FireEvent("ScreenInitialised")
     ResizeScreen()
     RedrawScreen()
 
@@ -318,6 +318,9 @@ Options:
                                (remaining arguments are passed to the script)
    -c    --convert src dest    Converts from one file format to another
          --config file.lua     Sets the name of the user config file
+   -r    --recent              Automatically load the most recently used file
+   -8    --no-unicode          Use ISO-8859-1 characters only
+         --no-ncurses-colour   Don't use colours on the terminal
 
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
@@ -431,6 +434,7 @@ the program starts up (but after any --lua files). It defaults to:
             ["convert"]    = do_convert,
             ["config"]     = do_config,
             ["8"]          = do_8bit,
+            ["no-unicode"] = do_8bit,
             ["r"]          = do_recent,
             ["recent"]     = do_recent,
             ["no-ncurses-colour"] = do_nothing,
