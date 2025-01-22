@@ -471,7 +471,9 @@ function CreateIStream(data: string): any
 				return function()
 					return self:read("*l")
 				end
-			end
+			end,
+
+			close = function(self) end,
 		}
 	})
 
