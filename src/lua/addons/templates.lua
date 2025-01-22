@@ -75,7 +75,7 @@ function Cmd.LoadDefaultTemplate()
 	local templatename = GlobalSettings.directories.templates.."/default.wg"
 	local r, e = wg.readfile(templatename)
 	if r then
-		local d, e = LoadFromString(r)
+		local d, e = LoadFromString(templatename, r)
 		if d then
 			local fileformat = d.fileformat or 1
 			if fileformat ~= FILEFORMAT then
