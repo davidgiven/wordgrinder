@@ -594,7 +594,7 @@ function LoadFromHeaderlessString(s)
 	return loadfromstreamt(CreateIStream(s))
 end
 
-function LoadFromString(data: string): (DocumentSet?, string?)
+function LoadFromString(filename: string, data: string): (DocumentSet?, string?)
 	local fp = CreateIStream(data)
 
 	local loader = nil
@@ -620,7 +620,7 @@ function LoadFromFile(filename): (DocumentSet?, string?)
 		return nil, ("'"..filename.."' could not be opened: "..e)
 	end
 	assert(data)
-	return LoadFromString(data)
+	return LoadFromString(filename, data)
 end
 
 local function loaddocument(filename): (DocumentSet?, string?)
