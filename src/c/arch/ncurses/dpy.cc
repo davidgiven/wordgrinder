@@ -35,6 +35,11 @@ static std::vector<pair_t> colourPairs;
 
 void dpy_init(const char* argv[])
 {
+    // ESCDELAY defaults to 1000 (ms) in ncurses. This is why the menu requires a 1 second delay to appear after hitting escape.
+    // Setting it too low might interfere with other control key inputs.. 30 doesn't seem to cause problems, and the menu
+    // appears quickly. 
+    ESCDELAY = 30;
+
     while (*argv)
     {
         if (strcmp(*argv, "--no-ncurses-colour") == 0)
