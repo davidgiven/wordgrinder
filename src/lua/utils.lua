@@ -97,6 +97,15 @@ function SplitString(str: string, delim: string): {string}
     return result
 end
 
+-- return whether a string is both not nil and not the empty string, ''
+--
+-- @param val                any value that can be consumed by #tostring
+-- @return                   true if the string is not nil and not ''
+
+function StringPresent(val: any?): (boolean)
+	return string.len( tostring(val) ) > 0
+end
+
 --- Simple table renderer (no recursion).
 --
 -- @param t                  input table

@@ -160,7 +160,7 @@ function SaveDocumentSetRaw(filename): (boolean?, string?)
 end
 
 function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
-	if not filename then
+	if not StringPresent(filename) then
 		filename = FileBrowser("Save Document Set", "Save as:", true)
 		if not filename then
 			return false
