@@ -167,5 +167,5 @@ int main(int argc, char* const* argv)
     }
     printf("(%d errors)\n", count);
 
-    return 0;
+    return count ? 1 : 0;
 }

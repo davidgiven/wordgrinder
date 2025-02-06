@@ -24,11 +24,13 @@ function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 		filename = filename .. ".wg"
 	end
 
-	documentSet.name = ""
+	local oldname = documentSet.name
+	documentSet.name = nil
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
 	local r, e = SaveDocumentSetRaw(filename)
+	documentSet.name = oldname
 	if not r then
 		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
@@ -58,7 +60,7 @@ function Cmd.CreateDocumentSetFromTemplate(): (boolean, string?)
 	end
 
 	local r, e = Cmd.LoadDocumentSet(filename)
-	documentSet.name = ""
+	documentSet.name = nil
 	return r, e
 end
 
@@ -88,7 +90,7 @@ function Cmd.LoadDefaultTemplate()
 		end
 	end
 
-	documentSet.name = ""
+	documentSet.name = nil
 	return r, e
 end
 
