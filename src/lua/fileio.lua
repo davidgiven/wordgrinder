@@ -175,7 +175,8 @@ function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
-	local r, e = SaveDocumentSetRaw(documentSet.name)
+	print(filename)
+	local r, e = SaveDocumentSetRaw(filename)
 	if not r then
 		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
