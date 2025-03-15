@@ -18,8 +18,11 @@ local function announce()
 end
 
 local function makefilename(pattern: string)
-	local leafname = Leafname(documentSet.name)
-	local dirname = GlobalSettings.directories.autosaves or Dirname(documentSet.name)
+	local name = documentSet.name
+	assert(name)
+
+	local leafname = Leafname(name)
+	local dirname = GlobalSettings.directories.autosaves or Dirname(name)
 	leafname = leafname:gsub("%.wg$", "")
 	leafname = leafname:gsub("%%", "%%%%")
 	
@@ -46,6 +49,11 @@ do
 			settings.lastsaved = os.time()
 		end
 		
+		if not documentSet.name then
+			ImmediateMessage("Cannot autosave; document set has no name!")
+			return
+		end
+
 		if ((os.time() - settings.lastsaved) > (settings.period * 60)) then
 			ImmediateMessage("Autosaving...")
 			

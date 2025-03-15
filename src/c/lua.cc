@@ -112,6 +112,9 @@ void script_init(void)
     lua_pushstring(L, STRINGIFY(FRONTEND));
     lua_setglobal(L, "FRONTEND");
 
+    lua_pushstring(L, STRINGIFY(DEFAULT_DICTIONARY_PATH));
+    lua_setglobal(L, "DEFAULT_DICTIONARY_PATH");
+
     lua_pushcclosurek(L, loadstring_cb, "loadstring", 0, nullptr);
     lua_setglobal(L, "loadstring");
 

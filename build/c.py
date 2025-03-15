@@ -81,6 +81,12 @@ def cxxfile(
     cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
 
 
+def _removeprefix(self, prefix):
+    if self.startswith(prefix):
+        return self[len(prefix):]
+    else:
+        return self[:]
+
 def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
         if f.endswith(".h") or f.endswith(".hh"):
@@ -90,7 +96,7 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
     for s in flatten(srcs):
         objs += [
             filerule(
-                name=join(name, f.removeprefix("$(OBJ)/")),
+                name=join(name, _removeprefix(f,"$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
                 cflags=sorted(set(cflags)),
@@ -102,6 +108,8 @@ def findsources(name, srcs, deps, cflags, filerule, cwd):
             or f.endswith(".cpp")
             or f.endswith(".S")
             or f.endswith(".s")
+            or f.endswith(".m")
+            or f.endswith(".mm")
         ]
         if any(f.endswith(".o") for f in filenamesof([s])):
             objs += [s]

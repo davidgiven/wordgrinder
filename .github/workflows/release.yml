@@ -60,6 +60,11 @@ jobs:
         assets: | 
           wordgrinder-*.tar.xz
           WordGrinder-*-setup.exe
+        fail-if-no-assets: false
+
+    - name: date
+      run: |
+        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
 
     - name: release
       uses: softprops/action-gh-release@v1
@@ -71,3 +76,53 @@ jobs:
         tag_name: dev
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        path: 'wordgrinder'
+
+    - name: brew
+      run: |
+        brew install pkg-config glfw3 python3 cmark fmt coreutils make dylibbundler
+        brew link --overwrite python3
+        brew install pillow
+
+    - name: make
+      run: |
+        gmake -C wordgrinder -j$(nproc) BUILDTYPE=osx
+
+    - name: tag
+      uses: EndBug/latest-tag@latest
+      with:
+        tag-name: dev
+        force-branch: false
+        git-directory: 'wordgrinder'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: delete-old-assets
+      uses: mknejp/delete-release-assets@v1
+      with:
+        token: ${{ github.token }}
+        tag: dev
+        assets: | 
+          WordGrinder-*-setup.pkg
+        fail-if-no-assets: false
+
+    - name: date
+      run: |
+        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+
+    - name: release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Development build ${{ env.RELEASE_DATE }}
+        files: |
+          wordgrinder/bin/WordGrinder-*-setup.pkg
+        tag_name: dev
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

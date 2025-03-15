@@ -118,7 +118,7 @@ local function writetostreamt(object, write)
 	return true
 end
 
-function SaveToString(object)
+function SaveToHeaderlessString(object)
 	local ss = {}
 	local write = function(s)
 		ss[#ss+1] = s
@@ -132,7 +132,7 @@ function SaveToFile(filename: string, object: any): (boolean, string?)
 	-- Write the file to a *different* filename (so that crashes during
 	-- writing doesn't corrupt the file).
 
-	local s = TMAGIC .. "\n" .. SaveToString(object)
+	local s = TMAGIC .. "\n" .. SaveToHeaderlessString(object)
 
 	local new_filename = filename..".new"
 	local _, e = WriteFile(new_filename, s)
@@ -175,7 +175,8 @@ function Cmd.SaveCurrentDocumentAs(filename: string?): boolean
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
-	local r, e = SaveDocumentSetRaw(documentSet.name)
+	print(filename)
+	local r, e = SaveDocumentSetRaw(filename)
 	if not r then
 		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
@@ -590,17 +591,11 @@ local function loadfromstreamt(fp): DocumentSet
 	return data
 end
 
-function LoadFromString(s)
+function LoadFromHeaderlessString(s)
 	return loadfromstreamt(CreateIStream(s))
 end
 
-function LoadFromFile(filename): (DocumentSet?, string?)
-	local data, _, e = wg.readfile(filename);
-	if not data then
-		assert(e)
-		return nil, ("'"..filename.."' could not be opened: "..e)
-	end
-	assert(data)
+function LoadFromString(filename: string, data: string): (DocumentSet?, string?)
 	local fp = CreateIStream(data)
 
 	local loader = nil
@@ -617,6 +612,16 @@ function LoadFromFile(filename): (DocumentSet?, string?)
 	end
 
 	return loader(fp)
+end
+
+function LoadFromFile(filename): (DocumentSet?, string?)
+	local data, _, e = wg.readfile(filename);
+	if not data then
+		assert(e)
+		return nil, ("'"..filename.."' could not be opened: "..e)
+	end
+	assert(data)
+	return LoadFromString(filename, data)
 end
 
 local function loaddocument(filename): (DocumentSet?, string?)
@@ -782,7 +787,7 @@ end
 function GetClipboard()
 	local text, wgdata = wg.clipboard_get()
 	if wgdata then
-		return LoadFromString(wgdata).documents[1]
+		return LoadFromHeaderlessString(wgdata).documents[1]
 	end
 	if text then
 		return Cmd.ImportTextString(text)
@@ -797,7 +802,7 @@ function SetClipboard(document)
 	document.name = "clipboard"
 	documentSet.documents = { document }
 
-	local wgdata = SaveToString(documentSet)
+	local wgdata = SaveToHeaderlessString(documentSet)
 	wg.clipboard_set(text, wgdata)
 end
 

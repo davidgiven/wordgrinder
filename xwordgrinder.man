@@ -69,6 +69,11 @@ for use when importing or exporting WordGrinder files.
 .BI \--config\  file.lua
 Sets the name of the user config file.
 
+.TP
+.B --recent
+On startup, loads the most recent file edited by WordGrinder. If there is no
+most recent file, you get an empty document.
+
 
 .SH CONFIGURATION
 

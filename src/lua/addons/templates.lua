@@ -24,11 +24,13 @@ function Cmd.SaveCurrentDocumentAsTemplate(): (boolean, string?)
 		filename = filename .. ".wg"
 	end
 
-	documentSet.name = ""
+	local oldname = documentSet.name
+	documentSet.name = nil
 
 	ImmediateMessage("Saving...")
 	documentSet:clean()
 	local r, e = SaveDocumentSetRaw(filename)
+	documentSet.name = oldname
 	if not r then
 		assert(e)
 		ModalMessage("Save failed", "The document could not be saved: "..e)
@@ -58,7 +60,37 @@ function Cmd.CreateDocumentSetFromTemplate(): (boolean, string?)
 	end
 
 	local r, e = Cmd.LoadDocumentSet(filename)
-	documentSet.name = ""
+	documentSet.name = nil
+	return r, e
+end
+
+-----------------------------------------------------------------------------
+-- Create a new document set from the default template. If there isn't one,
+-- you get a vanilla blank document set.
+
+function Cmd.LoadDefaultTemplate()
+	if not ConfirmDocumentErasure() then
+		return false
+	end
+
+	ResetDocumentSet()
+	local templatename = GlobalSettings.directories.templates.."/default.wg"
+	local r, e = wg.readfile(templatename)
+	if r then
+		local d, e = LoadFromString(templatename, r)
+		if d then
+			local fileformat = d.fileformat or 1
+			if fileformat ~= FILEFORMAT then
+				NonmodalMessage("Cannot load default template: please update it.")
+			else
+				Cmd.LoadDocumentSet(templatename)
+			end
+		else
+			NonmodalMessage("Cannot load default template.")
+		end
+	end
+
+	documentSet.name = nil
 	return r, e
 end
 

@@ -25,19 +25,12 @@ declare function GroupCallback(s: any): () -> (any?, any?)
 
 -- Determine the user's home directory.
 
-declare HOME: string
-declare CONFIGDIR: string
-declare FRONTEND: string
-declare DEBUG: boolean
-declare VERSION: string
-declare FILEFORMAT: number
-declare ARCH: string
-declare HOME: string
-declare WINDOWS_INSTALL_DIR: string?
-
 HOME = wg.getenv("HOME") or wg.getenv("USERPROFILE") or "."
 CONFIGDIR = HOME .. "/.wordgrinder"
 local configfile = CONFIGDIR.."/startup.lua"
+
+type LAST_RECENT_FILE = "last_recent_file"
+local LAST_RECENT_FILE: LAST_RECENT_FILE = "last_recent_file"
 
 -- Determine the installation directory (Windows only).
 
@@ -107,7 +100,7 @@ end
 -- This function contains the word processor proper, including the main event
 -- loop.
 
-function WordProcessor(filename)
+function WordProcessor(filename: string? | {any})
     ResetDocumentSet()
 
     -- Move legacy config files.
@@ -159,15 +152,19 @@ function WordProcessor(filename)
     end
 
     wg.initscreen()
-	FireEvent("ScreenInitialised")
+    FireEvent("ScreenInitialised")
     ResizeScreen()
     RedrawScreen()
 
+    Cmd.LoadDefaultTemplate()
     if filename then
-        if not Cmd.LoadDocumentSet(filename) then
+        if filename == LAST_RECENT_FILE then
+            local r = (GlobalSettings.recents or {}) :: {string}
+            filename = r[1]
+        elseif filename and not Cmd.LoadDocumentSet(filename) then
             -- As a special case, if we tried to load a document from the command line and it
             -- doesn't exist, then we prime the document name so that saving the file is easy.
-            documentSet.name = filename
+            documentSet.name = filename :: string
         end
     else
         FireEvent("DocumentLoaded")
@@ -217,14 +214,16 @@ function WordProcessor(filename)
     local oldmb = false
     local oldmx, oldmy
     local function handle_mouse_event(m)
-        if m.b and not oldmb then
-            oldmx = m.x
-            oldmy = m.y
-            Cmd.UnsetMark()
-            Cmd.GotoXYPosition(m.x, m.y)
-            Cmd.SetMark()
-        else
-            Cmd.GotoXYPosition(m.x, m.y)
+        if m.b then
+            if not oldmb then
+                oldmx = m.x
+                oldmy = m.y
+                Cmd.UnsetMark()
+                Cmd.GotoXYPosition(m.x, m.y)
+                Cmd.SetMark()
+            else
+                Cmd.GotoXYPosition(m.x, m.y)
+            end
         end
         if not m.b and oldmb and (m.x == oldmx) and (m.y == oldmy) then
             Cmd.UnsetMark();
@@ -301,7 +300,7 @@ function Main(...)
 
     local arg = {...}
     table_remove(arg, 1) -- contains the executable name
-    local filename = nil
+    local filename: string? | LAST_RECENT_FILE = nil
     do
         local function do_help()
             PrintErr("WordGrinder version ", VERSION, " © 2007-2020 David Given\n")
@@ -319,6 +318,9 @@ Options:
                                (remaining arguments are passed to the script)
    -c    --convert src dest    Converts from one file format to another
          --config file.lua     Sets the name of the user config file
+   -r    --recent              Automatically load the most recently used file
+   -8    --no-unicode          Use ISO-8859-1 characters only
+         --no-ncurses-colour   Don't use colours on the terminal
 
 Only one filename may be specified, which is the name of a WordGrinder
 file to load on startup. If not given, you get a blank document instead.
@@ -391,10 +393,14 @@ the program starts up (but after any --lua files). It defaults to:
             return 1
         end
 
-        local function do_filename(fn)
+        local function check_file_not_specified()
             if filename then
                 CLIError("you may only specify one filename")
             end
+        end
+
+        local function do_filename(fn)
+            check_file_not_specified()
             filename = fn
             return 1
         end
@@ -404,7 +410,17 @@ the program starts up (but after any --lua files). It defaults to:
             return 0
         end
 
-        local function unrecognisedarg(arg)
+        local function do_recent(opt)
+            check_file_not_specified()
+            filename = LAST_RECENT_FILE
+            return 0
+        end
+
+        local function do_nothing(arg)
+            return 0
+        end
+
+        local function unrecognisedarg(arg: string)
             CLIError("unrecognised option '", arg, "' --- try --help for help")
             assert(false)
         end
@@ -418,6 +434,10 @@ the program starts up (but after any --lua files). It defaults to:
             ["convert"]    = do_convert,
             ["config"]     = do_config,
             ["8"]          = do_8bit,
+            ["no-unicode"] = do_8bit,
+            ["r"]          = do_recent,
+            ["recent"]     = do_recent,
+            ["no-ncurses-colour"] = do_nothing,
             [FILENAME_ARG] = do_filename,
             [UNKNOWN_ARG]  = unrecognisedarg,
         }
@@ -428,6 +448,7 @@ the program starts up (but after any --lua files). It defaults to:
     end
 
     if filename and
+            (filename ~= LAST_RECENT_FILE) and
             not filename:find("^/") and
             not filename:find("^[a-zA-Z]:[/\\]") then
         filename = GetCwd() .. "/" .. filename

@@ -29,7 +29,7 @@ _G.DocumentSet = DocumentSet
 
 type DocumentSet = {
 	fileformat: number,
-	name: string,
+	name: string?,
 	menu: MenuTree,
 	current: Document,
 	documents: {[number]: Document},
