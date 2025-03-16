@@ -12,9 +12,7 @@ count=0
 for f in "$@"; do
 	echo
 	echo "/* This is $f */"
-	echo "static const unsigned char file_$count[] = {"
-	xxd -i < $f
-	echo "};"
+	python3 build/_objectify.py $f file_$count
 	count=$(expr $count + 1)
 done
 
