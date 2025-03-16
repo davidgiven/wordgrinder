@@ -2,6 +2,7 @@ from build.ab import simplerule
 from build.c import clibrary
 from build.windows import windres, makensis
 from config import VERSION
+from glob import glob
 
 windres(
     name="rc",
@@ -41,6 +42,6 @@ makensis(
         "README.wg",
         "extras/british.dictionary",
         "extras/american-canadian.dictionary",
-    ],
+    ] + glob("licenses/COPYING.*"),
     defs={"VERSION": VERSION},
 )
