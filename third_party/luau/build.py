@@ -11,7 +11,10 @@ def _compute_header_name(f):
 
 LUAU_SRCS = [
     f.as_posix()
-    for f in Path("third_party/luau").glob("**/*.cpp")
+    for f in (
+        list(Path("third_party/luau").glob("*/src/*.cpp"))
+        + list(Path("third_party/luau").glob("*/src/*.h"))
+    )
     if ("/CLI" not in f.as_posix())
 ]
 LUAU_HDRS = {
@@ -23,7 +26,8 @@ LUAU_HDRS = {
 }
 
 cxxlibrary(
-    name="luau-hdrs",
+    name="luau",
+    srcs=LUAU_SRCS,
     hdrs=LUAU_HDRS
     | {
         "lua.h": "./VM/include/lua.h",
@@ -48,8 +52,6 @@ cxxlibrary(
         "ludata.h": "./VM/src/ludata.h",
     },
 )
-
-cxxlibrary(name="luau", srcs=LUAU_SRCS, deps=[".+luau-hdrs"])
 
 cxxprogram(
     name="analyse",

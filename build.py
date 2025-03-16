@@ -15,7 +15,11 @@ export(
     items={
         "bin/wordgrinder$(EXT)": TEST_BINARY,
     }
-    | ({"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"} if HAS_XWORDGRINDER else {})
+    | (
+        {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
+        if HAS_XWORDGRINDER
+        else {}
+    )
     | (
         {"bin/wordgrinder-haiku": "src/c+wordgrinder-glfw-haiku"}
         if HAS_HAIKU

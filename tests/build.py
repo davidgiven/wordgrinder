@@ -1,5 +1,6 @@
 from build.ab import simplerule, Rule, Target, export
 from config import TEST_BINARY
+from glob import glob
 
 TESTS = [
     "apply-markup",
@@ -85,8 +86,9 @@ def test(self, name, exe: Target = None):
         replaces=self,
         ins=["./" + self.localname + ".lua", exe],
         outs=["=log"],
+        deps=["./testsuite.lua"] + glob("testdocs/*"),
         commands=[
-            "{ins[1]} --lua {ins[0]} >{outs} 2>&1 || (cat {outs} && rm -f {outs} && false)"
+            "$[ins[1]] --lua $[ins[0]] >$[outs] 2>&1 || (cat $[outs] && rm -f $[outs] && false)"
         ],
         label="TEST",
     )

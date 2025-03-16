@@ -20,16 +20,16 @@ simplerule(
     name="wordgrinder-stripped",
     ins=["src/c+wordgrinder-wincon"],
     outs=["=wordgrinder-stripped.exe"],
-    commands=["strip {ins[0]} -o {outs[0]}"],
-    label="STRIP"
+    commands=["strip $[ins[0]] -o $[outs[0]]"],
+    label="STRIP",
 )
 
 simplerule(
     name="wordgrinder-windows-stripped",
     ins=["src/c+wordgrinder-glfw-windows"],
     outs=["=wordgrinder-windows-stripped.exe"],
-    commands=["strip {ins[0]} -o {outs[0]}"],
-    label="STRIP"
+    commands=["strip $[ins[0]] -o $[outs[0]]"],
+    label="STRIP",
 )
 
 makensis(

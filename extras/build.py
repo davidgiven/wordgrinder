@@ -13,7 +13,7 @@ def manpage(self, name, date, version, src: Target):
             + date
             + "/g; s/@@@VERSION@@@/"
             + version
-            + "/g' {ins} > {outs}"
+            + "/g' $[ins] > $[outs]"
         ],
         label="MANPAGE",
     )
@@ -38,8 +38,8 @@ simplerule(
     ins=["./icon.png"],
     outs=["=wordgrinder.iconset"],
     commands=[
-        "mkdir -p {outs[0]}",
-        "sips -z 64 64 {ins[0]} --out {outs[0]}/icon_32x32@2x.png > /dev/null",
+        "mkdir -p $[outs[0]]",
+        "sips -z 64 64 $[ins[0]] --out $[outs[0]]/icon_32x32@2x.png > /dev/null",
     ],
     label="ICONSET",
 )
@@ -48,7 +48,6 @@ simplerule(
     name="wordgrinder_icns",
     ins=[".+wordgrinder_iconset"],
     outs=["=wordgrinder.icns"],
-    commands=["iconutil -c icns -o {outs[0]} {ins[0]}"],
+    commands=["iconutil -c icns -o $[outs[0]] $[ins[0]]"],
     label="ICONUTIL",
 )
-

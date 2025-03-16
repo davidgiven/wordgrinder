@@ -2,7 +2,11 @@ from build.c import cxxlibrary
 from build.pkg import package
 from config import HAS_XWORDGRINDER
 
-cxxlibrary(name="clip_common", srcs=["./clip.cpp", "./image.cpp"])
+cxxlibrary(
+    name="clip_common",
+    srcs=["./clip.cpp", "./image.cpp"],
+    hdrs={"clip.h": "./clip.h", "clip_lock_impl.h": "./clip_lock_impl.h"},
+)
 
 cxxlibrary(
     name="clip_none",

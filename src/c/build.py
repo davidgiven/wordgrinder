@@ -122,7 +122,7 @@ if HAS_OSX:
         ins=[".+wordgrinder_app"],
         outs=["=wordgrinder-component.pkg"],
         commands=[
-            "pkgbuild --quiet --install-location /Applications --component {ins[0]} {outs[0]}"
+            "pkgbuild --quiet --install-location /Applications --component $[ins[0]] $[outs[0]]"
         ],
         label="PKGBUILD",
     )
@@ -136,15 +136,15 @@ if HAS_OSX:
         ],
         outs=["=wordgrinder.app"],
         commands=[
-            "rm -rf {outs[0]}",
-            "cp -a {ins[2]} {outs[0]}",
-            "touch {outs[0]}",
-            "cp {ins[0]} {outs[0]}/Contents/MacOS/wordgrinder",
-            "mkdir -p {outs[0]}/Contents/Resources",
-            "cp {ins[1]} {outs[0]}/Contents/Resources/wordgrinder.icns",
-            "dylibbundler -of -x {outs[0]}/Contents/MacOS/wordgrinder -b -d {outs[0]}/Contents/libs -cd > /dev/null",
-            "cp $$(brew --prefix fmt)/LICENSE* {outs[0]}/Contents/libs/fmt.rst",
-            "cp $$(brew --prefix glfw)/LICENSE* {outs[0]}/Contents/libs/glfw.md",
+            "rm -rf $[outs[0]]",
+            "cp -a $[ins[2]] $[outs[0]]",
+            "touch $[outs[0]]",
+            "cp $[ins[0]] $[outs[0]]/Contents/MacOS/wordgrinder",
+            "mkdir -p $[outs[0]]/Contents/Resources",
+            "cp $[ins[1]] $[outs[0]]/Contents/Resources/wordgrinder.icns",
+            "dylibbundler -of -x $[outs[0]]/Contents/MacOS/wordgrinder -b -d $[outs[0]]/Contents/libs -cd > /dev/null",
+            "cp $$(brew --prefix fmt)/LICENSE* $[outs[0]]/Contents/libs/fmt.rst",
+            "cp $$(brew --prefix glfw)/LICENSE* $[outs[0]]/Contents/libs/glfw.md",
         ],
         label="MKAPP",
     )
