@@ -35,6 +35,12 @@ simplerule(
 makensis(
     name="installer",
     srcs=["extras/windows-installer.nsi"],
-    deps=[".+wordgrinder-stripped", ".+wordgrinder-windows-stripped"],
+    deps=[
+        ".+wordgrinder-stripped",
+        ".+wordgrinder-windows-stripped",
+        "README.wg",
+        "extras/british.dictionary",
+        "extras/american-canadian.dictionary",
+    ],
     defs={"VERSION": VERSION},
 )
