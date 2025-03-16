@@ -6,6 +6,8 @@ clibrary(
         "./src/blocks.c",
         "./src/buffer.c",
         "./src/cmark.c",
+        "./src/case_fold_switch.inc",
+        "./src/entities.inc",
         "./src/cmark_ctype.c",
         "./src/commonmark.c",
         "./src/houdini_href_e.c",

@@ -50,7 +50,7 @@ def _package(self, name, package, fallback, pkgconfig):
 
     assert (
         fallback
-    ), f"Required package '{package}' not installed when materialising target '{name}'"
+    ), f"Required package '{package}' not installed when materialising target '$[name]'"
 
     if "cheader_deps" in fallback.args:
         self.args["cheader_deps"] = fallback.args["cheader_deps"]

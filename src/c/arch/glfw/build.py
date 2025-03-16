@@ -22,6 +22,7 @@ cxxlibrary(
     name="glfw",
     srcs=[
         "./font.cc",
+        "./gui.h",
         "./main.cc",
         "./utils.cc",
         "tools+icon_cc",

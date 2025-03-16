@@ -12,6 +12,8 @@ cxxlibrary(
         "fmt/chrono.h": "./include/fmt/chrono.h",
         "fmt/core.h": "./include/fmt/core.h",
         "fmt/format.h": "./include/fmt/format.h",
+        "fmt/format-inl.h": "./include/fmt/format-inl.h",
+        "fmt/os.h": "./include/fmt/os.h",
         "fmt/ostream.h": "./include/fmt/ostream.h",
         "fmt/ranges.h": "./include/fmt/ranges.h",
     },

@@ -8,7 +8,8 @@ def multibin(self, name, symbol, srcs: Targets = []):
         replaces=self,
         ins=srcs,
         outs=[f"={symbol}.h"],
-        commands=["sh tools/multibin2c.sh " + symbol + " {ins} > {outs}"],
+        deps=["tools/multibin2c.sh"],
+        commands=["sh tools/multibin2c.sh " + symbol + " $[ins] > $[outs]"],
         label="MULTIBIN",
     )
 
@@ -21,6 +22,6 @@ simplerule(
     name="icon_cc",
     ins=["./makeicon.py", "extras/icon.png"],
     outs=["=icon.cc"],
-    commands=["python3 {ins[0]} {ins[1]} > {outs[0]}"],
+    commands=["python3 $[ins[0]] $[ins[1]] > $[outs[0]]"],
     label="MAKEICON",
 )

@@ -20,12 +20,14 @@ endif
 """
 )
 
+
 def _combine(list1, list2):
     r = list(list1)
     for i in list2:
         if i not in r:
             r.append(i)
     return r
+
 
 def _indirect(deps, name):
     r = []
@@ -61,7 +63,7 @@ def cfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CC) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    commands=["$(CC) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
     label="CC",
 ):
     cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
@@ -75,7 +77,7 @@ def cxxfile(
     deps: Targets = None,
     cflags=[],
     suffix=".o",
-    commands=["$(CXX) -c -o {outs[0]} {ins[0]} $(CFLAGS) {cflags}"],
+    commands=["$(CXX) -c -o $[outs[0]] $[ins[0]] $(CFLAGS) $[cflags]"],
     label="CXX",
 ):
     cfileimpl(self, name, srcs, deps, suffix, commands, label, cflags)
@@ -83,33 +85,41 @@ def cxxfile(
 
 def _removeprefix(self, prefix):
     if self.startswith(prefix):
-        return self[len(prefix):]
+        return self[len(prefix) :]
     else:
         return self[:]
 
+
+def _isSourceFile(f):
+    return (
+        f.endswith(".c")
+        or f.endswith(".cc")
+        or f.endswith(".cpp")
+        or f.endswith(".S")
+        or f.endswith(".s")
+        or f.endswith(".m")
+        or f.endswith(".mm")
+    )
+
+
 def findsources(name, srcs, deps, cflags, filerule, cwd):
     for f in filenamesof(srcs):
-        if f.endswith(".h") or f.endswith(".hh"):
+        if not _isSourceFile(f):
             cflags = cflags + [f"-I{dirname(f)}"]
+            deps = deps + [f]
 
     objs = []
     for s in flatten(srcs):
         objs += [
             filerule(
-                name=join(name, _removeprefix(f,"$(OBJ)/")),
+                name=join(name, _removeprefix(f, "$(OBJ)/")),
                 srcs=[f],
                 deps=deps,
                 cflags=sorted(set(cflags)),
                 cwd=cwd,
             )
             for f in filenamesof([s])
-            if f.endswith(".c")
-            or f.endswith(".cc")
-            or f.endswith(".cpp")
-            or f.endswith(".S")
-            or f.endswith(".s")
-            or f.endswith(".m")
-            or f.endswith(".mm")
+            if _isSourceFile(f)
         ]
         if any(f.endswith(".o") for f in filenamesof([s])):
             objs += [s]
@@ -148,7 +158,7 @@ def libraryimpl(
                 len(s) == 1
             ), "the target of a header must return exactly one file"
 
-            cs += ["$(CP) {ins[" + str(i) + "]} {outs[" + str(i) + "]}"]
+            cs += [f"$(CP) $[ins[{i}]] $[outs[{i}]]"]
             outs += ["=" + dest]
             i = i + 1
 
@@ -202,7 +212,7 @@ def clibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
     label="LIB",
     cfilerule=cfile,
 ):
@@ -233,7 +243,7 @@ def cxxlibrary(
     caller_ldflags=[],
     cflags=[],
     ldflags=[],
-    commands=["rm -f {outs[0]} && $(AR) cqs {outs[0]} {ins}"],
+    commands=["rm -f $[outs[0]] && $(AR) cqs $[outs[0]] $[ins]"],
     label="CXXLIB",
     cxxfilerule=cxxfile,
 ):
@@ -298,7 +308,7 @@ def cprogram(
     cflags=[],
     ldflags=[],
     commands=[
-        "$(CC) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+        "$(CC) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CLINK",
     cfilerule=cfile,
@@ -325,7 +335,7 @@ def cxxprogram(
     cflags=[],
     ldflags=[],
     commands=[
-        "$(CXX) -o {outs[0]} $(STARTGROUP) {ins} {ldflags} $(LDFLAGS) $(ENDGROUP)"
+        "$(CXX) -o $[outs[0]] $(STARTGROUP) $[ins] $[ldflags] $(LDFLAGS) $(ENDGROUP)"
     ],
     label="CXXLINK",
     cxxfilerule=cxxfile,

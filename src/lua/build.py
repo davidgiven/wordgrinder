@@ -68,5 +68,5 @@ simplerule(
     ins=["tools+typechecker", "./_types.d.lua"] + SRCS,
     outs=["=stamp"],
     label="TYPECHECK",
-    commands=["{ins[0]} -t {ins[1]} " + " ".join(SRCS)],
+    commands=["$[ins[0]] -t $[ins[1]] " + " ".join(SRCS), "touch $[outs]"],
 )
