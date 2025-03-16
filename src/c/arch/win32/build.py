@@ -8,7 +8,7 @@ windres(
     srcs=[
         "./wordgrinder.rc",
     ],
-    deps=["./manifest.xml"],
+    deps=["./manifest.xml", "./icon.ico"],
 )
 
 clibrary(
