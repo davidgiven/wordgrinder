@@ -14,7 +14,7 @@ def windres(self, name, srcs: Targets, deps: Targets = [], label="WINDRES"):
         deps=deps,
         outs=[f"={self.localname}.o"],
         label=label,
-        commands=["$(WINDRES) {ins[0]} {outs[0]}"],
+        commands=["$(WINDRES) $[ins[0]] $[outs[0]]"],
     )
 
 
@@ -33,6 +33,6 @@ def makensis(
         outs=[f"={self.localname}.exe"],
         label=label,
         commands=[
-            "$(MAKENSIS) -nocd -v2 " + d + " -dOUTFILE={outs[0]} {ins[0]}"
+            "$(MAKENSIS) -nocd -v2 " + d + " -dOUTFILE=$[outs[0]] $[ins[0]]"
         ],
     )
