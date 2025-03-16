@@ -49,13 +49,16 @@ Chances are you already have these in your distribution. Merely install these
 packages:
 
   If you have Debian/Ubuntu:
-    ninja-build libncursesw5-dev zlib1g-dev libglfw3-dev
+    libncursesw5-dev zlib1g-dev libglfw3-dev
 
   If you have Fedora:
-	zlib-devel libglfw-devel ncurses ncurses-devel ninja-build
+	zlib-devel libglfw-devel ncurses ncurses-devel
 
   If you have OSX with Homebrew:
-    ninja pkg-config glfw
+    pkg-config glfw
+
+  If you have Haiku:
+    pkgman install make glfw_devel pkgconfig zlib_devel ncurses6_devel gcc pillow_python310
 
 To detect a sensible configuration and build, simply do:
 
