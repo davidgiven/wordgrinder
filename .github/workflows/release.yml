@@ -60,7 +60,7 @@ jobs:
 
     - name: date
       run: |
-        wsl sh -c 'echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}'
+        wsl sh -c 'echo "RELEASE_DATE=$(date --rfc-3339=date)" >> $\{GITHUB_ENV}'
 
     - name: release
       uses: softprops/action-gh-release@v1
