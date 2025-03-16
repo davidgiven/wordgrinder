@@ -573,7 +573,7 @@ def export(self, name=None, items: TargetsMap = {}, deps: Targets = []):
             cwd=self.cwd,
             ins=[srcs[0]],
             outs=[destf],
-            commands=["$(CP) --dereference %s %s" % (srcs[0], destf)],
+            commands=["$(CP) -H %s %s" % (srcs[0], destf)],
             label="",
         )
         subrule.materialise()
