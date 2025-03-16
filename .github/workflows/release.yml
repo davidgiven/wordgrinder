@@ -69,7 +69,7 @@ jobs:
     - name: release
       uses: softprops/action-gh-release@v1
       with:
-        name: Development build ${{ env.RELEASE_DATE }}
+        name: Nightly build ${{ env.RELEASE_DATE }}
         files: |
           wordgrinder/bin/wordgrinder-*.tar.xz
           wordgrinder/bin/WordGrinder-*-setup.exe
@@ -119,7 +119,7 @@ jobs:
     - name: release
       uses: softprops/action-gh-release@v1
       with:
-        name: Development build ${{ env.RELEASE_DATE }}
+        name: Nightly build ${{ env.RELEASE_DATE }}
         files: |
           wordgrinder/bin/WordGrinder-*-setup.pkg
         tag_name: dev
