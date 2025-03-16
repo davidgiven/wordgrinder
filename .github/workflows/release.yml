@@ -114,7 +114,7 @@ jobs:
 
     - name: date
       run: |
-        echo "RELEASE_DATE=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+        echo "RELEASE_DATE=$(gdate --rfc-3339=date)" >> ${GITHUB_ENV}
 
     - name: release
       uses: softprops/action-gh-release@v1
