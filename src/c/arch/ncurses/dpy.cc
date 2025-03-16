@@ -72,7 +72,7 @@ void dpy_start(void)
     mouseinterval(0);
 
 #if defined A_ITALIC
-    use_italics = !!tigetstr("sitm");
+    use_italics = !!tigetstr((char*) "sitm");
 #endif
 }
 
