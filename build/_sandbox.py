@@ -29,7 +29,6 @@ def main():
                 os.link(abspath(f), sf)
             except PermissionError:
                 shutil.copy(f, sf)
-            os.chmod(sf, 0o500)
 
     if args.export:
         for f in args.files:
