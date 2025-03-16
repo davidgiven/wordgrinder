@@ -42,6 +42,7 @@ makensis(
         "README.wg",
         "extras/british.dictionary",
         "extras/american-canadian.dictionary",
-    ] + glob("licenses/COPYING.*"),
+    ]
+    + glob("licenses/COPYING.*"),
     defs={"VERSION": VERSION},
 )

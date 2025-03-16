@@ -5,6 +5,7 @@ from build.ab import (
     filenameof,
 )
 
+
 @Rule
 def zip(
     self, name, flags="", items: TargetsMap = {}, extension="zip", label="ZIP"

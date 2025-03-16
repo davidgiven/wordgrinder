@@ -127,14 +127,14 @@ if HAS_OSX:
         outs=["=wordgrinder-component.pkg"],
         commands=[
             "unzip -q -d $[dir] $[ins[0]]",
-            "pkgbuild --quiet --install-location /Applications --component $[dir]/WordGrinder.app $[outs[0]]"
+            "pkgbuild --quiet --install-location /Applications --component $[dir]/WordGrinder.app $[outs[0]]",
         ],
         label="PKGBUILD",
     )
 
     zip(
         name="wordgrinder_app_template",
-        items=itemsof("**", cwd="extras/WordGrinder.app.template")
+        items=itemsof("**", cwd="extras/WordGrinder.app.template"),
     )
 
     simplerule(
