@@ -37,7 +37,7 @@ cxxlibrary(
 
 cxxlibrary(
     name="clip_win",
-    srcs=["./clip_win.cpp"],
+    srcs=["./clip_win.cpp", "./clip_win_wic.h"],
     hdrs={"clip.h": "./clip.h"},
     deps=[".+clip_common"],
 )
