@@ -1,6 +1,10 @@
 from build.ab import simplerule
 from build.c import cxxprogram, cxxlibrary
 from build.pkg import package
+from build.zip import zip
+from build.utils import itemsof
+from os.path import *
+from glob import glob
 from config import (
     FILEFORMAT,
     HAS_OSX,
@@ -122,9 +126,15 @@ if HAS_OSX:
         ins=[".+wordgrinder_app"],
         outs=["=wordgrinder-component.pkg"],
         commands=[
-            "pkgbuild --quiet --install-location /Applications --component $[ins[0]] $[outs[0]]"
+            "unzip -q -d $[dir] $[ins[0]]",
+            "pkgbuild --quiet --install-location /Applications --component $[dir]/WordGrinder.app $[outs[0]]"
         ],
         label="PKGBUILD",
+    )
+
+    zip(
+        name="wordgrinder_app_template",
+        items=itemsof("**", cwd="extras/WordGrinder.app.template")
     )
 
     simplerule(
@@ -132,19 +142,20 @@ if HAS_OSX:
         ins=[
             ".+wordgrinder-glfw-osx",
             "extras+wordgrinder_icns",
-            "extras/WordGrinder.app.template/",
+            ".+wordgrinder_app_template",
         ],
-        outs=["=wordgrinder.app"],
+        outs=["=wordgrinder.app.zip"],
         commands=[
-            "rm -rf $[outs[0]]",
-            "cp -a $[ins[2]] $[outs[0]]",
-            "touch $[outs[0]]",
-            "cp $[ins[0]] $[outs[0]]/Contents/MacOS/wordgrinder",
-            "mkdir -p $[outs[0]]/Contents/Resources",
-            "cp $[ins[1]] $[outs[0]]/Contents/Resources/wordgrinder.icns",
-            "dylibbundler -of -x $[outs[0]]/Contents/MacOS/wordgrinder -b -d $[outs[0]]/Contents/libs -cd > /dev/null",
-            "cp $$(brew --prefix fmt)/LICENSE* $[outs[0]]/Contents/libs/fmt.rst",
-            "cp $$(brew --prefix glfw)/LICENSE* $[outs[0]]/Contents/libs/glfw.md",
+            "mkdir -p $[dir]/WordGrinder.app",
+            "unzip -q -d $[dir]/WordGrinder.app $[ins[2]]",
+            "mkdir -p $[dir]/WordGrinder.app/Contents/MacOS",
+            "cp $[ins[0]] $[dir]/WordGrinder.app/Contents/MacOS/wordgrinder",
+            "mkdir -p $[dir]/WordGrinder.app/Contents/Resources",
+            "cp $[ins[1]] $[dir]/WordGrinder.app/Contents/Resources/wordgrinder.icns",
+            "dylibbundler -of -x $[dir]/WordGrinder.app/Contents/MacOS/wordgrinder -b -d $[dir]/WordGrinder.app/Contents/libs -cd > /dev/null",
+            "cp $$(brew --prefix fmt)/LICENSE* $[dir]/WordGrinder.app/Contents/libs/fmt.rst",
+            "cp $$(brew --prefix glfw)/LICENSE* $[dir]/WordGrinder.app/Contents/libs/glfw.md",
+            "cd $[dir] && zip -qr wordgrinder.app.zip WordGrinder.app",
         ],
         label="MKAPP",
     )

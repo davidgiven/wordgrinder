@@ -29,6 +29,7 @@ export(
         {
             "bin/wordgrinder-osx": "src/c+wordgrinder-glfw-osx",
             "bin/wordgrinder-osx-ncurses": "src/c+wordgrinder-ncurses",
+            "bin/wordgrinder-osx.app.zip": "src/c+wordgrinder_app",
             f"bin/WordGrinder-{VERSION}-setup.pkg": "src/c+wordgrinder_pkg",
         }
         if HAS_OSX

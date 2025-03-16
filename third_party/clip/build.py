@@ -5,7 +5,11 @@ from config import HAS_XWORDGRINDER
 cxxlibrary(
     name="clip_common",
     srcs=["./clip.cpp", "./image.cpp"],
-    hdrs={"clip.h": "./clip.h", "clip_lock_impl.h": "./clip_lock_impl.h"},
+    hdrs={
+        "clip.h": "./clip.h",
+        "clip_lock_impl.h": "./clip_lock_impl.h",
+        "clip_common.h": "./clip_common.h",
+    },
 )
 
 cxxlibrary(

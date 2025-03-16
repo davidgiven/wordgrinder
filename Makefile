@@ -27,6 +27,10 @@ ifeq ($(BUILDTYPE),windows)
 	MAKENSIS = makensis
 	EXT = .exe
 else
+	ifeq ($(BUILDTYPE),osx)
+		export BREW := $(shell brew --prefix)/opt
+	endif
+
 	export CC = gcc
 	export CXX = g++ -std=c++20
 	export CFLAGS
