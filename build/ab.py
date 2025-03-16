@@ -494,7 +494,7 @@ def emit_rule(self, ins, outs, cmds=[], label=None):
             into=lines,
         )
         for c in cmds:
-            emit(f"\t$(hide) cd {sandbox} &&", c, into=lines)
+            emit(f"\t$(hide) cd {sandbox} && (", c, ")", into=lines)
         emit(
             "\t$(hide)",
             f"$(PYTHON) build/_sandbox.py --export -s {sandbox}",
