@@ -24,7 +24,8 @@ def main():
             if args.verbose:
                 print("link", sf)
             os.makedirs(dirname(sf), exist_ok=True)
-            os.symlink(abspath(f), sf)
+            os.link(abspath(f), sf)
+            os.chmod(sf, 0o500)
 
     if args.export:
         for f in args.files:
