@@ -3,6 +3,7 @@
 from os.path import *
 import argparse
 import os
+import shutil
 
 
 def main():
@@ -24,7 +25,10 @@ def main():
             if args.verbose:
                 print("link", sf)
             os.makedirs(dirname(sf), exist_ok=True)
-            os.link(abspath(f), sf)
+            try:
+                os.link(abspath(f), sf)
+            except PermissionError:
+                shutil.copy(f, sf)
             os.chmod(sf, 0o500)
 
     if args.export:
