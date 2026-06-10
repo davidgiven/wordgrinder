@@ -26,7 +26,7 @@ def main():
                 print("link", sf)
             os.makedirs(dirname(sf), exist_ok=True)
             try:
-                os.link(abspath(f), sf)
+                os.symlink(abspath(f), sf)
             except PermissionError:
                 shutil.copy(f, sf)
 
@@ -38,6 +38,11 @@ def main():
             df = dirname(f)
             if df:
                 os.makedirs(df, exist_ok=True)
+
+            try:
+                os.remove(f)
+            except FileNotFoundError:
+                pass
             os.rename(sf, f)
 
 

@@ -32,7 +32,8 @@ else
 	endif
 
 	export CC = gcc
-	export CXX = g++ -std=c++20
+	export CXX = g++ -std=c++20 \
+		-Wno-deprecated-declarations
 	export CFLAGS
 	export CXXFLAGS
 	export LDFLAGS
