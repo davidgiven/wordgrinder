@@ -187,8 +187,14 @@ function Document.renumber(self: Document)
 	local wc = 0
 	local pn = 1
 
+--i think i fixed the page count bug?
+
 	for _, p in ipairs(self) do
-		wc = wc + #p
+		for _, word in ipairs(p) do
+			if GetWordText(word) ~= "" then
+				wc = wc +1
+			end
+		end
 
 		local style = documentStyles[p.style]
 		if style.numbered then
