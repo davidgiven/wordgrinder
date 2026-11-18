@@ -18,9 +18,10 @@ export(
 export(
     name="javatests",
     deps=[
-        "javatests/com/cowlark/wordgrinder+test",
-        "javatests/com/cowlark/wordgrinder/document+test",
-        "javatests/com/cowlark/wordgrinder/eventbus+test",
+        "javatests/com/cowlark/wordgrinder+word-test",
+        "javatests/com/cowlark/wordgrinder/fileio+dumper-test",
+        "javatests/com/cowlark/wordgrinder/fileio+undumper-test",
+        "javatests/com/cowlark/wordgrinder/eventbus+eventbus-test",
     ],
 )
 

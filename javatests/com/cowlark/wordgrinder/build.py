@@ -1,8 +1,11 @@
 from build.junit4 import junit4
-from build.utils import itemsof
+
 
 junit4(
-    name="test",
-    srcitems=itemsof("javatests/com/cowlark/wordgrinder/*.java", cwd=""),
+    name="word-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/{f}": f"./{f}"
+        for f in ["WordTest.java"]
+    },
     deps=["java/com/cowlark/wordgrinder+main"],
 )

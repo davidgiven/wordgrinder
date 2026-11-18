@@ -1,8 +1,20 @@
 from build.junit4 import junit4
-from build.utils import itemsof
+
 
 junit4(
-    name="test",
-    srcitems=itemsof("javatests/com/cowlark/wordgrinder/fileio/*.java", cwd=""),
+    name="dumper-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/fileio/{f}": f"./{f}"
+        for f in ["DumperTest.java"]
+    },
+    deps=["java/com/cowlark/wordgrinder/fileio"],
+)
+
+junit4(
+    name="undumper-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/fileio/{f}": f"./{f}"
+        for f in ["UndumperTest.java"]
+    },
     deps=["java/com/cowlark/wordgrinder/fileio"],
 )
