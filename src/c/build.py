@@ -7,6 +7,7 @@ from os.path import *
 from glob import glob
 from config import (
     FILEFORMAT,
+    IS_WINDOWS,
     HAS_OSX,
     HAS_NCURSES,
     HAS_XWORDGRINDER,
@@ -81,22 +82,23 @@ if HAS_NCURSES:
         cflags=["-DFRONTEND=ncurses"],
     )
 
-make_wordgrinder(
-    "wordgrinder-wincon",
-    deps=[
-        "src/c/arch/win32",
-        "src/c/arch/win32/console",
-        "third_party/clip+clip_none",
-    ],
-    cflags=["-DFRONTEND=wincon"],
-    ldflags=[
-        "-mconsole",
-        "-lole32",
-        "-lshlwapi",
-        "-lwindowscodecs",
-        "-lrpcrt4",
-    ],
-)
+if IS_WINDOWS:
+    make_wordgrinder(
+        "wordgrinder-wincon",
+        deps=[
+            "src/c/arch/win32",
+            "src/c/arch/win32/console",
+            "third_party/clip+clip_none",
+        ],
+        cflags=["-DFRONTEND=wincon"],
+        ldflags=[
+            "-mconsole",
+            "-lole32",
+            "-lshlwapi",
+            "-lwindowscodecs",
+            "-lrpcrt4",
+        ],
+    )
 
 if HAS_XWORDGRINDER:
     make_wordgrinder(
@@ -160,29 +162,30 @@ if HAS_OSX:
         label="MKAPP",
     )
 
-make_wordgrinder(
-    "wordgrinder-glfw-windows",
-    deps=[
-        "src/c/arch/win32",
-        "src/c/arch/glfw",
-        "third_party/libstb",
-        "third_party/clip+clip_win",
-    ],
-    cflags=["-DFRONTEND=glfw"],
-    ldflags=[
-        "-static",
-        "-static-libgcc",
-        "-static-libstdc++",
-        "-lssp",
-        "-mwindows",
-        "-lole32",
-        "-lshlwapi",
-        "-lwindowscodecs",
-        "-lrpcrt4",
-        "-lopengl32",
-        "-lgdi32",
-    ],
-)
+if IS_WINDOWS:
+    make_wordgrinder(
+        "wordgrinder-glfw-windows",
+        deps=[
+            "src/c/arch/win32",
+            "src/c/arch/glfw",
+            "third_party/libstb",
+            "third_party/clip+clip_win",
+        ],
+        cflags=["-DFRONTEND=glfw"],
+        ldflags=[
+            "-static",
+            "-static-libgcc",
+            "-static-libstdc++",
+            "-lssp",
+            "-mwindows",
+            "-lole32",
+            "-lshlwapi",
+            "-lwindowscodecs",
+            "-lrpcrt4",
+            "-lopengl32",
+            "-lgdi32",
+        ],
+    )
 
 make_wordgrinder(
     "wordgrinder-glfw-haiku",

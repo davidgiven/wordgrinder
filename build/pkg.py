@@ -1,5 +1,4 @@
-from build.ab import Rule, emit, Target, filenamesof
-from types import SimpleNamespace
+from build.ab import Rule, Target, G
 import os
 import subprocess
 
@@ -32,7 +31,8 @@ class _PkgConfig:
         return self.package_properties[p]
 
 
-TargetPkgConfig = _PkgConfig(os.getenv("PKG_CONFIG"))
+TargetPkgConfig = _PkgConfig(G.PKG_CONFIG)
+HostPkgConfig = _PkgConfig(G.HOST_PKG_CONFIG)
 
 
 def _package(self, name, package, fallback, pkgconfig):
@@ -44,13 +44,12 @@ def _package(self, name, package, fallback, pkgconfig):
             self.args["caller_cflags"] = [cflags]
         if ldflags:
             self.args["caller_ldflags"] = [ldflags]
-        self.traits.add("clibrary")
-        self.traits.add("cheaders")
+        self.args["clibrary_deps"] = [self]
+        self.args["cheader_deps"] = [self]
+        self.traits.update({"clibrary", "cxxlibrary"})
         return
 
-    assert (
-        fallback
-    ), f"Required package '{package}' not installed when materialising target '$[name]'"
+    assert fallback, f"Required package '{package}' not installed"
 
     if "cheader_deps" in fallback.args:
         self.args["cheader_deps"] = fallback.args["cheader_deps"]
@@ -69,3 +68,16 @@ def _package(self, name, package, fallback, pkgconfig):
 @Rule
 def package(self, name, package=None, fallback: Target = None):
     _package(self, name, package, fallback, TargetPkgConfig)
+
+
+@Rule
+def hostpackage(self, name, package=None, fallback: Target = None):
+    _package(self, name, package, fallback, HostPkgConfig)
+
+
+def has_package(name):
+    return TargetPkgConfig.has_package(name)
+
+
+def has_host_package(name):
+    return HostPkgConfig.has_package(name)

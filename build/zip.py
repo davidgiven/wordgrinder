@@ -7,9 +7,7 @@ from build.ab import (
 
 
 @Rule
-def zip(
-    self, name, flags="", items: TargetsMap = {}, extension="zip", label="ZIP"
-):
+def zip(self, name, flags="", items: TargetsMap = {}, extension="zip", label="ZIP"):
     cs = ["$(PYTHON) build/_zip.py -z $[outs]"]
 
     ins = []

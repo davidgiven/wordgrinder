@@ -24,7 +24,7 @@ jobs:
 
     - name: brew
       run: |
-        brew install pkg-config glfw3 python3 cmark fmt coreutils make dylibbundler
+        brew install pkg-config glfw python3 cmark fmt coreutils make dylibbundler
         brew link --overwrite python3
         brew install pillow
 
@@ -69,7 +69,7 @@ jobs:
         wsl --import fedora fedora install.tar.gz
         wsl --set-default fedora
         wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-40-1.noarch.rpm'
-        wsl sh -c 'dnf -y install --setopt=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow'
+        wsl sh -c 'dnf -y install --setopt=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow ninja-build'
 
     - name: fix line endings
       run: |
