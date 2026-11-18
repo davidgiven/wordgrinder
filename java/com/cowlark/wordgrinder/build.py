@@ -111,7 +111,7 @@ mavenjar(
 
 javalibrary(
     name="main",
-    deps=[".+teavm-interop", "./eventbus"],
+    deps=[".+teavm-interop", "./eventbus", "./document"],
     srcitems=itemsof("java/com/cowlark/wordgrinder/*.java", cwd=""),
 )
 
@@ -128,6 +128,7 @@ teavm_native = simplerule(
     ins=[".+main", "./display.h", "./clipboard.h"],
     deps=[
         "./eventbus",
+        "./document",
         ".+jspecify",
         ".+teavm-cli",
         ".+teavm-core",
