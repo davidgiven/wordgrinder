@@ -1,3 +1,6 @@
 .obj/
 bin/
 *.swp
+.ninja_log
+compile_commands.json
+

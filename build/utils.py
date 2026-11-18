@@ -4,14 +4,19 @@ from build.ab import (
     Targets,
     filenameof,
     filenamesof,
-    cwdStack,
+    getcwd,
     error,
     simplerule,
+    G,
 )
-from os.path import relpath, splitext, join, basename, isfile
+from os.path import relpath, splitext, join, basename, isfile, normpath
+from os import walk
 from glob import iglob
 import fnmatch
-import itertools
+import subprocess
+import shutil
+import re
+import functools
 
 
 def filenamesmatchingof(xs, pattern):
@@ -33,9 +38,67 @@ def collectattrs(*, targets, name, initial=[]):
     return sorted(s)
 
 
+@functools.cache
+def _glob_to_re(glob_str):
+    if glob_str.startswith("./"):
+        glob_str = normpath(join(getcwd(), glob_str))
+
+    opts = re.compile("([.]|[*][*]/|[*]|[?])|(.)")
+    out = ""
+    for pattern_match, literal_text in opts.findall(glob_str):
+        if pattern_match == ".":
+            out += "[.]"
+        elif pattern_match == "**/":
+            out += "(?:.*/)?"
+        elif pattern_match == "*":
+            out += "[^/]*"
+        elif pattern_match == "?":
+            out += "."
+        elif literal_text:
+            out += literal_text
+    return re.compile(out)
+
+
+def _glob_filter(paths, pattern):
+    r = _glob_to_re(pattern)
+    for f in paths:
+        if r.match(f):
+            yield f
+
+
+def _glob_matches(path, pattern):
+    r = _glob_to_re(pattern)
+    return r.match(path)
+
+
+def glob(include=["*"], exclude=[], dir=None, relative_to="."):
+    if not dir:
+        dir = getcwd()
+    if dir.startswith("./"):
+        dir = normpath(join(getcwd(), dir))
+    if relative_to.startswith("./"):
+        relative_to = normpath(join(getcwd(), relative_to))
+
+    def iterate():
+        for dirpath, dirnames, filenames in walk(
+            dir, topdown=True, followlinks=True
+        ):
+            dirpath = relpath(dirpath, relative_to)
+            filenames = [normpath(join(dirpath, f)) for f in filenames]
+            matching = set()
+            for p in include:
+                matching.update([f for f in _glob_filter(filenames, p)])
+            for p in exclude:
+                matching = [n for n in matching if not _glob_matches(n, p)]
+            for f in matching:
+                yield f
+
+    return list(iterate())
+
+
 def itemsof(pattern, root=None, cwd=None):
     if not cwd:
-        cwd = cwdStack[-1]
+        cwd = getcwd()
     if not root:
         root = "."
 
@@ -50,6 +113,16 @@ def itemsof(pattern, root=None, cwd=None):
         except ValueError:
             error(f"file '{f}' is not in root '{root}'")
     return result
+
+
+def does_command_exist(cmd):
+    basecmd = cmd.strip().split()[0]
+    return shutil.which(basecmd)
+
+
+def shell(cmd):
+    r = subprocess.check_output([G.SHELL, "-c", cmd])
+    return r.decode("utf-8").strip()
 
 
 @Rule
@@ -78,7 +151,7 @@ def test(
             replaces=self,
             ins=[command],
             outs=["=sentinel"],
-            commands=["$[ins[0]]", "touch {outs}"],
+            commands=["$[ins[0]]", "touch $[outs[0]]"],
             deps=deps,
             label=label,
         )
@@ -87,7 +160,7 @@ def test(
             replaces=self,
             ins=ins,
             outs=["=sentinel"],
-            commands=commands + ["touch {outs}"],
+            commands=commands + ["touch $[outs[0]]"],
             deps=deps,
             label=label,
         )

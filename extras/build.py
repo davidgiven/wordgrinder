@@ -47,6 +47,6 @@ simplerule(
     name="wordgrinder_icns",
     ins=[".+wordgrinder_iconset"],
     outs=["=wordgrinder.icns"],
-    commands=["iconutil -c icns -o $[outs[0]] $(dir $[ins[0]])"],
+    commands=["iconutil -c icns -o $[outs[0]] $$(dir $[ins[0]])"],
     label="ICONUTIL",
 )
