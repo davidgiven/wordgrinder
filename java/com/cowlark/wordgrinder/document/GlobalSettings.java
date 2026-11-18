@@ -11,11 +11,6 @@ public class GlobalSettings
 {
     @RemainingDumpables public Map<String, String> remaining;
 
-    private static class Wrapper
-    {
-        @Dumpable public GlobalSettings globalSettings;
-    }
-
     public static GlobalSettings loadGlobalSettings() throws IOException
     {
         /* Decode settings as UTF-8 before passing the text to Undumper. */
@@ -28,5 +23,10 @@ public class GlobalSettings
             new Undumper().undump(wrapper, reader);
             return wrapper.globalSettings;
         }
+    }
+
+    private static class Wrapper
+    {
+        @Dumpable public GlobalSettings globalSettings;
     }
 }

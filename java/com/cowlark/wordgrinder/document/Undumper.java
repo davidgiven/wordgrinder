@@ -1,5 +1,7 @@
 package com.cowlark.wordgrinder.document;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -13,8 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Reads Dumper's headerless text metadata into a mutable object. The caller owns
@@ -28,6 +28,50 @@ import org.jspecify.annotations.Nullable;
  */
 public class Undumper
 {
+    static @NonNull Object parse(@NonNull String raw)
+    {
+        /* Recognise the two boolean literals. */
+        if (raw.equals("true"))
+            return true;
+        if (raw.equals("false"))
+            return false;
+
+        /* Quoted strings use exactly the four escapes written by Dumper. */
+        if (raw.length() >= 2 && raw.charAt(0) == '"' && raw.charAt(raw.length() - 1) == '"')
+        {
+            StringBuilder text = new StringBuilder();
+            for (int i = 1; i < raw.length() - 1; i++)
+            {
+                /* Reject an unescaped quote within the string. */
+                char c = raw.charAt(i);
+                if (c == '"')
+                    throw new IllegalArgumentException("Unescaped quote in " + raw);
+
+                /* Decode escapes, leaving ordinary characters unchanged. */
+                if (c == '\\')
+                {
+                    if (++i >= raw.length() - 1)
+                        throw new IllegalArgumentException("Unterminated escape in " + raw);
+                    c = switch (raw.charAt(i))
+                    {
+                        case 'n' -> '\n';
+                        case 'r' -> '\r';
+                        case '\\' -> '\\';
+                        case '"' -> '"';
+                        default -> throw new IllegalArgumentException("Invalid escape in " + raw);
+                    };
+                }
+                text.append(c);
+            }
+            return text.toString();
+        }
+
+        /* Keep numbers exact until the destination field's type is known. */
+        if (!raw.matches("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?"))
+            throw new IllegalArgumentException("Invalid dump value " + raw);
+        return new BigDecimal(raw);
+    }
+
     public void undump(@NonNull Object object, @NonNull BufferedReader input) throws IOException
     {
         /* Parse the complete input before making changes to the object. */
@@ -75,8 +119,12 @@ public class Undumper
         return root;
     }
 
-    private @Nullable Object read(@NonNull Node node, @NonNull Type type, @Nullable Object current,
-            @NonNull String path, @Nullable Remaining remaining)
+    private @Nullable Object read(
+            @NonNull Node node,
+            @NonNull Type type,
+            @Nullable Object current,
+            @NonNull String path,
+            @Nullable Remaining remaining)
     {
         /* Leaf nodes are scalar values, converted to the declared Java type. */
         Class<?> cls = rawType(type);
@@ -98,23 +146,34 @@ public class Undumper
     }
 
     @SuppressWarnings("unchecked")
-    private @NonNull Object readMap(@NonNull Node node, @NonNull Type type, @Nullable Object current,
-            @NonNull String path, @Nullable Remaining remaining)
+    private @NonNull Object readMap(
+            @NonNull Node node,
+            @NonNull Type type,
+            @Nullable Object current,
+            @NonNull String path,
+            @Nullable Remaining remaining)
     {
         /* Merge entries using the map's declared value type. */
-        Map<String, Object> map = current == null ? new LinkedHashMap<>() : (Map<String, Object>) current;
+        Map<String, Object> map =
+                current == null ? new LinkedHashMap<>() : (Map<String, Object>) current;
         Type valueType = argument(type, 1);
         for (Map.Entry<String, Node> entry : node.children.entrySet())
         {
             String key = entry.getKey();
-            map.put(key, read(entry.getValue(), valueType, map.get(key), path + "." + key, remaining));
+            map.put(
+                    key,
+                    read(entry.getValue(), valueType, map.get(key), path + "." + key, remaining));
         }
         return map;
     }
 
     @SuppressWarnings("unchecked")
-    private @NonNull Object readList(@NonNull Node node, @NonNull Type type, @Nullable Object current,
-            @NonNull String path, @Nullable Remaining remaining)
+    private @NonNull Object readList(
+            @NonNull Node node,
+            @NonNull Type type,
+            @Nullable Object current,
+            @NonNull String path,
+            @Nullable Remaining remaining)
     {
         /* Grow the list to accommodate the dump's one-based indices. */
         List<Object> list = current == null ? new ArrayList<>() : (List<Object>) current;
@@ -124,14 +183,23 @@ public class Undumper
             int index = index(entry.getKey());
             while (list.size() <= index)
                 list.add(null);
-            list.set(index, read(entry.getValue(), elementType, list.get(index),
-                    path + "." + entry.getKey(), remaining));
+            list.set(
+                    index, read(
+                            entry.getValue(),
+                            elementType,
+                            list.get(index),
+                            path + "." + entry.getKey(),
+                            remaining));
         }
         return list;
     }
 
-    private @NonNull Object readArray(@NonNull Node node, @NonNull Class<?> elementType,
-            @Nullable Object current, @NonNull String path, @Nullable Remaining remaining)
+    private @NonNull Object readArray(
+            @NonNull Node node,
+            @NonNull Class<?> elementType,
+            @Nullable Object current,
+            @NonNull String path,
+            @Nullable Remaining remaining)
     {
         /* Allocate enough room while retaining any existing elements. */
         int length = current == null ? 0 : Array.getLength(current);
@@ -149,14 +217,23 @@ public class Undumper
         for (Map.Entry<String, Node> entry : node.children.entrySet())
         {
             int index = index(entry.getKey());
-            Array.set(array, index, read(entry.getValue(), elementType, Array.get(array, index),
-                    path + "." + entry.getKey(), remaining));
+            Array.set(
+                    array, index, read(
+                            entry.getValue(),
+                            elementType,
+                            Array.get(array, index),
+                            path + "." + entry.getKey(),
+                            remaining));
         }
         return array;
     }
 
-    private @NonNull Object readObject(@NonNull Node node, @NonNull Class<?> cls,
-            @Nullable Object current, @NonNull String path, @Nullable Remaining remaining)
+    private @NonNull Object readObject(
+            @NonNull Node node,
+            @NonNull Class<?> cls,
+            @Nullable Object current,
+            @NonNull String path,
+            @Nullable Remaining remaining)
     {
         try
         {
@@ -188,18 +265,20 @@ public class Undumper
                 Object old = field.get(target);
                 boolean isFinal = Modifier.isFinal(field.getModifiers());
                 if (entry.getValue().raw != null && isFinal)
-                    throw new IllegalArgumentException("Cannot assign final dump field " + childPath);
-                Object value = read(entry.getValue(), field.getGenericType(), old, childPath, remaining);
+                    throw new IllegalArgumentException(
+                            "Cannot assign final dump field " + childPath);
+                Object value =
+                        read(entry.getValue(), field.getGenericType(), old, childPath, remaining);
                 if (value != old)
                 {
                     if (isFinal)
-                        throw new IllegalArgumentException("Cannot replace final dump field " + childPath);
+                        throw new IllegalArgumentException(
+                                "Cannot replace final dump field " + childPath);
                     field.set(target, value);
                 }
             }
             return target;
-        }
-        catch (ReflectiveOperationException e)
+        } catch (ReflectiveOperationException e)
         {
             /* Add the dump path to reflection failures for easier diagnosis. */
             throw new IllegalArgumentException("Cannot populate dump object at " + path, e);
@@ -207,7 +286,9 @@ public class Undumper
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable Remaining remainingFor(@NonNull Object target, @NonNull String path,
+    private @Nullable Remaining remainingFor(
+            @NonNull Object target,
+            @NonNull String path,
             @Nullable Remaining parent) throws IllegalAccessException
     {
         /* Inherit the enclosing catch-all unless this object declares its own. */
@@ -256,8 +337,9 @@ public class Undumper
     private @NonNull Type argument(@NonNull Type type, int index)
     {
         /* Raw collections have no declared element type. */
-        return type instanceof ParameterizedType parameterized
-                ? parameterized.getActualTypeArguments()[index] : Object.class;
+        return type instanceof ParameterizedType parameterized ?
+                parameterized.getActualTypeArguments()[index] :
+                Object.class;
     }
 
     private int index(@NonNull String key)
@@ -269,7 +351,10 @@ public class Undumper
         return index - 1;
     }
 
-    private @NonNull Object convert(@NonNull String raw, @NonNull Class<?> type, @NonNull String path)
+    private @NonNull Object convert(
+            @NonNull String raw,
+            @NonNull Class<?> type,
+            @NonNull String path)
     {
         /* Decode the value before checking whether the destination can hold it. */
         Object value = parse(raw);
@@ -325,68 +410,26 @@ public class Undumper
                 if (type == java.math.BigInteger.class)
                     return number.toBigIntegerExact();
             }
-        }
-        catch (ArithmeticException e)
+        } catch (ArithmeticException e)
         {
             /* Preserve the property path when an exact numeric conversion fails. */
             throw new IllegalArgumentException("Number out of range at " + path, e);
         }
 
         /* Reject mismatched types rather than silently discarding a known property. */
-        throw new IllegalArgumentException("Invalid value for " + type.getName() + " at " + path + ": " + raw);
-    }
-
-    static @NonNull Object parse(@NonNull String raw)
-    {
-        /* Recognise the two boolean literals. */
-        if (raw.equals("true"))
-            return true;
-        if (raw.equals("false"))
-            return false;
-
-        /* Quoted strings use exactly the four escapes written by Dumper. */
-        if (raw.length() >= 2 && raw.charAt(0) == '"' && raw.charAt(raw.length() - 1) == '"')
-        {
-            StringBuilder text = new StringBuilder();
-            for (int i = 1; i < raw.length() - 1; i++)
-            {
-                /* Reject an unescaped quote within the string. */
-                char c = raw.charAt(i);
-                if (c == '"')
-                    throw new IllegalArgumentException("Unescaped quote in " + raw);
-
-                /* Decode escapes, leaving ordinary characters unchanged. */
-                if (c == '\\')
-                {
-                    if (++i >= raw.length() - 1)
-                        throw new IllegalArgumentException("Unterminated escape in " + raw);
-                    c = switch (raw.charAt(i))
-                    {
-                        case 'n' -> '\n';
-                        case 'r' -> '\r';
-                        case '\\' -> '\\';
-                        case '"' -> '"';
-                        default -> throw new IllegalArgumentException("Invalid escape in " + raw);
-                    };
-                }
-                text.append(c);
-            }
-            return text.toString();
-        }
-
-        /* Keep numbers exact until the destination field's type is known. */
-        if (!raw.matches("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?"))
-            throw new IllegalArgumentException("Invalid dump value " + raw);
-        return new BigDecimal(raw);
+        throw new IllegalArgumentException(
+                "Invalid value for " + type.getName() + " at " + path + ": " + raw);
     }
 
     /* The nearest object's catch-all map and the path to which its keys are relative. */
-    private record Remaining(@NonNull String path, @NonNull Map<String, String> values) {}
+    private record Remaining(@NonNull String path, @NonNull Map<String, String> values)
+    {
+    }
 
     /* A property is either a raw scalar value or a collection of child properties. */
     private static final class Node
     {
-        @Nullable String raw;
         final @NonNull Map<String, Node> children = new TreeMap<>();
+        @Nullable String raw;
     }
 }

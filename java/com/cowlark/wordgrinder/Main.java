@@ -21,6 +21,6 @@ public class Main
         }
     }
 
-    @Import(name="exit")
+    @Import(name = "exit")
     private static native void exit(int status);
 }

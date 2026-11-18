@@ -20,7 +20,6 @@ public final class DumpableReflectionPolicy extends SimpleReflectionPolicy
                     return true;
             }
             return false;
-        })
-                .reflectableMethods(withParameterCount(0).and(named("<init>")));
+        }).reflectableMethods(withParameterCount(0).and(named("<init>")));
     }
 }

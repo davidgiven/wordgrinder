@@ -22,6 +22,7 @@ public final class EventBus
     private final Map<Class<? extends Event>, Map<EventToken, Listener<?>>> listeners =
             new LinkedHashMap<>();
     private final Map<Class<? extends Event>, Event> batched = new LinkedHashMap<>();
+
     /**
      * Creates an independent bus with no listeners or pending events.
      */

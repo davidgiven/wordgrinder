@@ -1,14 +1,16 @@
 package com.cowlark.wordgrinder.document;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.Map;
 import java.util.TreeMap;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
-/** Shared validation of serialization field annotations. */
+/**
+ * Shared validation of serialization field annotations.
+ */
 final class DumpFields
 {
     static @NonNull Map<String, Field> fields(@NonNull Class<?> type)
@@ -40,14 +42,17 @@ final class DumpFields
             {
                 if (field.getAnnotation(RemainingDumpables.class) == null)
                     continue;
-                if (Modifier.isStatic(field.getModifiers()) || !Map.class.isAssignableFrom(field.getType())
-                        || field.getAnnotation(Dumpable.class) != null || result != null)
-                    throw new IllegalArgumentException("Invalid @RemainingDumpables field " + field);
-                if (!(field.getGenericType() instanceof ParameterizedType typeArguments)
-                        || typeArguments.getActualTypeArguments().length != 2
-                        || typeArguments.getActualTypeArguments()[0] != String.class
-                        || typeArguments.getActualTypeArguments()[1] != String.class)
-                    throw new IllegalArgumentException("@RemainingDumpables requires Map<String, String>: " + field);
+                if (Modifier.isStatic(field.getModifiers()) ||
+                        !Map.class.isAssignableFrom(field.getType()) ||
+                        field.getAnnotation(Dumpable.class) != null || result != null)
+                    throw new IllegalArgumentException(
+                            "Invalid @RemainingDumpables field " + field);
+                if (!(field.getGenericType() instanceof ParameterizedType typeArguments) ||
+                        typeArguments.getActualTypeArguments().length != 2 ||
+                        typeArguments.getActualTypeArguments()[0] != String.class ||
+                        typeArguments.getActualTypeArguments()[1] != String.class)
+                    throw new IllegalArgumentException(
+                            "@RemainingDumpables requires Map<String, String>: " + field);
                 field.setAccessible(true);
                 result = field;
             }

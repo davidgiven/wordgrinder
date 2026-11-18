@@ -27,6 +27,7 @@ public final class Display
     public static final int KEY_RESIZE = 6 << 24;
     public static final int KEY_TIMEOUT = 7 << 24;
     public static final int KEY_QUIT = 8 << 24;
+
     private Display()
     {
     }

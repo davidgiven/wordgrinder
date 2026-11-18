@@ -127,23 +127,29 @@ public class Dumper
                             {
                                 for (Map.Entry<?, ?> entry : entries.entrySet())
                                 {
-                                    if (!(entry.getKey() instanceof String key) || !key.startsWith(".")
-                                            || !(entry.getValue() instanceof String raw)
-                                            || key.endsWith(".") || key.contains("..") || key.indexOf(':') >= 0
-                                            || key.indexOf('\n') >= 0 || key.indexOf('\r') >= 0
-                                            || raw.indexOf('\n') >= 0 || raw.indexOf('\r') >= 0)
-                                        throw new IllegalArgumentException("Invalid remaining dump entry " + entry);
+                                    if (!(entry.getKey() instanceof String key) ||
+                                            !key.startsWith(".") ||
+                                            !(entry.getValue() instanceof String raw) ||
+                                            key.endsWith(".") || key.contains("..") ||
+                                            key.indexOf(':') >= 0 || key.indexOf('\n') >= 0 ||
+                                            key.indexOf('\r') >= 0 || raw.indexOf('\n') >= 0 ||
+                                            raw.indexOf('\r') >= 0)
+                                        throw new IllegalArgumentException(
+                                                "Invalid remaining dump entry " + entry);
                                     Undumper.parse(raw);
                                     writeValue(path + key, raw, values);
                                 }
                             }
-                        }
-                        catch (IllegalAccessException e)
+                        } catch (IllegalAccessException e)
                         {
-                            throw new IllegalArgumentException("Cannot read remaining dump fields at " + path, e);
+                            throw new IllegalArgumentException(
+                                    "Cannot read remaining dump fields at " + path,
+                                    e);
                         }
                     }
-                    for (Map.Entry<String, Field> entry : DumpFields.fields(value.getClass()).entrySet())
+                    for (Map.Entry<String, Field> entry : DumpFields
+                            .fields(value.getClass())
+                            .entrySet())
                     {
                         Field field = entry.getValue();
                         try

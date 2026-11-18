@@ -1,20 +1,28 @@
 package com.cowlark.wordgrinder.document;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import org.junit.Test;
 import java.io.BufferedReader;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 public final class UndumperTest
 {
-    /** Runs the same reflection checks in a TeaVM C executable. */
+    /**
+     * Runs the same reflection checks in a TeaVM C executable.
+     */
     public static void main(String[] args) throws IOException
     {
         var tests = new UndumperTest();
@@ -38,36 +46,14 @@ public final class UndumperTest
         return output.toString();
     }
 
-    private static class Parent
-    {
-        @Dumpable("renamed") private String name;
-        @RemainingDumpables private Map<String, String> remaining = new LinkedHashMap<>();
-    }
-
-    private static final class Data extends Parent
-    {
-        @Dumpable int count;
-        @Dumpable boolean enabled;
-        @Dumpable char character;
-        @Dumpable double fraction;
-        @Dumpable Long large;
-        @Dumpable Child child;
-        @Dumpable List<Child> children = new ArrayList<>();
-        @Dumpable Map<String, Integer> numbers;
-        @Dumpable int[] values;
-    }
-
-    private static final class Child
-    {
-        @Dumpable String text;
-    }
-
     @Test
     public void restoresScalarsInheritedPrivateFieldsAndEscapes() throws IOException
     {
         Data data = new Data();
-        load(data, ".renamed: \"a\\\"b\\\\c\\nd\\ré😀\u0011\"\n.count: 7\n.enabled: true\n"
-                + ".character: \"é\"\n.fraction: 1.25\n.large: 9223372036854775807\n");
+        load(
+                data,
+                ".renamed: \"a\\\"b\\\\c\\nd\\ré😀\u0011\"\n.count: 7\n.enabled: true\n" +
+                        ".character: \"é\"\n.fraction: 1.25\n.large: 9223372036854775807\n");
         assertEquals("a\"b\\c\nd\ré😀\u0011", ((Parent) data).name);
         assertEquals(7, data.count);
         assertTrue(data.enabled);
@@ -80,8 +66,11 @@ public final class UndumperTest
     public void constructsNestedObjectsAndTypedContainers() throws IOException
     {
         Data data = new Data();
-        load(data, ".child.text: \"hello\"\n.children.2.text: \"second\"\n"
-                + ".children.1.text: \"first\"\n.numbers.answer: 42\n.values.2: 8\n.values.1: 7\n");
+        load(
+                data,
+                ".child.text: \"hello\"\n.children.2.text: \"second\"\n" +
+                        ".children.1.text: \"first\"\n.numbers.answer: 42\n.values.2: 8\n.values" +
+                        ".1: 7\n");
         assertEquals("hello", data.child.text);
         assertEquals("first", data.children.get(0).text);
         assertEquals("second", data.children.get(1).text);
@@ -92,30 +81,24 @@ public final class UndumperTest
     @Test
     public void unknownNestedPathsAndRawValuesSurviveRepeatedRoundTrips() throws IOException
     {
-        String text = ".child.future.deep: \"a\\\\b\\n😀\"\n.child.text: \"known\"\n"
-                + ".count: 4\n.future.number: 1.200e+03\n.future.truth: false\n";
+        String text = ".child.future.deep: \"a\\\\b\\n😀\"\n.child.text: \"known\"\n" +
+                ".count: 4\n.future.number: 1.200e+03\n.future.truth: false\n";
         Data data = new Data();
         load(data, text);
-        assertEquals(Map.of(".child.future.deep", "\"a\\\\b\\n😀\"", ".future.number", "1.200e+03",
-                ".future.truth", "false"), ((Parent) data).remaining);
+        assertEquals(
+                Map.of(
+                        ".child.future.deep",
+                        "\"a\\\\b\\n😀\"",
+                        ".future.number",
+                        "1.200e+03",
+                        ".future.truth",
+                        "false"), ((Parent) data).remaining);
         String first = dump(data);
         Data copy = new Data();
         load(copy, first);
         assertEquals(first, dump(copy));
         assertTrue(first.contains(".future.number: 1.200e+03\n"));
         assertTrue(first.contains(".child.future.deep: \"a\\\\b\\n😀\"\n"));
-    }
-
-    private static final class Local
-    {
-        @Dumpable String text;
-        @RemainingDumpables Map<String, String> remaining;
-    }
-
-    private static final class Owner
-    {
-        @Dumpable Local nested = new Local();
-        @RemainingDumpables Map<String, String> remaining = new LinkedHashMap<>();
     }
 
     @Test
@@ -143,14 +126,21 @@ public final class UndumperTest
     @Test
     public void malformedValuesConflictingPathsAndInvalidAssignmentsAreErrors()
     {
-        for (String text : List.of("garbage\n", ".x: nil\n", ".x: \"bad\\q\"\n", ".x: 1\n.x: 2\n",
-                ".x: 1\n.x.y: 2\n", ".x.y: 1\n.x: 2\n", ".x..y: 1\n",
-                ".count: 2147483648\n", ".count: 1.5\n", ".enabled: 1\n", ".values.0: 1\n"))
+        for (String text : List.of(
+                "garbage\n",
+                ".x: nil\n",
+                ".x: \"bad\\q\"\n",
+                ".x: 1\n.x: 2\n",
+                ".x: 1\n.x.y: 2\n",
+                ".x.y: 1\n.x: 2\n",
+                ".x..y: 1\n",
+                ".count: 2147483648\n",
+                ".count: 1.5\n",
+                ".enabled: 1\n",
+                ".values.0: 1\n"))
             assertThrows(text, IllegalArgumentException.class, () -> load(new Data(), text));
         assertThrows(IllegalArgumentException.class, () -> load(new Child(), ".unknown.path: 7\n"));
     }
-
-    private record Immutable(@Dumpable int count) {}
 
     @Test
     public void finalScalarFieldsAndConflictingRemainingEntriesAreErrors()
@@ -160,11 +150,6 @@ public final class UndumperTest
         local.text = "known";
         local.remaining = Map.of(".text", "\"stale\"");
         assertThrows(IllegalArgumentException.class, () -> dump(local));
-    }
-
-    private static final class WrongRemainingType
-    {
-        @RemainingDumpables Map<String, Integer> remaining;
     }
 
     @Test
@@ -182,7 +167,9 @@ public final class UndumperTest
         local.text = "scalar";
         assertThrows(IllegalArgumentException.class, () -> dump(local));
         assertThrows(IllegalArgumentException.class, () -> dump(new WrongRemainingType()));
-        assertThrows(IllegalArgumentException.class, () -> load(new WrongRemainingType(), ".x: 7\n"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> load(new WrongRemainingType(), ".x: 7\n"));
     }
 
     @Test
@@ -190,8 +177,57 @@ public final class UndumperTest
     {
         var input = new BufferedReader(new StringReader(".count: 1\n"))
         {
-            @Override public void close() { fail("Caller owns input"); }
+            @Override
+            public void close()
+            {
+                fail("Caller owns input");
+            }
         };
         new Undumper().undump(new Data(), input);
+    }
+
+    private static class Parent
+    {
+        @Dumpable("renamed") private String name;
+        @RemainingDumpables private Map<String, String> remaining = new LinkedHashMap<>();
+    }
+
+    private static final class Data extends Parent
+    {
+        @Dumpable int count;
+        @Dumpable boolean enabled;
+        @Dumpable char character;
+        @Dumpable double fraction;
+        @Dumpable Long large;
+        @Dumpable Child child;
+        @Dumpable List<Child> children = new ArrayList<>();
+        @Dumpable Map<String, Integer> numbers;
+        @Dumpable int[] values;
+    }
+
+    private static final class Child
+    {
+        @Dumpable String text;
+    }
+
+    private static final class Local
+    {
+        @Dumpable String text;
+        @RemainingDumpables Map<String, String> remaining;
+    }
+
+    private static final class Owner
+    {
+        @Dumpable Local nested = new Local();
+        @RemainingDumpables Map<String, String> remaining = new LinkedHashMap<>();
+    }
+
+    private record Immutable(@Dumpable int count)
+    {
+    }
+
+    private static final class WrongRemainingType
+    {
+        @RemainingDumpables Map<String, Integer> remaining;
     }
 }
