@@ -17,7 +17,10 @@ export(
 
 export(
     name="javatests",
-    deps=["javatests/com/cowlark/wordgrinder/eventbus+test"],
+    deps=[
+        "javatests/com/cowlark/wordgrinder+test",
+        "javatests/com/cowlark/wordgrinder/eventbus+test",
+    ],
 )
 
 export(
