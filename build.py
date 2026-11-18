@@ -16,6 +16,11 @@ export(
 )
 
 export(
+    name="javatests",
+    deps=["javatests/com/cowlark/wordgrinder/eventbus+test"],
+)
+
+export(
     name="all",
     items={
         "bin/wordgrinder$(EXT)": TEST_BINARY,

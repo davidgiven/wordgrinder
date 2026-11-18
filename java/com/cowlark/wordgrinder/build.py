@@ -1,8 +1,11 @@
 from build.ab import simplerule
 from build.c import cxxlibrary, cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
+from build.utils import itemsof
 
 TEAVM_VERSION = "0.14.1"
+
+mavenjar(name="jspecify", artifact="org.jspecify:jspecify:1.0.0")
 
 mavenjar(name="teavm-cli", artifact=f"org.teavm:teavm-cli:{TEAVM_VERSION}")
 mavenjar(
@@ -108,13 +111,8 @@ mavenjar(
 
 javalibrary(
     name="main",
-    deps=[".+teavm-interop"],
-    srcitems={
-        "com/cowlark/wordgrinder/Main.java": "./Main.java",
-        "com/cowlark/wordgrinder/Display.java": "./Display.java",
-        "com/cowlark/wordgrinder/Screen.java": "./Screen.java",
-        "com/cowlark/wordgrinder/Clipboard.java": "./Clipboard.java",
-    },
+    deps=[".+teavm-interop", "./eventbus"],
+    srcitems=itemsof("java/com/cowlark/wordgrinder/*.java", cwd=""),
 )
 
 javaprogram(
@@ -129,6 +127,8 @@ teavm_native = simplerule(
     name="wordgrinder-teavm",
     ins=[".+main", "./display.h", "./clipboard.h"],
     deps=[
+        "./eventbus",
+        ".+jspecify",
         ".+teavm-cli",
         ".+teavm-core",
         ".+teavm-tooling",

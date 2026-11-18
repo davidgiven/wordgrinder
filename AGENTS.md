@@ -1,0 +1,7 @@
+# Java conventions
+
+- Express non-null contracts with `org.jspecify.annotations.NonNull` (`@NonNull`).
+- Do not use `Objects.requireNonNull`; use annotations instead of explicit runtime null checks for these contracts.
+- Place Java tests under top-level `javatests/`, mirroring the package paths under `java/` (Bazel style).
+- Use JUnit4 for Java tests, with a package-local `build.py` that builds and runs them through a `test()` rule.
+- Use `build.utils.itemsof` with repository-relative patterns for Java `srcitems`, e.g. `itemsof("java/com/cowlark/wordgrinder/eventbus/*.java", cwd="")`, instead of manual source lists or relative-root arguments.

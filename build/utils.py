@@ -97,7 +97,7 @@ def glob(include=["*"], exclude=[], dir=None, relative_to="."):
 
 
 def itemsof(pattern, root=None, cwd=None):
-    if not cwd:
+    if cwd is None:
         cwd = getcwd()
     if not root:
         root = "."
