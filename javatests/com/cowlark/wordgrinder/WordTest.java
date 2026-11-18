@@ -1,11 +1,11 @@
 package com.cowlark.wordgrinder;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class WordTest
 {
@@ -16,11 +16,12 @@ public final class WordTest
     @Test
     public void parseWordReportsTextRunsWithDefaultStyles()
     {
-        assertEquals(List.of(
-            new Word.StyledRun(Word.BRIGHT, "a😀"),
-            new Word.StyledRun(Word.BRIGHT | Word.BOLD, "é"),
-            new Word.StyledRun(Word.BRIGHT, "界")),
-            Word.parseWord("a😀" + BOLD + "é" + NORMAL + "界", Word.BRIGHT));
+        assertEquals(
+                List.of(
+                        new Word.StyledRun(Word.BRIGHT, "a😀"),
+                        new Word.StyledRun(Word.BRIGHT | Word.BOLD, "é"),
+                        new Word.StyledRun(Word.BRIGHT, "界")),
+                Word.parseWord("a😀" + BOLD + "é" + NORMAL + "界", Word.BRIGHT));
     }
 
     @Test
@@ -28,8 +29,9 @@ public final class WordTest
     {
         assertEquals(List.of(), Word.parseWord("", 0));
         assertEquals(List.of(), Word.parseWord(BOLD + NORMAL, 0));
-        assertEquals(List.of(new Word.StyledRun(Word.UNDERLINE, "x")),
-            Word.parseWord(BOLD + UNDERLINE + "x" + NORMAL, 0));
+        assertEquals(
+                List.of(new Word.StyledRun(Word.UNDERLINE, "x")),
+                Word.parseWord(BOLD + UNDERLINE + "x" + NORMAL, 0));
         List<String> calls = new ArrayList<>();
         Word.parseWord(BOLD + "hello", 0, (style, text) -> calls.add(style + ":" + text));
         assertEquals(List.of(Word.BOLD + ":hello"), calls);
@@ -92,14 +94,16 @@ public final class WordTest
         assertEquals("a" + BOLD + "😀" + NORMAL + "b", result.word());
         assertEquals(1, result.startOffset());
         assertEquals(4, result.endOffset());
-        assertEquals(BOLD + "😀", result.word().substring(result.startOffset(), result.endOffset()));
+        assertEquals(BOLD + "😀", result.word().substring(result.startOffset(),
+                result.endOffset()));
     }
 
     @Test
     public void insertionHonoursExplicitStylesAndSupportsEmptyWordsAndEndOffsets()
     {
-        assertEquals(BOLD + "x" + NORMAL + "y",
-            Word.insertIntoWord("", BOLD + "x" + NORMAL + "y", 0, Word.UNDERLINE).word());
+        assertEquals(
+                BOLD + "x" + NORMAL + "y",
+                Word.insertIntoWord("", BOLD + "x" + NORMAL + "y", 0, Word.UNDERLINE).word());
         assertEquals("😀x", Word.insertIntoWord("😀", "x", 2, 0).word());
         Word.InsertResult empty = Word.insertIntoWord("ab", "", 1, 0);
         assertEquals("ab", empty.word());
@@ -132,7 +136,9 @@ public final class WordTest
         Word.StyleResult result = Word.applyStyleToWord("a😀b", Word.BOLD, Word.STYLE_ALL, 1, 3, 1);
         assertEquals("a" + BOLD + "😀" + NORMAL + "b", result.word());
         assertEquals(2, result.cursorOffset());
-        assertEquals(5, Word.applyStyleToWord("a😀b", Word.BOLD, Word.STYLE_ALL, 1, 3, 3).cursorOffset());
+        assertEquals(
+                5,
+                Word.applyStyleToWord("a😀b", Word.BOLD, Word.STYLE_ALL, 1, 3, 3).cursorOffset());
     }
 
     @Test
@@ -142,7 +148,9 @@ public final class WordTest
         Word.StyleResult result = Word.applyStyleToWord(both + "ab", 0, ~Word.BOLD, 0, 3, 3);
         assertEquals(UNDERLINE + "ab", result.word());
         assertEquals(3, result.cursorOffset());
-        assertEquals(new Word.StyleResult("", 0), Word.applyStyleToWord("", Word.BOLD, -1, 0, 0, 0));
+        assertEquals(
+                new Word.StyleResult("", 0),
+                Word.applyStyleToWord("", Word.BOLD, -1, 0, 0, 0));
     }
 
     @Test
@@ -158,24 +166,38 @@ public final class WordTest
     public void styleCharactersEncodeOnlyTheFourEmbeddedFlags()
     {
         for (int style = 0; style <= Word.STYLE_ALL; style++)
-            assertEquals(String.valueOf((char) (style | Word.STYLE_MARKER)), Word.createStyleByte(style));
+            assertEquals(
+                    String.valueOf((char) (style | Word.STYLE_MARKER)),
+                    Word.createStyleByte(style));
         assertEquals(NORMAL, Word.createStyleByte(Word.BRIGHT | Word.DIM));
     }
 
-    private record Glyph(int x, int y, int codePoint, int style) {}
+    private record Glyph(int x, int y, int codePoint, int style)
+    {
+    }
 
     private static final class RecordingRenderer implements Word.Renderer
     {
         int attributes;
         final List<Glyph> glyphs = new ArrayList<>();
-        @Override public void setAttributes(int attributes) { this.attributes = attributes; }
-        @Override public void writeCodePoint(int x, int y, int codePoint)
+
+        @Override
+        public void setAttributes(int attributes)
+        {
+            this.attributes = attributes;
+        }
+
+        @Override
+        public void writeCodePoint(int x, int y, int codePoint)
         {
             glyphs.add(new Glyph(x, y, codePoint, attributes));
         }
-        @Override public int width(int codePoint)
+
+        @Override
+        public int width(int codePoint)
         {
-            if (codePoint == 0x301) return 0;
+            if (codePoint == 0x301)
+                return 0;
             return codePoint == 0x1f600 ? 2 : 1;
         }
     }
@@ -185,8 +207,11 @@ public final class WordTest
     {
         RecordingRenderer renderer = new RecordingRenderer();
         assertEquals(0, Word.writeStyled(5, 2, "a😀b", 0, 1, 3, 0, renderer));
-        assertEquals(List.of(new Glyph(5, 2, 'a', 0), new Glyph(6, 2, 0x1f600, Word.REVERSE),
-            new Glyph(8, 2, 'b', 0)), renderer.glyphs);
+        assertEquals(
+                List.of(
+                        new Glyph(5, 2, 'a', 0),
+                        new Glyph(6, 2, 0x1f600, Word.REVERSE),
+                        new Glyph(8, 2, 'b', 0)), renderer.glyphs);
         assertEquals(0, renderer.attributes);
     }
 
@@ -194,10 +219,12 @@ public final class WordTest
     public void styledDrawingBridgesMatchingUnderlinedWordsAndKeepsFinalStyle()
     {
         RecordingRenderer renderer = new RecordingRenderer();
-        assertEquals(Word.UNDERLINE,
-            Word.writeStyled(3, 0, UNDERLINE + "x", Word.UNDERLINE, -1, -1, 0, renderer));
-        assertEquals(List.of(new Glyph(2, 0, 160, Word.UNDERLINE),
-            new Glyph(3, 0, 'x', Word.UNDERLINE)), renderer.glyphs);
+        assertEquals(
+                Word.UNDERLINE,
+                Word.writeStyled(3, 0, UNDERLINE + "x", Word.UNDERLINE, -1, -1, 0, renderer));
+        assertEquals(
+                List.of(new Glyph(2, 0, 160, Word.UNDERLINE), new Glyph(3, 0, 'x', Word.UNDERLINE)),
+                renderer.glyphs);
         assertEquals(Word.REVERSE, Word.writeStyled(0, 0, "x", 0, 0, 1, 0, renderer));
         assertEquals(0, renderer.attributes);
     }
@@ -209,7 +236,9 @@ public final class WordTest
         assertThrows(IllegalArgumentException.class, () -> Word.prevCharInWord("😀", 1));
         assertThrows(IllegalArgumentException.class, () -> Word.insertIntoWord("😀", "x", 1, 0));
         assertThrows(IllegalArgumentException.class, () -> Word.deleteFromWord("😀", 0, 1));
-        assertThrows(IllegalArgumentException.class, () -> Word.applyStyleToWord("😀", 0, -1, 0, 2, 1));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Word.applyStyleToWord("😀", 0, -1, 0, 2, 1));
         assertThrows(IndexOutOfBoundsException.class, () -> Word.getStyleFromWord("a", 2));
         assertThrows(IllegalArgumentException.class, () -> Word.deleteFromWord("a", 1, 0));
     }
