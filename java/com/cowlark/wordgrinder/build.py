@@ -107,8 +107,10 @@ mavenjar(
 
 javalibrary(
     name="main",
+    deps=[".+teavm-interop"],
     srcitems={
         "com/cowlark/wordgrinder/Main.java": "./Main.java",
+        "com/cowlark/wordgrinder/NCurses.java": "./NCurses.java",
     },
 )
 
@@ -153,7 +155,9 @@ simplerule(
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(CC) $(CFLAGS) -std=c11 -o $[outs[0]] $[dir]/c/all.c $(LDFLAGS)",
+        "$(CC) $(CFLAGS) `$(PKG_CONFIG) --cflags ncurses` "
+        "-std=c11 -o $[outs[0]] $[dir]/c/all.c $(LDFLAGS) "
+        "`$(PKG_CONFIG) --libs ncurses`",
     ],
     label="TEAVM",
 )
