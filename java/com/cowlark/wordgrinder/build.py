@@ -113,6 +113,7 @@ javalibrary(
         "com/cowlark/wordgrinder/Main.java": "./Main.java",
         "com/cowlark/wordgrinder/Display.java": "./Display.java",
         "com/cowlark/wordgrinder/Screen.java": "./Screen.java",
+        "com/cowlark/wordgrinder/Clipboard.java": "./Clipboard.java",
     },
 )
 
@@ -126,7 +127,7 @@ javaprogram(
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main", "./display.h"],
+    ins=[".+main", "./display.h", "./clipboard.h"],
     deps=[
         ".+teavm-cli",
         ".+teavm-core",
@@ -177,8 +178,16 @@ cxxlibrary(
 )
 
 
+cxxlibrary(
+    name="clipboard-native",
+    srcs=["./clipboard.cc"],
+    hdrs={"clipboard.h": "./clipboard.h"},
+    deps=["third_party/clip+clip_none"],
+)
+
+
 cxxprogram(
     name="wordgrinder-c",
     srcs=[],
-    deps=[".+wordgrinder-teavm", ".+display-native"],
+    deps=[".+wordgrinder-teavm", ".+display-native", ".+clipboard-native"],
 )
