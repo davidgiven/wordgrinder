@@ -17,3 +17,8 @@ r = simplerule(
 )
 r.args["caller_cflags"] = [f"-I{r.dir}/glfw-3.4.bin.WIN32/include"]
 r.args["cheader_deps"] = [r]
+r.args["cheader_files"] = [r]
+r.args["clibrary_deps"] = [r]
+r.args["clibrary_files"] = [
+    r.targetof(f"{r.dir}/glfw-3.4.bin.WIN32/lib-mingw-w64/libglfw3.a")
+]
