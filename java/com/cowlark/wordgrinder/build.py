@@ -112,6 +112,7 @@ javalibrary(
     srcitems={
         "com/cowlark/wordgrinder/Main.java": "./Main.java",
         "com/cowlark/wordgrinder/Display.java": "./Display.java",
+        "com/cowlark/wordgrinder/Screen.java": "./Screen.java",
     },
 )
 

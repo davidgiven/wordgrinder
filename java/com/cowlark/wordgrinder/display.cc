@@ -78,3 +78,20 @@ int32_t wg_dpy_getchar(double timeout)
     return dpy_getchar(timeout);
 }
 
+
+// Preserve the native screen layer's locale-dependent character handling.
+#if !defined(_WIN32) && !defined(__APPLE__)
+#include <langinfo.h>
+#endif
+
+void wg_screen_atexit(void (*callback)(void)) { atexit(callback); }
+int32_t wg_screen_width(int32_t character) { return emu_wcwidth(character); }
+bool wg_screen_control(int32_t character) { return iswcntrl(character); }
+bool wg_screen_default_unicode(void)
+{
+#if defined(_WIN32) || defined(__APPLE__)
+    return true;
+#else
+    return strcmp(nl_langinfo(CODESET), "UTF-8") == 0;
+#endif
+}

@@ -4,22 +4,17 @@ public class Main
 {
     public static void main(String[] args)
     {
-        System.out.println("Welcome to WordGrinder!");
-        Display.dpy_init(args);
-        Display.dpy_start();
+        Screen.screenInit(args);
+        Screen.initScreen();
+
         try
         {
-            Display.dpy_clearscreen();
-            Display.dpy_writechar(5, 5, 'q');
-            for (; ; )
-            {
-                var c = Display.dpy_getchar(10.0);
-                if (c == ' ')
-                    break;
-            }
+            Screen.clearScreen();
+            Screen.write(5, 5, "Hello, world!");
+            var c = Screen.getEvent();
         } finally
         {
-            Display.dpy_shutdown();
+            Screen.deinitScreen();
         }
     }
 }
