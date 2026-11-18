@@ -119,7 +119,7 @@ javaprogram(
 )
 
 
-# TeaVM emits multiple C/header files, so preserve the complete generated tree.
+# Generate and compile the C sources within one rule.
 simplerule(
     name="wordgrinder-c",
     ins=[".+main"],
@@ -148,12 +148,12 @@ simplerule(
         ".+teavm-relocated-libs-asm-analysis",
         ".+teavm-jso",
     ],
-    outs=["=wordgrinder-c.jar"],
+    outs=["=wordgrinder-c$(EXT)"],
     commands=[
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(JAR) --create --file=$[outs[0]] -C $[dir]/c .",
+        "$(CC) $(CFLAGS) -std=c11 -o $[outs[0]] $[dir]/c/all.c $(LDFLAGS)",
     ],
     label="TEAVM",
 )
