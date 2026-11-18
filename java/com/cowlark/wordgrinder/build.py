@@ -1,4 +1,5 @@
 from build.ab import simplerule
+from build.c import cxxlibrary, cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
 
 TEAVM_VERSION = "0.14.1"
@@ -110,6 +111,7 @@ javalibrary(
     deps=[".+teavm-interop"],
     srcitems={
         "com/cowlark/wordgrinder/Main.java": "./Main.java",
+        "com/cowlark/wordgrinder/Display.java": "./Display.java",
         "com/cowlark/wordgrinder/NCurses.java": "./NCurses.java",
     },
 )
@@ -121,10 +123,10 @@ javaprogram(
 )
 
 
-# Generate and compile the C sources within one rule.
-simplerule(
-    name="wordgrinder-c",
-    ins=[".+main"],
+# Generate and compile TeaVM C, then link it with the C++ display adapter.
+teavm_native = simplerule(
+    name="wordgrinder-teavm",
+    ins=[".+main", "./display.h"],
     deps=[
         ".+teavm-cli",
         ".+teavm-core",
@@ -150,14 +152,33 @@ simplerule(
         ".+teavm-relocated-libs-asm-analysis",
         ".+teavm-jso",
     ],
-    outs=["=wordgrinder-c$(EXT)"],
+    outs=["=wordgrinder.o"],
     commands=[
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
-        "-p $[ins] $[deps] -- com.cowlark.wordgrinder.Main",
+        "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
         "$(CC) $(CFLAGS) `$(PKG_CONFIG) --cflags ncurses` "
-        "-std=c11 -o $[outs[0]] $[dir]/c/all.c $(LDFLAGS) "
-        "`$(PKG_CONFIG) --libs ncurses`",
+        "-Ijava/com/cowlark/wordgrinder "
+        "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
     ],
     label="TEAVM",
+    traits={"clibrary"},
+)
+teavm_native.args["clibrary_deps"] = [teavm_native]
+teavm_native.args["clibrary_files"] = [teavm_native]
+
+
+# C ABI adapters for the existing C++ display backend.
+cxxlibrary(
+    name="display-native",
+    srcs=["./display.cc"],
+    hdrs={"display.h": "./display.h"},
+    deps=["src/c/arch/ncurses"],
+)
+
+
+cxxprogram(
+    name="wordgrinder-c",
+    srcs=[],
+    deps=[".+wordgrinder-teavm", ".+display-native"],
 )

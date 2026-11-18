@@ -21,6 +21,7 @@ cxxlibrary(
     name="globals",
     srcs=[
         "./utils.cc",
+        "./display_utils.cc",
         "./cmark.cc",
         "./filesystem.cc",
         "./main.cc",

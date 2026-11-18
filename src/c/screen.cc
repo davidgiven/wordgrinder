@@ -234,13 +234,6 @@ static int getbytesofcharacter_cb(lua_State* L)
     return 1;
 }
 
-uni_t encode_mouse_event(int x, int y, bool b)
-{
-    uni_t key = b ? KEY_MOUSEDOWN : KEY_MOUSEUP;
-    key |= (x & 0xff);
-    key |= (y & 0xff) << 8;
-    return key;
-}
 
 void decode_mouse_event(uni_t key, int* x, int* y, bool* b)
 {
