@@ -11,6 +11,11 @@ from config import (
 )
 
 export(
+    name="java",
+    items={"bin/wordgrinder-java": "java/com/cowlark/wordgrinder+wordgrinder"},
+)
+
+export(
     name="all",
     items={
         "bin/wordgrinder$(EXT)": TEST_BINARY,
