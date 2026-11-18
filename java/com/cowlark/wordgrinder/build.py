@@ -122,11 +122,19 @@ javalibrary(
         ".+teavm-interop",
         "./eventbus",
         "./document",
+        "./fileio",
+        "./addons/debug+settings",
+        "./addons/directories+settings",
+        "./addons/gui+settings",
+        "./addons/lookandfeel+settings",
+        "./addons/recents+settings",
+        "./addons/spillchocker+settings",
     ],
     srcitems={
         f"com/cowlark/wordgrinder/{f}": f"./{f}"
         for f in [
             "Clipboard.java",
+            "Context.java",
             "Display.java",
             "Main.java",
             "Screen.java",
@@ -147,6 +155,12 @@ teavm_native = simplerule(
     ins=[".+main", "./display.h", "./clipboard.h"],
     deps=[
         "./teavm",
+        "./addons/debug+settings",
+        "./addons/directories+settings",
+        "./addons/gui+settings",
+        "./addons/lookandfeel+settings",
+        "./addons/recents+settings",
+        "./addons/spillchocker+settings",
         "./eventbus",
         "./document",
         "./fileio",

@@ -142,8 +142,8 @@ public class Dumper
                             }
                         } catch (IllegalAccessException e)
                         {
-                            throw new IllegalArgumentException(
-                                    "Cannot read remaining dump fields at " + path,
+                            throw new IllegalArgumentException("Cannot read remaining dump fields" +
+                                    " at " + path,
                                     e);
                         }
                     }

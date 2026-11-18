@@ -14,6 +14,8 @@ public class Main
         {
             var g = GlobalSettings.loadGlobalSettings();
             System.out.println("" + g);
+            System.out.println(g.lookandfeel.denseparagraphs);
+            System.out.println(g.lookandfeel.enabled);
         } catch (Exception e)
         {
             e.printStackTrace();

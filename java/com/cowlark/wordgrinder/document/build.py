@@ -9,5 +9,14 @@ javalibrary(
             "GlobalSettings.java",
         ]
     },
-    deps=["java/com/cowlark/wordgrinder+jspecify", "java/com/cowlark/wordgrinder/fileio"],
+    deps=[
+        "java/com/cowlark/wordgrinder+jspecify",
+        "java/com/cowlark/wordgrinder/fileio",
+        "java/com/cowlark/wordgrinder/addons/debug+settings",
+        "java/com/cowlark/wordgrinder/addons/directories+settings",
+        "java/com/cowlark/wordgrinder/addons/gui+settings",
+        "java/com/cowlark/wordgrinder/addons/lookandfeel+settings",
+        "java/com/cowlark/wordgrinder/addons/recents+settings",
+        "java/com/cowlark/wordgrinder/addons/spillchocker+settings",
+    ],
 )
