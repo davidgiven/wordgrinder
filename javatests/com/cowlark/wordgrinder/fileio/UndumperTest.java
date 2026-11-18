@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.document;
+package com.cowlark.wordgrinder.fileio;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

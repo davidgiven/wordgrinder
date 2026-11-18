@@ -1,8 +1,13 @@
 from build.java import javalibrary
-from build.utils import itemsof
 
 javalibrary(
     name="document",
-    srcitems=itemsof("java/com/cowlark/wordgrinder/document/*.java", cwd=""),
-    deps=["java/com/cowlark/wordgrinder+jspecify"],
+    srcitems={
+        f"com/cowlark/wordgrinder/document/{f}": f"./{f}"
+        for f in [
+            "DocumentStyle.java",
+            "GlobalSettings.java",
+        ]
+    },
+    deps=["java/com/cowlark/wordgrinder+jspecify", "java/com/cowlark/wordgrinder/fileio"],
 )

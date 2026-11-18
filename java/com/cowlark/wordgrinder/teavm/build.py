@@ -1,11 +1,15 @@
 from build.ab import simplerule
 from build.java import javalibrary
-from build.utils import itemsof
 
 # This extension runs inside the compiler, not inside the application.
 javalibrary(
     name="classes",
-    srcitems=itemsof("java/com/cowlark/wordgrinder/teavm/*.java", cwd=""),
+    srcitems={
+        f"com/cowlark/wordgrinder/teavm/{f}": f"./{f}"
+        for f in [
+            "DumpableReflectionPolicy.java",
+        ]
+    },
     deps=[
         "java/com/cowlark/wordgrinder+teavm-extension-apis",
         "java/com/cowlark/wordgrinder+teavm-extension-spi",

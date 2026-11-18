@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.document;
+package com.cowlark.wordgrinder.fileio;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

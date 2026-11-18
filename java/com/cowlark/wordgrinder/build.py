@@ -1,7 +1,6 @@
 from build.ab import simplerule
 from build.c import cxxlibrary, cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
-from build.utils import itemsof
 
 TEAVM_VERSION = "0.16.0"
 
@@ -124,7 +123,16 @@ javalibrary(
         "./eventbus",
         "./document",
     ],
-    srcitems=itemsof("java/com/cowlark/wordgrinder/*.java", cwd=""),
+    srcitems={
+        f"com/cowlark/wordgrinder/{f}": f"./{f}"
+        for f in [
+            "Clipboard.java",
+            "Display.java",
+            "Main.java",
+            "Screen.java",
+            "Word.java",
+        ]
+    },
 )
 
 javaprogram(
@@ -141,6 +149,7 @@ teavm_native = simplerule(
         "./teavm",
         "./eventbus",
         "./document",
+        "./fileio",
         ".+jspecify",
         ".+teavm-cli",
         ".+teavm-c-incremental",

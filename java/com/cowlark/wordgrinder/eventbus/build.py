@@ -1,8 +1,16 @@
 from build.java import javalibrary
-from build.utils import itemsof
 
 javalibrary(
     name="eventbus",
-    srcitems=itemsof("java/com/cowlark/wordgrinder/eventbus/*.java", cwd=""),
+    srcitems={
+        f"com/cowlark/wordgrinder/eventbus/{f}": f"./{f}"
+        for f in [
+            "DrawWord.java",
+            "Event.java",
+            "EventBus.java",
+            "EventCallback.java",
+            "EventToken.java",
+        ]
+    },
     deps=["java/com/cowlark/wordgrinder+jspecify"],
 )

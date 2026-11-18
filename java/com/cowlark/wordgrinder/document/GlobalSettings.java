@@ -1,5 +1,9 @@
 package com.cowlark.wordgrinder.document;
 
+import com.cowlark.wordgrinder.fileio.Dumpable;
+import com.cowlark.wordgrinder.fileio.RemainingDumpables;
+import com.cowlark.wordgrinder.fileio.Undumper;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;

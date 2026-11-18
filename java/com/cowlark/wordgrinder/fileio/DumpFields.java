@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.document;
+package com.cowlark.wordgrinder.fileio;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;

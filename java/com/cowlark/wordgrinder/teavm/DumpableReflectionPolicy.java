@@ -10,8 +10,8 @@ public final class DumpableReflectionPolicy extends SimpleReflectionPolicy
     @Override
     protected void setup()
     {
-        var dumpable = withAnnotation("com.cowlark.wordgrinder.document.Dumpable");
-        var remaining = withAnnotation("com.cowlark.wordgrinder.document.RemainingDumpables");
+        var dumpable = withAnnotation("com.cowlark.wordgrinder.fileio.Dumpable");
+        var remaining = withAnnotation("com.cowlark.wordgrinder.fileio.RemainingDumpables");
         allClasses().reflectableFields(dumpable.or(remaining));
         selectClasses(cls -> {
             for (var current = cls; current != null; current = current.superclass())
