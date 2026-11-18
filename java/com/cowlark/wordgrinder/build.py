@@ -112,7 +112,6 @@ javalibrary(
     srcitems={
         "com/cowlark/wordgrinder/Main.java": "./Main.java",
         "com/cowlark/wordgrinder/Display.java": "./Display.java",
-        "com/cowlark/wordgrinder/NCurses.java": "./NCurses.java",
     },
 )
 
@@ -157,7 +156,7 @@ teavm_native = simplerule(
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(CC) $(CFLAGS) `$(PKG_CONFIG) --cflags ncurses` "
+        "$(CC) $(CFLAGS) "
         "-Ijava/com/cowlark/wordgrinder "
         "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
     ],
