@@ -17,7 +17,7 @@ package com.cowlark.wordgrinder.eventbus;
  * <li>{@code DocumentLoaded}: a document set has just been loaded.</li>
  * <li>{@code DocumentModified}: a document has been modified; carries the document.</li>
  * <li>{@code DocumentUpgrade}: a document set is being upgraded; carries the old and new versions.</li>
- * <li>{@code DrawWord}: a word is being drawn; carries the word and its old and current styles.</li>
+ * <li>{@link DrawWord}: a word is being drawn; carries mutable word text, old/current styles, and sentence-start status.</li>
  * <li>{@code KeyTyped}: the user is typing into the document; carries the typed value.</li>
  * <li>{@code Idle}: the user is not touching the keyboard.</li>
  * <li>{@code Moved}: the cursor has moved.</li>
@@ -26,8 +26,8 @@ package com.cowlark.wordgrinder.eventbus;
  * <li>{@code WaitingForUser}: the application is about to wait for a keypress.</li>
  * <li>{@code ScreenInitialised}: the screen has just been set up.</li>
  * </ul>
- * These names describe the Lua event catalogue; concrete Java event subclasses are defined
- * by their callers as the corresponding application code is ported.
+ * These names describe the Lua event catalogue; concrete Java event subclasses are added
+ * as the corresponding application code is ported.
  */
 public abstract class Event
 {

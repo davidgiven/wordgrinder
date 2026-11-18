@@ -129,6 +129,10 @@ public final class Display
     @Import(name = "wg_dpy_cleararea")
     public static native void dpy_cleararea(int x1, int y1, int x2, int y2);
 
+    /** Terminal cell width of one Unicode code point, using the native locale. */
+    @Import(name = "wg_screen_width")
+    public static native int getCharacterWidth(int codePoint);
+
     @Import(name = "wg_dpy_getchar")
     public static native int dpy_getchar(double timeout);
 

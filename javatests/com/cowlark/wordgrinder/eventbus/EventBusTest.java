@@ -1,27 +1,40 @@
 package com.cowlark.wordgrinder.eventbus;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-/** Regression tests for typed event dispatch, listener registration, and async batching. */
+import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Regression tests for typed event dispatch, listener registration, and async batching.
+ */
 public final class EventBusTest
 {
     private static class Changed extends Event
     {
         final int value;
-        Changed(int value) { this.value = value; }
+
+        Changed(int value)
+        {
+            this.value = value;
+        }
     }
+
     private static final class SpecialChanged extends Changed
     {
-        SpecialChanged() { super(0); }
+        SpecialChanged()
+        {
+            super(0);
+        }
     }
-    private static final class Idle extends Event {}
+
+    private static final class Idle extends Event
+    {
+    }
 
     @Test
     public void typedDispatchAndTokens()
@@ -29,10 +42,11 @@ public final class EventBusTest
         EventBus bus = new EventBus();
         List<Integer> values = new ArrayList<>();
         EventToken first = bus.addEventListener(Changed.class, event -> values.add(event.value));
-        EventToken second = bus.addEventListener(Changed.class, (event, token) -> {
-            values.add(event.value * 10);
-            bus.removeEventListener(token);
-        });
+        EventToken second = bus.addEventListener(
+                Changed.class, (event, token) -> {
+                    values.add(event.value * 10);
+                    bus.removeEventListener(token);
+                });
         assertNotSame(first, second);
         bus.fireEvent(new Idle());
         bus.fireEvent(new SpecialChanged());
@@ -55,12 +69,13 @@ public final class EventBusTest
         EventBus bus = new EventBus();
         List<String> calls = new ArrayList<>();
         List<EventToken> tokens = new ArrayList<>();
-        tokens.add(bus.addEventListener(Changed.class, (event, token) -> {
-            calls.add("first");
-            bus.removeEventListener(token);
-            bus.removeEventListener(tokens.get(1));
-            bus.addEventListener(Changed.class, next -> calls.add("new"));
-        }));
+        tokens.add(bus.addEventListener(
+                Changed.class, (event, token) -> {
+                    calls.add("first");
+                    bus.removeEventListener(token);
+                    bus.removeEventListener(tokens.get(1));
+                    bus.addEventListener(Changed.class, next -> calls.add("new"));
+                }));
         tokens.add(bus.addEventListener(Changed.class, event -> calls.add("removed")));
         bus.fireEvent(new Changed(1));
         assertEquals(List.of("first"), calls);
@@ -73,10 +88,12 @@ public final class EventBusTest
     {
         EventBus bus = new EventBus();
         List<Integer> values = new ArrayList<>();
-        bus.addEventListener(Changed.class, event -> {
-            values.add(event.value);
-            if (event.value == 2) bus.fireAsyncEvent(new Changed(3));
-        });
+        bus.addEventListener(
+                Changed.class, event -> {
+                    values.add(event.value);
+                    if (event.value == 2)
+                        bus.fireAsyncEvent(new Changed(3));
+                });
         bus.fireAsyncEvent(new Changed(1));
         bus.fireAsyncEvent(new Changed(2));
         assertTrue(values.isEmpty());
@@ -92,10 +109,12 @@ public final class EventBusTest
         EventBus bus = new EventBus();
         EventBus other = new EventBus();
         List<Integer> values = new ArrayList<>();
-        EventToken token = bus.addEventListener(Changed.class, event -> {
-            values.add(event.value);
-            if (event.value == 1) bus.fireEvent(new Changed(2));
-        });
+        EventToken token = bus.addEventListener(
+                Changed.class, event -> {
+                    values.add(event.value);
+                    if (event.value == 1)
+                        bus.fireEvent(new Changed(2));
+                });
         other.removeEventListener(token);
         other.fireEvent(new Changed(0));
         bus.fireEvent(new Changed(1));
@@ -107,7 +126,10 @@ public final class EventBusTest
     {
         EventBus bus = new EventBus();
         List<String> calls = new ArrayList<>();
-        bus.addEventListener(Changed.class, event -> { throw new IllegalStateException(); });
+        bus.addEventListener(
+                Changed.class, event -> {
+                    throw new IllegalStateException();
+                });
         bus.addEventListener(Idle.class, event -> calls.add("idle"));
         bus.fireAsyncEvent(new Changed(1));
         bus.fireAsyncEvent(new Idle());
@@ -115,5 +137,28 @@ public final class EventBusTest
         assertTrue(calls.isEmpty());
         bus.flushAsyncEvents();
         assertEquals(List.of("idle"), calls);
+    }
+
+    @Test
+    public void drawWordListenersCanUpdateTheRenderingPayload()
+    {
+        EventBus bus = new EventBus();
+        DrawWord event = new DrawWord("word", 2, 8, true);
+        bus.addEventListener(
+                DrawWord.class, payload -> {
+                    assertEquals("word", payload.word);
+                    assertEquals(2, payload.oldStyle);
+                    assertEquals(8, payload.currentStyle);
+                    assertTrue(payload.firstWord);
+                    payload.word = "replacement";
+                    payload.oldStyle = 0;
+                    payload.currentStyle |= 32;
+                    payload.firstWord = false;
+                });
+        bus.fireEvent(event);
+        assertEquals("replacement", event.word);
+        assertEquals(0, event.oldStyle);
+        assertEquals(40, event.currentStyle);
+        assertTrue(!event.firstWord);
     }
 }
