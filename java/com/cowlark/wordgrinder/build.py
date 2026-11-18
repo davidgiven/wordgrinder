@@ -22,7 +22,6 @@ mavenjar(
     name="teavm-interop", artifact=f"org.teavm:teavm-interop:{TEAVM_VERSION}"
 )
 
-
 mavenjar(name="commons-cli", artifact="commons-cli:commons-cli:1.11.0")
 
 mavenjar(
@@ -50,7 +49,6 @@ mavenjar(
     artifact=f"org.teavm:teavm-relocated-libs-rhino:{TEAVM_VERSION}",
 )
 
-
 mavenjar(
     name="teavm-jso-apis",
     artifact=f"org.teavm:teavm-jso-apis:{TEAVM_VERSION}",
@@ -65,7 +63,6 @@ mavenjar(
     name="teavm-metaprogramming-impl",
     artifact=f"org.teavm:teavm-metaprogramming-impl:{TEAVM_VERSION}",
 )
-
 
 mavenjar(
     name="jzlib",
@@ -97,7 +94,6 @@ mavenjar(
     artifact=f"org.teavm:teavm-jso:{TEAVM_VERSION}",
 )
 
-
 # Additional compiler/runtime modules introduced since TeaVM 0.14.
 mavenjar(
     name="teavm-c-incremental", artifact=f"org.teavm:teavm-c-incremental:{TEAVM_VERSION}"
@@ -121,7 +117,6 @@ mavenjar(name="asm-util", artifact="org.ow2.asm:asm-util:9.10.1")
 mavenjar(name="rhino", artifact="org.mozilla:rhino:1.9.1")
 mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
 
-
 javalibrary(
     name="main",
     deps=[
@@ -137,7 +132,6 @@ javaprogram(
     mainclass="com.cowlark.wordgrinder.Main",
     deps=[".+main"],
 )
-
 
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
@@ -196,7 +190,6 @@ teavm_native = simplerule(
 teavm_native.args["clibrary_deps"] = [teavm_native]
 teavm_native.args["clibrary_files"] = [teavm_native]
 
-
 # C ABI adapters for the existing C++ display backend.
 cxxlibrary(
     name="display-native",
@@ -205,14 +198,12 @@ cxxlibrary(
     deps=["src/c/arch/ncurses"],
 )
 
-
 cxxlibrary(
     name="clipboard-native",
     srcs=["./clipboard.cc"],
     hdrs={"clipboard.h": "./clipboard.h"},
     deps=["third_party/clip+clip_none"],
 )
-
 
 cxxprogram(
     name="wordgrinder-c",

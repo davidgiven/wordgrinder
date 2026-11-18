@@ -172,36 +172,6 @@ public final class WordTest
         assertEquals(NORMAL, Word.createStyleByte(Word.BRIGHT | Word.DIM));
     }
 
-    private record Glyph(int x, int y, int codePoint, int style)
-    {
-    }
-
-    private static final class RecordingRenderer implements Word.Renderer
-    {
-        int attributes;
-        final List<Glyph> glyphs = new ArrayList<>();
-
-        @Override
-        public void setAttributes(int attributes)
-        {
-            this.attributes = attributes;
-        }
-
-        @Override
-        public void writeCodePoint(int x, int y, int codePoint)
-        {
-            glyphs.add(new Glyph(x, y, codePoint, attributes));
-        }
-
-        @Override
-        public int width(int codePoint)
-        {
-            if (codePoint == 0x301)
-                return 0;
-            return codePoint == 0x1f600 ? 2 : 1;
-        }
-    }
-
     @Test
     public void styledDrawingUsesCodePointsAndRendererWidths()
     {
@@ -241,5 +211,35 @@ public final class WordTest
                 () -> Word.applyStyleToWord("😀", 0, -1, 0, 2, 1));
         assertThrows(IndexOutOfBoundsException.class, () -> Word.getStyleFromWord("a", 2));
         assertThrows(IllegalArgumentException.class, () -> Word.deleteFromWord("a", 1, 0));
+    }
+
+    private record Glyph(int x, int y, int codePoint, int style)
+    {
+    }
+
+    private static final class RecordingRenderer implements Word.Renderer
+    {
+        final List<Glyph> glyphs = new ArrayList<>();
+        int attributes;
+
+        @Override
+        public void setAttributes(int attributes)
+        {
+            this.attributes = attributes;
+        }
+
+        @Override
+        public void writeCodePoint(int x, int y, int codePoint)
+        {
+            glyphs.add(new Glyph(x, y, codePoint, attributes));
+        }
+
+        @Override
+        public int width(int codePoint)
+        {
+            if (codePoint == 0x301)
+                return 0;
+            return codePoint == 0x1f600 ? 2 : 1;
+        }
     }
 }

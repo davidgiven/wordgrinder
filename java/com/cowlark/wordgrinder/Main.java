@@ -1,28 +1,26 @@
 package com.cowlark.wordgrinder;
 
-import com.cowlark.wordgrinder.document.Dumpable;
-import com.cowlark.wordgrinder.document.Dumper;
+import com.cowlark.wordgrinder.document.GlobalSettings;
+import org.teavm.interop.Import;
+import org.teavm.interop.c.Include;
+import java.io.IOException;
 
+@Include("stdlib.h")
 public class Main
 {
-    static class TestClass
+    public static void main(String[] args) throws IOException
     {
-        public @Dumpable int fnord;
+        try
+        {
+            var g = GlobalSettings.loadGlobalSettings();
+            System.out.println("" + g);
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            exit(1);
+        }
     }
 
-    public static void main(String[] args)
-    {
-        var o = new TestClass();
-        o.fnord = 7;
-
-        System.out.println("start dump");
-        new Dumper().dump(o, System.out);
-        System.out.println("end dump");
-
-        //
-        //        Screen.screenInit(args);
-        //        Screen.initScreen();
-        //
-        //        Screen.deinitScreen();
-    }
+    @Import(name="exit")
+    private static native void exit(int status);
 }

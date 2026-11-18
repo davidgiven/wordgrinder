@@ -31,35 +31,6 @@ public final class Word
     public static final int DIM = 32;
     public static final int STYLE_MARKER = 16;
     public static final int STYLE_ALL = 15;
-
-    private Word()
-    {
-    }
-
-    public record StyledRun(int style, @NonNull String text)
-    {
-    }
-
-    public record InsertResult(@NonNull String word, int startOffset, int endOffset)
-    {
-    }
-
-    public record StyleResult(@NonNull String word, int cursorOffset)
-    {
-    }
-
-    /**
-     * Java drawing operations; cell widths are supplied by the caller's renderer.
-     */
-    public interface Renderer
-    {
-        void setAttributes(int attributes);
-
-        void writeCodePoint(int x, int y, int codePoint);
-
-        int width(int codePoint);
-    }
-
     /**
      * Native display renderer; callers can still supply a renderer for off-screen drawing or tests.
      */
@@ -83,6 +54,10 @@ public final class Word
             return Display.getCharacterWidth(codePoint);
         }
     };
+
+    private Word()
+    {
+    }
 
     /**
      * Parses a word into nonempty text runs, combining each style with the default style.
@@ -390,25 +365,6 @@ public final class Word
             throw new IllegalArgumentException("range starts after its end");
     }
 
-    private static final class Reader
-    {
-        final @NonNull String text;
-        int offset;
-        int style;
-
-        Reader(@NonNull String text, int style)
-        {
-            this.text = text;
-            this.style = style & STYLE_ALL;
-        }
-    }
-
-    private static final class Writer
-    {
-        final StringBuilder text = new StringBuilder();
-        int style;
-    }
-
     /**
      * Copies a code point or consumes a style, emitting only necessary style changes.
      */
@@ -442,5 +398,48 @@ public final class Word
             destination.text.appendCodePoint(codePoint);
         }
         return true;
+    }
+
+    /**
+     * Java drawing operations; cell widths are supplied by the caller's renderer.
+     */
+    public interface Renderer
+    {
+        void setAttributes(int attributes);
+
+        void writeCodePoint(int x, int y, int codePoint);
+
+        int width(int codePoint);
+    }
+
+    public record StyledRun(int style, @NonNull String text)
+    {
+    }
+
+    public record InsertResult(@NonNull String word, int startOffset, int endOffset)
+    {
+    }
+
+    public record StyleResult(@NonNull String word, int cursorOffset)
+    {
+    }
+
+    private static final class Reader
+    {
+        final @NonNull String text;
+        int offset;
+        int style;
+
+        Reader(@NonNull String text, int style)
+        {
+            this.text = text;
+            this.style = style & STYLE_ALL;
+        }
+    }
+
+    private static final class Writer
+    {
+        final StringBuilder text = new StringBuilder();
+        int style;
     }
 }

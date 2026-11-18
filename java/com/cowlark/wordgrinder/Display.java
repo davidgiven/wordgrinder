@@ -5,21 +5,19 @@ import org.teavm.interop.Import;
 import org.teavm.interop.Strings;
 import org.teavm.interop.c.Include;
 
-/** Bindings to the native display backend. Coordinates are (x, y).
+/**
+ * Bindings to the native display backend. Coordinates are (x, y).
  * Requires TeaVM's C backend and the display-native library.
  */
 @Include("display.h")
 public final class Display
 {
-    private Display() {}
-
     public static final int DPY_ITALIC = 1;
     public static final int DPY_UNDERLINE = 2;
     public static final int DPY_REVERSE = 4;
     public static final int DPY_BOLD = 8;
     public static final int DPY_BRIGHT = 16;
     public static final int DPY_DIM = 32;
-
     public static final int KEYM_MOUSE = 0x7f << 24;
     public static final int KEY_MOUSEDOWN = 1 << 24;
     public static final int KEY_MOUSEUP = 2 << 24;
@@ -29,8 +27,13 @@ public final class Display
     public static final int KEY_RESIZE = 6 << 24;
     public static final int KEY_TIMEOUT = 7 << 24;
     public static final int KEY_QUIT = 8 << 24;
+    private Display()
+    {
+    }
 
-    /** Pass command-line options to the backend before dpy_start(). */
+    /**
+     * Pass command-line options to the backend before dpy_start().
+     */
     public static void dpy_init(String[] args)
     {
         Address argv = malloc((args.length + 1L) * Address.sizeOf());
@@ -44,16 +47,18 @@ public final class Display
                 if (arg == null)
                     throw new NullPointerException("display argument");
                 Address text = Strings.toC(arg);
-                argv.add(count * Address.sizeOf()).putAddress(text);
+                argv
+                        .add(count * Address.sizeOf()).putAddress(text);
                 count++;
             }
-            argv.add(count * Address.sizeOf()).putAddress(null);
+            argv
+                    .add(count * Address.sizeOf()).putAddress(null);
             initNative(argv);
-        }
-        finally
+        } finally
         {
             for (int i = 0; i < count; i++)
-                free(argv.add(i * Address.sizeOf()).getAddress());
+                free(argv
+                        .add(i * Address.sizeOf()).getAddress());
             free(argv);
         }
     }
@@ -61,13 +66,21 @@ public final class Display
     @Import(name = "wg_dpy_init")
     private static native void initNative(Address argv);
 
-    /** RGB components use the native colour_t range, 0.0 to 1.0. */
+    /**
+     * RGB components use the native colour_t range, 0.0 to 1.0.
+     */
     @Import(name = "wg_dpy_setcolour")
     public static native void dpy_setcolour(
-        float foregroundRed, float foregroundGreen, float foregroundBlue,
-        float backgroundRed, float backgroundGreen, float backgroundBlue);
+            float foregroundRed,
+            float foregroundGreen,
+            float foregroundBlue,
+            float backgroundRed,
+            float backgroundGreen,
+            float backgroundBlue);
 
-    /** Returns {width, height}. */
+    /**
+     * Returns {width, height}.
+     */
     public static int[] dpy_getscreensize()
     {
         int[] size = new int[2];
@@ -87,8 +100,7 @@ public final class Display
         try
         {
             return Strings.fromC(text);
-        }
-        finally
+        } finally
         {
             free(text);
         }
@@ -129,7 +141,9 @@ public final class Display
     @Import(name = "wg_dpy_cleararea")
     public static native void dpy_cleararea(int x1, int y1, int x2, int y2);
 
-    /** Terminal cell width of one Unicode code point, using the native locale. */
+    /**
+     * Terminal cell width of one Unicode code point, using the native locale.
+     */
     @Import(name = "wg_screen_width")
     public static native int getCharacterWidth(int codePoint);
 

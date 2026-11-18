@@ -14,28 +14,6 @@ import java.util.List;
  */
 public final class EventBusTest
 {
-    private static class Changed extends Event
-    {
-        final int value;
-
-        Changed(int value)
-        {
-            this.value = value;
-        }
-    }
-
-    private static final class SpecialChanged extends Changed
-    {
-        SpecialChanged()
-        {
-            super(0);
-        }
-    }
-
-    private static final class Idle extends Event
-    {
-    }
-
     @Test
     public void typedDispatchAndTokens()
     {
@@ -160,5 +138,27 @@ public final class EventBusTest
         assertEquals(0, event.oldStyle);
         assertEquals(40, event.currentStyle);
         assertTrue(!event.firstWord);
+    }
+
+    private static class Changed extends Event
+    {
+        final int value;
+
+        Changed(int value)
+        {
+            this.value = value;
+        }
+    }
+
+    private static final class SpecialChanged extends Changed
+    {
+        SpecialChanged()
+        {
+            super(0);
+        }
+    }
+
+    private static final class Idle extends Event
+    {
     }
 }

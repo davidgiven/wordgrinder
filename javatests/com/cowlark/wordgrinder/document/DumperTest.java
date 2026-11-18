@@ -1,35 +1,21 @@
 package com.cowlark.wordgrinder.document;
 
-import java.io.PrintStream;
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.List;
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import org.junit.Test;
+import java.io.StringWriter;
+import java.io.PrintWriter;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 public final class DumperTest
 {
     private static String dump(Object object)
     {
-        ByteArrayOutputStream output = new ByteArrayOutputStream();
-        new Dumper().dump(object, new PrintStream(output, false, StandardCharsets.UTF_8));
-        return output.toString(StandardCharsets.UTF_8);
-    }
-
-    private static class Parent
-    {
-        @Dumpable private int alpha = 7;
-        private String ignored = "not saved";
-    }
-
-    private static final class Child extends Parent
-    {
-        @Dumpable private String zebra = "hello";
-        @Dumpable private static String staticField = "not saved";
-        @Dumpable private String absent;
+        StringWriter output = new StringWriter();
+        new Dumper().dump(object, new PrintWriter(output));
+        return output.toString();
     }
 
     @Test
@@ -37,8 +23,6 @@ public final class DumperTest
     {
         assertEquals(".alpha: 7\n.zebra: \"hello\"\n", dump(new Child()));
     }
-
-    private record Value(@Dumpable("oldname") String name, @Dumpable boolean enabled) {}
 
     @Test
     public void recordFieldsAndExplicitNamesAreSupported()
@@ -53,8 +37,10 @@ public final class DumperTest
         values.put("z", new int[]{2, 3});
         values.put("a", List.of(new Value("first", true), new Value("second", false)));
         values.put("_transient", "ignored");
-        assertEquals(".a.1.enabled: true\n.a.1.oldname: \"first\"\n"
-            + ".a.2.enabled: false\n.a.2.oldname: \"second\"\n.z.1: 2\n.z.2: 3\n", dump(values));
+        assertEquals(
+                ".a.1.enabled: true\n.a.1.oldname: \"first\"\n" +
+                        ".a.2.enabled: false\n.a.2.oldname: \"second\"\n.z.1: 2\n.z.2: 3\n",
+                dump(values));
     }
 
     @Test
@@ -77,7 +63,9 @@ public final class DumperTest
     public void sharedObjectsCanBeRepeatedButCyclesAreRejected()
     {
         var repeated = new Value("x", true);
-        assertEquals(dump(List.of(new Value("x", true), new Value("x", true))), dump(List.of(repeated, repeated)));
+        assertEquals(
+                dump(List.of(new Value("x", true), new Value("x", true))),
+                dump(List.of(repeated, repeated)));
         var cyclic = new LinkedHashMap<String, Object>();
         cyclic.put("self", cyclic);
         assertThrows(IllegalArgumentException.class, () -> dump(cyclic));
@@ -89,5 +77,22 @@ public final class DumperTest
         assertThrows(IllegalArgumentException.class, () -> dump(Double.NaN));
         assertThrows(IllegalArgumentException.class, () -> dump(Double.POSITIVE_INFINITY));
         assertThrows(IllegalArgumentException.class, () -> dump(java.util.Map.of(1, "value")));
+    }
+
+    private static class Parent
+    {
+        @Dumpable private int alpha = 7;
+        private String ignored = "not saved";
+    }
+
+    private static final class Child extends Parent
+    {
+        @Dumpable private static String staticField = "not saved";
+        @Dumpable private String zebra = "hello";
+        @Dumpable private String absent;
+    }
+
+    private record Value(@Dumpable("oldname") String name, @Dumpable boolean enabled)
+    {
     }
 }

@@ -1,20 +1,21 @@
 package com.cowlark.wordgrinder;
 
-import java.nio.charset.StandardCharsets;
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
 import org.teavm.interop.c.Include;
+import java.nio.charset.StandardCharsets;
 
-/** Java equivalents of src/c/clipboard.cc, using the native clip backend. */
+/**
+ * Java equivalents of src/c/clipboard.cc, using the native clip backend.
+ */
 @Include("clipboard.h")
 public final class Clipboard
 {
     private static boolean initialized;
 
-    private Clipboard() {}
-
-    /** Either field is null when its clipboard format is unavailable. */
-    public record Contents(String text, byte[] wordgrinderData) {}
+    private Clipboard()
+    {
+    }
 
     public static void clipboardInit()
     {
@@ -40,23 +41,27 @@ public final class Clipboard
         try
         {
             byte[] text = read(snapshot, 0);
-            return new Contents(text == null ? null : new String(text, StandardCharsets.UTF_8),
-                read(snapshot, 1));
-        }
-        finally
+            return new Contents(
+                    text == null ? null : new String(text, StandardCharsets.UTF_8),
+                    read(snapshot, 1));
+        } finally
         {
             releaseNative(snapshot);
         }
     }
 
-    /** Replaces the clipboard; null omits a format, while an empty value stores it. */
+    /**
+     * Replaces the clipboard; null omits a format, while an empty value stores it.
+     */
     public static void clipboardSet(String text, byte[] wordgrinderData)
     {
         clipboardInit();
         byte[] encoded = text == null ? null : text.getBytes(StandardCharsets.UTF_8);
-        setNative(encoded == null ? null : Address.ofData(encoded), encoded == null ? -1 : encoded.length,
-            wordgrinderData == null ? null : Address.ofData(wordgrinderData),
-            wordgrinderData == null ? -1 : wordgrinderData.length);
+        setNative(
+                encoded == null ? null : Address.ofData(encoded),
+                encoded == null ? -1 : encoded.length,
+                wordgrinderData == null ? null : Address.ofData(wordgrinderData),
+                wordgrinderData == null ? -1 : wordgrinderData.length);
         Address.pin(encoded);
         Address.pin(wordgrinderData);
     }
@@ -69,7 +74,8 @@ public final class Clipboard
         byte[] bytes = new byte[length];
         Address source = dataNative(snapshot, format);
         for (int i = 0; i < length; i++)
-            bytes[i] = source.add(i).getByte();
+            bytes[i] = source
+                    .add(i).getByte();
         return bytes;
     }
 
@@ -92,5 +98,16 @@ public final class Clipboard
     private static native void releaseNative(Address snapshot);
 
     @Import(name = "wg_clipboard_set")
-    private static native void setNative(Address text, int textLength, Address data, int dataLength);
+    private static native void setNative(
+            Address text,
+            int textLength,
+            Address data,
+            int dataLength);
+
+    /**
+     * Either field is null when its clipboard format is unavailable.
+     */
+    public record Contents(String text, byte[] wordgrinderData)
+    {
+    }
 }

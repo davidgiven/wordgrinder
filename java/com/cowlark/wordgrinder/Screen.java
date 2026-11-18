@@ -22,20 +22,6 @@ public final class Screen
     {
     }
 
-    public sealed interface InputEvent permits MouseInputEvent, KeyInputEvent
-    {}
-
-    /** Character text or a symbolic key name returned by the display backend. */
-    public record KeyInputEvent(String key) implements InputEvent
-    {}
-
-    /**
-     * Mouse coordinates, current button state, and whether this event is a new press.
-     */
-    public record MouseInputEvent(int x, int y, boolean b, boolean clicked) implements InputEvent
-    {
-    }
-
     public static void screenInit(String[] args)
     {
         Display.dpy_init(args);
@@ -236,7 +222,8 @@ public final class Screen
     }
 
     /**
-     * Returns a KeyEvent for character text or symbolic key names, or a MouseEvent for button events.
+     * Returns a KeyEvent for character text or symbolic key names, or a MouseEvent for button
+     * events.
      */
     public static InputEvent getEvent(double timeout)
     {
@@ -271,11 +258,6 @@ public final class Screen
         unicode = enabled;
     }
 
-    public abstract static class ExitHandler extends Function
-    {
-        public abstract void invoke();
-    }
-
     @Import(name = "wg_screen_atexit")
     private static native void registerExitHandler(ExitHandler callback);
 
@@ -287,4 +269,27 @@ public final class Screen
 
     @Import(name = "wg_screen_default_unicode")
     private static native boolean defaultUnicode();
+
+    public sealed interface InputEvent permits MouseInputEvent, KeyInputEvent
+    {
+    }
+
+    /**
+     * Character text or a symbolic key name returned by the display backend.
+     */
+    public record KeyInputEvent(String key) implements InputEvent
+    {
+    }
+
+    /**
+     * Mouse coordinates, current button state, and whether this event is a new press.
+     */
+    public record MouseInputEvent(int x, int y, boolean b, boolean clicked) implements InputEvent
+    {
+    }
+
+    public abstract static class ExitHandler extends Function
+    {
+        public abstract void invoke();
+    }
 }

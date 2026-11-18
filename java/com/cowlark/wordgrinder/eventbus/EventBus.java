@@ -5,31 +5,28 @@
 
 package com.cowlark.wordgrinder.eventbus;
 
+import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Typed equivalent of the Lua event bus. Each instance owns its listeners and queue.
- * Dispatch matches the concrete event class exactly; base-class listeners do not receive subclasses.
+ * Dispatch matches the concrete event class exactly; base-class listeners do not receive
+ * subclasses.
  * Listener order is unspecified. Use the bus from one thread.
  */
 public final class EventBus
 {
-    /** Creates an independent bus with no listeners or pending events. */
-    public EventBus() {}
-
-    private final Map<Class<? extends Event>, Map<EventToken, Listener<?>>> listeners = new LinkedHashMap<>();
+    private final Map<Class<? extends Event>, Map<EventToken, Listener<?>>> listeners =
+            new LinkedHashMap<>();
     private final Map<Class<? extends Event>, Event> batched = new LinkedHashMap<>();
-
-    private record Listener<T extends @NonNull Event>(@NonNull Class<T> type, @NonNull EventCallback<T> callback, @NonNull EventToken token)
+    /**
+     * Creates an independent bus with no listeners or pending events.
+     */
+    public EventBus()
     {
-        void invoke(@NonNull Event event)
-        {
-            callback.invoke(type.cast(event), token);
-        }
     }
 
     /**
@@ -42,17 +39,20 @@ public final class EventBus
      * that listener. The callback also receives its token, allowing it to unregister itself.
      * Event parameters are carried by the event object rather than separate arguments.
      *
-     * @param <T> the event type accepted by the callback
+     * @param <T>       the event type accepted by the callback
      * @param eventType the concrete event class to register for
-     * @param callback the callback to register
+     * @param callback  the callback to register
      * @return the unique token for this registration
      */
-    public <T extends @NonNull Event> @NonNull EventToken addEventListener(@NonNull Class<T> eventType, @NonNull EventCallback<T> callback)
+    public <T extends @NonNull Event> @NonNull EventToken addEventListener(
+            @NonNull Class<T> eventType,
+            @NonNull EventCallback<T> callback)
     {
         EventToken token = new EventToken(this, eventType);
         // Ensure there is a listener table for this class, then register the callback.
-        listeners.computeIfAbsent(eventType, key -> new LinkedHashMap<>())
-            .put(token, new Listener<>(eventType, callback, token));
+        listeners
+                .computeIfAbsent(eventType, key -> new LinkedHashMap<>())
+                .put(token, new Listener<>(eventType, callback, token));
         return token;
     }
 
@@ -61,12 +61,14 @@ public final class EventBus
      * Registration and removal behave as for {@link #addEventListener(Class, EventCallback)};
      * the callback does not receive its registration token.
      *
-     * @param <T> the event type accepted by the callback
+     * @param <T>       the event type accepted by the callback
      * @param eventType the concrete event class to register for
-     * @param callback the callback to register
+     * @param callback  the callback to register
      * @return the unique token for this registration
      */
-    public <T extends @NonNull Event> @NonNull EventToken addEventListener(@NonNull Class<T> eventType, @NonNull Consumer<? super T> callback)
+    public <T extends @NonNull Event> @NonNull EventToken addEventListener(
+            @NonNull Class<T> eventType,
+            @NonNull Consumer<? super T> callback)
     {
         return addEventListener(eventType, (event, token) -> callback.accept(event));
     }
@@ -147,6 +149,16 @@ public final class EventBus
             // Remove before dispatch so a handler can queue this event class again.
             iterator.remove();
             fireEvent(event);
+        }
+    }
+
+    private record Listener<T extends @NonNull Event>(@NonNull Class<T> type,
+                                                      @NonNull EventCallback<T> callback,
+                                                      @NonNull EventToken token)
+    {
+        void invoke(@NonNull Event event)
+        {
+            callback.invoke(type.cast(event), token);
         }
     }
 }

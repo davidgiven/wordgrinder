@@ -11,13 +11,16 @@ package com.cowlark.wordgrinder.eventbus;
  *
  * <p>The original application defines these event kinds:
  * <ul>
- * <li>{@code BuildStatusBar}: the status-bar contents are being calculated; carries the status-bar list.</li>
+ * <li>{@code BuildStatusBar}: the status-bar contents are being calculated; carries the
+ * status-bar list.</li>
  * <li>{@code Changed}: the document has changed.</li>
  * <li>{@code DocumentCreated}: a new document set has just been created.</li>
  * <li>{@code DocumentLoaded}: a document set has just been loaded.</li>
  * <li>{@code DocumentModified}: a document has been modified; carries the document.</li>
- * <li>{@code DocumentUpgrade}: a document set is being upgraded; carries the old and new versions.</li>
- * <li>{@link DrawWord}: a word is being drawn; carries mutable word text, old/current styles, and sentence-start status.</li>
+ * <li>{@code DocumentUpgrade}: a document set is being upgraded; carries the old and new
+ * versions.</li>
+ * <li>{@link DrawWord}: a word is being drawn; carries mutable word text, old/current styles,
+ * and sentence-start status.</li>
  * <li>{@code KeyTyped}: the user is typing into the document; carries the typed value.</li>
  * <li>{@code Idle}: the user is not touching the keyboard.</li>
  * <li>{@code Moved}: the cursor has moved.</li>
@@ -31,6 +34,10 @@ package com.cowlark.wordgrinder.eventbus;
  */
 public abstract class Event
 {
-    /** Constructs an event for delivery through an {@link EventBus}. */
-    protected Event() {}
+    /**
+     * Constructs an event for delivery through an {@link EventBus}.
+     */
+    protected Event()
+    {
+    }
 }
