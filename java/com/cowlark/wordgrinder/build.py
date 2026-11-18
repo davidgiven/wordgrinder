@@ -3,11 +3,11 @@ from build.c import cxxlibrary, cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
 from build.utils import itemsof
 
-TEAVM_VERSION = "0.14.1"
+TEAVM_VERSION = "0.16.0"
 
 mavenjar(name="jspecify", artifact="org.jspecify:jspecify:1.0.0")
 
-mavenjar(name="teavm-cli", artifact=f"org.teavm:teavm-cli:{TEAVM_VERSION}")
+mavenjar(name="teavm-cli", artifact=f"org.teavm:cli:{TEAVM_VERSION}")
 mavenjar(
     name="teavm-tooling", artifact=f"org.teavm:teavm-tooling:{TEAVM_VERSION}"
 )
@@ -23,10 +23,7 @@ mavenjar(
 )
 
 
-mavenjar(
-    name="teavm-relocated-libs-commons-cli",
-    artifact=f"org.teavm:teavm-relocated-libs-commons-cli:{TEAVM_VERSION}",
-)
+mavenjar(name="commons-cli", artifact="commons-cli:commons-cli:1.11.0")
 
 mavenjar(
     name="teavm-metaprogramming-api",
@@ -53,10 +50,6 @@ mavenjar(
     artifact=f"org.teavm:teavm-relocated-libs-rhino:{TEAVM_VERSION}",
 )
 
-mavenjar(
-    name="teavm-relocated-libs-commons-io",
-    artifact=f"org.teavm:teavm-relocated-libs-commons-io:{TEAVM_VERSION}",
-)
 
 mavenjar(
     name="teavm-jso-apis",
@@ -73,10 +66,6 @@ mavenjar(
     artifact=f"org.teavm:teavm-metaprogramming-impl:{TEAVM_VERSION}",
 )
 
-mavenjar(
-    name="commons-io",
-    artifact="commons-io:commons-io:2.20.0",
-)
 
 mavenjar(
     name="jzlib",
@@ -109,6 +98,30 @@ mavenjar(
 )
 
 
+# Additional compiler/runtime modules introduced since TeaVM 0.14.
+mavenjar(
+    name="teavm-c-incremental", artifact=f"org.teavm:teavm-c-incremental:{TEAVM_VERSION}"
+)
+mavenjar(
+    name="teavm-extension-apis", artifact=f"org.teavm:teavm-extension-apis:{TEAVM_VERSION}"
+)
+mavenjar(
+    name="teavm-extension-spi", artifact=f"org.teavm:teavm-extension-spi:{TEAVM_VERSION}"
+)
+mavenjar(
+    name="teavm-extension-spi-util", artifact=f"org.teavm:teavm-extension-spi-util:{TEAVM_VERSION}"
+)
+
+# Runtime dependencies from the TeaVM 0.16.0 Maven POMs.
+mavenjar(name="asm", artifact="org.ow2.asm:asm:9.10.1")
+mavenjar(name="asm-tree", artifact="org.ow2.asm:asm-tree:9.10.1")
+mavenjar(name="asm-analysis", artifact="org.ow2.asm:asm-analysis:9.10.1")
+mavenjar(name="asm-commons", artifact="org.ow2.asm:asm-commons:9.10.1")
+mavenjar(name="asm-util", artifact="org.ow2.asm:asm-util:9.10.1")
+mavenjar(name="rhino", artifact="org.mozilla:rhino:1.9.1")
+mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
+
+
 javalibrary(
     name="main",
     deps=[
@@ -131,26 +144,36 @@ teavm_native = simplerule(
     name="wordgrinder-teavm",
     ins=[".+main", "./display.h", "./clipboard.h"],
     deps=[
+        "./teavm",
         "./eventbus",
         "./document",
         ".+jspecify",
         ".+teavm-cli",
+        ".+teavm-c-incremental",
+        ".+teavm-extension-apis",
+        ".+teavm-extension-spi",
+        ".+teavm-extension-spi-util",
+        ".+asm",
+        ".+asm-tree",
+        ".+asm-analysis",
+        ".+asm-commons",
+        ".+asm-util",
+        ".+rhino",
+        ".+hppc",
         ".+teavm-core",
         ".+teavm-tooling",
         ".+teavm-classlib",
-        ".+teavm-relocated-libs-commons-cli",
+        ".+commons-cli",
         ".+teavm-interop",
         ".+teavm-metaprogramming-api",
         ".+teavm-relocated-libs-asm-commons",
         ".+teavm-relocated-libs-asm-util",
         ".+teavm-relocated-libs-hppc",
         ".+teavm-relocated-libs-rhino",
-        ".+teavm-relocated-libs-commons-io",
         ".+teavm-platform",
         ".+teavm-jso-apis",
         ".+teavm-jso-impl",
         ".+teavm-metaprogramming-impl",
-        ".+commons-io",
         ".+jzlib",
         ".+joda-time",
         ".+teavm-relocated-libs-asm",
