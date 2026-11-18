@@ -2,6 +2,7 @@ package com.cowlark.wordgrinder.document;
 
 import com.cowlark.wordgrinder.fileio.Dumpable;
 import com.cowlark.wordgrinder.fileio.RemainingDumpables;
+import com.cowlark.wordgrinder.fileio.TMagic;
 import com.cowlark.wordgrinder.fileio.Undumper;
 
 import java.io.BufferedReader;
@@ -21,7 +22,9 @@ public class GlobalSettings
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(
                 new FileInputStream("/home/dg/.wordgrinder/settings.dat"), StandardCharsets.UTF_8)))
         {
-            reader.readLine();
+            String magic = reader.readLine();
+            if (!magic.equals(TMagic.TMAGIC))
+                throw new IOException("Invalid TMagic file");
 
             Wrapper wrapper = new Wrapper();
             new Undumper().undump(wrapper, reader);

@@ -9,6 +9,7 @@ javalibrary(
             "Dumpable.java",
             "Dumper.java",
             "RemainingDumpables.java",
+            "TMagic.java",
             "Undumper.java",
         ]
     },
