@@ -22,15 +22,17 @@ public final class Screen
     {
     }
 
-    public sealed interface Event permits MouseEvent, KeyEvent {}
+    public sealed interface InputEvent permits MouseInputEvent, KeyInputEvent
+    {}
 
     /** Character text or a symbolic key name returned by the display backend. */
-    public record KeyEvent(String key) implements Event {}
+    public record KeyInputEvent(String key) implements InputEvent
+    {}
 
     /**
      * Mouse coordinates, current button state, and whether this event is a new press.
      */
-    public record MouseEvent(int x, int y, boolean b, boolean clicked) implements Event
+    public record MouseInputEvent(int x, int y, boolean b, boolean clicked) implements InputEvent
     {
     }
 
@@ -222,13 +224,13 @@ public final class Screen
         return 6;
     }
 
-    public static MouseEvent decodeMouseEvent(int key)
+    public static MouseInputEvent decodeMouseEvent(int key)
     {
         boolean button = (key & Display.KEYM_MOUSE) == Display.KEY_MOUSEDOWN;
-        return new MouseEvent(key & 0xff, (key >> 8) & 0xff, button, false);
+        return new MouseInputEvent(key & 0xff, (key >> 8) & 0xff, button, false);
     }
 
-    public static Event getEvent()
+    public static InputEvent getEvent()
     {
         return getEvent(-1.0);
     }
@@ -236,7 +238,7 @@ public final class Screen
     /**
      * Returns a KeyEvent for character text or symbolic key names, or a MouseEvent for button events.
      */
-    public static Event getEvent(double timeout)
+    public static InputEvent getEvent(double timeout)
     {
         sync();
         for (; ; )
@@ -247,15 +249,15 @@ public final class Screen
                 int kind = -character & Display.KEYM_MOUSE;
                 if (kind == Display.KEY_MOUSEDOWN || kind == Display.KEY_MOUSEUP)
                 {
-                    MouseEvent event = decodeMouseEvent(-character);
+                    MouseInputEvent event = decodeMouseEvent(-character);
                     boolean clicked = event.b() && !oldMouseButton;
                     oldMouseButton = event.b();
-                    return new MouseEvent(event.x(), event.y(), event.b(), clicked);
+                    return new MouseInputEvent(event.x(), event.y(), event.b(), clicked);
                 }
-                return new KeyEvent(Display.dpy_getkeyname(character));
+                return new KeyInputEvent(Display.dpy_getkeyname(character));
             }
             if (characterWidth(character) > 0)
-                return new KeyEvent(new String(Character.toChars(character)));
+                return new KeyInputEvent(new String(Character.toChars(character)));
         }
     }
 
