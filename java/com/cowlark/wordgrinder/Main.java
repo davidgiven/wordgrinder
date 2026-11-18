@@ -7,14 +7,6 @@ public class Main
         Screen.screenInit(args);
         Screen.initScreen();
 
-        try
-        {
-            Screen.clearScreen();
-            Screen.write(5, 5, "Hello, world!");
-            var c = Screen.getEvent();
-        } finally
-        {
-            Screen.deinitScreen();
-        }
+        Screen.deinitScreen();
     }
 }

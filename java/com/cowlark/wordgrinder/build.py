@@ -111,7 +111,11 @@ mavenjar(
 
 javalibrary(
     name="main",
-    deps=[".+teavm-interop", "./eventbus", "./document"],
+    deps=[
+        ".+teavm-interop",
+        "./eventbus",
+        "./document",
+    ],
     srcitems=itemsof("java/com/cowlark/wordgrinder/*.java", cwd=""),
 )
 
