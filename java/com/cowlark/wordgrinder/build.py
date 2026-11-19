@@ -137,6 +137,7 @@ javalibrary(
             "Context.java",
             "Display.java",
             "Main.java",
+            "Paragraph.java",
             "Screen.java",
             "Word.java",
         ]
