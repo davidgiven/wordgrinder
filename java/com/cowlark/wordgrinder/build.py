@@ -15,7 +15,9 @@ mavenjar(
     name="guava-error-prone-annotations",
     artifact="com.google.errorprone:error_prone_annotations:2.52.0",
 )
-mavenjar(name="guava-j2objc-annotations", artifact="com.google.j2objc:j2objc-annotations:3.1")
+mavenjar(
+    name="guava-j2objc-annotations", artifact="com.google.j2objc:j2objc-annotations:3.1"
+)
 
 GUAVA_DEPS = [
     "java/com/cowlark/wordgrinder+guava",
@@ -25,19 +27,11 @@ GUAVA_DEPS = [
 ]
 
 mavenjar(name="teavm-cli", artifact=f"org.teavm:cli:{TEAVM_VERSION}")
-mavenjar(
-    name="teavm-tooling", artifact=f"org.teavm:teavm-tooling:{TEAVM_VERSION}"
-)
+mavenjar(name="teavm-tooling", artifact=f"org.teavm:teavm-tooling:{TEAVM_VERSION}")
 mavenjar(name="teavm-core", artifact=f"org.teavm:teavm-core:{TEAVM_VERSION}")
-mavenjar(
-    name="teavm-classlib", artifact=f"org.teavm:teavm-classlib:{TEAVM_VERSION}"
-)
-mavenjar(
-    name="teavm-platform", artifact=f"org.teavm:teavm-platform:{TEAVM_VERSION}"
-)
-mavenjar(
-    name="teavm-interop", artifact=f"org.teavm:teavm-interop:{TEAVM_VERSION}"
-)
+mavenjar(name="teavm-classlib", artifact=f"org.teavm:teavm-classlib:{TEAVM_VERSION}")
+mavenjar(name="teavm-platform", artifact=f"org.teavm:teavm-platform:{TEAVM_VERSION}")
+mavenjar(name="teavm-interop", artifact=f"org.teavm:teavm-interop:{TEAVM_VERSION}")
 
 mavenjar(name="commons-cli", artifact="commons-cli:commons-cli:1.11.0")
 
@@ -113,16 +107,20 @@ mavenjar(
 
 # Additional compiler/runtime modules introduced since TeaVM 0.14.
 mavenjar(
-    name="teavm-c-incremental", artifact=f"org.teavm:teavm-c-incremental:{TEAVM_VERSION}"
+    name="teavm-c-incremental",
+    artifact=f"org.teavm:teavm-c-incremental:{TEAVM_VERSION}",
 )
 mavenjar(
-    name="teavm-extension-apis", artifact=f"org.teavm:teavm-extension-apis:{TEAVM_VERSION}"
+    name="teavm-extension-apis",
+    artifact=f"org.teavm:teavm-extension-apis:{TEAVM_VERSION}",
 )
 mavenjar(
-    name="teavm-extension-spi", artifact=f"org.teavm:teavm-extension-spi:{TEAVM_VERSION}"
+    name="teavm-extension-spi",
+    artifact=f"org.teavm:teavm-extension-spi:{TEAVM_VERSION}",
 )
 mavenjar(
-    name="teavm-extension-spi-util", artifact=f"org.teavm:teavm-extension-spi-util:{TEAVM_VERSION}"
+    name="teavm-extension-spi-util",
+    artifact=f"org.teavm:teavm-extension-spi-util:{TEAVM_VERSION}",
 )
 
 # Runtime dependencies from the TeaVM 0.16.0 Maven POMs.
@@ -139,7 +137,8 @@ simplerule(
     name="build-info-source",
     outs=["=BuildInfo.java"],
     commands=[
-        "printf '%s' " + quote(
+        "printf '%s' "
+        + quote(
             "package com.cowlark.wordgrinder;\n"
             "/* Application version supplied by the shared build configuration. */\n"
             "final class BuildInfo {\n"
@@ -147,7 +146,8 @@ simplerule(
             "    /* TODO: Supply a debug flag when Java debug builds are supported. */\n"
             "    static final boolean DEBUG = false;\n"
             "}\n"
-        ) + " > $[outs[0]]",
+        )
+        + " > $[outs[0]]",
     ],
     label="BUILDINFO",
 )
@@ -162,7 +162,8 @@ javalibrary(
 
 javalibrary(
     name="main",
-    deps=GUAVA_DEPS + [
+    deps=GUAVA_DEPS
+    + [
         ".+build-info",
         "./nativeinterface",
         "./teavm/impl",
@@ -183,6 +184,7 @@ javalibrary(
         for f in [
             "Context.java",
             "Main.java",
+            "WordProcessor.java",
         ]
     },
 )
@@ -196,8 +198,14 @@ javaprogram(
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main", "./teavm/impl/display.h", "./teavm/impl/clipboard.h", "./teavm/impl/system.h"],
-    deps=GUAVA_DEPS + [
+    ins=[
+        ".+main",
+        "./teavm/impl/display.h",
+        "./teavm/impl/clipboard.h",
+        "./teavm/impl/system.h",
+    ],
+    deps=GUAVA_DEPS
+    + [
         "./teavm",
         "./nativeinterface",
         "./teavm/impl",

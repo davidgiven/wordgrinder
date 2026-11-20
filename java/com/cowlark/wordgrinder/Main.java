@@ -10,7 +10,6 @@ import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
 import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
 import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import com.cowlark.wordgrinder.ui.Ui;
-import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
 import com.cowlark.wordgrinder.utils.ArgumentParser;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -189,20 +188,14 @@ public class Main
         if (exitRequested)
             return;
 
-        /* Run the demonstration until the main word-processor loop is ported. */
+        /* Run the word processor with the display active. */
         try
         {
             screen.screenInit(args);
             screen.initScreen();
             try
             {
-                ui.newForm().setTitle("This is a form").setSize(40, 2).setStretchy(true)
-                        .add(new WrappedLabelWidget(wordRenderer, eventBus)
-                                .setBounds(1, 1, -1, -1)
-                                .setValue("""
-                                        This is a wrapped label. Its text flows across several
-                                        lines, and the form grows to fit it.
-                                        """)).run();
+                new WordProcessor(ui, wordRenderer, eventBus).run();
             } finally
             {
                 screen.deinitScreen();
