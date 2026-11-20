@@ -18,6 +18,8 @@ local escape = wg.escape
 local unescape = wg.unescape
 local string_format = string.format
 local unpack = rawget(_G, "unpack") or table.unpack
+-- bound this for page count bug fix
+local GetWordText = wg.getwordtext
 
 local MAGIC = "WordGrinder dumpfile v1: this is not a text file!"
 local ZMAGIC = "WordGrinder dumpfile v2: this is not a text file!"
@@ -721,8 +723,14 @@ function UpgradeDocument(oldversion)
 		for _, document in ipairs(documentSet.documents) do
 			local wc = 0
 
+-- page count bug fix
+
 			for _, p in ipairs(document) do
-				wc = wc + #p
+				for _, word in ipairs(p) do
+					if GetWordText(word) ~= "" then
+						wc = wc + 1
+					end
+				end
 			end
 
 			document.wordcount = wc
