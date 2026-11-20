@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * The word-processor input loop, translated from main.lua.
@@ -83,28 +84,44 @@ public class WordProcessor
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
     protected void resizeScreen()
     {
-        /* TODO: Port ResizeScreen once document layout is available. */
+        command(ResizeScreenCommand::new).run();
+    }
+
+    private class ResizeScreenCommand extends Command<ResizeScreenCommand>
+    {
+        public void run()
+        {
+
+        }
     }
 
     /* Draw the available desktop and messages; document and status-bar rendering are pending. */
     protected void redrawScreen()
     {
-        ui.setColour(null, "Desktop");
-        screen.clearScreen();
+        command(RedrawScreenCommand::new).run();
+    }
 
-        /* Stack messages upwards from the bottom, with the newest message last on screen. */
-        int[] size = screen.getScreenSize();
-        int y = size[1] - 1;
-        if (!messages.isEmpty())
+    private class RedrawScreenCommand extends Command<RedrawScreenCommand>
+    {
+        public void run()
         {
-            ui.setColour("MessageFG", "MessageBG");
-            screen.setReverse();
-            for (int i = messages.size() - 1; i >= 0 && y >= 0; i--, y--)
+            ui.setColour(null, "Desktop");
+            screen.clearScreen();
+
+            /* Stack messages upwards from the bottom, with the newest message last on screen. */
+            int[] size = screen.getScreenSize();
+            int y = size[1] - 1;
+            if (!messages.isEmpty())
             {
-                screen.clearArea(0, y, size[0] - 1, y);
-                screen.write(0, y, messages.get(i));
+                ui.setColour("MessageFG", "MessageBG");
+                screen.setReverse();
+                for (int i = messages.size() - 1; i >= 0 && y >= 0; i--, y--)
+                {
+                    screen.clearArea(0, y, size[0] - 1, y);
+                    screen.write(0, y, messages.get(i));
+                }
+                screen.setNormal();
             }
-            screen.setNormal();
         }
     }
 
@@ -204,6 +221,14 @@ public class WordProcessor
                         .setValue(text))
                 .run();
         queueRedraw();
+    }
+
+    /**
+     * Creates a Command ready for execution.
+     */
+    public <T extends Command<T>> T command(Supplier<T> constructor)
+    {
+        return constructor.get().init(this);
     }
 
     /**
