@@ -4,6 +4,8 @@
 
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
+
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
@@ -21,10 +23,10 @@ public final class Ui
 
     /* Draw and read input through the supplied screen backend. */
     private final @NonNull Screen screen;
-    /* Retain the UI-wide quit flag and the Light palette's default control colours. */
+    /* Retain the UI-wide quit flag and the selected theme. */
     private boolean quitting;
-    private float @NonNull [] controlForeground = {0.2f, 0.2f, 0.2f};
-    private float @NonNull [] controlBackground = {0.85f, 0.85f, 0.85f};
+    private @NonNull Palette palette = new DarkPalette();
+
     public Ui(@NonNull Screen screen)
     {
         this.screen = screen;
@@ -70,19 +72,41 @@ public final class Ui
         return quitting;
     }
 
-    /**
-     * Sets the RGB colours used when drawing forms. Components range from 0 to 1.
-     */
-    public void setControlColours(float @NonNull [] foreground, float @NonNull [] background)
+    /** Returns the selected palette. */
+    public @NonNull Palette getPalette()
     {
-        controlForeground = foreground.clone();
-        controlBackground = background.clone();
+        return palette;
     }
 
-    /* Apply the current control colours before drawing a form. */
-    void setControlColour()
+    /** Selects the palette used by subsequent colour lookups. */
+    public void setPalette(@NonNull Palette palette)
     {
-        screen.setColour(controlForeground, controlBackground);
+        this.palette = palette;
+    }
+
+    /** Selects a registered theme by name, rejecting unknown names. */
+    public void setTheme(@NonNull String name)
+    {
+        /* Resolve the theme before changing the current palette. */
+        Palette selected = Palette.getTheme(name);
+        if (selected == null)
+            throw new IllegalArgumentException("Unknown theme: " + name);
+        setPalette(selected);
+    }
+
+    /** Applies named palette colours, defaulting missing colours to white on black as in Lua. */
+    public void setColour(@Nullable String foreground, @Nullable String background)
+    {
+        /* Resolve names against the current theme, retaining Lua's missing-colour defaults. */
+        Colour fg = foreground != null ? palette.getColour(foreground) : null;
+        Colour bg = background != null ? palette.getColour(background) : null;
+        if (fg == null)
+            fg = new Colour(1, 1, 1);
+        if (bg == null)
+            bg = new Colour(0, 0, 0);
+
+        /* Pass the immutable colour values directly to the screen. */
+        screen.setColour(fg, bg);
     }
 
     /**

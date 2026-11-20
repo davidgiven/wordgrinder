@@ -4,6 +4,8 @@
 
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
+
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.google.common.collect.ImmutableList;

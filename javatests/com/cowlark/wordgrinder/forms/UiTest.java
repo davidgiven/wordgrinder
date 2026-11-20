@@ -1,5 +1,7 @@
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -14,6 +16,34 @@ import java.util.List;
  */
 public class UiTest
 {
+    /* Explicit theme selection keeps colour expectations independent of the UI default. */
+    @Test
+    public void resolvesColoursFromSelectedPalette()
+    {
+        TestScreen screen = new TestScreen();
+        Ui ui = new Ui(screen);
+        ui.setTheme("Light");
+        ui.setColour("ControlFG", "ControlBG");
+        assertEquals(new Colour(0.2f, 0.2f, 0.2f), screen.foreground);
+        assertEquals(new Colour(0.85f, 0.85f, 0.85f), screen.background);
+        ui.setTheme("Dark");
+        ui.setColour("ControlFG", "ControlBG");
+        assertEquals(new Colour(1, 1, 0), screen.foreground);
+        assertEquals(new Colour(0.14f, 0.22f, 0.4f), screen.background);
+    }
+
+    /* Missing colours preserve the Lua white foreground and black background defaults. */
+    @Test
+    public void suppliesMissingColourDefaults()
+    {
+        TestScreen screen = new TestScreen();
+        Ui ui = new Ui(screen);
+        ui.setTheme("Light");
+        ui.setColour(null, "missing");
+        assertEquals(new Colour(1, 1, 1), screen.foreground);
+        assertEquals(new Colour(0, 0, 0), screen.background);
+    }
+
     /* Timeouts alternate cursor phases and truncate the final wait. */
     @Test
     public void blinkingHonoursTimeout()

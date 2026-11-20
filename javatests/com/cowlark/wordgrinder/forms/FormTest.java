@@ -1,5 +1,7 @@
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
+
 import com.cowlark.wordgrinder.forms.Widget.Action;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
@@ -46,7 +48,7 @@ public class FormTest
     {
         TestScreen screen = new TestScreen();
         Ui ui = new Ui(screen);
-        ui.setControlColours(new float[] {1, 0, 0}, new float[] {0, 0, 1});
+        ui.setTheme("Classic");
         Probe widget = new Probe(true);
         int[] backdrop = {0};
         screen.events.add(new KeyInputEvent("KEY_RETURN"));
@@ -65,8 +67,8 @@ public class FormTest
         assertEquals(4, widget.realheight);
         assertTrue(screen.writes.contains("36,8:Example"));
         assertTrue(screen.writes.contains("37,15:<Help>"));
-        assertArrayEquals(new float[] {1, 0, 0}, screen.foreground, 0);
-        assertArrayEquals(new float[] {0, 0, 1}, screen.background, 0);
+        assertEquals(new Colour(1, 1, 1), screen.foreground);
+        assertEquals(new Colour(0, 0, 0), screen.background);
     }
 
     /* Large dimensions and negative widget bounds must be recalculated on resize. */

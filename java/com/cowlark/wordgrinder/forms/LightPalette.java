@@ -4,6 +4,8 @@
 
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
+
 import com.google.common.collect.ImmutableMap;
 import org.jspecify.annotations.NonNull;
 

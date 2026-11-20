@@ -38,7 +38,7 @@ public interface Screen
 
     void setNormal();
 
-    void setColour(float @NonNull [] foreground, float @NonNull [] background);
+    void setColour(@NonNull Colour foreground, @NonNull Colour background);
 
     void dpyWriteUniChar(int x, int y, int character);
 

@@ -7,7 +7,6 @@ javalibrary(
     srcitems={
         f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
         for f in [
-            "Colour.java",
             "Palette.java",
             "DarkPalette.java",
             "LightPalette.java",

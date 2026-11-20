@@ -1,6 +1,7 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
 import com.cowlark.wordgrinder.nativeinterface.Display;
+import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 import org.teavm.interop.Import;
@@ -124,15 +125,15 @@ public final class ScreenImpl implements Screen
      * Each colour contains red, green, and blue components in the range 0 to 1.
      */
     @Override
-    public void setColour(float @NonNull [] foreground, float @NonNull [] background)
+    public void setColour(@NonNull Colour foreground, @NonNull Colour background)
     {
         display.dpy_setcolour(
-                foreground[0],
-                foreground[1],
-                foreground[2],
-                background[0],
-                background[1],
-                background[2]);
+                foreground.red(),
+                foreground.green(),
+                foreground.blue(),
+                background.red(),
+                background.green(),
+                background.blue());
     }
 
     @Override

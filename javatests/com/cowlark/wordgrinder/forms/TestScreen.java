@@ -1,5 +1,6 @@
 package com.cowlark.wordgrinder.forms;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 import java.util.ArrayDeque;
@@ -17,8 +18,8 @@ class TestScreen implements Screen
     final List<Double> periods = new ArrayList<>();
     final List<Boolean> visibility = new ArrayList<>();
     final List<String> writes = new ArrayList<>();
-    float[] foreground;
-    float[] background;
+    Colour foreground;
+    Colour background;
 
     /* Implement the screen contract and reject unexpected operations. */
     @Override
@@ -100,10 +101,10 @@ class TestScreen implements Screen
     }
 
     @Override
-    public void setColour(float @NonNull [] foreground, float @NonNull [] background)
+    public void setColour(@NonNull Colour foreground, @NonNull Colour background)
     {
-        this.foreground = foreground.clone();
-        this.background = background.clone();
+        this.foreground = foreground;
+        this.background = background;
     }
 
     @Override

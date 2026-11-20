@@ -258,7 +258,7 @@ public final class Form
         }
 
         /* Draw the frame, optional help row and all widgets in the control colours. */
-        ui.setControlColour();
+        ui.setColour("ControlFG", "ControlBG");
         ui.drawTitledBox(
                 realx - 1,
                 realy - 1,

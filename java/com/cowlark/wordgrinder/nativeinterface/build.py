@@ -5,7 +5,7 @@ javalibrary(
     name="nativeinterface",
     srcitems={
         f"com/cowlark/wordgrinder/nativeinterface/{f}": f"./{f}"
-        for f in ["Clipboard.java", "Display.java", "Screen.java", "System.java"]
+        for f in ["Colour.java", "Clipboard.java", "Display.java", "Screen.java", "System.java"]
     },
     deps=["java/com/cowlark/wordgrinder+jspecify"],
 )
