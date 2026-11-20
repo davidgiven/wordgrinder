@@ -1,5 +1,7 @@
 package com.cowlark.wordgrinder;
 
+import com.cowlark.wordgrinder.document.Word;
+
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;

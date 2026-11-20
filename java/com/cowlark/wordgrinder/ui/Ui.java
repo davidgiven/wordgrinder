@@ -72,19 +72,25 @@ public final class Ui
         return quitting;
     }
 
-    /** Returns the selected palette. */
+    /**
+     * Returns the selected palette.
+     */
     public @NonNull Palette getPalette()
     {
         return palette;
     }
 
-    /** Selects the palette used by subsequent colour lookups. */
+    /**
+     * Selects the palette used by subsequent colour lookups.
+     */
     public void setPalette(@NonNull Palette palette)
     {
         this.palette = palette;
     }
 
-    /** Selects a registered theme by name, rejecting unknown names. */
+    /**
+     * Selects a registered theme by name, rejecting unknown names.
+     */
     public void setTheme(@NonNull String name)
     {
         /* Resolve the theme before changing the current palette. */
@@ -94,7 +100,9 @@ public final class Ui
         setPalette(selected);
     }
 
-    /** Applies named palette colours, defaulting missing colours to white on black as in Lua. */
+    /**
+     * Applies named palette colours, defaulting missing colours to white on black as in Lua.
+     */
     public void setColour(@Nullable String foreground, @Nullable String background)
     {
         /* Resolve names against the current theme, retaining Lua's missing-colour defaults. */

@@ -1,11 +1,10 @@
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.document;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.eventbus.DrawWord;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;

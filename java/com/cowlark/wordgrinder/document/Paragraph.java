@@ -3,9 +3,8 @@
  * file in this distribution for the full text.
  */
 
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.document;
 
-import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.eventbus.DrawWord;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
@@ -37,37 +36,93 @@ public final class Paragraph implements Iterable<@NonNull String>
     private final @NonNull EventBus eventBus;
     private @Nullable WrapData wrapData;
 
-    /**
-     * Creates a paragraph from individual styled words; no words creates an empty paragraph.
-     * The paragraph owns an immutable copy of the words.
-     */
-    public Paragraph(
-            @NonNull Screen screen,
-            @NonNull Word wordRenderer,
-            @NonNull EventBus eventBus,
-            @NonNull DocumentStyle style,
-            @NonNull String... words)
+    /* Build immutable paragraphs from the builder's captured dependencies and content. */
+    private Paragraph(@NonNull Builder builder, @NonNull DocumentStyle style)
     {
-        /* Accept individual words, including an empty paragraph. */
-        this(screen, wordRenderer, eventBus, style, ImmutableList.copyOf(words));
+        screen = builder.screen;
+        wordRenderer = builder.wordRenderer;
+        eventBus = builder.eventBus;
+        this.style = style;
+        words = builder.words;
     }
 
-    /**
-     * Creates a paragraph with the supplied document style, copying the word list.
-     * Subsequent edits to the caller's list do not affect the paragraph.
-     */
-    public Paragraph(
-            @NonNull Screen screen,
-            @NonNull Word wordRenderer,
-            @NonNull EventBus eventBus,
-            @NonNull DocumentStyle style,
-            @NonNull ImmutableList<@NonNull String> words)
+    /** Creates a paragraph builder with the injected layout and rendering collaborators. */
+    public static @NonNull Builder builder(
+            @NonNull Screen screen, @NonNull Word wordRenderer, @NonNull EventBus eventBus)
     {
-        this.screen = screen;
-        this.wordRenderer = wordRenderer;
-        this.eventBus = eventBus;
-        this.style = style;
-        this.words = words;
+        return new Builder(screen, wordRenderer, eventBus);
+    }
+
+    /** Configures immutable paragraph content while retaining the injected collaborators. */
+    public static final class Builder
+    {
+        /* Dependencies stay fixed; style is required and words default to an empty paragraph. */
+        private final @NonNull Screen screen;
+        private final @NonNull Word wordRenderer;
+        private final @NonNull EventBus eventBus;
+        private @Nullable DocumentStyle documentStyle;
+        private @NonNull ImmutableList<@NonNull String> words = ImmutableList.of();
+
+        private Builder(@NonNull Screen screen, @NonNull Word wordRenderer, @NonNull EventBus eventBus)
+        {
+            this.screen = screen;
+            this.wordRenderer = wordRenderer;
+            this.eventBus = eventBus;
+        }
+
+        /** Sets the paragraph's document style. */
+        public @NonNull Builder setDocumentStyle(@NonNull DocumentStyle documentStyle)
+        {
+            this.documentStyle = documentStyle;
+            return this;
+        }
+
+        /** Captures an immutable snapshot of the supplied styled words. */
+        public @NonNull Builder setWords(@NonNull Iterable<@NonNull String> words)
+        {
+            this.words = ImmutableList.copyOf(words);
+            return this;
+        }
+
+        /** Captures individual styled words; no words creates an empty paragraph. */
+        public @NonNull Builder setWords(@NonNull String... words)
+        {
+            this.words = ImmutableList.copyOf(words);
+            return this;
+        }
+
+        /** Splits text on spaces, tabs, CR and LF, matching Lua's ParseStringIntoWords. */
+        public @NonNull Builder setText(@NonNull String text)
+        {
+            /* Preserve embedded styles and other characters within each word. */
+            ImmutableList.Builder<String> words = ImmutableList.builder();
+            int start = -1;
+            for (int i = 0; i <= text.length(); i++)
+            {
+                char character = i < text.length() ? text.charAt(i) : ' ';
+                boolean separator = character == ' ' || character == '\t'
+                        || character == '\r' || character == '\n';
+                if (separator && start >= 0)
+                {
+                    words.add(text.substring(start, i));
+                    start = -1;
+                }
+                else if (!separator && start < 0)
+                    start = i;
+            }
+
+            /* Lua represents empty or whitespace-only text as a single empty word. */
+            ImmutableList<String> content = words.build();
+            return setWords(content.isEmpty() ? ImmutableList.of("") : content);
+        }
+
+        /** Builds an independent paragraph; the builder can subsequently be reused. */
+        public @NonNull Paragraph build()
+        {
+            if (documentStyle == null)
+                throw new IllegalStateException("Set the document style before building a paragraph");
+            return new Paragraph(this, documentStyle);
+        }
     }
 
     /**
@@ -87,7 +142,7 @@ public final class Paragraph implements Iterable<@NonNull String>
     public @NonNull Paragraph copy()
     {
         /* Copy words and style without the assigned paragraph number. */
-        return new Paragraph(screen, wordRenderer, eventBus, style, words);
+        return builder(screen, wordRenderer, eventBus).setDocumentStyle(style).setWords(words).build();
     }
 
     /**

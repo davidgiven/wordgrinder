@@ -4,10 +4,9 @@
 
 package com.cowlark.wordgrinder.ui;
 
-import com.cowlark.wordgrinder.nativeinterface.Colour;
-
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

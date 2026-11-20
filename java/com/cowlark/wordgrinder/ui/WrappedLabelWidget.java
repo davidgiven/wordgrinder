@@ -4,19 +4,20 @@
 
 package com.cowlark.wordgrinder.ui;
 
-import com.cowlark.wordgrinder.Paragraph;
-import com.cowlark.wordgrinder.Word;
+import com.cowlark.wordgrinder.document.Paragraph;
+import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.eventbus.EventBus;
-import com.google.common.collect.ImmutableList;
 import org.jspecify.annotations.NonNull;
 
-/** A label laid out and drawn as an ordinary paragraph, without DrawWord events. */
+/**
+ * A label laid out and drawn as an ordinary paragraph, without DrawWord events.
+ */
 public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
 {
     /* Label paragraphs have no document indentation or heading attributes. */
-    private static final @NonNull DocumentStyle STYLE = new DocumentStyle(
-            "Paragraph", "P", 0, 0, null, null, null, null, null, null);
+    private static final @NonNull DocumentStyle STYLE =
+            new DocumentStyle("Paragraph", "P", 0, 0, null, null, null, null, null, null);
 
     /* Retain rendering collaborators; Form.add() supplies the screen separately. */
     private final @NonNull Word wordRenderer;
@@ -30,44 +31,32 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
         this.eventBus = eventBus;
     }
 
-    /** Sets the text to wrap, preserving any embedded word styles. */
+    /**
+     * Sets the text to wrap, preserving any embedded word styles.
+     */
     public @NonNull WrappedLabelWidget setValue(@NonNull String value)
     {
         this.value = value;
         return self();
     }
 
-    /** Selects double spacing after full stops without consulting document preferences. */
+    /**
+     * Selects double spacing after full stops without consulting document preferences.
+     */
     public @NonNull WrappedLabelWidget setFullStopSpaces(boolean fullStopSpaces)
     {
         this.fullStopSpaces = fullStopSpaces;
         return self();
     }
 
-    /* Split on exactly the whitespace recognised by Lua's ParseStringIntoWords. */
+    /* Build the ordinary paragraph shared by height calculation and drawing. */
     private @NonNull Paragraph paragraph()
     {
-        ImmutableList.Builder<String> words = ImmutableList.builder();
-        int start = -1;
-        for (int i = 0; i <= value.length(); i++)
-        {
-            char character = i < value.length() ? value.charAt(i) : ' ';
-            boolean separator = character == ' ' || character == '\t'
-                    || character == '\r' || character == '\n';
-            if (separator && start >= 0)
-            {
-                words.add(value.substring(start, i));
-                start = -1;
-            }
-            else if (!separator && start < 0)
-                start = i;
-        }
-
-        /* Lua represents whitespace-only input as a single empty word. */
-        ImmutableList<String> content = words.build();
-        if (content.isEmpty())
-            content = ImmutableList.of("");
-        return new Paragraph(getScreen(), wordRenderer, eventBus, STYLE, content);
+        return Paragraph
+                .builder(getScreen(), wordRenderer, eventBus)
+                .setDocumentStyle(STYLE)
+                .setText(value)
+                .build();
     }
 
     /* Let stretchy forms measure the same layout that drawing will use. */

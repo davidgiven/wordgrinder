@@ -4,11 +4,11 @@
 
 package com.cowlark.wordgrinder.ui;
 
-import com.cowlark.wordgrinder.ui.Widget.Action;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import com.cowlark.wordgrinder.ui.Widget.Action;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;

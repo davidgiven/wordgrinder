@@ -4,7 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
-import com.cowlark.wordgrinder.Word;
+import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.DrawWord;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;

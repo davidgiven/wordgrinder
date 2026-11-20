@@ -1,15 +1,19 @@
 from build.java import javalibrary
+from java.com.cowlark.wordgrinder.build import GUAVA_DEPS
 
 javalibrary(
     name="document",
     srcitems={
         f"com/cowlark/wordgrinder/document/{f}": f"./{f}"
         for f in [
+            "Paragraph.java",
+            "Word.java",
             "DocumentStyle.java",
             "GlobalSettings.java",
         ]
     },
-    deps=[
+    deps=GUAVA_DEPS + [
+        "java/com/cowlark/wordgrinder/eventbus",
         "java/com/cowlark/wordgrinder+jspecify",
         "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder/fileio",
