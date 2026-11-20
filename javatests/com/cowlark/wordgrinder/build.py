@@ -1,5 +1,6 @@
 from build.junit4 import junit4
 
+from java.com.cowlark.wordgrinder.build import GUAVA_DEPS
 
 junit4(
     name="word-test",
@@ -10,14 +11,13 @@ junit4(
     deps=["java/com/cowlark/wordgrinder+main"],
 )
 
-
 junit4(
     name="paragraph-test",
     srcitems={
         f"com/cowlark/wordgrinder/{f}": f"./{f}"
         for f in ["ParagraphTest.java"]
     },
-    deps=[
+    deps=GUAVA_DEPS + [
         "java/com/cowlark/wordgrinder+main",
         "java/com/cowlark/wordgrinder/document",
     ],

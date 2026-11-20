@@ -6,6 +6,7 @@
 package com.cowlark.wordgrinder;
 
 import com.cowlark.wordgrinder.document.DocumentStyle;
+import com.google.common.collect.ImmutableList;
 import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +21,7 @@ import java.util.List;
 public final class Paragraph implements Iterable<@NonNull String>
 {
     /* Paragraph content and style remain fixed after construction. */
-    public final @NonNull List<@NonNull String> words;
+    public final @NonNull ImmutableList<@NonNull String> words;
     public final @NonNull DocumentStyle style;
     public final int number = 0;
 
@@ -33,7 +34,7 @@ public final class Paragraph implements Iterable<@NonNull String>
             @NonNull String... words)
     {
         /* Accept individual words, including an empty paragraph. */
-        this(style, Arrays.asList(words));
+        this(style, ImmutableList.copyOf(words));
     }
 
     /**
@@ -42,11 +43,10 @@ public final class Paragraph implements Iterable<@NonNull String>
      */
     public Paragraph(
             @NonNull DocumentStyle style,
-            @NonNull List<@NonNull String> words)
+            @NonNull ImmutableList<@NonNull String> words)
     {
-        /* Keep an immutable snapshot of the supplied words. */
         this.style = style;
-        this.words = List.copyOf(words);
+        this.words = words;
     }
 
     /**

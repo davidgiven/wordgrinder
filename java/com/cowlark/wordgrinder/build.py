@@ -6,6 +6,22 @@ TEAVM_VERSION = "0.16.0"
 
 mavenjar(name="jspecify", artifact="org.jspecify:jspecify:1.0.0")
 
+# Guava's Android variant and its supporting runtime and annotation libraries.
+mavenjar(name="guava", artifact="com.google.guava:guava:33.8.0-android")
+mavenjar(name="guava-failureaccess", artifact="com.google.guava:failureaccess:1.0.3")
+mavenjar(
+    name="guava-error-prone-annotations",
+    artifact="com.google.errorprone:error_prone_annotations:2.52.0",
+)
+mavenjar(name="guava-j2objc-annotations", artifact="com.google.j2objc:j2objc-annotations:3.1")
+
+GUAVA_DEPS = [
+    "java/com/cowlark/wordgrinder+guava",
+    "java/com/cowlark/wordgrinder+guava-failureaccess",
+    "java/com/cowlark/wordgrinder+guava-error-prone-annotations",
+    "java/com/cowlark/wordgrinder+guava-j2objc-annotations",
+]
+
 mavenjar(name="teavm-cli", artifact=f"org.teavm:cli:{TEAVM_VERSION}")
 mavenjar(
     name="teavm-tooling", artifact=f"org.teavm:teavm-tooling:{TEAVM_VERSION}"
@@ -118,7 +134,7 @@ mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
 
 javalibrary(
     name="main",
-    deps=[
+    deps=GUAVA_DEPS + [
         ".+teavm-interop",
         "./eventbus",
         "./document",
@@ -154,7 +170,7 @@ javaprogram(
 teavm_native = simplerule(
     name="wordgrinder-teavm",
     ins=[".+main", "./display.h", "./clipboard.h"],
-    deps=[
+    deps=GUAVA_DEPS + [
         "./teavm",
         "./addons/debug+settings",
         "./addons/directories+settings",

@@ -3,6 +3,7 @@ package com.cowlark.wordgrinder;
 import com.cowlark.wordgrinder.document.DocumentStyle;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -14,9 +15,8 @@ public final class ParagraphTest
     public void constructorsSnapshotWordsAndPreserveIterationOrder()
     {
         /* Copy the input while retaining the supplied style. */
-        List<String> input = new ArrayList<>(List.of("one", "two"));
+        ImmutableList<String> input = ImmutableList.of("one", "two");
         Paragraph paragraph = new Paragraph(style(null, null), input);
-        input.clear();
         assertEquals("P", paragraph.style.name());
         assertEquals(List.of("one", "two"), paragraph.words);
 
