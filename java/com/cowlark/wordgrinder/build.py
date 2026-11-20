@@ -171,6 +171,7 @@ javalibrary(
         "./document",
         "./fileio",
         "./ui",
+        "./app",
         "./utils",
         "./addons/debug+settings",
         "./addons/directories+settings",
@@ -184,7 +185,6 @@ javalibrary(
         for f in [
             "Context.java",
             "Main.java",
-            "WordProcessor.java",
         ]
     },
 )
@@ -210,6 +210,7 @@ teavm_native = simplerule(
         "./nativeinterface",
         "./teavm/impl",
         "./ui",
+        "./app",
         "./utils",
         "./addons/debug+settings",
         "./addons/directories+settings",

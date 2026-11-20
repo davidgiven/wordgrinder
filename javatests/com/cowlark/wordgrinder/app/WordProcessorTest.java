@@ -1,4 +1,9 @@
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.app;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.Changed;
@@ -12,13 +17,12 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.Ui;
+import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
 public class WordProcessorTest
 {
@@ -30,15 +34,17 @@ public class WordProcessorTest
         List<String> events = new ArrayList<>();
         fixture.bus.addEventListener(Changed.class, event -> events.add("changed"));
         fixture.bus.addEventListener(WaitingForUser.class, event -> events.add("waiting"));
-        fixture.bus.addEventListener(Idle.class, event -> {
-            events.add("idle");
-            fixture.idling = false;
-            fixture.processor.queueRedraw();
-        });
-        fixture.bus.addEventListener(KeyTyped.class, event -> {
-            events.add(event.value);
-            event.value = "replacement";
-        });
+        fixture.bus.addEventListener(
+                Idle.class, event -> {
+                    events.add("idle");
+                    fixture.idling = false;
+                    fixture.processor.queueRedraw();
+                });
+        fixture.bus.addEventListener(
+                KeyTyped.class, event -> {
+                    events.add(event.value);
+                    event.value = "replacement";
+                });
         fixture.bus.fireAsyncEvent(new Changed());
         fixture.idling = true;
         fixture.keys("x");
@@ -54,7 +60,14 @@ public class WordProcessorTest
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
         fixture.bus.addEventListener(KeyTyped.class, event -> typed.add(event.value));
-        fixture.keys("KEY_RESIZE", " ", "KEY_RETURN", "KEY_ESCAPE", "KEY_MENU", "KEY_QUIT", "KEY_REDRAW");
+        fixture.keys(
+                "KEY_RESIZE",
+                " ",
+                "KEY_RETURN",
+                "KEY_ESCAPE",
+                "KEY_MENU",
+                "KEY_QUIT",
+                "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
         assertEquals(0, fixture.processor.resizes);
@@ -67,16 +80,18 @@ public class WordProcessorTest
     {
         Fixture fixture = new Fixture();
         int[] waits = {0};
-        fixture.bus.addEventListener(WaitingForUser.class, event -> {
-            if (++waits[0] == 3)
-                fixture.processor.queueRedraw();
-        });
+        fixture.bus.addEventListener(
+                WaitingForUser.class, event -> {
+                    if (++waits[0] == 3)
+                        fixture.processor.queueRedraw();
+                });
         fixture.keys("KEY_UNKNOWN", "KEY_RESIZE", "x", "KEY_REDRAW");
         fixture.run();
-        assertEquals(List.of(
-                "Welcome to WordGrinder! Press ESC to show the menu.",
-                "UNKNOWN is not bound --- try ESCAPE for a menu",
-                "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.writes);
+        assertEquals(
+                List.of(
+                        "Welcome to WordGrinder! Press ESC to show the menu.",
+                        "UNKNOWN is not bound --- try ESCAPE for a menu",
+                        "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.writes);
         assertEquals(4, fixture.processor.redraws);
     }
 
@@ -88,7 +103,8 @@ public class WordProcessorTest
         fixture.processor.nonmodalMessage("first");
         fixture.processor.nonmodalMessage("second");
         fixture.run();
-        assertEquals(List.of("Welcome to WordGrinder! Press ESC to show the menu.", "second", "first"),
+        assertEquals(
+                List.of("Welcome to WordGrinder! Press ESC to show the menu.", "second", "first"),
                 fixture.writes);
         assertEquals(1, fixture.processor.redraws);
     }
@@ -100,8 +116,10 @@ public class WordProcessorTest
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
         fixture.bus.addEventListener(KeyTyped.class, event -> typed.add(event.value));
-        fixture.input.addAll(List.of(new MouseInputEvent(2, 3, true, true),
-                new MouseInputEvent(4, 5, true, false), new MouseInputEvent(4, 5, false, false)));
+        fixture.input.addAll(List.of(
+                new MouseInputEvent(2, 3, true, true),
+                new MouseInputEvent(4, 5, true, false),
+                new MouseInputEvent(4, 5, false, false)));
         fixture.keys("z");
         fixture.ui.requestQuit();
         fixture.run();
@@ -115,22 +133,29 @@ public class WordProcessorTest
     {
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
-        fixture.bus.addEventListener(KeyTyped.class, event -> {
-            if (event.value.equals("a"))
-                throw new IllegalStateException("test failure");
-            typed.add(event.value);
-        });
+        fixture.bus.addEventListener(
+                KeyTyped.class, event -> {
+                    if (event.value.equals("a"))
+                        throw new IllegalStateException("test failure");
+                    typed.add(event.value);
+                });
         fixture.keys("a", "b");
         fixture.run();
         assertEquals(List.of("b"), typed);
         assertEquals(1, fixture.processor.dialogues.size());
-        assertTrue(fixture.processor.dialogues.get(0).startsWith("Internal error!\nSomething went wrong"));
-        assertTrue(fixture.processor.dialogues.get(0).contains("IllegalStateException: test failure"));
+        assertTrue(fixture.processor.dialogues
+                .get(0)
+                .startsWith("Internal error!\nSomething went wrong"));
+        assertTrue(fixture.processor.dialogues
+                .get(0)
+                .contains("IllegalStateException: test failure"));
         assertEquals(2, fixture.processor.redraws);
     }
 
     /* An Error terminates the intentionally endless loop without entering its recovery handler. */
-    private static final class Stop extends Error {}
+    private static final class Stop extends Error
+    {
+    }
 
     private static class RecordingProcessor extends WordProcessor
     {
@@ -171,28 +196,40 @@ public class WordProcessorTest
         final List<String> writes = new ArrayList<>();
         final EventBus bus = new EventBus();
         boolean idling;
-        final Screen screen = (Screen) Proxy.newProxyInstance(Screen.class.getClassLoader(),
-                new Class<?>[] {Screen.class}, (proxy, method, args) -> {
-                    return switch (method.getName()) {
-                        case "getScreenSize" -> new int[] {80, 24};
-                        case "write" -> { writes.add((String) args[2]); yield null; }
-                        case "getEvent" -> {
+        final Screen screen = (Screen) Proxy.newProxyInstance(
+                Screen.class.getClassLoader(),
+                new Class<?>[]{Screen.class},
+                (proxy, method, args) -> {
+                    return switch (method.getName())
+                    {
+                        case "getScreenSize" -> new int[]{80, 24};
+                        case "write" ->
+                        {
+                            writes.add((String) args[2]);
+                            yield null;
+                        }
+                        case "getEvent" ->
+                        {
                             if (idling)
                                 yield new KeyInputEvent("KEY_TIMEOUT");
                             if (input.isEmpty())
                                 throw new Stop();
                             yield input.remove();
                         }
-                        default -> {
+                        default ->
+                        {
                             if (method.getReturnType() != void.class)
-                                throw new AssertionError("Unexpected screen call: " + method.getName());
+                                throw new AssertionError(
+                                        "Unexpected screen call: " + method.getName());
                             yield null;
                         }
                     };
                 });
         final Ui ui = new Ui(screen);
-        final Display display = (Display) Proxy.newProxyInstance(Display.class.getClassLoader(),
-                new Class<?>[] {Display.class}, (proxy, method, args) -> {
+        final Display display = (Display) Proxy.newProxyInstance(
+                Display.class.getClassLoader(),
+                new Class<?>[]{Display.class},
+                (proxy, method, args) -> {
                     throw new AssertionError("Unexpected display call: " + method.getName());
                 });
         final RecordingProcessor processor = new RecordingProcessor(ui, new Word(display), bus);

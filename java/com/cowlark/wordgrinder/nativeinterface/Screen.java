@@ -78,6 +78,11 @@ public interface Screen
     /* Input event values are independent of the native backend. */
     sealed interface InputEvent permits MouseInputEvent, KeyInputEvent
     {
+        /** Reports whether this event is a keyboard event with the supplied key name. */
+        default boolean isKey(String name)
+        {
+            return this instanceof KeyInputEvent key && key.key().equals(name);
+        }
     }
 
     record KeyInputEvent(String key) implements InputEvent

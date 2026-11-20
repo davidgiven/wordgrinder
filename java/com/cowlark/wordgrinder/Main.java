@@ -2,6 +2,7 @@ package com.cowlark.wordgrinder;
 
 import static java.lang.System.err;
 
+import com.cowlark.wordgrinder.app.WordProcessor;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;

@@ -15,19 +15,3 @@ junit4(
         "java/com/cowlark/wordgrinder/eventbus",
     ],
 )
-
-
-junit4(
-    name="word-processor-test",
-    srcitems={
-        f"com/cowlark/wordgrinder/{f}": f"./{f}"
-        for f in ["WordProcessorTest.java"]
-    },
-    deps=GUAVA_DEPS + [
-        "java/com/cowlark/wordgrinder+main",
-        "java/com/cowlark/wordgrinder/document",
-        "java/com/cowlark/wordgrinder/nativeinterface",
-        "java/com/cowlark/wordgrinder/eventbus",
-        "java/com/cowlark/wordgrinder/ui",
-    ],
-)

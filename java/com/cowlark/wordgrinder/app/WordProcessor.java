@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.app;
 
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.EventBus;
@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/** The word-processor input loop, translated from main.lua. */
+/**
+ * The word-processor input loop, translated from main.lua.
+ */
 public class WordProcessor
 {
     /* Retain the injected UI, renderer and application event bus. */
@@ -46,20 +48,26 @@ public class WordProcessor
         this.eventBus = eventBus;
     }
 
-    /** Requests a redraw before the next input wait. */
+    /**
+     * Requests a redraw before the next input wait.
+     */
     public void queueRedraw()
     {
         redrawPending = true;
     }
 
-    /** Adds a transient message and schedules its display. */
+    /**
+     * Adds a transient message and schedules its display.
+     */
     public void nonmodalMessage(String text)
     {
         messages.add(text);
         queueRedraw();
     }
 
-    /** Clears messages after input other than a resize event, matching Lua. */
+    /**
+     * Clears messages after input other than a resize event, matching Lua.
+     */
     public void resetNonmodalMessages()
     {
         messages.clear();
@@ -68,7 +76,8 @@ public class WordProcessor
     /* Grouped callbacks intentionally do nothing until command dispatch is ported. */
     private Runnable groupCallback(Runnable... callbacks)
     {
-        return () -> {};
+        return () -> {
+        };
     }
 
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
@@ -140,7 +149,8 @@ public class WordProcessor
         oldMouseButton = mouse.b();
     }
 
-    /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives. */
+    /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives
+    . */
     private void eventLoop(Map<String, Runnable> masterKeymap)
     {
         while (true)
@@ -157,12 +167,12 @@ public class WordProcessor
                     redrawPending = false;
                 }
                 input = ui.getCharWithBlinkingCursor(IDLE_TIME);
-                if (isKey(input, "KEY_TIMEOUT"))
+                if (input.isKey("KEY_TIMEOUT"))
                     eventBus.fireEvent(new Idle());
-            } while (isKey(input, "KEY_TIMEOUT"));
+            } while (input.isKey("KEY_TIMEOUT"));
 
             /* Resizes retain transient messages; all other input dismisses them. */
-            if (!isKey(input, "KEY_RESIZE"))
+            if (!input.isKey("KEY_RESIZE"))
                 resetNonmodalMessages();
             if (input instanceof MouseInputEvent mouse)
                 handleMouseEvent(mouse);
@@ -178,37 +188,45 @@ public class WordProcessor
         }
     }
 
-    /* Match symbolic events without treating mouse input as keyboard input. */
-    private static boolean isKey(InputEvent event, String name)
-    {
-        return event instanceof KeyInputEvent key && key.key().equals(name);
-    }
-
     /* Use the existing form widgets for the recoverable internal-error dialogue. */
     protected void modalMessage(String title, String text)
     {
-        ui.newForm().setTitle(title).setHeight(2).setStretchy(true)
-                .setRedraw(this::redrawScreen).setHelpText("press SPACE to continue")
+        ui
+                .newForm()
+                .setTitle(title)
+                .setHeight(2)
+                .setStretchy(true)
+                .setRedraw(this::redrawScreen)
+                .setHelpText("press SPACE to continue")
                 .on(" ", Action.CONFIRM)
                 .add(new WrappedLabelWidget(wordRenderer, eventBus)
-                        .setBounds(1, 1, -1, -3).setValue(text))
+                        .setBounds(1, 1, -1, -3)
+                        .setValue(text))
                 .run();
         queueRedraw();
     }
 
-    /** Runs the main input loop on an already initialised screen, recovering from exceptions. */
+    /**
+     * Runs the main input loop on an already initialised screen, recovering from exceptions.
+     */
     public void run()
     {
         /* Cmd-based groups remain inert, including resize's grouped redraw callback. */
-        ImmutableMap<String, Runnable> masterKeymap = ImmutableMap.<String, Runnable>builder()
+        ImmutableMap<String, Runnable> masterKeymap = ImmutableMap
+                .<String, Runnable>builder()
                 .put("KEY_RESIZE", groupCallback(this::resizeScreen, this::redrawScreen))
                 .put("KEY_REDRAW", this::redrawScreen)
-                .put(" ", groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord. */
-                .put("KEY_RETURN", groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentParagraph. */
-                .put("KEY_ESCAPE", groupCallback()) /* Cmd.ActivateMenu. */
-                .put("KEY_MENU", groupCallback()) /* Cmd.ActivateMenu. */
-                .put("KEY_QUIT", groupCallback()) /* Cmd.TerminateProgram. */
-                .build();
+                .put(
+                        " ",
+                        groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
+                 */.put("KEY_RETURN", groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected,
+                        SplitCurrentParagraph. */.put(
+                        "KEY_ESCAPE",
+                        groupCallback()) /* Cmd.ActivateMenu. */.put(
+                        "KEY_MENU",
+                        groupCallback()) /* Cmd.ActivateMenu. */.put(
+                        "KEY_QUIT",
+                        groupCallback()) /* Cmd.TerminateProgram. */.build();
 
         /* Keep the welcome message and restart after reporting an internal error. */
         nonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.");
@@ -222,11 +240,12 @@ public class WordProcessor
                 StringWriter traceback = new StringWriter();
                 e.printStackTrace(new PrintWriter(traceback));
                 java.lang.System.out.print(traceback);
-                modalMessage("Internal error!",
+                modalMessage(
+                        "Internal error!",
                         "Something went wrong inside WordGrinder! I'll try and " +
-                        "continue but you should save your work immediately (under a " +
-                        "different filename), exit, and send the following technical " +
-                        "information to the author:\n\n" + traceback);
+                                "continue but you should save your work immediately (under a " +
+                                "different filename), exit, and send the following technical " +
+                                "information to the author:\n\n" + traceback);
             }
         }
     }
