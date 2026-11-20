@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.google.common.collect.ImmutableList;
 import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -95,7 +94,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      *
      * @throws IndexOutOfBoundsException if start is outside zero through the word count
      */
-    public @NonNull List<@NonNull String> sub(int start)
+    public @NonNull ImmutableList<@NonNull String> sub(int start)
     {
         /* Without a count, copy all remaining words. */
         return sub(start, words.size() - start);
@@ -109,20 +108,21 @@ public final class Paragraph implements Iterable<@NonNull String>
      * @throws IndexOutOfBoundsException if start is outside zero through the word count,
      *                                   or count is negative
      */
-    public @NonNull List<@NonNull String> sub(int start, int count)
+    public @NonNull ImmutableList<@NonNull String> sub(int start, int count)
     {
         /* Clamp the requested count to the available words, as in Lua. */
         if (start < 0 || start > words.size() || count < 0)
             throw new IndexOutOfBoundsException("Invalid paragraph slice: " + start + ", " + count);
         int length = Math.min(count, words.size() - start);
-        return new ArrayList<>(words.subList(start, start + length));
+        return words.subList(start, start + length);
     }
 
     /**
      * Returns the paragraph's unstyled text, joining words with a single space.
      * An empty paragraph produces an empty string.
      */
-    public @NonNull String asString()
+    @Override
+    public @NonNull String toString()
     {
         /* Remove embedded word styles and separate words with a single space. */
         List<String> text = new ArrayList<>(words.size());

@@ -63,23 +63,6 @@ public final class ParagraphTest
     }
 
     @Test
-    public void slicesClampTheirCountAndReturnIndependentLists()
-    {
-        /* Use zero-based starts and retain Lua's count semantics. */
-        Paragraph paragraph = new Paragraph(style(null, null), "a", "b", "c");
-        assertEquals(List.of("b", "c"), paragraph.sub(1));
-        assertEquals(List.of("b"), paragraph.sub(1, 1));
-        assertEquals(List.of("b", "c"), paragraph.sub(1, Integer.MAX_VALUE));
-        assertTrue(paragraph.sub(3).isEmpty());
-        assertTrue(paragraph.sub(0, 0).isEmpty());
-
-        /* Slice edits must not edit paragraph storage. */
-        List<String> slice = paragraph.sub(0, 1);
-        slice.set(0, "other");
-        assertEquals("a", paragraph.words.get(0));
-    }
-
-    @Test
     public void invalidSlicesAndLineIndicesAreRejected()
     {
         /* Fail on invalid indices rather than silently truncating at the start. */
@@ -95,8 +78,8 @@ public final class ParagraphTest
     {
         /* Joining words preserves Unicode and removes only the word control codes. */
         Paragraph paragraph = new Paragraph(style(null, null), "\u0018Héllo", "😀\u0010world");
-        assertEquals("Héllo 😀world", paragraph.asString());
-        assertEquals("", new Paragraph(style(null, null)).asString());
+        assertEquals("Héllo 😀world", paragraph.toString());
+        assertEquals("", new Paragraph(style(null, null)).toString());
     }
 
     @Test

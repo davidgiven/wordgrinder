@@ -20,7 +20,7 @@ public class Main
 
             var d = new DocumentStyle("test", "test", 0, 0, 0, "", false, 0, false, "P");
             var p = new Paragraph(d);
-            System.out.println(p.asString());
+            System.out.println(p.toString());
         } catch (Exception e)
         {
             e.printStackTrace();
