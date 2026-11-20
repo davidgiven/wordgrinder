@@ -18,18 +18,18 @@ public class Main
     /* Keep backend selection separate from application execution. */
     private final @NonNull Screen screen;
     private final @NonNull Ui ui;
-    private final @NonNull System process;
+    private final @NonNull System system;
     private final @NonNull Word wordRenderer;
     private final @NonNull EventBus eventBus;
 
     public Main(
             @NonNull Screen screen,
-            @NonNull System process,
+            @NonNull System system,
             @NonNull Word wordRenderer,
             @NonNull EventBus eventBus)
     {
         this.screen = screen;
-        this.process = process;
+        this.system = system;
         this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
         ui = new Ui(screen);
@@ -65,7 +65,7 @@ public class Main
         } catch (Exception e)
         {
             e.printStackTrace();
-            process.exit(1);
+            system.exit(1);
         }
     }
 

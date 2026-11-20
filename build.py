@@ -18,9 +18,12 @@ export(
 export(
     name="javatests",
     deps=[
-        "javatests/com/cowlark/wordgrinder+word-test",
-        "javatests/com/cowlark/wordgrinder+paragraph-test",
+        "javatests/com/cowlark/wordgrinder/teavm/impl+cstring-test",
+        "javatests/com/cowlark/wordgrinder/document+word-test",
+        "javatests/com/cowlark/wordgrinder/document+paragraph-test",
+        "javatests/com/cowlark/wordgrinder/document+paragraph-render-test",
         "javatests/com/cowlark/wordgrinder/ui+widget-test",
+        "javatests/com/cowlark/wordgrinder/ui+wrapped-label-test",
         "javatests/com/cowlark/wordgrinder/ui+ui-test",
         "javatests/com/cowlark/wordgrinder/ui+form-test",
         "javatests/com/cowlark/wordgrinder/addons+settings-test",

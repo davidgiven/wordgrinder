@@ -33,6 +33,7 @@ public final class Word
     public static final int DIM = 32;
     public static final int STYLE_MARKER = 16;
     public static final int STYLE_ALL = 15;
+
     /* Adapt the injected display to the styled-word renderer. */
     private final @NonNull Renderer renderer;
 

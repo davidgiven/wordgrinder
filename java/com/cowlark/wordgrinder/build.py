@@ -166,7 +166,7 @@ javaprogram(
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main", "./teavm/impl/display.h", "./teavm/impl/clipboard.h"],
+    ins=[".+main", "./teavm/impl/display.h", "./teavm/impl/clipboard.h", "./teavm/impl/system.h"],
     deps=GUAVA_DEPS + [
         "./teavm",
         "./nativeinterface",

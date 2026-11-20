@@ -5,7 +5,6 @@ import org.jspecify.annotations.NonNull;
 
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
-import org.teavm.interop.Strings;
 import org.teavm.interop.c.Include;
 
 /**
@@ -78,27 +77,26 @@ public final class DisplayImpl implements Display
     @Override
     public void dpy_init(@NonNull String @NonNull [] args)
     {
+        /* Retain every CString until the backend has consumed the complete argument vector. */
+        CString[] strings = new CString[args.length];
         Address argv = malloc((args.length + 1L) * Address.sizeOf());
         if (argv == null)
             throw new OutOfMemoryError();
-        int count = 0;
         try
         {
-            for (String arg : args)
+            for (int i = 0; i < args.length; i++)
             {
-                Address text = Strings.toC(arg);
-                argv
-                        .add(count * Address.sizeOf()).putAddress(text);
-                count++;
+                strings[i] = new CString(args[i]);
+                argv.add(i * Address.sizeOf()).putAddress(strings[i].getAddress());
             }
-            argv
-                    .add(count * Address.sizeOf()).putAddress(null);
+            argv.add(args.length * Address.sizeOf()).putAddress(null);
             initNative(argv);
-        } finally
+        }
+        finally
         {
-            for (int i = 0; i < count; i++)
-                free(argv
-                        .add(i * Address.sizeOf()).getAddress());
+            for (CString string : strings)
+                if (string != null)
+                    string.close();
             free(argv);
         }
     }
@@ -144,7 +142,7 @@ public final class DisplayImpl implements Display
             throw new OutOfMemoryError();
         try
         {
-            return Strings.fromC(text);
+            return CString.fromC(text);
         } finally
         {
             free(text);
