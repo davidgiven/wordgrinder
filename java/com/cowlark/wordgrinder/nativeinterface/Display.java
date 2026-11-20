@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.nativeinterface;
 
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
@@ -7,7 +7,7 @@ import org.teavm.interop.c.Include;
 
 /**
  * Bindings to the native display backend. Coordinates are (x, y).
- * Requires TeaVM's C backend and the display-native library.
+ * Requires TeaVM's C backend and the nativeinterface native library.
  */
 @Include("display.h")
 public final class Display

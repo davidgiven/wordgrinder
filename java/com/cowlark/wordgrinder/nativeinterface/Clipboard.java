@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder;
+package com.cowlark.wordgrinder.nativeinterface;
 
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;

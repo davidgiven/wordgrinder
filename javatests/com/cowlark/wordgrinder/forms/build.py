@@ -8,6 +8,6 @@ junit4(
     },
     deps=[
         "java/com/cowlark/wordgrinder/forms",
-        "java/com/cowlark/wordgrinder+main",
+        "java/com/cowlark/wordgrinder/nativeinterface",
     ],
 )

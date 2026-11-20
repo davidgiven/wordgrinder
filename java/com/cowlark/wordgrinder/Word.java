@@ -5,6 +5,8 @@
 
 package com.cowlark.wordgrinder;
 
+import com.cowlark.wordgrinder.nativeinterface.Display;
+
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;

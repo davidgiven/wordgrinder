@@ -4,10 +4,12 @@
 
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 
-/** A boolean choice toggled with the space key. */
+/**
+ * A boolean choice toggled with the space key.
+ */
 public class CheckboxWidget extends Widget
 {
     /* Store the selected value and its descriptive label. */
@@ -18,13 +20,13 @@ public class CheckboxWidget extends Widget
     public CheckboxWidget()
     {
         focusable = true;
-        keybindings.put(" ", key ->
-        {
-            value = !value;
-            changed();
-            draw();
-            return Action.NOP;
-        });
+        keybindings.put(
+                " ", key -> {
+                    value = !value;
+                    changed();
+                    draw();
+                    return Action.NOP;
+                });
     }
 
     /* Highlight the choice and place the cursor when focused. */

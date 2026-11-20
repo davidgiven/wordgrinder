@@ -20,6 +20,7 @@ export(
     deps=[
         "javatests/com/cowlark/wordgrinder+word-test",
         "javatests/com/cowlark/wordgrinder+paragraph-test",
+        "javatests/com/cowlark/wordgrinder/forms+widget-test",
         "javatests/com/cowlark/wordgrinder/addons+settings-test",
         "javatests/com/cowlark/wordgrinder/fileio+dumper-test",
         "javatests/com/cowlark/wordgrinder/fileio+undumper-test",

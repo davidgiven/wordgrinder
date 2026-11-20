@@ -1,5 +1,5 @@
 from build.ab import simplerule
-from build.c import cxxlibrary, cxxprogram
+from build.c import cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
 
 TEAVM_VERSION = "0.16.0"
@@ -135,10 +135,11 @@ mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
 javalibrary(
     name="main",
     deps=GUAVA_DEPS + [
-        ".+teavm-interop",
+        "./nativeinterface",
         "./eventbus",
         "./document",
         "./fileio",
+        "./forms",
         "./addons/debug+settings",
         "./addons/directories+settings",
         "./addons/gui+settings",
@@ -149,12 +150,9 @@ javalibrary(
     srcitems={
         f"com/cowlark/wordgrinder/{f}": f"./{f}"
         for f in [
-            "Clipboard.java",
             "Context.java",
-            "Display.java",
             "Main.java",
             "Paragraph.java",
-            "Screen.java",
             "Word.java",
         ]
     },
@@ -169,9 +167,11 @@ javaprogram(
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main", "./display.h", "./clipboard.h"],
+    ins=[".+main", "./nativeinterface/display.h", "./nativeinterface/clipboard.h"],
     deps=GUAVA_DEPS + [
         "./teavm",
+        "./nativeinterface",
+        "./forms",
         "./addons/debug+settings",
         "./addons/directories+settings",
         "./addons/gui+settings",
@@ -221,7 +221,7 @@ teavm_native = simplerule(
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
         "$(CC) $(CFLAGS) "
-        "-Ijava/com/cowlark/wordgrinder "
+        "-Ijava/com/cowlark/wordgrinder/nativeinterface "
         "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
     ],
     label="TEAVM",
@@ -230,23 +230,8 @@ teavm_native = simplerule(
 teavm_native.args["clibrary_deps"] = [teavm_native]
 teavm_native.args["clibrary_files"] = [teavm_native]
 
-# C ABI adapters for the existing C++ display backend.
-cxxlibrary(
-    name="display-native",
-    srcs=["./display.cc"],
-    hdrs={"display.h": "./display.h"},
-    deps=["src/c/arch/ncurses"],
-)
-
-cxxlibrary(
-    name="clipboard-native",
-    srcs=["./clipboard.cc"],
-    hdrs={"clipboard.h": "./clipboard.h"},
-    deps=["third_party/clip+clip_none"],
-)
-
 cxxprogram(
     name="wordgrinder-c",
     srcs=[],
-    deps=[".+wordgrinder-teavm", ".+display-native", ".+clipboard-native"],
+    deps=[".+wordgrinder-teavm", "./nativeinterface+native"],
 )

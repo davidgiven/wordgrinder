@@ -1,7 +1,8 @@
 package com.cowlark.wordgrinder;
 
-import com.cowlark.wordgrinder.document.DocumentStyle;
-import com.cowlark.wordgrinder.document.GlobalSettings;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
+
+import com.cowlark.wordgrinder.forms.Ui;
 import org.teavm.interop.Import;
 import org.teavm.interop.c.Include;
 import java.io.IOException;
@@ -13,14 +14,15 @@ public class Main
     {
         try
         {
-            var g = GlobalSettings.loadGlobalSettings();
-            System.out.println("" + g);
-            System.out.println(g.lookandfeel.denseparagraphs);
-            System.out.println(g.lookandfeel.enabled);
-
-            var d = new DocumentStyle("test", "test", 0, 0, 0, "", false, 0, false, "P");
-            var p = new Paragraph(d);
-            System.out.println(p.toString());
+            Screen.screenInit(args);
+            Screen.initScreen();
+            try
+            {
+                var c = Ui.getCharWithBlinkingCursor();
+            } finally
+            {
+                Screen.deinitScreen();
+            }
         } catch (Exception e)
         {
             e.printStackTrace();

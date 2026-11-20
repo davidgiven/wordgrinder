@@ -5,6 +5,7 @@ javalibrary(
     srcitems={
         f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
         for f in [
+            "Ui.java",
             "Widget.java",
             "DividerWidget.java",
             "LabelWidget.java",
@@ -15,7 +16,7 @@ javalibrary(
         ]
     },
     deps=[
-        "java/com/cowlark/wordgrinder+main",
+        "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder+jspecify",
     ],
 )

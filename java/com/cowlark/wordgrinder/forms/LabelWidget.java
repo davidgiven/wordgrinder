@@ -4,14 +4,14 @@
 
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 
-/** A single line of aligned text. */
+/**
+ * A single line of aligned text.
+ */
 public class LabelWidget extends Widget
 {
-    /* Labels default to centred text. */
-    public enum Alignment { LEFT, RIGHT, CENTRE }
     public @NonNull Alignment align = Alignment.CENTRE;
     public @NonNull String value = "";
 
@@ -28,4 +28,8 @@ public class LabelWidget extends Widget
         Screen.write(realx1, realy1, " ".repeat(realwidth));
         Screen.write(realx1 + offset, realy1, value);
     }
+
+    /* Labels default to centred text. */
+    public enum Alignment
+    {LEFT, RIGHT, CENTRE}
 }

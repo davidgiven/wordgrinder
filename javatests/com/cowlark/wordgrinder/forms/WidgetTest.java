@@ -1,6 +1,6 @@
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import java.util.List;
 import org.junit.Test;
 import org.jspecify.annotations.NonNull;

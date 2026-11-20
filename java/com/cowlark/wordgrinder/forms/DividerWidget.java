@@ -4,9 +4,11 @@
 
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 
-/** A horizontal divider. */
+/**
+ * A horizontal divider.
+ */
 public class DividerWidget extends Widget
 {
     /* Draw across the assigned width, matching the Lua divider. */

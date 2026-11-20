@@ -4,30 +4,36 @@
 
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
-import java.util.ArrayList;
-import java.util.List;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
-/** A scrollable list; cursor and offset are zero-based item indices. */
+/**
+ * A scrollable list; cursor and offset are zero-based item indices.
+ */
 public class BrowserWidget extends Widget
 {
-    /* Browser items carry application data, a display label and an optional key. */
-    public record Item(@NonNull String data, @NonNull String label, @Nullable String key) {}
     public @NonNull List<@NonNull Item> data = new ArrayList<>();
     public @NonNull String label = "";
     public int cursor;
     public int offset = -1;
-
     /* Notify subclasses only when the selected item changes. */
     public BrowserWidget()
     {
         focusable = true;
-        keybindings.put("KEY_UP", key -> moveTo(Math.max(0, cursor - 1)));
-        keybindings.put("KEY_DOWN", key -> moveTo(Math.max(0, Math.min(data.size() - 1, cursor + 1))));
-        keybindings.put("KEY_PGUP", key -> moveTo(Math.max(0, cursor - realheight / 2)));
-        keybindings.put("KEY_PGDN", key -> moveTo(Math.max(0, Math.min(data.size() - 1, cursor + realheight / 2))));
+        keybindings.put("KEY_UP", key -> moveTo(max(0, cursor - 1)));
+        keybindings.put(
+                "KEY_DOWN",
+                key -> moveTo(max(0, min(data.size() - 1, cursor + 1))));
+        keybindings.put("KEY_PGUP", key -> moveTo(max(0, cursor - realheight / 2)));
+        keybindings.put(
+                "KEY_PGDN",
+                key -> moveTo(max(0, min(data.size() - 1, cursor + realheight / 2))));
     }
 
     /* Return the change hook's command to the caller, as in Lua. */
@@ -45,10 +51,10 @@ public class BrowserWidget extends Widget
     {
         if (offset == -1)
             offset = cursor - realheight / 2;
-        offset = Math.min(offset, cursor);
-        offset = Math.max(offset, cursor - (realheight - 2));
-        offset = Math.min(offset, data.size() - (realheight - 2) - 1);
-        offset = Math.max(offset, 0);
+        offset = min(offset, cursor);
+        offset = max(offset, cursor - (realheight - 2));
+        offset = min(offset, data.size() - (realheight - 2) - 1);
+        offset = max(offset, 0);
     }
 
     /* Draw the surrounding box using the configured character set. */
@@ -100,5 +106,10 @@ public class BrowserWidget extends Widget
             Screen.setNormal();
         }
         Screen.setNormal();
+    }
+
+    /* Browser items carry application data, a display label and an optional key. */
+    public record Item(@NonNull String data, @NonNull String label, @Nullable String key)
+    {
     }
 }

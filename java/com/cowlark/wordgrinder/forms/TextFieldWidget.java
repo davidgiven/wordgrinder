@@ -4,10 +4,12 @@
 
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.Screen;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 
-/** An editable line. Cursor and offset are UTF-16 indices at code-point boundaries. */
+/**
+ * An editable line. Cursor and offset are UTF-16 indices at code-point boundaries.
+ */
 public class TextFieldWidget extends Widget
 {
     /* A negative initial cursor means the end of the initial value. */
@@ -20,75 +22,75 @@ public class TextFieldWidget extends Widget
     public TextFieldWidget()
     {
         focusable = true;
-        keybindings.put("KEY_LEFT", key ->
-        {
-            transientValue = false;
-            if (cursor > 0)
-            {
-                cursor = value.offsetByCodePoints(cursor, -1);
-                draw();
-            }
-            return Action.NOP;
-        });
-        keybindings.put("KEY_RIGHT", key ->
-        {
-            transientValue = false;
-            if (cursor < value.length())
-            {
-                cursor = value.offsetByCodePoints(cursor, 1);
-                draw();
-            }
-            return Action.NOP;
-        });
-        keybindings.put("KEY_HOME", key ->
-        {
-            transientValue = false;
-            cursor = 0;
-            draw();
-            return Action.NOP;
-        });
-        keybindings.put("KEY_END", key ->
-        {
-            transientValue = false;
-            cursor = value.length();
-            draw();
-            return Action.NOP;
-        });
-        keybindings.put("KEY_BACKSPACE", key ->
-        {
-            discardTransientValue();
-            if (cursor > 0)
-            {
-                int previous = value.offsetByCodePoints(cursor, -1);
-                value = value.substring(0, previous) + value.substring(cursor);
-                cursor = previous;
-                changed();
-                draw();
-            }
-            return Action.NOP;
-        });
-        keybindings.put("KEY_DELETE", key ->
-        {
-            discardTransientValue();
-            if (cursor < value.length())
-            {
-                value = value.substring(0, cursor)
-                        + value.substring(value.offsetByCodePoints(cursor, 1));
-                changed();
-                draw();
-            }
-            return Action.NOP;
-        });
-        keybindings.put("KEY_^U", key ->
-        {
-            discardTransientValue();
-            cursor = 0;
-            offset = 0;
-            value = "";
-            changed();
-            draw();
-            return Action.NOP;
-        });
+        keybindings.put(
+                "KEY_LEFT", key -> {
+                    transientValue = false;
+                    if (cursor > 0)
+                    {
+                        cursor = value.offsetByCodePoints(cursor, -1);
+                        draw();
+                    }
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_RIGHT", key -> {
+                    transientValue = false;
+                    if (cursor < value.length())
+                    {
+                        cursor = value.offsetByCodePoints(cursor, 1);
+                        draw();
+                    }
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_HOME", key -> {
+                    transientValue = false;
+                    cursor = 0;
+                    draw();
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_END", key -> {
+                    transientValue = false;
+                    cursor = value.length();
+                    draw();
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_BACKSPACE", key -> {
+                    discardTransientValue();
+                    if (cursor > 0)
+                    {
+                        int previous = value.offsetByCodePoints(cursor, -1);
+                        value = value.substring(0, previous) + value.substring(cursor);
+                        cursor = previous;
+                        changed();
+                        draw();
+                    }
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_DELETE", key -> {
+                    discardTransientValue();
+                    if (cursor < value.length())
+                    {
+                        value = value.substring(0, cursor) +
+                                value.substring(value.offsetByCodePoints(cursor, 1));
+                        changed();
+                        draw();
+                    }
+                    return Action.NOP;
+                });
+        keybindings.put(
+                "KEY_^U", key -> {
+                    discardTransientValue();
+                    cursor = 0;
+                    offset = 0;
+                    value = "";
+                    changed();
+                    draw();
+                    return Action.NOP;
+                });
     }
 
     /* Preserve explicit cursor positions across redraws. */
@@ -121,7 +123,8 @@ public class TextFieldWidget extends Widget
         Screen.setNormal();
         if (cursor < offset)
             offset = cursor;
-        while (offset < cursor && Screen.getStringWidth(value.substring(offset, cursor)) > realwidth)
+        while (offset < cursor &&
+                Screen.getStringWidth(value.substring(offset, cursor)) > realwidth)
             offset = value.offsetByCodePoints(offset, 1);
 
         /* Highlight transient text and position the cursor by terminal cell width. */
