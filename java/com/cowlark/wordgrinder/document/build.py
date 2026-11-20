@@ -11,6 +11,7 @@ javalibrary(
     },
     deps=[
         "java/com/cowlark/wordgrinder+jspecify",
+        "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder/fileio",
         "java/com/cowlark/wordgrinder/addons/debug+settings",
         "java/com/cowlark/wordgrinder/addons/directories+settings",

@@ -6,6 +6,8 @@
 package com.cowlark.wordgrinder;
 
 import com.cowlark.wordgrinder.document.DocumentStyle;
+import com.cowlark.wordgrinder.eventbus.DrawWord;
+import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -18,7 +20,7 @@ import java.util.List;
 /**
  * An immutable sequence of styled words, translated from paragraph.lua.
  * Word and line indices are zero-based. Layout uses terminal cell widths from the
- * injected screen; rendering and position queries are not yet translated.
+ * injected screen. Line rendering uses the supplied word renderer and event bus.
  */
 public final class Paragraph implements Iterable<@NonNull String>
 {
@@ -29,16 +31,25 @@ public final class Paragraph implements Iterable<@NonNull String>
 
     /* Screen metrics remain fixed for this paragraph; only the most recent layout is cached. */
     private final @NonNull Screen screen;
+
+    /* Rendering uses the supplied word renderer and the application's shared event bus. */
+    private final @NonNull Word wordRenderer;
+    private final @NonNull EventBus eventBus;
     private @Nullable WrapData wrapData;
 
     /**
      * Creates a paragraph from individual styled words; no words creates an empty paragraph.
      * The paragraph owns an immutable copy of the words.
      */
-    public Paragraph(@NonNull Screen screen, @NonNull DocumentStyle style, @NonNull String... words)
+    public Paragraph(
+            @NonNull Screen screen,
+            @NonNull Word wordRenderer,
+            @NonNull EventBus eventBus,
+            @NonNull DocumentStyle style,
+            @NonNull String... words)
     {
         /* Accept individual words, including an empty paragraph. */
-        this(screen, style, ImmutableList.copyOf(words));
+        this(screen, wordRenderer, eventBus, style, ImmutableList.copyOf(words));
     }
 
     /**
@@ -47,10 +58,14 @@ public final class Paragraph implements Iterable<@NonNull String>
      */
     public Paragraph(
             @NonNull Screen screen,
+            @NonNull Word wordRenderer,
+            @NonNull EventBus eventBus,
             @NonNull DocumentStyle style,
             @NonNull ImmutableList<@NonNull String> words)
     {
         this.screen = screen;
+        this.wordRenderer = wordRenderer;
+        this.eventBus = eventBus;
         this.style = style;
         this.words = words;
     }
@@ -72,7 +87,7 @@ public final class Paragraph implements Iterable<@NonNull String>
     public @NonNull Paragraph copy()
     {
         /* Copy words and style without the assigned paragraph number. */
-        return new Paragraph(screen, style, words);
+        return new Paragraph(screen, wordRenderer, eventBus, style, words);
     }
 
     /**
@@ -104,8 +119,8 @@ public final class Paragraph implements Iterable<@NonNull String>
     public @NonNull WrapData wrap(int width, boolean fullStopSpaces)
     {
         /* Both layout inputs participate in the cache, since either can change line breaks. */
-        if (wrapData != null && wrapData.wrapWidth() == width
-                && wrapData.fullStopSpaces() == fullStopSpaces)
+        if (wrapData != null && wrapData.wrapWidth() == width &&
+                wrapData.fullStopSpaces() == fullStopSpaces)
             return wrapData;
 
         /* Match Lua's raw-word sentence heuristic, including its final-word marker. */
@@ -169,23 +184,61 @@ public final class Paragraph implements Iterable<@NonNull String>
         /* Publish an immutable layout so later wraps cannot mutate previously returned data. */
         if (lineHasWords)
             lines.add(new Line(firstWord, lineWords.build()));
-        wrapData = new WrapData(width, fullStopSpaces, sentences.build(), lines.build(), xs.build());
+        wrapData =
+                new WrapData(width, fullStopSpaces, sentences.build(), lines.build(), xs.build());
         return wrapData;
     }
 
-    /** A wrapped line's first paragraph word and its zero-based paragraph word indices. */
-    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words) {}
+    /**
+     * Draws one wrapped line, translating Lua's renderLine. Call wrap before rendering.
+     * The origin already includes any desired indentation, as in the Lua caller.
+     * When enabled, DrawWord listeners may change the rendered word and its styles;
+     * cached word positions and the paragraph's immutable content remain unchanged.
+     */
+    public void renderLine(@NonNull Line line, int x, int y, boolean fireDrawWord)
+    {
+        /* Rendering requires the cached positions and sentence markers from wrapping. */
+        WrapData layout = wrapData;
+        if (layout == null)
+            throw new IllegalStateException("Wrap the paragraph before rendering it");
+        int currentStyle = style.cstyle();
+        int oldStyle = 0;
+
+        /* Deliver each mutable payload synchronously before drawing at its wrapped position. */
+        for (int wn : line.words())
+        {
+            String word = words.get(wn);
+            int wordStyle = currentStyle;
+            if (fireDrawWord)
+            {
+                DrawWord payload = new DrawWord(word, oldStyle, currentStyle, layout.sentences().contains(wn));
+                eventBus.fireEvent(payload);
+                word = payload.word;
+                oldStyle = payload.oldStyle;
+                wordStyle = payload.currentStyle;
+            }
+            oldStyle = wordRenderer.writeStyled(
+                    x + layout.xs().get(wn), y, word, oldStyle, -1, -1, wordStyle);
+        }
+    }
+
+    /**
+     * A wrapped line's first paragraph word and its zero-based paragraph word indices.
+     */
+    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words)
+    {
+    }
 
     /**
      * Cached layout data. Sentence markers identify the initial word, words following a raw
      * non-alphabetic ending, and the final word. Empty paragraphs have no markers or lines.
      */
-    public record WrapData(
-            int wrapWidth,
-            boolean fullStopSpaces,
-            @NonNull ImmutableSet<@NonNull Integer> sentences,
-            @NonNull ImmutableList<@NonNull Line> lines,
-            @NonNull ImmutableList<@NonNull Integer> xs) {}
+    public record WrapData(int wrapWidth, boolean fullStopSpaces,
+                           @NonNull ImmutableSet<@NonNull Integer> sentences,
+                           @NonNull ImmutableList<@NonNull Line> lines,
+                           @NonNull ImmutableList<@NonNull Integer> xs)
+    {
+    }
 
     /**
      * Copies the words from the zero-based start index to the end into a mutable list.

@@ -37,3 +37,18 @@ junit4(
         "java/com/cowlark/wordgrinder+jspecify",
     ],
 )
+
+junit4(
+    name="wrapped-label-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
+        for f in ["WrappedLabelWidgetTest.java", "TestScreen.java"]
+    },
+    deps=[
+        "java/com/cowlark/wordgrinder/ui",
+        "java/com/cowlark/wordgrinder+text",
+        "java/com/cowlark/wordgrinder/eventbus",
+        "java/com/cowlark/wordgrinder/nativeinterface",
+        "java/com/cowlark/wordgrinder+jspecify",
+    ],
+)

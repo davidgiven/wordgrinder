@@ -132,6 +132,21 @@ mavenjar(name="asm-util", artifact="org.ow2.asm:asm-util:9.10.1")
 mavenjar(name="rhino", artifact="org.mozilla:rhino:1.9.1")
 mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
 
+# Text layout and rendering can be used by the UI without depending on the application.
+javalibrary(
+    name="text",
+    srcitems={
+        f"com/cowlark/wordgrinder/{f}": f"./{f}"
+        for f in ["Word.java", "Paragraph.java"]
+    },
+    deps=GUAVA_DEPS + [
+        ".+jspecify",
+        "./nativeinterface",
+        "./document",
+        "./eventbus",
+    ],
+)
+
 javalibrary(
     name="main",
     deps=GUAVA_DEPS + [
@@ -141,6 +156,7 @@ javalibrary(
         "./document",
         "./fileio",
         "./ui",
+        ".+text",
         "./addons/debug+settings",
         "./addons/directories+settings",
         "./addons/gui+settings",
@@ -153,8 +169,6 @@ javalibrary(
         for f in [
             "Context.java",
             "Main.java",
-            "Paragraph.java",
-            "Word.java",
         ]
     },
 )
@@ -174,6 +188,7 @@ teavm_native = simplerule(
         "./nativeinterface",
         "./teavm/impl",
         "./ui",
+        ".+text",
         "./addons/debug+settings",
         "./addons/directories+settings",
         "./addons/gui+settings",

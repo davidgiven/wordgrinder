@@ -16,6 +16,7 @@ javalibrary(
             "Widget.java",
             "DividerWidget.java",
             "LabelWidget.java",
+            "WrappedLabelWidget.java",
             "CheckboxWidget.java",
             "ToggleWidget.java",
             "TextFieldWidget.java",
@@ -23,6 +24,9 @@ javalibrary(
         ]
     },
     deps=GUAVA_DEPS + [
+        "java/com/cowlark/wordgrinder+text",
+        "java/com/cowlark/wordgrinder/document",
+        "java/com/cowlark/wordgrinder/eventbus",
         "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder+jspecify",
     ],
