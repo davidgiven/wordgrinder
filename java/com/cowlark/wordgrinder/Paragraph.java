@@ -28,9 +28,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * Creates a paragraph from individual styled words; no words creates an empty paragraph.
      * The paragraph owns an immutable copy of the words.
      */
-    public Paragraph(
-            @NonNull DocumentStyle style,
-            @NonNull String... words)
+    public Paragraph(@NonNull DocumentStyle style, @NonNull String... words)
     {
         /* Accept individual words, including an empty paragraph. */
         this(style, ImmutableList.copyOf(words));
@@ -40,9 +38,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * Creates a paragraph with the supplied document style, copying the word list.
      * Subsequent edits to the caller's list do not affect the paragraph.
      */
-    public Paragraph(
-            @NonNull DocumentStyle style,
-            @NonNull ImmutableList<@NonNull String> words)
+    public Paragraph(@NonNull DocumentStyle style, @NonNull ImmutableList<@NonNull String> words)
     {
         this.style = style;
         this.words = words;

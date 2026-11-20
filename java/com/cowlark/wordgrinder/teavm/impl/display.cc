@@ -33,14 +33,28 @@ char* wg_dpy_getkeyname(int32_t key)
     return result;
 }
 
+/* Keep process-exit cleanup within the native backend's lifetime. */
+static bool displayRunning = false;
+static bool exitHandlerRegistered = false;
+
 void wg_dpy_start(void)
 {
     dpy_start();
+    displayRunning = true;
+    if (!exitHandlerRegistered)
+    {
+        atexit(wg_dpy_shutdown);
+        exitHandlerRegistered = true;
+    }
 }
 
 void wg_dpy_shutdown(void)
 {
-    dpy_shutdown();
+    if (displayRunning)
+    {
+        dpy_shutdown();
+        displayRunning = false;
+    }
 }
 
 void wg_dpy_setattr(int32_t andmask, int32_t ormask)
@@ -84,7 +98,6 @@ int32_t wg_dpy_getchar(double timeout)
 #include <langinfo.h>
 #endif
 
-void wg_screen_atexit(void (*callback)(void)) { atexit(callback); }
 int32_t wg_screen_width(int32_t character) { return emu_wcwidth(character); }
 bool wg_screen_control(int32_t character) { return iswcntrl(character); }
 bool wg_screen_default_unicode(void)

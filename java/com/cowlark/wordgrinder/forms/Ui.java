@@ -10,25 +10,34 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
-/** Screen helpers shared by forms, translated from ui.lua and redraw.lua. */
+/**
+ * Screen helpers shared by forms, translated from ui.lua and redraw.lua.
+ */
 public final class Ui
 {
     /* Match the cursor timings declared in the Lua prologue, in seconds. */
     public static final double BLINK_ON_TIME = 0.8;
     public static final double BLINK_OFF_TIME = 0.53;
 
-    /* This class contains only stateless screen operations. */
-    private Ui() {}
+    /* Draw and read input through the supplied screen backend. */
+    private final @NonNull Screen screen;
 
-    /** Draws a reversed status line on the bottom screen row. */
-    public static void drawStatusLine(@NonNull String text)
+    public Ui(@NonNull Screen screen)
+    {
+        this.screen = screen;
+    }
+
+    /**
+     * Draws a reversed status line on the bottom screen row.
+     */
+    public void drawStatusLine(@NonNull String text)
     {
         /* Query the current size rather than retaining document redraw state. */
-        int[] size = Screen.getScreenSize();
-        Screen.setReverse();
-        Screen.clearArea(0, size[1] - 1, size[0] - 1, size[1] - 1);
-        Screen.write(0, size[1] - 1, text);
-        Screen.setNormal();
+        int[] size = screen.getScreenSize();
+        screen.setReverse();
+        screen.clearArea(0, size[1] - 1, size[0] - 1, size[1] - 1);
+        screen.write(0, size[1] - 1, text);
+        screen.setNormal();
     }
 
     /**
@@ -36,90 +45,109 @@ public final class Ui
      * The top-left corner is (x, y); the interior starts at (x + 1, y + 1).
      * As in Lua, a column outside each vertical border is also cleared.
      */
-    public static void drawBox(int x, int y, int width, int height)
+    public void drawBox(int x, int y, int width, int height)
     {
         /* Draw the corners and horizontal borders in the selected character set. */
-        boolean unicode = Screen.useUnicode();
+        boolean unicode = screen.useUnicode();
         String border = (unicode ? "─" : "-").repeat(width);
         String space = " ".repeat(width);
-        Screen.write(x - 1, y, unicode ? " ┌" : " +");
-        Screen.write(x + width + 1, y, unicode ? "┐ " : "+ ");
-        Screen.write(x - 1, y + height + 1, unicode ? " └" : " +");
-        Screen.write(x + width + 1, y + height + 1, unicode ? "┘ " : "+ ");
-        Screen.write(x + 1, y, border);
-        Screen.write(x + 1, y + height + 1, border);
+        screen.write(x - 1, y, unicode ? " ┌" : " +");
+        screen.write(x + width + 1, y, unicode ? "┐ " : "+ ");
+        screen.write(x - 1, y + height + 1, unicode ? " └" : " +");
+        screen.write(x + width + 1, y + height + 1, unicode ? "┘ " : "+ ");
+        screen.write(x + 1, y, border);
+        screen.write(x + 1, y + height + 1, border);
 
         /* Clear the interior and draw its vertical borders. */
         for (int row = y + 1; row <= y + height; row++)
         {
-            Screen.write(x - 1, row, unicode ? " │" : " |");
-            Screen.write(x + width + 1, row, unicode ? "│ " : "| ");
-            Screen.write(x + 1, row, space);
+            screen.write(x - 1, row, unicode ? " │" : " |");
+            screen.write(x + width + 1, row, unicode ? "│ " : "| ");
+            screen.write(x + 1, row, space);
         }
     }
 
-    /** Clips text to the field's cell width and centres it without clearing the field. */
-    public static void centreInField(int x, int y, int width, @NonNull String text)
+    /**
+     * Clips text to the field's cell width and centres it without clearing the field.
+     */
+    public void centreInField(int x, int y, int width, @NonNull String text)
     {
         /* Align using terminal cell widths rather than Java string lengths. */
-        String bounded = Screen.getBoundedString(text, width);
-        int offset = Math.floorDiv(width - Screen.getStringWidth(bounded), 2);
-        Screen.write(x + offset, y, bounded);
+        String bounded = screen.getBoundedString(text, width);
+        int offset = Math.floorDiv(width - screen.getStringWidth(bounded), 2);
+        screen.write(x + offset, y, bounded);
     }
 
-    /** Clips text and aligns it to the left without clearing the field. */
-    public static void lAlignInField(int x, int y, int width, @NonNull String text)
+    /**
+     * Clips text and aligns it to the left without clearing the field.
+     */
+    public void lAlignInField(int x, int y, int width, @NonNull String text)
     {
         /* Clipping preserves complete Unicode code points. */
-        Screen.write(x, y, Screen.getBoundedString(text, width));
+        screen.write(x, y, screen.getBoundedString(text, width));
     }
 
-    /** Clips text and aligns it to the right without clearing the field. */
-    public static void rAlignInField(int x, int y, int width, @NonNull String text)
+    /**
+     * Clips text and aligns it to the right without clearing the field.
+     */
+    public void rAlignInField(int x, int y, int width, @NonNull String text)
     {
         /* Measure the clipped text so it ends at the field's right edge. */
-        String bounded = Screen.getBoundedString(text, width);
-        Screen.write(x + width - Screen.getStringWidth(bounded), y, bounded);
+        String bounded = screen.getBoundedString(text, width);
+        screen.write(x + width - screen.getStringWidth(bounded), y, bounded);
     }
 
-    /** Draws a bright box with a centred title on its top border. */
-    public static void drawTitledBox(int x, int y, int width, int height, @NonNull String title)
+    /**
+     * Draws a bright box with a centred title on its top border.
+     */
+    public void drawTitledBox(int x, int y, int width, int height, @NonNull String title)
     {
         /* A missing subtitle leaves the lower border uninterrupted. */
         drawTitledBox(x, y, width, height, title, null);
     }
 
-    /** Draws a titled box with an optional bold subtitle on its bottom border. */
-    public static void drawTitledBox(
-            int x, int y, int width, int height, @NonNull String title, @Nullable String subtitle)
+    /**
+     * Draws a titled box with an optional bold subtitle on its bottom border.
+     */
+    public void drawTitledBox(
+            int x,
+            int y,
+            int width,
+            int height,
+            @NonNull String title,
+            @Nullable String subtitle)
     {
         /* Restore normal attributes after drawing both border captions. */
-        Screen.setBright();
+        screen.setBright();
         drawBox(x, y, width, height);
         centreInField(x + 1, y, width, title);
         if (subtitle != null)
         {
-            Screen.setBold();
+            screen.setBold();
             centreInField(x + 1, y + height + 1, width, subtitle);
         }
-        Screen.setNormal();
+        screen.setNormal();
     }
 
-    /** Displays a centred boxed message immediately, without waiting for input. */
-    public static void immediateMessage(@NonNull String text)
+    /**
+     * Displays a centred boxed message immediately, without waiting for input.
+     */
+    public void immediateMessage(@NonNull String text)
     {
         /* Match the Lua message's padding and placement on the current screen. */
-        int[] size = Screen.getScreenSize();
-        int width = Screen.getStringWidth(text);
+        int[] size = screen.getScreenSize();
+        int width = screen.getStringWidth(text);
         int x = Math.floorDiv(size[0] - width, 2);
         int y = Math.floorDiv(size[1], 2);
         drawBox(x - 2, y - 1, width + 2, 1);
-        Screen.write(x, y, text);
-        Screen.sync();
+        screen.write(x, y, text);
+        screen.sync();
     }
 
-    /** Waits for an input event while blinking the cursor. */
-    public static @NonNull InputEvent getCharWithBlinkingCursor()
+    /**
+     * Waits for an input event while blinking the cursor.
+     */
+    public @NonNull InputEvent getCharWithBlinkingCursor()
     {
         /* Use the same effectively unlimited wait as the Lua helper. */
         return getCharWithBlinkingCursor(1E10);
@@ -129,25 +157,25 @@ public final class Ui
      * Waits up to timeout seconds, returning a KEY_TIMEOUT event on expiry.
      * Keyboard, mouse and system events are returned unchanged; receipt shows the cursor.
      */
-    public static @NonNull InputEvent getCharWithBlinkingCursor(double timeout)
+    public @NonNull InputEvent getCharWithBlinkingCursor(double timeout)
     {
         /* Begin visible and alternate the on/off periods until input or expiry. */
-        Screen.showCursor();
+        screen.showCursor();
         boolean shown = true;
         while (timeout > 0)
         {
             double period = Math.min(shown ? BLINK_ON_TIME : BLINK_OFF_TIME, timeout);
-            InputEvent event = Screen.getEvent(period);
+            InputEvent event = screen.getEvent(period);
             if (!(event instanceof KeyInputEvent key) || !key.key().equals("KEY_TIMEOUT"))
             {
-                Screen.showCursor();
+                screen.showCursor();
                 return event;
             }
             shown = !shown;
             if (shown)
-                Screen.showCursor();
+                screen.showCursor();
             else
-                Screen.hideCursor();
+                screen.hideCursor();
             timeout -= period;
         }
         return new KeyInputEvent("KEY_TIMEOUT");

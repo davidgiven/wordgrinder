@@ -22,14 +22,14 @@ public class BrowserWidget extends Widget
     public @NonNull String label = "";
     public int cursor;
     public int offset = -1;
+
     /* Notify subclasses only when the selected item changes. */
-    public BrowserWidget()
+    public BrowserWidget(@NonNull Screen screen)
     {
+        super(screen);
         focusable = true;
         keybindings.put("KEY_UP", key -> moveTo(max(0, cursor - 1)));
-        keybindings.put(
-                "KEY_DOWN",
-                key -> moveTo(max(0, min(data.size() - 1, cursor + 1))));
+        keybindings.put("KEY_DOWN", key -> moveTo(max(0, min(data.size() - 1, cursor + 1))));
         keybindings.put("KEY_PGUP", key -> moveTo(max(0, cursor - realheight / 2)));
         keybindings.put(
                 "KEY_PGDN",
@@ -65,21 +65,21 @@ public class BrowserWidget extends Widget
         int y = realy1;
         int w = realwidth;
         int h = realheight;
-        boolean unicode = Screen.useUnicode();
+        boolean unicode = screen.useUnicode();
         String border = (unicode ? "─" : "-").repeat(w - 2);
-        Screen.setBright();
-        Screen.write(x, y, unicode ? "┌" : "+");
-        Screen.write(x + 1, y, border);
-        Screen.write(x + w - 1, y, unicode ? "┐" : "+");
+        screen.setBright();
+        screen.write(x, y, unicode ? "┌" : "+");
+        screen.write(x + 1, y, border);
+        screen.write(x + w - 1, y, unicode ? "┐" : "+");
         for (int i = 1; i < h; i++)
         {
-            Screen.write(x, y + i, unicode ? "│" : "|");
-            Screen.write(x + w - 1, y + i, unicode ? "│" : "|");
+            screen.write(x, y + i, unicode ? "│" : "|");
+            screen.write(x + w - 1, y + i, unicode ? "│" : "|");
         }
-        Screen.write(x, y + h, unicode ? "└" : "+");
-        Screen.write(x + 1, y + h, border);
-        Screen.write(x + w - 1, y + h, unicode ? "┘" : "+");
-        Screen.setNormal();
+        screen.write(x, y + h, unicode ? "└" : "+");
+        screen.write(x + 1, y + h, border);
+        screen.write(x + w - 1, y + h, unicode ? "┘" : "+");
+        screen.setNormal();
         adjustOffset();
 
         /* Highlight the current item and indicate the visible range on the scrollbar. */
@@ -90,22 +90,22 @@ public class BrowserWidget extends Widget
             if (index >= data.size())
                 break;
             if (index == cursor)
-                Screen.setReverse();
+                screen.setReverse();
             else
-                Screen.setNormal();
-            Screen.write(x + 1, y + 1 + i, space);
-            Screen.write(x + 2, y + 1 + i, Screen.getBoundedString(data.get(index).label(), w - 4));
+                screen.setNormal();
+            screen.write(x + 1, y + 1 + i, space);
+            screen.write(x + 2, y + 1 + i, screen.getBoundedString(data.get(index).label(), w - 4));
             if (data.size() > h - 2)
             {
-                Screen.setNormal();
-                Screen.setBright();
+                screen.setNormal();
+                screen.setBright();
                 double fraction = (i + 1.0) * data.size() / (h - 1);
                 String mark = fraction >= offset + 1 && fraction <= offset + h - 1 ? "║" : "│";
-                Screen.write(x + w - 1, y + 1 + i, mark);
+                screen.write(x + w - 1, y + 1 + i, mark);
             }
-            Screen.setNormal();
+            screen.setNormal();
         }
-        Screen.setNormal();
+        screen.setNormal();
     }
 
     /* Browser items carry application data, a display label and an optional key. */

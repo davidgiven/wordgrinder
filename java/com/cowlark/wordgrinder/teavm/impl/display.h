@@ -24,7 +24,6 @@ void wg_dpy_sync(void);
 void wg_dpy_cleararea(int32_t x1, int32_t y1, int32_t x2, int32_t y2);
 int32_t wg_dpy_getchar(double timeout);
 
-void wg_screen_atexit(void (*callback)(void));
 int32_t wg_screen_width(int32_t character);
 bool wg_screen_control(int32_t character);
 bool wg_screen_default_unicode(void);

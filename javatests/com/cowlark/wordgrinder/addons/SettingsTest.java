@@ -20,7 +20,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 
-/** Checks compatibility with the saved Lua addon structures. */
+/**
+ * Checks compatibility with the saved Lua addon structures.
+ */
 public final class SettingsTest
 {
     /* Read headerless Lua metadata through the production reader. */
@@ -42,10 +44,12 @@ public final class SettingsTest
     public void globalSettingsReadLuaPathsAndRoundTrip() throws Exception
     {
         GlobalSettings settings = new GlobalSettings();
-        read(settings, ".debug.memory: true\n.directories.templates: \"/templates\"\n" +
-                ".gui.font_size: 24\n.lookandfeel.palette: \"Dark\"\n" +
-                ".recents.1: \"first.wg\"\n.recents.2: \"second.wg\"\n" +
-                ".systemdictionary.filename: \"/dictionary\"\n.future.option: true\n");
+        read(
+                settings,
+                ".debug.memory: true\n.directories.templates: \"/templates\"\n" +
+                        ".gui.font_size: 24\n.lookandfeel.palette: \"Dark\"\n" +
+                        ".recents.1: \"first.wg\"\n.recents.2: \"second.wg\"\n" +
+                        ".systemdictionary.filename: \"/dictionary\"\n.future.option: true\n");
 
         /* Check the values were assigned to typed fields rather than unknown metadata. */
         assertTrue(settings.debug.memory);
@@ -67,10 +71,12 @@ public final class SettingsTest
     public void documentSettingsReadLuaPathsAndRetainDefaults() throws Exception
     {
         Addons settings = new Addons();
-        read(settings, ".autosave.enabled: true\n.autosave.period: 2.5\n" +
-                ".autosave.lastsaved: 1700000000\n.scrapbook.document: \"Clippings\"\n" +
-                ".smartquotes.doublequotes: true\n.spellchecker.enabled: true\n" +
-                ".pagecount.wordsperpage: 300\n");
+        read(
+                settings,
+                ".autosave.enabled: true\n.autosave.period: 2.5\n" +
+                        ".autosave.lastsaved: 1700000000\n.scrapbook.document: \"Clippings\"\n" +
+                        ".smartquotes.doublequotes: true\n.spellchecker.enabled: true\n" +
+                        ".pagecount.wordsperpage: 300\n");
 
         /* Missing properties retain the addon registration defaults. */
         assertTrue(settings.autosave.enabled);

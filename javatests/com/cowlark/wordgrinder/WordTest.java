@@ -3,6 +3,8 @@ package com.cowlark.wordgrinder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import com.cowlark.wordgrinder.nativeinterface.Display;
+import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,6 +213,112 @@ public final class WordTest
                 () -> Word.applyStyleToWord("😀", 0, -1, 0, 2, 1));
         assertThrows(IndexOutOfBoundsException.class, () -> Word.getStyleFromWord("a", 2));
         assertThrows(IllegalArgumentException.class, () -> Word.deleteFromWord("a", 1, 0));
+    }
+
+    /* The constructor must route default rendering to the supplied display only. */
+    @Test
+    public void styledDrawingUsesInjectedDisplay()
+    {
+        RecordingRenderer renderer = new RecordingRenderer();
+        Display display = new Display()
+        {
+            @Override
+            public void dpy_init(@NonNull String @NonNull [] args)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public int @NonNull [] dpy_getscreensize()
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public @NonNull String dpy_getkeyname(int key)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_setcolour(
+                    float foregroundRed,
+                    float foregroundGreen,
+                    float foregroundBlue,
+                    float backgroundRed,
+                    float backgroundGreen,
+                    float backgroundBlue)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_start()
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_shutdown()
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_setattr(int andmask, int ormask)
+            {
+                assertEquals(0, andmask);
+                renderer.setAttributes(ormask);
+            }
+
+            @Override
+            public void dpy_writechar(int x, int y, int c)
+            {
+                renderer.writeCodePoint(x, y, c);
+            }
+
+            @Override
+            public void dpy_setcursor(int x, int y, boolean shown)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_clearscreen()
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_sync()
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public void dpy_cleararea(int x1, int y1, int x2, int y2)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+
+            @Override
+            public int getCharacterWidth(int codePoint)
+            {
+                return renderer.width(codePoint);
+            }
+
+            @Override
+            public int dpy_getchar(double timeout)
+            {
+                throw new AssertionError("Unexpected display call");
+            }
+        };
+        Word word = new Word(display);
+        assertEquals(Word.BOLD, word.writeStyled(5, 2, BOLD + "😀a", 0, -1, -1, 0));
+        assertEquals(
+                List.of(new Glyph(5, 2, 0x1f600, Word.BOLD), new Glyph(7, 2, 'a', Word.BOLD)),
+                renderer.glyphs);
+        assertEquals(0, renderer.attributes);
     }
 
     private record Glyph(int x, int y, int codePoint, int style)

@@ -1,16 +1,15 @@
+/* © 2026 David Given.
+ * WordGrinder is licensed under the MIT open source licence. See COPYING.
+ */
+
 package com.cowlark.wordgrinder.nativeinterface;
 
-import org.teavm.interop.Address;
-import org.teavm.interop.Import;
-import org.teavm.interop.Strings;
-import org.teavm.interop.c.Include;
+import org.jspecify.annotations.NonNull;
 
 /**
- * Bindings to the native display backend. Coordinates are (x, y).
- * Requires TeaVM's C backend and the nativeinterface native library.
+ * Backend-independent display operations.
  */
-@Include("display.h")
-public final class Display
+public interface Display
 {
     public static final int DPY_ITALIC = 1;
     public static final int DPY_UNDERLINE = 2;
@@ -28,50 +27,17 @@ public final class Display
     public static final int KEY_TIMEOUT = 7 << 24;
     public static final int KEY_QUIT = 8 << 24;
 
-    private Display()
-    {
-    }
+    /* Operations are supplied by an injected backend instance. */
+    void dpy_init(@NonNull String @NonNull [] args);
+
+    int @NonNull [] dpy_getscreensize();
+
+    @NonNull String dpy_getkeyname(int key);
 
     /**
-     * Pass command-line options to the backend before dpy_start().
+     * Colour components are in the range 0 to 1.
      */
-    public static void dpy_init(String[] args)
-    {
-        Address argv = malloc((args.length + 1L) * Address.sizeOf());
-        if (argv == null)
-            throw new OutOfMemoryError();
-        int count = 0;
-        try
-        {
-            for (String arg : args)
-            {
-                if (arg == null)
-                    throw new NullPointerException("display argument");
-                Address text = Strings.toC(arg);
-                argv
-                        .add(count * Address.sizeOf()).putAddress(text);
-                count++;
-            }
-            argv
-                    .add(count * Address.sizeOf()).putAddress(null);
-            initNative(argv);
-        } finally
-        {
-            for (int i = 0; i < count; i++)
-                free(argv
-                        .add(i * Address.sizeOf()).getAddress());
-            free(argv);
-        }
-    }
-
-    @Import(name = "wg_dpy_init")
-    private static native void initNative(Address argv);
-
-    /**
-     * RGB components use the native colour_t range, 0.0 to 1.0.
-     */
-    @Import(name = "wg_dpy_setcolour")
-    public static native void dpy_setcolour(
+    void dpy_setcolour(
             float foregroundRed,
             float foregroundGreen,
             float foregroundBlue,
@@ -79,76 +45,23 @@ public final class Display
             float backgroundGreen,
             float backgroundBlue);
 
-    /**
-     * Returns {width, height}.
-     */
-    public static int[] dpy_getscreensize()
-    {
-        int[] size = new int[2];
-        getScreenSizeNative(Address.ofData(size));
-        Address.pin(size);
-        return size;
-    }
+    void dpy_start();
 
-    @Import(name = "wg_dpy_getscreensize")
-    private static native void getScreenSizeNative(Address size);
+    void dpy_shutdown();
 
-    public static String dpy_getkeyname(int key)
-    {
-        Address text = getKeyNameNative(key);
-        if (text == null)
-            throw new OutOfMemoryError();
-        try
-        {
-            return Strings.fromC(text);
-        } finally
-        {
-            free(text);
-        }
-    }
+    void dpy_setattr(int andmask, int ormask);
 
-    @Import(name = "wg_dpy_getkeyname")
-    private static native Address getKeyNameNative(int key);
+    void dpy_writechar(int x, int y, int c);
 
-    @Include(value = "stdlib.h", isSystem = true)
-    @Import(name = "malloc")
-    private static native Address malloc(long size);
+    void dpy_setcursor(int x, int y, boolean shown);
 
-    @Include(value = "stdlib.h", isSystem = true)
-    @Import(name = "free")
-    private static native void free(Address pointer);
+    void dpy_clearscreen();
 
-    @Import(name = "wg_dpy_start")
-    public static native void dpy_start();
+    void dpy_sync();
 
-    @Import(name = "wg_dpy_shutdown")
-    public static native void dpy_shutdown();
+    void dpy_cleararea(int x1, int y1, int x2, int y2);
 
-    @Import(name = "wg_dpy_setattr")
-    public static native void dpy_setattr(int andmask, int ormask);
+    int getCharacterWidth(int codePoint);
 
-    @Import(name = "wg_dpy_writechar")
-    public static native void dpy_writechar(int x, int y, int c);
-
-    @Import(name = "wg_dpy_setcursor")
-    public static native void dpy_setcursor(int x, int y, boolean shown);
-
-    @Import(name = "wg_dpy_clearscreen")
-    public static native void dpy_clearscreen();
-
-    @Import(name = "wg_dpy_sync")
-    public static native void dpy_sync();
-
-    @Import(name = "wg_dpy_cleararea")
-    public static native void dpy_cleararea(int x1, int y1, int x2, int y2);
-
-    /**
-     * Terminal cell width of one Unicode code point, using the native locale.
-     */
-    @Import(name = "wg_screen_width")
-    public static native int getCharacterWidth(int codePoint);
-
-    @Import(name = "wg_dpy_getchar")
-    public static native int dpy_getchar(double timeout);
-
+    int dpy_getchar(double timeout);
 }

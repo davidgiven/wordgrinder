@@ -19,8 +19,9 @@ public class ToggleWidget extends Widget
     public @NonNull String label = "Toggle";
 
     /* Arrow keys stop at the ends; space cycles through all choices. */
-    public ToggleWidget()
+    public ToggleWidget(@NonNull Screen screen)
     {
+        super(screen);
         focusable = true;
         keybindings.put(
                 "KEY_LEFT", key -> {
@@ -52,14 +53,14 @@ public class ToggleWidget extends Widget
     @Override
     public void draw()
     {
-        Screen.write(realx1, realy1, " ".repeat(realwidth));
-        Screen.write(realx1, realy1, Screen.getBoundedString(label, realwidth - 2));
+        screen.write(realx1, realy1, " ".repeat(realwidth));
+        screen.write(realx1, realy1, screen.getBoundedString(label, realwidth - 2));
         String text = (value == 0 ? "  " : "< ") + values.get(value) +
                 (value == values.size() - 1 ? "  " : " >");
-        Screen.setBright();
-        Screen.write(realx2 - 12, realy1, text);
-        Screen.setNormal();
+        screen.setBright();
+        screen.write(realx2 - 12, realy1, text);
+        screen.setNormal();
         if (focus)
-            Screen.gotoXY(realx2 - 10, realy1);
+            screen.gotoXY(realx2 - 10, realy1);
     }
 }

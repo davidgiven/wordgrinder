@@ -1,16 +1,37 @@
 package com.cowlark.wordgrinder;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
+
 import com.cowlark.wordgrinder.document.DocumentStyle;
-import java.util.ArrayList;
-import java.util.List;
 import com.google.common.collect.ImmutableList;
-import org.junit.Test;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-import static org.junit.Assert.*;
+import org.junit.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class ParagraphTest
 {
+    private static @NonNull DocumentStyle style(
+            @Nullable Integer indent,
+            @Nullable Integer firstIndent)
+    {
+        /* Only indentation fields matter for these paragraph queries. */
+        return new DocumentStyle(
+                "Paragraph",
+                "P",
+                0,
+                0,
+                indent,
+                null,
+                null,
+                firstIndent,
+                null,
+                null);
+    }
+
     @Test
     public void constructorsSnapshotWordsAndPreserveIterationOrder()
     {
@@ -56,7 +77,9 @@ public final class ParagraphTest
 
         /* Public list access, sublists, and iteration must all reject mutation. */
         assertThrows(UnsupportedOperationException.class, () -> paragraph.words.clear());
-        assertThrows(UnsupportedOperationException.class, () -> paragraph.words.subList(0, 1).clear());
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> paragraph.words.subList(0, 1).clear());
         var iterator = paragraph.iterator();
         iterator.next();
         assertThrows(UnsupportedOperationException.class, iterator::remove);
@@ -97,11 +120,5 @@ public final class ParagraphTest
         assertEquals(4, new Paragraph(style(4, null)).getIndentOfLine(0));
         assertEquals(0, new Paragraph(style(null, null)).getIndentOfLine(0));
         assertEquals(0, new Paragraph(style(null, 7)).getIndentOfLine(2));
-    }
-
-    private static @NonNull DocumentStyle style(@Nullable Integer indent, @Nullable Integer firstIndent)
-    {
-        /* Only indentation fields matter for these paragraph queries. */
-        return new DocumentStyle("Paragraph", "P", 0, 0, indent, null, null, firstIndent, null, null);
     }
 }

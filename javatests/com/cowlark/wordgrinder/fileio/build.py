@@ -1,6 +1,5 @@
 from build.junit4 import junit4
 
-
 junit4(
     name="dumper-test",
     srcitems={

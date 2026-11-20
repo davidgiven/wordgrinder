@@ -136,6 +136,7 @@ javalibrary(
     name="main",
     deps=GUAVA_DEPS + [
         "./nativeinterface",
+        "./teavm/impl",
         "./eventbus",
         "./document",
         "./fileio",
@@ -167,10 +168,11 @@ javaprogram(
 # Generate and compile TeaVM C, then link it with the C++ display adapter.
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main", "./nativeinterface/display.h", "./nativeinterface/clipboard.h"],
+    ins=[".+main", "./teavm/impl/display.h", "./teavm/impl/clipboard.h"],
     deps=GUAVA_DEPS + [
         "./teavm",
         "./nativeinterface",
+        "./teavm/impl",
         "./forms",
         "./addons/debug+settings",
         "./addons/directories+settings",
@@ -221,7 +223,7 @@ teavm_native = simplerule(
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
         "$(CC) $(CFLAGS) "
-        "-Ijava/com/cowlark/wordgrinder/nativeinterface "
+        "-Ijava/com/cowlark/wordgrinder/teavm/impl "
         "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
     ],
     label="TEAVM",
@@ -233,5 +235,5 @@ teavm_native.args["clibrary_files"] = [teavm_native]
 cxxprogram(
     name="wordgrinder-c",
     srcs=[],
-    deps=[".+wordgrinder-teavm", "./nativeinterface+native"],
+    deps=[".+wordgrinder-teavm", "./teavm/impl+native"],
 )

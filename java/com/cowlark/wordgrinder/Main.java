@@ -1,35 +1,51 @@
 package com.cowlark.wordgrinder;
 
-import com.cowlark.wordgrinder.nativeinterface.Screen;
-
 import com.cowlark.wordgrinder.forms.Ui;
-import org.teavm.interop.Import;
-import org.teavm.interop.c.Include;
+import com.cowlark.wordgrinder.nativeinterface.System;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
+import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
+import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
+import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
+import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 
-@Include("stdlib.h")
 public class Main
 {
+    /* Keep backend selection separate from application execution. */
+    private final @NonNull Screen screen;
+    private final @NonNull Ui ui;
+    private final @NonNull System process;
+    public Main(@NonNull Screen screen, @NonNull System process)
+    {
+        this.screen = screen;
+        this.process = process;
+        ui = new Ui(screen);
+    }
+
+    /* The entry point chooses the backend; application logic receives its interface. */
     public static void main(String[] args) throws IOException
+    {
+        new Main(new ScreenImpl(new DisplayImpl()), new SystemImpl()).run(args);
+    }
+
+    public void run(@NonNull String[] args) throws IOException
     {
         try
         {
-            Screen.screenInit(args);
-            Screen.initScreen();
+            screen.screenInit(args);
+            screen.initScreen();
             try
             {
-                var c = Ui.getCharWithBlinkingCursor();
+                var c = ui.getCharWithBlinkingCursor();
             } finally
             {
-                Screen.deinitScreen();
+                screen.deinitScreen();
             }
         } catch (Exception e)
         {
             e.printStackTrace();
-            exit(1);
+            process.exit(1);
         }
     }
 
-    @Import(name = "exit")
-    private static native void exit(int status);
 }

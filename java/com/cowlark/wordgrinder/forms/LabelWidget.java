@@ -14,6 +14,11 @@ public class LabelWidget extends Widget
 {
     public @NonNull Alignment align = Alignment.CENTRE;
     public @NonNull String value = "";
+    /* Supply the drawing backend to the base widget. */
+    public LabelWidget(@NonNull Screen screen)
+    {
+        super(screen);
+    }
 
     /* Clear the field before drawing its aligned contents. */
     @Override
@@ -22,11 +27,11 @@ public class LabelWidget extends Widget
         int offset = switch (align)
         {
             case LEFT -> 0;
-            case RIGHT -> realwidth - Screen.getStringWidth(value);
-            case CENTRE -> Math.floorDiv(realwidth - Screen.getStringWidth(value), 2);
+            case RIGHT -> realwidth - screen.getStringWidth(value);
+            case CENTRE -> Math.floorDiv(realwidth - screen.getStringWidth(value), 2);
         };
-        Screen.write(realx1, realy1, " ".repeat(realwidth));
-        Screen.write(realx1 + offset, realy1, value);
+        screen.write(realx1, realy1, " ".repeat(realwidth));
+        screen.write(realx1 + offset, realy1, value);
     }
 
     /* Labels default to centred text. */

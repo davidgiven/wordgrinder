@@ -17,8 +17,9 @@ public class CheckboxWidget extends Widget
     public @NonNull String label = "Checkbox";
 
     /* Install this widget's keybindings. */
-    public CheckboxWidget()
+    public CheckboxWidget(@NonNull Screen screen)
     {
+        super(screen);
         focusable = true;
         keybindings.put(
                 " ", key -> {
@@ -33,11 +34,11 @@ public class CheckboxWidget extends Widget
     @Override
     public void draw()
     {
-        Screen.write(realx1, realy1, Screen.getBoundedString(label, realwidth - 10));
-        Screen.setBright();
-        Screen.write(realx2 - 10, realy1, value ? "> YES" : "> NO ");
-        Screen.setNormal();
+        screen.write(realx1, realy1, screen.getBoundedString(label, realwidth - 10));
+        screen.setBright();
+        screen.write(realx2 - 10, realy1, value ? "> YES" : "> NO ");
+        screen.setNormal();
         if (focus)
-            Screen.gotoXY(realx2 - 10, realy1);
+            screen.gotoXY(realx2 - 10, realy1);
     }
 }

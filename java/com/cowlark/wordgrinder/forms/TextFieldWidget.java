@@ -19,8 +19,9 @@ public class TextFieldWidget extends Widget
     public boolean transientValue;
 
     /* Bind editing operations to this field. */
-    public TextFieldWidget()
+    public TextFieldWidget(@NonNull Screen screen)
     {
+        super(screen);
         focusable = true;
         keybindings.put(
                 "KEY_LEFT", key -> {
@@ -117,25 +118,25 @@ public class TextFieldWidget extends Widget
     @Override
     public void draw()
     {
-        Screen.setBright();
-        Screen.write(realx1, realy1 + 1, (Screen.useUnicode() ? "▔" : " ").repeat(realwidth));
-        Screen.write(realx1, realy1, " ".repeat(realwidth));
-        Screen.setNormal();
+        screen.setBright();
+        screen.write(realx1, realy1 + 1, (screen.useUnicode() ? "▔" : " ").repeat(realwidth));
+        screen.write(realx1, realy1, " ".repeat(realwidth));
+        screen.setNormal();
         if (cursor < offset)
             offset = cursor;
         while (offset < cursor &&
-                Screen.getStringWidth(value.substring(offset, cursor)) > realwidth)
+                screen.getStringWidth(value.substring(offset, cursor)) > realwidth)
             offset = value.offsetByCodePoints(offset, 1);
 
         /* Highlight transient text and position the cursor by terminal cell width. */
-        String text = Screen.getBoundedString(value.substring(offset), realwidth);
-        Screen.setBright();
+        String text = screen.getBoundedString(value.substring(offset), realwidth);
+        screen.setBright();
         if (transientValue)
-            Screen.setReverse();
-        Screen.write(realx1, realy1, text);
-        Screen.setNormal();
+            screen.setReverse();
+        screen.write(realx1, realy1, text);
+        screen.setNormal();
         if (focus)
-            Screen.gotoXY(realx1 + Screen.getStringWidth(value.substring(offset, cursor)), realy1);
+            screen.gotoXY(realx1 + screen.getStringWidth(value.substring(offset, cursor)), realy1);
     }
 
     /* Convert a mouse column into a code-point boundary, including wide characters. */
@@ -150,7 +151,7 @@ public class TextFieldWidget extends Widget
         while (position < value.length())
         {
             int next = value.offsetByCodePoints(position, 1);
-            int nextWidth = Screen.getStringWidth(value.substring(position, next));
+            int nextWidth = screen.getStringWidth(value.substring(position, next));
             if (width + nextWidth > column)
                 break;
             width += nextWidth;

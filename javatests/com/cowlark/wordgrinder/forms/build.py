@@ -4,10 +4,23 @@ junit4(
     name="widget-test",
     srcitems={
         f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
-        for f in ["WidgetTest.java"]
+        for f in ["WidgetTest.java", "TestScreen.java"]
     },
     deps=[
         "java/com/cowlark/wordgrinder/forms",
         "java/com/cowlark/wordgrinder/nativeinterface",
+    ],
+)
+
+junit4(
+    name="ui-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
+        for f in ["UiTest.java", "TestScreen.java"]
+    },
+    deps=[
+        "java/com/cowlark/wordgrinder/forms",
+        "java/com/cowlark/wordgrinder/nativeinterface",
+        "java/com/cowlark/wordgrinder+jspecify",
     ],
 )

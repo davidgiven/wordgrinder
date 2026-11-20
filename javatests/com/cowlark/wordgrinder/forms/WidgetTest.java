@@ -1,22 +1,20 @@
 package com.cowlark.wordgrinder.forms;
 
-import com.cowlark.wordgrinder.nativeinterface.Screen;
-import java.util.List;
-import org.junit.Test;
-import org.jspecify.annotations.NonNull;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-/** Exercises widget state transitions without requiring the native screen backend. */
+import com.cowlark.wordgrinder.nativeinterface.Screen;
+import org.jspecify.annotations.NonNull;
+import org.junit.Test;
+import java.util.List;
+
+/**
+ * Exercises widget state transitions without requiring the native screen backend.
+ */
 public class WidgetTest
 {
-    /* Replace native drawing with observations of change notifications. */
-    private static class Field extends TextFieldWidget
-    {
-        int changes;
-        @Override public void draw() {}
-        @Override public @NonNull Action changed() { changes++; return Action.NOP; }
-    }
-
     /* Dispatch through the public binding map just as a form runner would. */
     private static Widget.@NonNull Action press(@NonNull Widget widget, @NonNull String key)
     {
@@ -85,8 +83,23 @@ public class WidgetTest
         class Checkbox extends CheckboxWidget
         {
             int changes;
-            @Override public void draw() {}
-            @Override public @NonNull Action changed() { changes++; return Action.NOP; }
+
+            Checkbox()
+            {
+                super(new TestScreen());
+            }
+
+            @Override
+            public void draw()
+            {
+            }
+
+            @Override
+            public @NonNull Action changed()
+            {
+                changes++;
+                return Action.NOP;
+            }
         }
         Checkbox first = new Checkbox();
         Checkbox second = new Checkbox();
@@ -102,9 +115,12 @@ public class WidgetTest
     @Test
     public void toggleStopsAndCycles()
     {
-        ToggleWidget toggle = new ToggleWidget()
+        ToggleWidget toggle = new ToggleWidget(new TestScreen())
         {
-            @Override public void draw() {}
+            @Override
+            public void draw()
+            {
+            }
         };
         toggle.values = List.of("one", "two");
         press(toggle, "KEY_LEFT");
@@ -123,8 +139,24 @@ public class WidgetTest
         class Browser extends BrowserWidget
         {
             int changes;
-            @Override public void draw() { adjustOffset(); }
-            @Override public @NonNull Action changed() { changes++; return Action.CONFIRM; }
+
+            Browser()
+            {
+                super(new TestScreen());
+            }
+
+            @Override
+            public void draw()
+            {
+                adjustOffset();
+            }
+
+            @Override
+            public @NonNull Action changed()
+            {
+                changes++;
+                return Action.CONFIRM;
+            }
         }
         Browser browser = new Browser();
         browser.realheight = 4;
@@ -152,13 +184,40 @@ public class WidgetTest
     @Test
     public void browserAcceptsEmptyData()
     {
-        BrowserWidget browser = new BrowserWidget()
+        BrowserWidget browser = new BrowserWidget(new TestScreen())
         {
-            @Override public void draw() { fail("Empty navigation must not redraw"); }
+            @Override
+            public void draw()
+            {
+                fail("Empty navigation must not redraw");
+            }
         };
         browser.realheight = 6;
         for (String key : List.of("KEY_UP", "KEY_DOWN", "KEY_PGUP", "KEY_PGDN"))
             assertEquals(Widget.Action.NOP, press(browser, key));
         assertEquals(0, browser.cursor);
+    }
+
+    /* Replace native drawing with observations of change notifications. */
+    private static class Field extends TextFieldWidget
+    {
+        int changes;
+
+        Field()
+        {
+            super(new TestScreen());
+        }
+
+        @Override
+        public void draw()
+        {
+        }
+
+        @Override
+        public @NonNull Action changed()
+        {
+            changes++;
+            return Action.NOP;
+        }
     }
 }

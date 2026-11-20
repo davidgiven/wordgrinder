@@ -33,32 +33,31 @@ public final class Word
     public static final int DIM = 32;
     public static final int STYLE_MARKER = 16;
     public static final int STYLE_ALL = 15;
-    /**
-     * Native display renderer; callers can still supply a renderer for off-screen drawing or tests.
-     */
-    public static final @NonNull Renderer DEFAULT_RENDERER = new Renderer()
+    /* Adapt the injected display to the styled-word renderer. */
+    private final @NonNull Renderer renderer;
+
+    public Word(@NonNull Display display)
     {
-        @Override
-        public void setAttributes(int attributes)
+        renderer = new Renderer()
         {
-            Display.dpy_setattr(0, attributes);
-        }
+            @Override
+            public void setAttributes(int attributes)
+            {
+                display.dpy_setattr(0, attributes);
+            }
 
-        @Override
-        public void writeCodePoint(int x, int y, int codePoint)
-        {
-            Display.dpy_writechar(x, y, codePoint);
-        }
+            @Override
+            public void writeCodePoint(int x, int y, int codePoint)
+            {
+                display.dpy_writechar(x, y, codePoint);
+            }
 
-        @Override
-        public int width(int codePoint)
-        {
-            return Display.getCharacterWidth(codePoint);
-        }
-    };
-
-    private Word()
-    {
+            @Override
+            public int width(int codePoint)
+            {
+                return display.getCharacterWidth(codePoint);
+            }
+        };
     }
 
     /**
@@ -96,29 +95,6 @@ public final class Word
         }
         if (start < word.length())
             callback.accept(style | defaultStyle, word.substring(start));
-    }
-
-    /**
-     * Draws a styled word using {@link #DEFAULT_RENDERER}; requires the native display backend.
-     */
-    public static int writeStyled(
-            int x,
-            int y,
-            @NonNull String word,
-            int oldAttributes,
-            int reverseOn,
-            int reverseOff,
-            int defaultStyle)
-    {
-        return writeStyled(
-                x,
-                y,
-                word,
-                oldAttributes,
-                reverseOn,
-                reverseOff,
-                defaultStyle,
-                DEFAULT_RENDERER);
     }
 
     /**
@@ -400,6 +376,29 @@ public final class Word
             destination.text.appendCodePoint(codePoint);
         }
         return true;
+    }
+
+    /**
+     * Draws a styled word through the display supplied to the constructor.
+     */
+    public int writeStyled(
+            int x,
+            int y,
+            @NonNull String word,
+            int oldAttributes,
+            int reverseOn,
+            int reverseOff,
+            int defaultStyle)
+    {
+        return writeStyled(
+                x,
+                y,
+                word,
+                oldAttributes,
+                reverseOn,
+                reverseOff,
+                defaultStyle,
+                renderer);
     }
 
     /**

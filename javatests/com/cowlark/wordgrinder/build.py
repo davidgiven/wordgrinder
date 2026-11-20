@@ -8,7 +8,11 @@ junit4(
         f"com/cowlark/wordgrinder/{f}": f"./{f}"
         for f in ["WordTest.java"]
     },
-    deps=["java/com/cowlark/wordgrinder+main"],
+    deps=[
+        "java/com/cowlark/wordgrinder+main",
+        "java/com/cowlark/wordgrinder/nativeinterface",
+        "java/com/cowlark/wordgrinder+jspecify",
+    ],
 )
 
 junit4(

@@ -18,11 +18,17 @@ public abstract class Widget
     /* Bind handlers to this instance, independently of its overridable methods. */
     public final @NonNull Map<@NonNull String, @NonNull Function<@NonNull String, @NonNull Action>>
             keybindings = new HashMap<>();
+    /* Share the injected screen with every widget subclass. */
+    protected final @NonNull Screen screen;
     /* Keep requested bounds separate from the bounds assigned by the form. */
     public int x1, y1, x2, y2;
     public int realx1, realy1, realx2, realy2, realwidth, realheight;
     public boolean focusable;
     public boolean focus;
+    protected Widget(@NonNull Screen screen)
+    {
+        this.screen = screen;
+    }
 
     /* Supply defaults for the optional Lua widget hooks. */
     public void init()
