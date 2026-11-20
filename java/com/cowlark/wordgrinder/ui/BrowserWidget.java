@@ -2,7 +2,7 @@
  * WordGrinder is licensed under the MIT open source licence. See COPYING.
  */
 
-package com.cowlark.wordgrinder.forms;
+package com.cowlark.wordgrinder.ui;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;

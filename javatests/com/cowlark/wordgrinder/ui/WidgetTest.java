@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.forms;
+package com.cowlark.wordgrinder.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

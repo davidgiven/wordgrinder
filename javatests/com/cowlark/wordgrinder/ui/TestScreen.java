@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.forms;
+package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen;

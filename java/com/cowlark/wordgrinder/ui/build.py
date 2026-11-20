@@ -3,9 +3,9 @@ from build.java import javalibrary
 from java.com.cowlark.wordgrinder.build import GUAVA_DEPS
 
 javalibrary(
-    name="forms",
+    name="ui",
     srcitems={
-        f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
+        f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
         for f in [
             "Palette.java",
             "DarkPalette.java",

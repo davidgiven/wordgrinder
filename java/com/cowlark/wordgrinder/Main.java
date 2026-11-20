@@ -1,7 +1,7 @@
 package com.cowlark.wordgrinder;
 
-import com.cowlark.wordgrinder.forms.LabelWidget;
-import com.cowlark.wordgrinder.forms.Ui;
+import com.cowlark.wordgrinder.ui.LabelWidget;
+import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
