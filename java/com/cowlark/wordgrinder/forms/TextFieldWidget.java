@@ -10,7 +10,7 @@ import org.jspecify.annotations.NonNull;
 /**
  * An editable line. Cursor and offset are UTF-16 indices at code-point boundaries.
  */
-public class TextFieldWidget extends Widget
+public class TextFieldWidget extends Widget<TextFieldWidget>
 {
     /* A negative initial cursor means the end of the initial value. */
     public @NonNull String value = "";
@@ -19,9 +19,8 @@ public class TextFieldWidget extends Widget
     public boolean transientValue;
 
     /* Bind editing operations to this field. */
-    public TextFieldWidget(@NonNull Screen screen)
+    public TextFieldWidget()
     {
-        super(screen);
         focusable = true;
         keybindings.put(
                 "KEY_LEFT", key -> {
@@ -94,6 +93,34 @@ public class TextFieldWidget extends Widget
                 });
     }
 
+    /** Sets the editable text. */
+    public @NonNull TextFieldWidget setValue(@NonNull String value)
+    {
+        this.value = value;
+        return self();
+    }
+
+    /** Sets the UTF-16 cursor index; -1 selects the end during initialisation. */
+    public @NonNull TextFieldWidget setCursor(int cursor)
+    {
+        this.cursor = cursor;
+        return self();
+    }
+
+    /** Sets the UTF-16 index of the first visible code point. */
+    public @NonNull TextFieldWidget setOffset(int offset)
+    {
+        this.offset = offset;
+        return self();
+    }
+
+    /** Sets whether the initial text is replaced by the first edit. */
+    public @NonNull TextFieldWidget setTransientValue(boolean transientValue)
+    {
+        this.transientValue = transientValue;
+        return self();
+    }
+
     /* Preserve explicit cursor positions across redraws. */
     @Override
     public void init()
@@ -118,6 +145,10 @@ public class TextFieldWidget extends Widget
     @Override
     public void draw()
     {
+        /* Obtain the backend attached by Form.add(). */
+        Screen screen = getScreen();
+
+        /* Render the widget using its resolved bounds. */
         screen.setBright();
         screen.write(realx1, realy1 + 1, (screen.useUnicode() ? "▔" : " ").repeat(realwidth));
         screen.write(realx1, realy1, " ".repeat(realwidth));
@@ -143,6 +174,7 @@ public class TextFieldWidget extends Widget
     @Override
     public @NonNull Action click(Screen.@NonNull MouseInputEvent event)
     {
+        Screen screen = getScreen();
         int column = event.x() - realx1;
         if (column < 0)
             return Action.NOP;

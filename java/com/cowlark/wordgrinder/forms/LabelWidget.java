@@ -10,20 +10,33 @@ import org.jspecify.annotations.NonNull;
 /**
  * A single line of aligned text.
  */
-public class LabelWidget extends Widget
+public class LabelWidget extends Widget<LabelWidget>
 {
     public @NonNull Alignment align = Alignment.CENTRE;
     public @NonNull String value = "";
-    /* Supply the drawing backend to the base widget. */
-    public LabelWidget(@NonNull Screen screen)
+
+    /** Sets the text alignment. */
+    public @NonNull LabelWidget setAlign(@NonNull Alignment align)
     {
-        super(screen);
+        this.align = align;
+        return self();
+    }
+
+    /** Sets the displayed text. */
+    public @NonNull LabelWidget setValue(@NonNull String value)
+    {
+        this.value = value;
+        return self();
     }
 
     /* Clear the field before drawing its aligned contents. */
     @Override
     public void draw()
     {
+        /* Obtain the backend attached by Form.add(). */
+        Screen screen = getScreen();
+
+        /* Render the widget using its resolved bounds. */
         int offset = switch (align)
         {
             case LEFT -> 0;

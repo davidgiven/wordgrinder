@@ -1,11 +1,12 @@
 package com.cowlark.wordgrinder;
 
+import com.cowlark.wordgrinder.forms.LabelWidget;
 import com.cowlark.wordgrinder.forms.Ui;
-import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
+import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
-import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
+import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 
@@ -15,6 +16,7 @@ public class Main
     private final @NonNull Screen screen;
     private final @NonNull Ui ui;
     private final @NonNull System process;
+
     public Main(@NonNull Screen screen, @NonNull System process)
     {
         this.screen = screen;
@@ -36,7 +38,10 @@ public class Main
             screen.initScreen();
             try
             {
-                var c = ui.getCharWithBlinkingCursor();
+                ui.newForm()
+                        .setTitle("This is a form")
+                        .add(new LabelWidget().setBounds(2, 2, -2, 2).setValue("This a is a label"))
+                        .run();
             } finally
             {
                 screen.deinitScreen();

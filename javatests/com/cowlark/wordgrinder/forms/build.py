@@ -24,3 +24,16 @@ junit4(
         "java/com/cowlark/wordgrinder+jspecify",
     ],
 )
+
+junit4(
+    name="form-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
+        for f in ["FormTest.java", "TestScreen.java"]
+    },
+    deps=[
+        "java/com/cowlark/wordgrinder/forms",
+        "java/com/cowlark/wordgrinder/nativeinterface",
+        "java/com/cowlark/wordgrinder+jspecify",
+    ],
+)

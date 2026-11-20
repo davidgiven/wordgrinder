@@ -17,6 +17,8 @@ class TestScreen implements Screen
     final List<Double> periods = new ArrayList<>();
     final List<Boolean> visibility = new ArrayList<>();
     final List<String> writes = new ArrayList<>();
+    float[] foreground;
+    float[] background;
 
     /* Implement the screen contract and reject unexpected operations. */
     @Override
@@ -100,7 +102,8 @@ class TestScreen implements Screen
     @Override
     public void setColour(float @NonNull [] foreground, float @NonNull [] background)
     {
-        throw new AssertionError("Unexpected screen operation: setColour");
+        this.foreground = foreground.clone();
+        this.background = background.clone();
     }
 
     @Override

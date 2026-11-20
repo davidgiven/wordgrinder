@@ -6,6 +6,7 @@ javalibrary(
         f"com/cowlark/wordgrinder/forms/{f}": f"./{f}"
         for f in [
             "Ui.java",
+            "Form.java",
             "Widget.java",
             "DividerWidget.java",
             "LabelWidget.java",

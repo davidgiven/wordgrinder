@@ -16,7 +16,7 @@ import java.util.List;
 public class WidgetTest
 {
     /* Dispatch through the public binding map just as a form runner would. */
-    private static Widget.@NonNull Action press(@NonNull Widget widget, @NonNull String key)
+    private static Widget.@NonNull Action press(@NonNull Widget<?> widget, @NonNull String key)
     {
         return widget.keybindings.get(key).apply(key);
     }
@@ -84,11 +84,6 @@ public class WidgetTest
         {
             int changes;
 
-            Checkbox()
-            {
-                super(new TestScreen());
-            }
-
             @Override
             public void draw()
             {
@@ -115,7 +110,7 @@ public class WidgetTest
     @Test
     public void toggleStopsAndCycles()
     {
-        ToggleWidget toggle = new ToggleWidget(new TestScreen())
+        ToggleWidget toggle = new ToggleWidget()
         {
             @Override
             public void draw()
@@ -139,11 +134,6 @@ public class WidgetTest
         class Browser extends BrowserWidget
         {
             int changes;
-
-            Browser()
-            {
-                super(new TestScreen());
-            }
 
             @Override
             public void draw()
@@ -184,7 +174,7 @@ public class WidgetTest
     @Test
     public void browserAcceptsEmptyData()
     {
-        BrowserWidget browser = new BrowserWidget(new TestScreen())
+        BrowserWidget browser = new BrowserWidget()
         {
             @Override
             public void draw()
@@ -202,11 +192,6 @@ public class WidgetTest
     private static class Field extends TextFieldWidget
     {
         int changes;
-
-        Field()
-        {
-            super(new TestScreen());
-        }
 
         @Override
         public void draw()

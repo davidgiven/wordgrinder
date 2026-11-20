@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * A scrollable list; cursor and offset are zero-based item indices.
  */
-public class BrowserWidget extends Widget
+public class BrowserWidget extends Widget<BrowserWidget>
 {
     public @NonNull List<@NonNull Item> data = new ArrayList<>();
     public @NonNull String label = "";
@@ -24,9 +24,8 @@ public class BrowserWidget extends Widget
     public int offset = -1;
 
     /* Notify subclasses only when the selected item changes. */
-    public BrowserWidget(@NonNull Screen screen)
+    public BrowserWidget()
     {
-        super(screen);
         focusable = true;
         keybindings.put("KEY_UP", key -> moveTo(max(0, cursor - 1)));
         keybindings.put("KEY_DOWN", key -> moveTo(max(0, min(data.size() - 1, cursor + 1))));
@@ -34,6 +33,34 @@ public class BrowserWidget extends Widget
         keybindings.put(
                 "KEY_PGDN",
                 key -> moveTo(max(0, min(data.size() - 1, cursor + realheight / 2))));
+    }
+
+    /** Sets the browser items. */
+    public @NonNull BrowserWidget setData(@NonNull List<@NonNull Item> data)
+    {
+        this.data = data;
+        return self();
+    }
+
+    /** Sets the descriptive label. */
+    public @NonNull BrowserWidget setLabel(@NonNull String label)
+    {
+        this.label = label;
+        return self();
+    }
+
+    /** Sets the zero-based selected item. */
+    public @NonNull BrowserWidget setCursor(int cursor)
+    {
+        this.cursor = cursor;
+        return self();
+    }
+
+    /** Sets the zero-based first visible item; -1 centres the initial selection. */
+    public @NonNull BrowserWidget setOffset(int offset)
+    {
+        this.offset = offset;
+        return self();
     }
 
     /* Return the change hook's command to the caller, as in Lua. */
@@ -61,6 +88,10 @@ public class BrowserWidget extends Widget
     @Override
     public void draw()
     {
+        /* Obtain the backend attached by Form.add(). */
+        Screen screen = getScreen();
+
+        /* Render the widget using its resolved bounds. */
         int x = realx1;
         int y = realy1;
         int w = realwidth;
