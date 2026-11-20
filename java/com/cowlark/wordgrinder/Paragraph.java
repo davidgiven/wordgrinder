@@ -6,16 +6,19 @@
 package com.cowlark.wordgrinder;
 
 import com.cowlark.wordgrinder.document.DocumentStyle;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * An immutable sequence of styled words, translated from paragraph.lua.
- * Word and line indices are zero-based. Wrapping, rendering, and position queries
- * which depend on wrapping are deferred until the layout implementation exists.
+ * Word and line indices are zero-based. Layout uses terminal cell widths from the
+ * injected screen; rendering and position queries are not yet translated.
  */
 public final class Paragraph implements Iterable<@NonNull String>
 {
@@ -24,22 +27,30 @@ public final class Paragraph implements Iterable<@NonNull String>
     public final @NonNull DocumentStyle style;
     public final int number = 0;
 
+    /* Screen metrics remain fixed for this paragraph; only the most recent layout is cached. */
+    private final @NonNull Screen screen;
+    private @Nullable WrapData wrapData;
+
     /**
      * Creates a paragraph from individual styled words; no words creates an empty paragraph.
      * The paragraph owns an immutable copy of the words.
      */
-    public Paragraph(@NonNull DocumentStyle style, @NonNull String... words)
+    public Paragraph(@NonNull Screen screen, @NonNull DocumentStyle style, @NonNull String... words)
     {
         /* Accept individual words, including an empty paragraph. */
-        this(style, ImmutableList.copyOf(words));
+        this(screen, style, ImmutableList.copyOf(words));
     }
 
     /**
      * Creates a paragraph with the supplied document style, copying the word list.
      * Subsequent edits to the caller's list do not affect the paragraph.
      */
-    public Paragraph(@NonNull DocumentStyle style, @NonNull ImmutableList<@NonNull String> words)
+    public Paragraph(
+            @NonNull Screen screen,
+            @NonNull DocumentStyle style,
+            @NonNull ImmutableList<@NonNull String> words)
     {
+        this.screen = screen;
         this.style = style;
         this.words = words;
     }
@@ -61,7 +72,7 @@ public final class Paragraph implements Iterable<@NonNull String>
     public @NonNull Paragraph copy()
     {
         /* Copy words and style without the assigned paragraph number. */
-        return new Paragraph(style, words);
+        return new Paragraph(screen, style, words);
     }
 
     /**
@@ -83,6 +94,98 @@ public final class Paragraph implements Iterable<@NonNull String>
             indent = style.indent();
         return indent == null ? 0 : indent;
     }
+
+    /**
+     * Wraps styled words using explicit width and sentence-spacing preferences.
+     * Word offsets are measured in terminal cells relative to the line's indentation.
+     * As in Lua, a word and its trailing spacing move to the next line when they reach
+     * or exceed the available width. An oversized first word leaves an empty first line.
+     */
+    public @NonNull WrapData wrap(int width, boolean fullStopSpaces)
+    {
+        /* Both layout inputs participate in the cache, since either can change line breaks. */
+        if (wrapData != null && wrapData.wrapWidth() == width
+                && wrapData.fullStopSpaces() == fullStopSpaces)
+            return wrapData;
+
+        /* Match Lua's raw-word sentence heuristic, including its final-word marker. */
+        ImmutableSet.Builder<Integer> sentences = ImmutableSet.builder();
+        boolean sentence = true;
+        for (int wn = 0; wn < words.size(); wn++)
+        {
+            String word = words.get(wn);
+            if (sentence)
+            {
+                sentences.add(wn);
+                sentence = false;
+            }
+            if (!word.isEmpty())
+            {
+                char last = word.charAt(word.length() - 1);
+                if (!(last >= 'a' && last <= 'z') && !(last >= 'A' && last <= 'Z'))
+                    sentence = true;
+            }
+        }
+        if (!words.isEmpty())
+            sentences.add(words.size() - 1);
+
+        /* Account for first-line indentation before placing the words. */
+        ImmutableList.Builder<Line> lines = ImmutableList.builder();
+        ImmutableList.Builder<Integer> xs = ImmutableList.builder();
+        ImmutableList.Builder<Integer> lineWords = ImmutableList.builder();
+        int firstWord = 0;
+        int availableWidth = width - getIndentOfLine(0);
+        int x = 0;
+        boolean firstLine = true;
+        boolean lineHasWords = false;
+        for (int wn = 0; wn < words.size(); wn++)
+        {
+            String word = words.get(wn);
+            int wordWidth = screen.getStringWidth(word) + 1;
+            if (fullStopSpaces && word.endsWith("."))
+                wordWidth++;
+            int wordX = x;
+            x += wordWidth;
+
+            /* A break changes the indentation only when leaving the first line. */
+            if (x >= availableWidth)
+            {
+                lines.add(new Line(firstWord, lineWords.build()));
+                if (firstLine)
+                {
+                    availableWidth += getIndentOfLine(0) - getIndentOfLine(1);
+                    firstLine = false;
+                }
+                firstWord = wn;
+                lineWords = ImmutableList.builder();
+                x = wordWidth;
+                wordX = 0;
+            }
+            xs.add(wordX);
+            lineWords.add(wn);
+            lineHasWords = true;
+        }
+
+        /* Publish an immutable layout so later wraps cannot mutate previously returned data. */
+        if (lineHasWords)
+            lines.add(new Line(firstWord, lineWords.build()));
+        wrapData = new WrapData(width, fullStopSpaces, sentences.build(), lines.build(), xs.build());
+        return wrapData;
+    }
+
+    /** A wrapped line's first paragraph word and its zero-based paragraph word indices. */
+    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words) {}
+
+    /**
+     * Cached layout data. Sentence markers identify the initial word, words following a raw
+     * non-alphabetic ending, and the final word. Empty paragraphs have no markers or lines.
+     */
+    public record WrapData(
+            int wrapWidth,
+            boolean fullStopSpaces,
+            @NonNull ImmutableSet<@NonNull Integer> sentences,
+            @NonNull ImmutableList<@NonNull Line> lines,
+            @NonNull ImmutableList<@NonNull Integer> xs) {}
 
     /**
      * Copies the words from the zero-based start index to the end into a mutable list.

@@ -24,5 +24,6 @@ junit4(
     deps=GUAVA_DEPS + [
         "java/com/cowlark/wordgrinder+main",
         "java/com/cowlark/wordgrinder/document",
+        "java/com/cowlark/wordgrinder/nativeinterface",
     ],
 )
