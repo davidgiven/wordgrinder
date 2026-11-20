@@ -9,13 +9,13 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 
 /**
  * A modal form, translated from Form.Run in forms.lua.
@@ -28,8 +28,9 @@ public final class Form
     private final @NonNull Ui ui;
     private final @NonNull Screen screen;
     private final @NonNull List<@NonNull Widget<?>> widgets = new ArrayList<>();
-    private final @NonNull Map<@NonNull String,
-            @NonNull BiFunction<@NonNull Form, @NonNull String, @NonNull Action>> actions = new HashMap<>();
+    private final @NonNull Map<@NonNull String, @NonNull BiFunction<@NonNull Form,
+            @NonNull String, @NonNull Action>>
+            actions = new HashMap<>();
 
     /* Missing dimensions select the Lua 'large' size; focus is selected on first draw. */
     private @NonNull String title = "";
@@ -48,7 +49,15 @@ public final class Form
         screen = ui.getScreen();
     }
 
-    /** Appends a widget, preserving drawing, hit-testing and focus order. */
+    /* Negative widget coordinates are measured from the form's far edge. */
+    private static int resolveSize(int size, int bound)
+    {
+        return size < 0 ? size + bound : size;
+    }
+
+    /**
+     * Appends a widget, preserving drawing, hit-testing and focus order.
+     */
     public @NonNull Form add(@NonNull Widget<?> widget)
     {
         widget.attachScreen(screen);
@@ -56,55 +65,71 @@ public final class Form
         return this;
     }
 
-    /** Sets the title drawn on the top border. */
+    /**
+     * Sets the title drawn on the top border.
+     */
     public @NonNull Form setTitle(@NonNull String title)
     {
         this.title = title;
         return this;
     }
 
-    /** Sets the interior width in cells; by default it is six sevenths of the screen. */
+    /**
+     * Sets the interior width in cells; by default it is six sevenths of the screen.
+     */
     public @NonNull Form setWidth(int width)
     {
         this.width = width;
         return this;
     }
 
-    /** Sets the interior height in cells; by default it is five sixths of the screen. */
+    /**
+     * Sets the interior height in cells; by default it is five sixths of the screen.
+     */
     public @NonNull Form setHeight(int height)
     {
         this.height = height;
         return this;
     }
 
-    /** Sets both fixed dimensions. */
+    /**
+     * Sets both fixed dimensions.
+     */
     public @NonNull Form setSize(int width, int height)
     {
         return setWidth(width).setHeight(height);
     }
 
-    /** Adds the calculated height of the first widget spanning positive to negative rows. */
+    /**
+     * Adds the calculated height of the first widget spanning positive to negative rows.
+     */
     public @NonNull Form setStretchy(boolean stretchy)
     {
         this.stretchy = stretchy;
         return this;
     }
 
-    /** Draws optional help text beneath the widgets, inside an extra row of the box. */
+    /**
+     * Draws optional help text beneath the widgets, inside an extra row of the box.
+     */
     public @NonNull Form setHelpText(@Nullable String helpText)
     {
         this.helpText = helpText;
         return this;
     }
 
-    /** Supplies the backdrop redraw operation, called before laying out the form. */
+    /**
+     * Supplies the backdrop redraw operation, called before laying out the form.
+     */
     public @NonNull Form setRedraw(@NonNull Runnable redraw)
     {
         this.redraw = redraw;
         return this;
     }
 
-    /** Selects a widget already added to the form as its initial focus. */
+    /**
+     * Selects a widget already added to the form as its initial focus.
+     */
     public @NonNull Form setFocus(@NonNull Widget<?> widget)
     {
         if (!widgets.contains(widget))
@@ -113,13 +138,17 @@ public final class Form
         return this;
     }
 
-    /** Binds a key to a form command. Widget bindings take precedence. */
+    /**
+     * Binds a key to a form command. Widget bindings take precedence.
+     */
     public @NonNull Form on(@NonNull String key, @NonNull Action action)
     {
         return on(key, (form, pressedKey) -> action);
     }
 
-    /** Binds a key to a callback receiving this form and the key name. */
+    /**
+     * Binds a key to a callback receiving this form and the key name.
+     */
     public @NonNull Form on(
             @NonNull String key,
             @NonNull BiFunction<@NonNull Form, @NonNull String, @NonNull Action> action)
@@ -128,14 +157,18 @@ public final class Form
         return this;
     }
 
-    /** Redraws transient screen contents after the next input event, before dispatching it. */
+    /**
+     * Redraws transient screen contents after the next input event, before dispatching it.
+     */
     public @NonNull Form invalidate()
     {
         transientDisplay = true;
         return this;
     }
 
-    /** Runs the form until confirmation, cancellation or a UI quit request. */
+    /**
+     * Runs the form until confirmation, cancellation or a UI quit request.
+     */
     public boolean run()
     {
         /* Draw once before entering the modal input loop. */
@@ -160,7 +193,9 @@ public final class Form
             }
 
             /* Execute the selected command, leaving NOP and unhandled events in the loop. */
-            Action action = event instanceof MouseInputEvent mouse ? mouse(mouse) : key((KeyInputEvent) event);
+            Action action = event instanceof MouseInputEvent mouse ?
+                    mouse(mouse) :
+                    key((KeyInputEvent) event);
             if (action == Action.CANCEL)
                 return false;
             if (action == Action.CONFIRM)
@@ -169,12 +204,6 @@ public final class Form
                 draw();
         }
         return false;
-    }
-
-    /* Negative widget coordinates are measured from the form's far edge. */
-    private static int resolveSize(int size, int bound)
-    {
-        return size < 0 ? size + bound : size;
     }
 
     /* Recalculate geometry and initialise widgets whenever the form is redrawn. */
@@ -230,8 +259,12 @@ public final class Form
 
         /* Draw the frame, optional help row and all widgets in the control colours. */
         ui.setControlColour();
-        ui.drawTitledBox(realx - 1, realy - 1, realwidth,
-                realheight + (helpText != null ? 1 : 0), title);
+        ui.drawTitledBox(
+                realx - 1,
+                realy - 1,
+                realwidth,
+                realheight + (helpText != null ? 1 : 0),
+                title);
         if (helpText != null)
             ui.centreInField(realx, realy + realheight, realwidth, "<" + helpText + ">");
         screen.gotoXY(screenSize[0] - 1, screenSize[1] - 1);
@@ -288,8 +321,8 @@ public final class Form
     {
         for (Widget<?> widget : widgets)
         {
-            if (event.x() >= widget.realx1 && event.x() <= widget.realx2
-                    && event.y() >= widget.realy1 && event.y() <= widget.realy2)
+            if (event.x() >= widget.realx1 && event.x() <= widget.realx2 &&
+                    event.y() >= widget.realy1 && event.y() <= widget.realy2)
             {
                 Action action = null;
                 if (event.b() && widget.focusable)

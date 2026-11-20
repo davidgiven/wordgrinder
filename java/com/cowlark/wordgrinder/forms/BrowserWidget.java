@@ -35,28 +35,36 @@ public class BrowserWidget extends Widget<BrowserWidget>
                 key -> moveTo(max(0, min(data.size() - 1, cursor + realheight / 2))));
     }
 
-    /** Sets the browser items. */
+    /**
+     * Sets the browser items.
+     */
     public @NonNull BrowserWidget setData(@NonNull List<@NonNull Item> data)
     {
         this.data = data;
         return self();
     }
 
-    /** Sets the descriptive label. */
+    /**
+     * Sets the descriptive label.
+     */
     public @NonNull BrowserWidget setLabel(@NonNull String label)
     {
         this.label = label;
         return self();
     }
 
-    /** Sets the zero-based selected item. */
+    /**
+     * Sets the zero-based selected item.
+     */
     public @NonNull BrowserWidget setCursor(int cursor)
     {
         this.cursor = cursor;
         return self();
     }
 
-    /** Sets the zero-based first visible item; -1 centres the initial selection. */
+    /**
+     * Sets the zero-based first visible item; -1 centres the initial selection.
+     */
     public @NonNull BrowserWidget setOffset(int offset)
     {
         this.offset = offset;

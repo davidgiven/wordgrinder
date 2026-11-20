@@ -29,14 +29,18 @@ public class CheckboxWidget extends Widget<CheckboxWidget>
                 });
     }
 
-    /** Sets the checked state. */
+    /**
+     * Sets the checked state.
+     */
     public @NonNull CheckboxWidget setValue(boolean value)
     {
         this.value = value;
         return self();
     }
 
-    /** Sets the descriptive label. */
+    /**
+     * Sets the descriptive label.
+     */
     public @NonNull CheckboxWidget setLabel(@NonNull String label)
     {
         this.label = label;

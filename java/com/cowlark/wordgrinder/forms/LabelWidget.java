@@ -15,14 +15,18 @@ public class LabelWidget extends Widget<LabelWidget>
     public @NonNull Alignment align = Alignment.CENTRE;
     public @NonNull String value = "";
 
-    /** Sets the text alignment. */
+    /**
+     * Sets the text alignment.
+     */
     public @NonNull LabelWidget setAlign(@NonNull Alignment align)
     {
         this.align = align;
         return self();
     }
 
-    /** Sets the displayed text. */
+    /**
+     * Sets the displayed text.
+     */
     public @NonNull LabelWidget setValue(@NonNull String value)
     {
         this.value = value;

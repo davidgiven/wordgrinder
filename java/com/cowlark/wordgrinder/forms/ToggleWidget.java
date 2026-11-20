@@ -48,21 +48,27 @@ public class ToggleWidget extends Widget<ToggleWidget>
                 });
     }
 
-    /** Sets the available choices. */
+    /**
+     * Sets the available choices.
+     */
     public @NonNull ToggleWidget setValues(@NonNull List<@NonNull String> values)
     {
         this.values = values;
         return self();
     }
 
-    /** Sets the zero-based selected choice. */
+    /**
+     * Sets the zero-based selected choice.
+     */
     public @NonNull ToggleWidget setValue(int value)
     {
         this.value = value;
         return self();
     }
 
-    /** Sets the descriptive label. */
+    /**
+     * Sets the descriptive label.
+     */
     public @NonNull ToggleWidget setLabel(@NonNull String label)
     {
         this.label = label;

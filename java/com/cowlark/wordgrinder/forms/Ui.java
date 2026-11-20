@@ -21,48 +21,58 @@ public final class Ui
 
     /* Draw and read input through the supplied screen backend. */
     private final @NonNull Screen screen;
-
+    /* Retain the UI-wide quit flag and the Light palette's default control colours. */
+    private boolean quitting;
+    private float @NonNull [] controlForeground = {0.2f, 0.2f, 0.2f};
+    private float @NonNull [] controlBackground = {0.85f, 0.85f, 0.85f};
     public Ui(@NonNull Screen screen)
     {
         this.screen = screen;
     }
 
-    /* Retain the UI-wide quit flag and the Light palette's default control colours. */
-    private boolean quitting;
-    private float @NonNull [] controlForeground = {0.2f, 0.2f, 0.2f};
-    private float @NonNull [] controlBackground = {0.85f, 0.85f, 0.85f};
-
-    /** Creates a new form sharing this UI and its screen. */
+    /**
+     * Creates a new form sharing this UI and its screen.
+     */
     public @NonNull Form newForm()
     {
         return new Form(this);
     }
 
-    /** Returns the injected screen shared by forms and their widgets. */
+    /**
+     * Returns the injected screen shared by forms and their widgets.
+     */
     public @NonNull Screen getScreen()
     {
         return screen;
     }
 
-    /** Requests that all modal form loops using this UI stop. */
+    /**
+     * Requests that all modal form loops using this UI stop.
+     */
     public void requestQuit()
     {
         quitting = true;
     }
 
-    /** Cancels a previous quit request. */
+    /**
+     * Cancels a previous quit request.
+     */
     public void cancelQuit()
     {
         quitting = false;
     }
 
-    /** Reports whether the application has requested shutdown. */
+    /**
+     * Reports whether the application has requested shutdown.
+     */
     public boolean isQuitting()
     {
         return quitting;
     }
 
-    /** Sets the RGB colours used when drawing forms. Components range from 0 to 1. */
+    /**
+     * Sets the RGB colours used when drawing forms. Components range from 0 to 1.
+     */
     public void setControlColours(float @NonNull [] foreground, float @NonNull [] background)
     {
         controlForeground = foreground.clone();

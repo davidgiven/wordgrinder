@@ -93,28 +93,36 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
                 });
     }
 
-    /** Sets the editable text. */
+    /**
+     * Sets the editable text.
+     */
     public @NonNull TextFieldWidget setValue(@NonNull String value)
     {
         this.value = value;
         return self();
     }
 
-    /** Sets the UTF-16 cursor index; -1 selects the end during initialisation. */
+    /**
+     * Sets the UTF-16 cursor index; -1 selects the end during initialisation.
+     */
     public @NonNull TextFieldWidget setCursor(int cursor)
     {
         this.cursor = cursor;
         return self();
     }
 
-    /** Sets the UTF-16 index of the first visible code point. */
+    /**
+     * Sets the UTF-16 index of the first visible code point.
+     */
     public @NonNull TextFieldWidget setOffset(int offset)
     {
         this.offset = offset;
         return self();
     }
 
-    /** Sets whether the initial text is replaced by the first edit. */
+    /**
+     * Sets whether the initial text is replaced by the first edit.
+     */
     public @NonNull TextFieldWidget setTransientValue(boolean transientValue)
     {
         this.transientValue = transientValue;
