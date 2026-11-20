@@ -1,3 +1,5 @@
+from config import VERSION
+from shlex import quote
 from build.ab import simplerule
 from build.c import cxxprogram
 from build.java import javalibrary, javaprogram, mavenjar
@@ -132,9 +134,36 @@ mavenjar(name="asm-util", artifact="org.ow2.asm:asm-util:9.10.1")
 mavenjar(name="rhino", artifact="org.mozilla:rhino:1.9.1")
 mavenjar(name="hppc", artifact="com.carrotsearch:hppc:0.10.0")
 
+# Expose the shared application version to Java command-line help.
+simplerule(
+    name="build-info-source",
+    outs=["=BuildInfo.java"],
+    commands=[
+        "printf '%s' " + quote(
+            "package com.cowlark.wordgrinder;\n"
+            "/* Application version supplied by the shared build configuration. */\n"
+            "final class BuildInfo {\n"
+            f'    static final String VERSION = "{VERSION}";\n'
+            "    /* TODO: Supply a debug flag when Java debug builds are supported. */\n"
+            "    static final boolean DEBUG = false;\n"
+            "}\n"
+        ) + " > $[outs[0]]",
+    ],
+    label="BUILDINFO",
+)
+
+javalibrary(
+    name="build-info",
+    srcitems={
+        f"com/cowlark/wordgrinder/{f}": ".+build-info-source"
+        for f in ["BuildInfo.java"]
+    },
+)
+
 javalibrary(
     name="main",
     deps=GUAVA_DEPS + [
+        ".+build-info",
         "./nativeinterface",
         "./teavm/impl",
         "./eventbus",
