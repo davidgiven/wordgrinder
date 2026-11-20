@@ -1,11 +1,10 @@
 package com.cowlark.wordgrinder.ui;
 
-import com.cowlark.wordgrinder.nativeinterface.Colour;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import org.junit.Test;

@@ -44,9 +44,9 @@ public final class ParagraphTest
     private static @NonNull Word wordRenderer()
     {
         Display display = (Display) Proxy.newProxyInstance(
-                Display.class.getClassLoader(), new Class<?>[] {Display.class},
-                (proxy, method, args) ->
-                {
+                Display.class.getClassLoader(),
+                new Class<?>[]{Display.class},
+                (proxy, method, args) -> {
                     throw new AssertionError("Unexpected display operation: " + method.getName());
                 });
         return new Word(display);
@@ -71,11 +71,15 @@ public final class ParagraphTest
     }
 
     @Test
-    public void constructorsSnapshotWordsAndPreserveIterationOrder()
+    public void buildersSnapshotWordsAndPreserveIterationOrder()
     {
         /* Copy the input while retaining the supplied style. */
         ImmutableList<String> input = ImmutableList.of("one", "two");
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), input);
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords(input)
+                .build();
         assertEquals("P", paragraph.style.name());
         assertEquals(List.of("one", "two"), paragraph.words);
 
@@ -86,14 +90,89 @@ public final class ParagraphTest
         assertEquals(List.of("one", "two"), iterated);
         assertEquals(
                 paragraph.words,
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "one", "two").words);
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(null, null))
+                        .setWords("one", "two")
+                        .build().words);
+    }
+
+    @Test
+    public void reusedBuildersKeepPreviouslyBuiltParagraphsImmutable()
+    {
+        /* Snapshot mutable input when setting words, including before the first build. */
+        DocumentStyle originalStyle = style(4, 0);
+        List<String> input = new ArrayList<>(List.of("original"));
+        Paragraph.Builder builder = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(originalStyle)
+                .setWords(input);
+        input.set(0, "changed");
+        Paragraph original = builder.build();
+        assertEquals(List.of("original"), original.words);
+
+        /* Reconfiguring the builder must not alter a paragraph or its cached layout. */
+        Paragraph.WrapData layout = original.wrap(20, false);
+        DocumentStyle replacementStyle = style(1, 2);
+        Paragraph replacement =
+                builder.setDocumentStyle(replacementStyle).setWords("replacement").build();
+        assertSame(originalStyle, original.style);
+        assertSame(replacementStyle, replacement.style);
+        assertEquals(List.of("original"), original.words);
+        assertEquals(List.of("replacement"), replacement.words);
+        assertSame(layout, original.wrap(20, false));
+    }
+
+    @Test
+    public void builderRequiresAStyleAndDefaultsToEmptyWords()
+    {
+        /* Omitted required configuration fails before constructing an incomplete paragraph. */
+        Paragraph.Builder builder = Paragraph.builder(screen(), wordRenderer(), new EventBus());
+        assertThrows(IllegalStateException.class, builder::build);
+        assertEquals(List.of(), builder.setDocumentStyle(style(null, null)).build().words);
+    }
+
+    @Test
+    public void setTextMatchesLuaWhitespaceAndPreservesStyledWords()
+    {
+        /* Only the four Lua separators split words; Unicode and embedded styles survive. */
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setText(" \t\u0018Héllo\n😀\r\nworld\u00a0joined\tform\ffeed  ")
+                .build();
+        assertEquals(
+                List.of("\u0018Héllo", "😀", "world\u00a0joined", "form\ffeed"),
+                paragraph.words);
+    }
+
+    @Test
+    public void setTextReplacesWordsWithoutChangingPreviouslyBuiltParagraphs()
+    {
+        /* Text and word setters replace the same snapshot, with the last setter taking effect. */
+        Paragraph.Builder builder = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("original");
+        Paragraph original = builder.build();
+        assertEquals(List.of("one", "two"), builder.setText("one two").build().words);
+        assertEquals(List.of("explicit"), builder.setWords("explicit").build().words);
+        assertEquals(List.of("original"), original.words);
+
+        /* Unlike an omitted word list, empty text deliberately contains one empty word. */
+        assertEquals(List.of(""), builder.setText("").build().words);
+        assertEquals(List.of(""), builder.setText(" \t\r\n").build().words);
     }
 
     @Test
     public void copyingPreservesWordsAndStyleButNotParagraphNumber()
     {
         /* Copying retains the immutable content and style. */
-        Paragraph original = new Paragraph(screen(), wordRenderer(), new EventBus(), style(4, 7), "first", "second");
+        Paragraph original = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(4, 7))
+                .setWords("first", "second")
+                .build();
         Paragraph copy = original.copy();
         assertSame(original.style, copy.style);
         assertEquals(original.words, copy.words);
@@ -111,7 +190,11 @@ public final class ParagraphTest
     {
         /* Mutating the varargs array must not change the snapshot. */
         String[] input = {"first", "second"};
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), input);
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords(input)
+                .build();
         input[0] = "changed";
         assertEquals(List.of("first", "second"), paragraph.words);
 
@@ -129,7 +212,11 @@ public final class ParagraphTest
     public void invalidSlicesAndLineIndicesAreRejected()
     {
         /* Fail on invalid indices rather than silently truncating at the start. */
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "word");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("word")
+                .build();
         assertThrows(IndexOutOfBoundsException.class, () -> paragraph.sub(-1));
         assertThrows(IndexOutOfBoundsException.class, () -> paragraph.sub(2));
         assertThrows(IndexOutOfBoundsException.class, () -> paragraph.sub(0, -1));
@@ -140,10 +227,19 @@ public final class ParagraphTest
     public void textStripsEmbeddedStylesAndPreservesUnicode()
     {
         /* Joining words preserves Unicode and removes only the word control codes. */
-        Paragraph paragraph =
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "\u0018Héllo", "😀\u0010world");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("\u0018Héllo", "😀\u0010world")
+                .build();
         assertEquals("Héllo 😀world", paragraph.toString());
-        assertEquals("", new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null)).toString());
+        assertEquals(
+                "",
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(null, null))
+                        .build()
+                        .toString());
     }
 
     @Test
@@ -151,16 +247,43 @@ public final class ParagraphTest
     {
         /* A zero first-line override is present, rather than a missing value. */
         DocumentStyle style = style(4, 0);
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style);
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style)
+                .build();
         assertSame(style, paragraph.style);
         assertEquals(0, paragraph.getIndentOfLine(0));
         assertEquals(4, paragraph.getIndentOfLine(1));
-        assertEquals(7, new Paragraph(screen(), wordRenderer(), new EventBus(), style(4, 7)).getIndentOfLine(0));
+        assertEquals(
+                7,
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(4, 7))
+                        .build()
+                        .getIndentOfLine(0));
 
         /* Missing indentation values fall back in the same order as Lua. */
-        assertEquals(4, new Paragraph(screen(), wordRenderer(), new EventBus(), style(4, null)).getIndentOfLine(0));
-        assertEquals(0, new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null)).getIndentOfLine(0));
-        assertEquals(0, new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, 7)).getIndentOfLine(2));
+        assertEquals(
+                4,
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(4, null))
+                        .build()
+                        .getIndentOfLine(0));
+        assertEquals(
+                0,
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(null, null))
+                        .build()
+                        .getIndentOfLine(0));
+        assertEquals(
+                0,
+                Paragraph
+                        .builder(screen(), wordRenderer(), new EventBus())
+                        .setDocumentStyle(style(null, 7))
+                        .build()
+                        .getIndentOfLine(2));
     }
 
     /* Preserve all three wrapping fixtures from tests/line-wrapping.lua with zero-based indices. */
@@ -168,8 +291,12 @@ public final class ParagraphTest
     public void wrapsLikeTheLuaRegressionFixtures()
     {
         String[] words = "The quick brown fox jumps over the lazy dog.".split(" ");
-        Paragraph.WrapData ordinary =
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(0, null), words).wrap(20, false);
+        Paragraph.WrapData ordinary = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(0, null))
+                .setWords(words)
+                .build()
+                .wrap(20, false);
         assertEquals(
                 List.of(List.of(0, 1, 2), List.of(3, 4, 5, 6), List.of(7, 8)),
                 ordinary.lines().stream().map(Paragraph.Line::words).toList());
@@ -180,14 +307,22 @@ public final class ParagraphTest
 
         /* Ordinary indentation affects every line, while the first-line override affects only
         one. */
-        Paragraph.WrapData indented =
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(4, null), words).wrap(20, false);
+        Paragraph.WrapData indented = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(4, null))
+                .setWords(words)
+                .build()
+                .wrap(20, false);
         assertEquals(
                 List.of(List.of(0, 1), List.of(2, 3), List.of(4, 5, 6), List.of(7, 8)),
                 indented.lines().stream().map(Paragraph.Line::words).toList());
         assertEquals(List.of(0, 4, 0, 6, 0, 6, 11, 0, 5), indented.xs());
-        Paragraph.WrapData firstIndent =
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(0, 15), words).wrap(20, false);
+        Paragraph.WrapData firstIndent = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(0, 15))
+                .setWords(words)
+                .build()
+                .wrap(20, false);
         assertEquals(
                 List.of(List.of(0), List.of(1, 2, 3), List.of(4, 5, 6), List.of(7, 8)),
                 firstIndent.lines().stream().map(Paragraph.Line::words).toList());
@@ -198,7 +333,11 @@ public final class ParagraphTest
     @Test
     public void cachesBothWidthAndFullStopSpacing()
     {
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "Hi.", "there", "friend");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("Hi.", "there", "friend")
+                .build();
         Paragraph.WrapData single = paragraph.wrap(11, false);
         assertSame(single, paragraph.wrap(11, false));
         assertEquals(List.of(0, 4, 0), single.xs());
@@ -221,7 +360,11 @@ public final class ParagraphTest
     @Test
     public void preservesExactFitAndOversizedFirstWordBehaviour()
     {
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "abc");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("abc")
+                .build();
         Paragraph.WrapData exact = paragraph.wrap(4, false);
         assertEquals(
                 List.of(List.of(), List.of(0)),
@@ -238,8 +381,11 @@ public final class ParagraphTest
     @Test
     public void wrapsUsingTerminalCellWidths()
     {
-        Paragraph paragraph =
-                new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "\u0018界", "e\u0301", "😀");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("\u0018界", "e\u0301", "😀")
+                .build();
         Paragraph.WrapData wrapped = paragraph.wrap(6, false);
         assertEquals(
                 List.of(List.of(0, 1), List.of(2)),
@@ -251,20 +397,17 @@ public final class ParagraphTest
     @Test
     public void retainsLuaSentenceMarkersAndRawFullStopDetection()
     {
-        Paragraph paragraph = new Paragraph(
-                screen(),
-                wordRenderer(),
-                new EventBus(),
-                style(null, null),
-                "Hello",
-                "world",
-                "Stop.",
-                "Next",
-                "é",
-                "tail",
-                "");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("Hello", "world", "Stop.", "Next", "é", "tail", "")
+                .build();
         assertEquals(Set.of(0, 3, 5, 6), paragraph.wrap(80, false).sentences());
-        Paragraph styled = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "One.\u0010", "two", "three");
+        Paragraph styled = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("One.\u0010", "two", "three")
+                .build();
         assertEquals(Set.of(0, 1, 2), styled.wrap(80, true).sentences());
         assertEquals(List.of(0, 5, 9), styled.wrap(80, true).xs());
     }
@@ -273,11 +416,19 @@ public final class ParagraphTest
     @Test
     public void handlesEmptyParagraphsAndKeepsLayoutsImmutable()
     {
-        Paragraph.WrapData empty = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null)).wrap(20, false);
+        Paragraph.WrapData empty = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .build()
+                .wrap(20, false);
         assertEquals(List.of(), empty.lines());
         assertEquals(List.of(), empty.xs());
         assertEquals(Set.of(), empty.sentences());
-        Paragraph paragraph = new Paragraph(screen(), wordRenderer(), new EventBus(), style(null, null), "");
+        Paragraph paragraph = Paragraph
+                .builder(screen(), wordRenderer(), new EventBus())
+                .setDocumentStyle(style(null, null))
+                .setWords("")
+                .build();
         Paragraph.WrapData oneWord = paragraph.wrap(20, false);
         assertEquals(
                 List.of(List.of(0)),
