@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.util.List;
 
@@ -16,7 +15,7 @@ import java.util.List;
 public class WidgetTest
 {
     /* Dispatch through the public binding map just as a form runner would. */
-    private static Widget.@NonNull Action press(@NonNull Widget<?> widget, @NonNull String key)
+    private static Widget.Action press(Widget<?> widget, String key)
     {
         return widget.keybindings.get(key).apply(key);
     }
@@ -90,7 +89,7 @@ public class WidgetTest
             }
 
             @Override
-            public @NonNull Action changed()
+            public Action changed()
             {
                 changes++;
                 return Action.NOP;
@@ -142,7 +141,7 @@ public class WidgetTest
             }
 
             @Override
-            public @NonNull Action changed()
+            public Action changed()
             {
                 changes++;
                 return Action.CONFIRM;
@@ -199,7 +198,7 @@ public class WidgetTest
         }
 
         @Override
-        public @NonNull Action changed()
+        public Action changed()
         {
             changes++;
             return Action.NOP;

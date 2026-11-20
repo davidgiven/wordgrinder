@@ -7,7 +7,6 @@ package com.cowlark.wordgrinder.ui;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 
 import com.google.common.collect.ImmutableMap;
-import org.jspecify.annotations.NonNull;
 
 /**
  * The Light theme from colours.lua.
@@ -15,10 +14,10 @@ import org.jspecify.annotations.NonNull;
 public final class LightPalette extends Palette
 {
     /* Share the immutable colours used by multiple paragraph styles. */
-    private static final @NonNull Colour INK = new Colour(0f, 0f, 0f);
-    private static final @NonNull Colour PAPER = new Colour(0.760f, 0.760f, 0.730f);
-    private static final @NonNull Colour HEADERFG = new Colour(0.14f, 0.22f, 0.40f);
-    private static final @NonNull Colour HEADERBG = new Colour(0.66f, 0.66f, 0.66f);
+    private static final Colour INK = new Colour(0f, 0f, 0f);
+    private static final Colour PAPER = new Colour(0.760f, 0.760f, 0.730f);
+    private static final Colour HEADERFG = new Colour(0.14f, 0.22f, 0.40f);
+    private static final Colour HEADERBG = new Colour(0.66f, 0.66f, 0.66f);
 
     /* Supply the shared palette implementation with this theme's definitions. */
     public LightPalette()

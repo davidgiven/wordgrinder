@@ -4,7 +4,6 @@
 
 package com.cowlark.wordgrinder.nativeinterface;
 
-import org.jspecify.annotations.NonNull;
 
 /**
  * Backend-independent screen operations.
@@ -12,7 +11,7 @@ import org.jspecify.annotations.NonNull;
 public interface Screen
 {
     /* Operations are supplied by an injected backend instance. */
-    void screenInit(@NonNull String @NonNull [] args);
+    void screenInit(String[] args);
 
     void initScreen();
 
@@ -38,11 +37,11 @@ public interface Screen
 
     void setNormal();
 
-    void setColour(@NonNull Colour foreground, @NonNull Colour background);
+    void setColour(Colour foreground, Colour background);
 
     void dpyWriteUniChar(int x, int y, int character);
 
-    void write(int x, int y, @NonNull String text);
+    void write(int x, int y, String text);
 
     void clearArea(int x1, int y1, int x2, int y2);
 
@@ -55,22 +54,22 @@ public interface Screen
     /**
      * Returns the current width and height in terminal cells.
      */
-    int @NonNull [] getScreenSize();
+    int[] getScreenSize();
 
-    int getStringWidth(@NonNull String text);
+    int getStringWidth(String text);
 
-    @NonNull String getBoundedString(@NonNull String text, int width);
+    String getBoundedString(String text, int width);
 
     int getBytesOfCharacter(int firstByte);
 
-    @NonNull MouseInputEvent decodeMouseEvent(int key);
+    MouseInputEvent decodeMouseEvent(int key);
 
-    @NonNull InputEvent getEvent();
+    InputEvent getEvent();
 
     /**
      * Reads input with a timeout in seconds; a negative timeout waits indefinitely.
      */
-    @NonNull InputEvent getEvent(double timeout);
+    InputEvent getEvent(double timeout);
 
     boolean useUnicode();
 
@@ -81,7 +80,7 @@ public interface Screen
     {
     }
 
-    record KeyInputEvent(@NonNull String key) implements InputEvent
+    record KeyInputEvent(String key) implements InputEvent
     {
     }
 

@@ -2,7 +2,6 @@ package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,7 @@ class TestScreen implements Screen
 
     /* Implement the screen contract and reject unexpected operations. */
     @Override
-    public void screenInit(@NonNull String @NonNull [] args)
+    public void screenInit(String[] args)
     {
         throw new AssertionError("Unexpected screen operation: screenInit");
     }
@@ -101,7 +100,7 @@ class TestScreen implements Screen
     }
 
     @Override
-    public void setColour(@NonNull Colour foreground, @NonNull Colour background)
+    public void setColour(Colour foreground, Colour background)
     {
         this.foreground = foreground;
         this.background = background;
@@ -114,7 +113,7 @@ class TestScreen implements Screen
     }
 
     @Override
-    public void write(int x, int y, @NonNull String text)
+    public void write(int x, int y, String text)
     {
         writes.add(x + "," + y + ":" + text);
     }
@@ -144,13 +143,13 @@ class TestScreen implements Screen
     }
 
     @Override
-    public int @NonNull [] getScreenSize()
+    public int[] getScreenSize()
     {
         return new int[]{80, 24};
     }
 
     @Override
-    public int getStringWidth(@NonNull String text)
+    public int getStringWidth(String text)
     {
         int width = 0;
         for (int cp : text.codePoints().toArray())
@@ -159,7 +158,7 @@ class TestScreen implements Screen
     }
 
     @Override
-    public @NonNull String getBoundedString(@NonNull String text, int width)
+    public String getBoundedString(String text, int width)
     {
         int end = 0;
         while (end < text.length())
@@ -179,19 +178,19 @@ class TestScreen implements Screen
     }
 
     @Override
-    public @NonNull MouseInputEvent decodeMouseEvent(int key)
+    public MouseInputEvent decodeMouseEvent(int key)
     {
         throw new AssertionError("Unexpected screen operation: decodeMouseEvent");
     }
 
     @Override
-    public @NonNull InputEvent getEvent()
+    public InputEvent getEvent()
     {
         return events.remove();
     }
 
     @Override
-    public @NonNull InputEvent getEvent(double timeout)
+    public InputEvent getEvent(double timeout)
     {
         periods.add(timeout);
         return events.remove();

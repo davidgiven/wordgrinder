@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.eventbus.DrawWord;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -117,7 +116,7 @@ public class WrappedLabelWidgetTest
         final TestScreen screen = new TestScreen()
         {
             @Override
-            public int getStringWidth(@NonNull String text)
+            public int getStringWidth(String text)
             {
                 return super.getStringWidth(Word.getWordText(text));
             }
@@ -135,7 +134,7 @@ public class WrappedLabelWidgetTest
         }
 
         /* Keep proxy callbacks outside field initialisers so member rearrangement is harmless. */
-        private @NonNull Display createDisplay()
+        private Display createDisplay()
         {
             return (Display) Proxy.newProxyInstance(
                     Display.class.getClassLoader(),
@@ -161,7 +160,7 @@ public class WrappedLabelWidgetTest
         }
 
         /* Attach the screen as Form.add normally does, without needing to run an input loop. */
-        WrappedLabelWidget label(@NonNull String text, int width)
+        WrappedLabelWidget label(String text, int width)
         {
             WrappedLabelWidget label = new WrappedLabelWidget(renderer, events).setValue(text);
             new Ui(screen).newForm()
@@ -171,7 +170,7 @@ public class WrappedLabelWidgetTest
         }
 
         /* Recover visible text from glyph coordinates, including the unpainted spaces. */
-        @NonNull String row(int y, int x)
+        String row(int y, int x)
         {
             StringBuilder text = new StringBuilder();
             int column = x;

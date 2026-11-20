@@ -8,7 +8,6 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,8 +17,8 @@ import java.util.List;
  */
 public class BrowserWidget extends Widget<BrowserWidget>
 {
-    public @NonNull List<@NonNull Item> data = new ArrayList<>();
-    public @NonNull String label = "";
+    public List<Item> data = new ArrayList<>();
+    public String label = "";
     public int cursor;
     public int offset = -1;
 
@@ -38,7 +37,7 @@ public class BrowserWidget extends Widget<BrowserWidget>
     /**
      * Sets the browser items.
      */
-    public @NonNull BrowserWidget setData(@NonNull List<@NonNull Item> data)
+    public BrowserWidget setData(List<Item> data)
     {
         this.data = data;
         return self();
@@ -47,7 +46,7 @@ public class BrowserWidget extends Widget<BrowserWidget>
     /**
      * Sets the descriptive label.
      */
-    public @NonNull BrowserWidget setLabel(@NonNull String label)
+    public BrowserWidget setLabel(String label)
     {
         this.label = label;
         return self();
@@ -56,7 +55,7 @@ public class BrowserWidget extends Widget<BrowserWidget>
     /**
      * Sets the zero-based selected item.
      */
-    public @NonNull BrowserWidget setCursor(int cursor)
+    public BrowserWidget setCursor(int cursor)
     {
         this.cursor = cursor;
         return self();
@@ -65,14 +64,14 @@ public class BrowserWidget extends Widget<BrowserWidget>
     /**
      * Sets the zero-based first visible item; -1 centres the initial selection.
      */
-    public @NonNull BrowserWidget setOffset(int offset)
+    public BrowserWidget setOffset(int offset)
     {
         this.offset = offset;
         return self();
     }
 
     /* Return the change hook's command to the caller, as in Lua. */
-    private @NonNull Action moveTo(int destination)
+    private Action moveTo(int destination)
     {
         if (destination == cursor)
             return Action.NOP;
@@ -148,7 +147,7 @@ public class BrowserWidget extends Widget<BrowserWidget>
     }
 
     /* Browser items carry application data, a display label and an optional key. */
-    public record Item(@NonNull String data, @NonNull String label, @Nullable String key)
+    public record Item(String data, String label, @Nullable String key)
     {
     }
 }

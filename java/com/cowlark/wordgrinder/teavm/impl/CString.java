@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.teavm.backend.c.runtime.Memory;
 import org.teavm.interop.Address;
@@ -12,9 +11,9 @@ import org.teavm.interop.Strings;
 final class CString implements AutoCloseable
 {
     /* Keep the allocation alive until the native call has finished. */
-    private final @NonNull Address address;
+    private final Address address;
 
-    CString(@NonNull String string)
+    CString(String string)
     {
         address = Strings.toC(string);
         if (address == null)
@@ -41,7 +40,7 @@ final class CString implements AutoCloseable
     /**
      * Returns the pointer while this resource is open.
      */
-    public @NonNull Address getAddress()
+    public Address getAddress()
     {
         return address;
     }

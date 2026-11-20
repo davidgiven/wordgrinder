@@ -1,7 +1,6 @@
 package com.cowlark.wordgrinder.addons.lookandfeel;
 
 import com.cowlark.wordgrinder.fileio.Dumpable;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Settings stored in globalSettings; field names match the Lua save format.
@@ -13,7 +12,7 @@ public class LookAndFeelGlobalSettings
     @Dumpable public int maxwidth = 80;
     @Dumpable public boolean terminators = true;
     @Dumpable public boolean denseparagraphs = false;
-    @Dumpable public @NonNull String palette = "Light";
-    @Dumpable public @NonNull String scrollmode = "Fixed";
+    @Dumpable public String palette = "Light";
+    @Dumpable public String scrollmode = "Fixed";
     @Dumpable public boolean fullstopspaces = false;
 }

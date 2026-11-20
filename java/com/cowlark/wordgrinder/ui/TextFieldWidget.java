@@ -5,7 +5,6 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 
 /**
  * An editable line. Cursor and offset are UTF-16 indices at code-point boundaries.
@@ -13,7 +12,7 @@ import org.jspecify.annotations.NonNull;
 public class TextFieldWidget extends Widget<TextFieldWidget>
 {
     /* A negative initial cursor means the end of the initial value. */
-    public @NonNull String value = "";
+    public String value = "";
     public int cursor = -1;
     public int offset;
     public boolean transientValue;
@@ -96,7 +95,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
     /**
      * Sets the editable text.
      */
-    public @NonNull TextFieldWidget setValue(@NonNull String value)
+    public TextFieldWidget setValue(String value)
     {
         this.value = value;
         return self();
@@ -105,7 +104,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
     /**
      * Sets the UTF-16 cursor index; -1 selects the end during initialisation.
      */
-    public @NonNull TextFieldWidget setCursor(int cursor)
+    public TextFieldWidget setCursor(int cursor)
     {
         this.cursor = cursor;
         return self();
@@ -114,7 +113,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
     /**
      * Sets the UTF-16 index of the first visible code point.
      */
-    public @NonNull TextFieldWidget setOffset(int offset)
+    public TextFieldWidget setOffset(int offset)
     {
         this.offset = offset;
         return self();
@@ -123,7 +122,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
     /**
      * Sets whether the initial text is replaced by the first edit.
      */
-    public @NonNull TextFieldWidget setTransientValue(boolean transientValue)
+    public TextFieldWidget setTransientValue(boolean transientValue)
     {
         this.transientValue = transientValue;
         return self();
@@ -180,7 +179,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
 
     /* Convert a mouse column into a code-point boundary, including wide characters. */
     @Override
-    public @NonNull Action click(Screen.@NonNull MouseInputEvent event)
+    public Action click(Screen.MouseInputEvent event)
     {
         Screen screen = getScreen();
         int column = event.x() - realx1;
@@ -205,7 +204,7 @@ public class TextFieldWidget extends Widget<TextFieldWidget>
 
     /* Insert character events; leave unhandled symbolic keys alone. */
     @Override
-    public @NonNull Action key(Screen.@NonNull KeyInputEvent event)
+    public Action key(Screen.KeyInputEvent event)
     {
         String text = event.key();
         if (!text.startsWith("KEY_"))

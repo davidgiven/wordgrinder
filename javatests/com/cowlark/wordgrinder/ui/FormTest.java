@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.Widget.Action;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +63,7 @@ public class FormTest
             int queries;
 
             @Override
-            public int @NonNull [] getScreenSize()
+            public int[] getScreenSize()
             {
                 return ++queries == 1 ? new int[]{80, 24} : new int[]{100, 30};
             }
@@ -229,7 +228,7 @@ public class FormTest
         Probe widget = new Probe(false)
         {
             @Override
-            public @NonNull Action mouse(@NonNull MouseInputEvent event)
+            public Action mouse(MouseInputEvent event)
             {
                 assertFalse(event.b());
                 assertFalse(focus);
@@ -393,7 +392,7 @@ public class FormTest
         }
 
         @Override
-        public @NonNull Action key(@NonNull KeyInputEvent event)
+        public Action key(KeyInputEvent event)
         {
             keys.add(event.key());
             return Action.NOP;

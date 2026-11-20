@@ -1,7 +1,6 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
 import com.cowlark.wordgrinder.nativeinterface.System;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
@@ -19,7 +18,7 @@ public final class SystemImpl implements System
 
     /* Environment values remain owned by the C runtime. */
     @Import(name = "getenv")
-    private static native @Nullable Address getenvNative(@NonNull Address name);
+    private static native @Nullable Address getenvNative(Address name);
 
     /* The platform bridge discovers and exposes the Windows executable path. */
     @Include("system.h")
@@ -27,7 +26,7 @@ public final class SystemImpl implements System
     private static native @Nullable Address getExecutablePathNative();
 
     /* Copy the environment value before releasing only the temporary variable name. */
-    private static @Nullable String getenv(@NonNull String name)
+    private static @Nullable String getenv(String name)
     {
         try (CString cstring = new CString(name))
         {
@@ -37,7 +36,7 @@ public final class SystemImpl implements System
 
     /* Match main.lua's HOME, USERPROFILE and relative-directory fallback order. */
     @Override
-    public @NonNull String getConfigDirectory()
+    public String getConfigDirectory()
     {
         String home = getenv("HOME");
         if (home == null)

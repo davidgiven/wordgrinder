@@ -7,7 +7,6 @@ package com.cowlark.wordgrinder.ui;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 
 import com.google.common.collect.ImmutableMap;
-import org.jspecify.annotations.NonNull;
 
 /**
  * The Dark theme from colours.lua.
@@ -15,10 +14,10 @@ import org.jspecify.annotations.NonNull;
 public final class DarkPalette extends Palette
 {
     /* Share the immutable colours used by multiple paragraph styles. */
-    private static final @NonNull Colour INK = new Colour(1f, 1f, 1f);
-    private static final @NonNull Colour PAPER = new Colour(0.2f, 0.2f, 0.2f);
-    private static final @NonNull Colour HEADERFG = new Colour(1f, 1f, 0f);
-    private static final @NonNull Colour HEADERBG = new Colour(0.3f, 0.3f, 0.3f);
+    private static final Colour INK = new Colour(1f, 1f, 1f);
+    private static final Colour PAPER = new Colour(0.2f, 0.2f, 0.2f);
+    private static final Colour HEADERFG = new Colour(1f, 1f, 0f);
+    private static final Colour HEADERBG = new Colour(0.3f, 0.3f, 0.3f);
 
     /* Supply the shared palette implementation with this theme's definitions. */
     public DarkPalette()

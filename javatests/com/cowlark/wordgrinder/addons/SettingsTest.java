@@ -12,7 +12,6 @@ import com.cowlark.wordgrinder.document.GlobalSettings;
 import com.cowlark.wordgrinder.fileio.Dumpable;
 import com.cowlark.wordgrinder.fileio.Dumper;
 import com.cowlark.wordgrinder.fileio.Undumper;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.io.BufferedReader;
 import java.io.PrintWriter;
@@ -26,13 +25,13 @@ import java.util.List;
 public final class SettingsTest
 {
     /* Read headerless Lua metadata through the production reader. */
-    private static void read(@NonNull Object target, @NonNull String text) throws Exception
+    private static void read(Object target, String text) throws Exception
     {
         new Undumper().undump(target, new BufferedReader(new StringReader(text)));
     }
 
     /* Write headerless metadata through the production writer. */
-    private static @NonNull String dump(@NonNull Object target)
+    private static String dump(Object target)
     {
         StringWriter output = new StringWriter();
         new Dumper().dump(target, new PrintWriter(output));
@@ -100,15 +99,14 @@ public final class SettingsTest
     /* Model only the document addon container needed to check saved field paths. */
     public static class Addons
     {
-        @Dumpable public @NonNull AutosaveDocumentSetSettings autosave =
-                new AutosaveDocumentSetSettings();
-        @Dumpable public @NonNull ScrapbookDocumentSetSettings scrapbook =
+        @Dumpable public AutosaveDocumentSetSettings autosave = new AutosaveDocumentSetSettings();
+        @Dumpable public ScrapbookDocumentSetSettings scrapbook =
                 new ScrapbookDocumentSetSettings();
-        @Dumpable public @NonNull SmartQuotesDocumentSetSettings smartquotes =
+        @Dumpable public SmartQuotesDocumentSetSettings smartquotes =
                 new SmartQuotesDocumentSetSettings();
-        @Dumpable public @NonNull SpillchockerDocumentSetSettings spellchecker =
+        @Dumpable public SpillchockerDocumentSetSettings spellchecker =
                 new SpillchockerDocumentSetSettings();
-        @Dumpable public @NonNull StatusbarPageCountDocumentSetSettings pagecount =
+        @Dumpable public StatusbarPageCountDocumentSetSettings pagecount =
                 new StatusbarPageCountDocumentSetSettings();
     }
 }

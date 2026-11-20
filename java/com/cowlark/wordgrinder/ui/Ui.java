@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -22,12 +21,12 @@ public final class Ui
     public static final double BLINK_OFF_TIME = 0.53;
 
     /* Draw and read input through the supplied screen backend. */
-    private final @NonNull Screen screen;
+    private final Screen screen;
     /* Retain the UI-wide quit flag and the selected theme. */
     private boolean quitting;
-    private @NonNull Palette palette = new DarkPalette();
+    private Palette palette = new DarkPalette();
 
-    public Ui(@NonNull Screen screen)
+    public Ui(Screen screen)
     {
         this.screen = screen;
     }
@@ -35,7 +34,7 @@ public final class Ui
     /**
      * Creates a new form sharing this UI and its screen.
      */
-    public @NonNull Form newForm()
+    public Form newForm()
     {
         return new Form(this);
     }
@@ -43,7 +42,7 @@ public final class Ui
     /**
      * Returns the injected screen shared by forms and their widgets.
      */
-    public @NonNull Screen getScreen()
+    public Screen getScreen()
     {
         return screen;
     }
@@ -75,7 +74,7 @@ public final class Ui
     /**
      * Returns the selected palette.
      */
-    public @NonNull Palette getPalette()
+    public Palette getPalette()
     {
         return palette;
     }
@@ -83,7 +82,7 @@ public final class Ui
     /**
      * Selects the palette used by subsequent colour lookups.
      */
-    public void setPalette(@NonNull Palette palette)
+    public void setPalette(Palette palette)
     {
         this.palette = palette;
     }
@@ -91,7 +90,7 @@ public final class Ui
     /**
      * Selects a registered theme by name, rejecting unknown names.
      */
-    public void setTheme(@NonNull String name)
+    public void setTheme(String name)
     {
         /* Resolve the theme before changing the current palette. */
         Palette selected = Palette.getTheme(name);
@@ -120,7 +119,7 @@ public final class Ui
     /**
      * Draws a reversed status line on the bottom screen row.
      */
-    public void drawStatusLine(@NonNull String text)
+    public void drawStatusLine(String text)
     {
         /* Query the current size rather than retaining document redraw state. */
         int[] size = screen.getScreenSize();
@@ -160,7 +159,7 @@ public final class Ui
     /**
      * Clips text to the field's cell width and centres it without clearing the field.
      */
-    public void centreInField(int x, int y, int width, @NonNull String text)
+    public void centreInField(int x, int y, int width, String text)
     {
         /* Align using terminal cell widths rather than Java string lengths. */
         String bounded = screen.getBoundedString(text, width);
@@ -171,7 +170,7 @@ public final class Ui
     /**
      * Clips text and aligns it to the left without clearing the field.
      */
-    public void lAlignInField(int x, int y, int width, @NonNull String text)
+    public void lAlignInField(int x, int y, int width, String text)
     {
         /* Clipping preserves complete Unicode code points. */
         screen.write(x, y, screen.getBoundedString(text, width));
@@ -180,7 +179,7 @@ public final class Ui
     /**
      * Clips text and aligns it to the right without clearing the field.
      */
-    public void rAlignInField(int x, int y, int width, @NonNull String text)
+    public void rAlignInField(int x, int y, int width, String text)
     {
         /* Measure the clipped text so it ends at the field's right edge. */
         String bounded = screen.getBoundedString(text, width);
@@ -190,7 +189,7 @@ public final class Ui
     /**
      * Draws a bright box with a centred title on its top border.
      */
-    public void drawTitledBox(int x, int y, int width, int height, @NonNull String title)
+    public void drawTitledBox(int x, int y, int width, int height, String title)
     {
         /* A missing subtitle leaves the lower border uninterrupted. */
         drawTitledBox(x, y, width, height, title, null);
@@ -204,7 +203,7 @@ public final class Ui
             int y,
             int width,
             int height,
-            @NonNull String title,
+            String title,
             @Nullable String subtitle)
     {
         /* Restore normal attributes after drawing both border captions. */
@@ -222,7 +221,7 @@ public final class Ui
     /**
      * Displays a centred boxed message immediately, without waiting for input.
      */
-    public void immediateMessage(@NonNull String text)
+    public void immediateMessage(String text)
     {
         /* Match the Lua message's padding and placement on the current screen. */
         int[] size = screen.getScreenSize();
@@ -237,7 +236,7 @@ public final class Ui
     /**
      * Waits for an input event while blinking the cursor.
      */
-    public @NonNull InputEvent getCharWithBlinkingCursor()
+    public InputEvent getCharWithBlinkingCursor()
     {
         /* Use the same effectively unlimited wait as the Lua helper. */
         return getCharWithBlinkingCursor(1E10);
@@ -247,7 +246,7 @@ public final class Ui
      * Waits up to timeout seconds, returning a KEY_TIMEOUT event on expiry.
      * Keyboard, mouse and system events are returned unchanged; receipt shows the cursor.
      */
-    public @NonNull InputEvent getCharWithBlinkingCursor(double timeout)
+    public InputEvent getCharWithBlinkingCursor(double timeout)
     {
         /* Begin visible and alternate the on/off periods until input or expiry. */
         screen.showCursor();

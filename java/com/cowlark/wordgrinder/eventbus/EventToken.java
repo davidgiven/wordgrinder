@@ -5,7 +5,6 @@
 
 package com.cowlark.wordgrinder.eventbus;
 
-import org.jspecify.annotations.NonNull;
 
 /**
  * Unique, opaque handle returned for each listener registration.
@@ -15,10 +14,10 @@ import org.jspecify.annotations.NonNull;
  */
 public final class EventToken
 {
-    final @NonNull EventBus owner;
-    final @NonNull Class<? extends Event> eventType;
+    final EventBus owner;
+    final Class<? extends Event> eventType;
 
-    EventToken(@NonNull EventBus owner, @NonNull Class<? extends Event> eventType)
+    EventToken(EventBus owner, Class<? extends Event> eventType)
     {
         this.owner = owner;
         this.eventType = eventType;

@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
@@ -18,13 +17,13 @@ public final class CStringProbe
 
     /* Verify the C-visible bytes directly, without relying on a Java-side decoder. */
     @Import(name = "wg_cstring_test_check")
-    private static native void checkNative(@NonNull Address address, int example);
+    private static native void checkNative(Address address, int example);
 
     /* Validate the Java conversion against the platform's actual executable path rules. */
     @Import(name = "wg_cstring_test_executable_path")
     private static native void checkExecutablePathNative(@Nullable Address path);
 
-    private static void checkString(@NonNull String text, int example)
+    private static void checkString(String text, int example)
     {
         try (CString cstring = new CString(text))
         {

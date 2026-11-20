@@ -5,7 +5,6 @@
 
 package com.cowlark.wordgrinder.eventbus;
 
-import org.jspecify.annotations.NonNull;
 
 /**
  * Fired before a word is drawn. Listeners may change the word and its rendering styles;
@@ -16,7 +15,7 @@ public final class DrawWord extends Event
     /**
      * The word text.
      */
-    public @NonNull String word;
+    public String word;
 
     /**
      * Attributes returned by rendering the preceding word, used for inter-word spacing.
@@ -33,7 +32,7 @@ public final class DrawWord extends Event
      */
     public boolean firstWord;
 
-    public DrawWord(@NonNull String word, int oldStyle, int currentStyle, boolean firstWord)
+    public DrawWord(String word, int oldStyle, int currentStyle, boolean firstWord)
     {
         this.word = word;
         this.oldStyle = oldStyle;

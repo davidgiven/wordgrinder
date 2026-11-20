@@ -5,7 +5,6 @@
 
 package com.cowlark.wordgrinder.eventbus;
 
-import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,9 +44,9 @@ public final class EventBus
      * @param callback  the callback to register
      * @return the unique token for this registration
      */
-    public <T extends @NonNull Event> @NonNull EventToken addEventListener(
-            @NonNull Class<T> eventType,
-            @NonNull EventCallback<T> callback)
+    public <T extends Event> EventToken addEventListener(
+            Class<T> eventType,
+            EventCallback<T> callback)
     {
         EventToken token = new EventToken(this, eventType);
         // Ensure there is a listener table for this class, then register the callback.
@@ -67,9 +66,9 @@ public final class EventBus
      * @param callback  the callback to register
      * @return the unique token for this registration
      */
-    public <T extends @NonNull Event> @NonNull EventToken addEventListener(
-            @NonNull Class<T> eventType,
-            @NonNull Consumer<? super T> callback)
+    public <T extends Event> EventToken addEventListener(
+            Class<T> eventType,
+            Consumer<? super T> callback)
     {
         return addEventListener(eventType, (event, token) -> callback.accept(event));
     }
@@ -80,7 +79,7 @@ public final class EventBus
      *
      * @param token a token returned by {@code addEventListener}
      */
-    public void removeEventListener(@NonNull EventToken token)
+    public void removeEventListener(EventToken token)
     {
         if (token.owner != this)
             return;
@@ -105,7 +104,7 @@ public final class EventBus
      *
      * @param event the event to fire, including its payload
      */
-    public void fireEvent(@NonNull Event event)
+    public void fireEvent(Event event)
     {
         Map<EventToken, Listener<?>> registered = listeners.get(event.getClass());
         if (registered == null)
@@ -127,7 +126,7 @@ public final class EventBus
      *
      * @param event the event to queue, including its payload
      */
-    public void fireAsyncEvent(@NonNull Event event)
+    public void fireAsyncEvent(Event event)
     {
         batched.put(event.getClass(), event);
     }
@@ -153,11 +152,10 @@ public final class EventBus
         }
     }
 
-    private record Listener<T extends @NonNull Event>(@NonNull Class<T> type,
-                                                      @NonNull EventCallback<T> callback,
-                                                      @NonNull EventToken token)
+    private record Listener<T extends Event>(Class<T> type, EventCallback<T> callback,
+                                             EventToken token)
     {
-        void invoke(@NonNull Event event)
+        void invoke(Event event)
         {
             callback.invoke(type.cast(event), token);
         }

@@ -5,20 +5,19 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 
 /**
  * A single line of aligned text.
  */
 public class LabelWidget extends Widget<LabelWidget>
 {
-    public @NonNull Alignment align = Alignment.CENTRE;
-    public @NonNull String value = "";
+    public Alignment align = Alignment.CENTRE;
+    public String value = "";
 
     /**
      * Sets the text alignment.
      */
-    public @NonNull LabelWidget setAlign(@NonNull Alignment align)
+    public LabelWidget setAlign(Alignment align)
     {
         this.align = align;
         return self();
@@ -27,7 +26,7 @@ public class LabelWidget extends Widget<LabelWidget>
     /**
      * Sets the displayed text.
      */
-    public @NonNull LabelWidget setValue(@NonNull String value)
+    public LabelWidget setValue(String value)
     {
         this.value = value;
         return self();

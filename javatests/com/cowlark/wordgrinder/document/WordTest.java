@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import com.cowlark.wordgrinder.nativeinterface.Display;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -223,19 +222,19 @@ public final class WordTest
         Display display = new Display()
         {
             @Override
-            public void dpy_init(@NonNull String @NonNull [] args)
+            public void dpy_init(String[] args)
             {
                 throw new AssertionError("Unexpected display call");
             }
 
             @Override
-            public int @NonNull [] dpy_getscreensize()
+            public int[] dpy_getscreensize()
             {
                 throw new AssertionError("Unexpected display call");
             }
 
             @Override
-            public @NonNull String dpy_getkeyname(int key)
+            public String dpy_getkeyname(int key)
             {
                 throw new AssertionError("Unexpected display call");
             }

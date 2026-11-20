@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.fileio;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.io.PrintWriter;
 import java.lang.reflect.Array;
@@ -22,7 +21,7 @@ import java.util.TreeMap;
  */
 public class Dumper
 {
-    public void dump(@NonNull Object object, @NonNull PrintWriter writer)
+    public void dump(Object object, PrintWriter writer)
     {
         Map<String, String> values = new TreeMap<>();
         save("", object, values, new IdentityHashMap<>());
@@ -44,10 +43,10 @@ public class Dumper
     }
 
     private void save(
-            @NonNull String path,
+            String path,
             @Nullable Object value,
-            @NonNull Map<String, String> values,
-            @NonNull IdentityHashMap<Object, Boolean> active)
+            Map<String, String> values,
+            IdentityHashMap<Object, Boolean> active)
     {
         switch (value)
         {
@@ -171,10 +170,7 @@ public class Dumper
         }
     }
 
-    private void writeValue(
-            @NonNull String path,
-            @NonNull String value,
-            @NonNull Map<String, String> values)
+    private void writeValue(String path, String value, Map<String, String> values)
     {
         if (values.putIfAbsent(path, value) != null)
             throw new IllegalArgumentException("Duplicate dump path " + path);
@@ -183,7 +179,7 @@ public class Dumper
     /**
      * Uses the same four escapes as wg.escape: quote, backslash, CR and LF.
      */
-    private @NonNull String quote(@NonNull String text)
+    private String quote(String text)
     {
         StringBuilder escaped = new StringBuilder(text.length() + 2).append('"');
         for (int i = 0; i < text.length(); i++)

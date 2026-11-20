@@ -5,7 +5,6 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 
 /**
  * A boolean choice toggled with the space key.
@@ -14,7 +13,7 @@ public class CheckboxWidget extends Widget<CheckboxWidget>
 {
     /* Store the selected value and its descriptive label. */
     public boolean value;
-    public @NonNull String label = "Checkbox";
+    public String label = "Checkbox";
 
     /* Install this widget's keybindings. */
     public CheckboxWidget()
@@ -32,7 +31,7 @@ public class CheckboxWidget extends Widget<CheckboxWidget>
     /**
      * Sets the checked state.
      */
-    public @NonNull CheckboxWidget setValue(boolean value)
+    public CheckboxWidget setValue(boolean value)
     {
         this.value = value;
         return self();
@@ -41,7 +40,7 @@ public class CheckboxWidget extends Widget<CheckboxWidget>
     /**
      * Sets the descriptive label.
      */
-    public @NonNull CheckboxWidget setLabel(@NonNull String label)
+    public CheckboxWidget setLabel(String label)
     {
         this.label = label;
         return self();

@@ -5,7 +5,6 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import java.util.List;
 
 /**
@@ -14,9 +13,9 @@ import java.util.List;
 public class ToggleWidget extends Widget<ToggleWidget>
 {
     /* Start with a single default choice. */
-    public @NonNull List<@NonNull String> values = List.of("Default");
+    public List<String> values = List.of("Default");
     public int value;
-    public @NonNull String label = "Toggle";
+    public String label = "Toggle";
 
     /* Arrow keys stop at the ends; space cycles through all choices. */
     public ToggleWidget()
@@ -51,7 +50,7 @@ public class ToggleWidget extends Widget<ToggleWidget>
     /**
      * Sets the available choices.
      */
-    public @NonNull ToggleWidget setValues(@NonNull List<@NonNull String> values)
+    public ToggleWidget setValues(List<String> values)
     {
         this.values = values;
         return self();
@@ -60,7 +59,7 @@ public class ToggleWidget extends Widget<ToggleWidget>
     /**
      * Sets the zero-based selected choice.
      */
-    public @NonNull ToggleWidget setValue(int value)
+    public ToggleWidget setValue(int value)
     {
         this.value = value;
         return self();
@@ -69,7 +68,7 @@ public class ToggleWidget extends Widget<ToggleWidget>
     /**
      * Sets the descriptive label.
      */
-    public @NonNull ToggleWidget setLabel(@NonNull String label)
+    public ToggleWidget setLabel(String label)
     {
         this.label = label;
         return self();

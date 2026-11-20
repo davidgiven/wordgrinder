@@ -18,6 +18,7 @@ export(
 export(
     name="javatests",
     deps=[
+        "javatests/com/cowlark/wordgrinder/utils+argument-parser-test",
         "javatests/com/cowlark/wordgrinder/teavm/impl+cstring-test",
         "javatests/com/cowlark/wordgrinder/document+word-test",
         "javatests/com/cowlark/wordgrinder/document+paragraph-test",

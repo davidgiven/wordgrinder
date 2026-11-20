@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.fileio;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -13,7 +12,7 @@ import java.util.TreeMap;
  */
 final class DumpFields
 {
-    static @NonNull Map<String, Field> fields(@NonNull Class<?> type)
+    static Map<String, Field> fields(Class<?> type)
     {
         Map<String, Field> fields = new TreeMap<>();
         for (Class<?> current = type; current != null; current = current.getSuperclass())
@@ -33,7 +32,7 @@ final class DumpFields
         return fields;
     }
 
-    static @Nullable Field remaining(@NonNull Class<?> type)
+    static @Nullable Field remaining(Class<?> type)
     {
         Field result = null;
         for (Class<?> current = type; current != null; current = current.getSuperclass())

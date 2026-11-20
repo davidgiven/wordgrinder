@@ -10,23 +10,18 @@ import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
 import com.cowlark.wordgrinder.utils.ArgumentParser;
-import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 
 public class Main
 {
     /* Keep backend selection separate from application execution. */
-    private final @NonNull Screen screen;
-    private final @NonNull Ui ui;
-    private final @NonNull System system;
-    private final @NonNull Word wordRenderer;
-    private final @NonNull EventBus eventBus;
+    private final Screen screen;
+    private final Ui ui;
+    private final System system;
+    private final Word wordRenderer;
+    private final EventBus eventBus;
 
-    public Main(
-            @NonNull Screen screen,
-            @NonNull System system,
-            @NonNull Word wordRenderer,
-            @NonNull EventBus eventBus)
+    public Main(Screen screen, System system, Word wordRenderer, EventBus eventBus)
     {
         this.screen = screen;
         this.system = system;
@@ -48,7 +43,7 @@ public class Main
         return 0;
     }
 
-    public void run(@NonNull String[] args) throws IOException
+    public void run(String[] args) throws IOException
     {
         try
         {

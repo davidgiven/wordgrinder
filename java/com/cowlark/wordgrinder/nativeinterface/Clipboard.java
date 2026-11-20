@@ -4,7 +4,6 @@
 
 package com.cowlark.wordgrinder.nativeinterface;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -17,7 +16,7 @@ public interface Clipboard
 
     void clipboardClear();
 
-    @NonNull Contents clipboardGet();
+    Contents clipboardGet();
 
     void clipboardSet(@Nullable String text, byte @Nullable [] wordgrinderData);
 

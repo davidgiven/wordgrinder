@@ -10,7 +10,6 @@ import com.cowlark.wordgrinder.fileio.Dumpable;
 import com.cowlark.wordgrinder.fileio.RemainingDumpables;
 import com.cowlark.wordgrinder.fileio.TMagic;
 import com.cowlark.wordgrinder.fileio.Undumper;
-import org.jspecify.annotations.NonNull;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -22,15 +21,12 @@ import java.util.Map;
 public class GlobalSettings
 {
     /* Global addon settings depend only on their separate settings libraries. */
-    @Dumpable public @NonNull DebugGlobalSettings debug = new DebugGlobalSettings();
-    @Dumpable public @NonNull DirectoriesGlobalSettings directories =
-            new DirectoriesGlobalSettings();
-    @Dumpable public @NonNull GuiGlobalSettings gui = new GuiGlobalSettings();
-    @Dumpable public @NonNull LookAndFeelGlobalSettings lookandfeel =
-            new LookAndFeelGlobalSettings();
-    @Dumpable public @NonNull RecentsGlobalSettings recents = new RecentsGlobalSettings();
-    @Dumpable public @NonNull SpillchockerGlobalSettings systemdictionary =
-            new SpillchockerGlobalSettings();
+    @Dumpable public DebugGlobalSettings debug = new DebugGlobalSettings();
+    @Dumpable public DirectoriesGlobalSettings directories = new DirectoriesGlobalSettings();
+    @Dumpable public GuiGlobalSettings gui = new GuiGlobalSettings();
+    @Dumpable public LookAndFeelGlobalSettings lookandfeel = new LookAndFeelGlobalSettings();
+    @Dumpable public RecentsGlobalSettings recents = new RecentsGlobalSettings();
+    @Dumpable public SpillchockerGlobalSettings systemdictionary = new SpillchockerGlobalSettings();
 
     /* Preserve settings which have not yet been given Java definitions. */
     @RemainingDumpables public Map<String, String> remaining;

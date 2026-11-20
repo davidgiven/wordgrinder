@@ -4,7 +4,6 @@
 
 package com.cowlark.wordgrinder.utils;
 
-import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,11 +18,9 @@ import java.util.function.ToIntFunction;
 public final class ArgumentParser
 {
     /* Store handlers independently for each parser; unhandled filenames are skipped. */
-    private final @NonNull Map<@NonNull String,
-            @NonNull ToIntFunction<@NonNull List<@NonNull String>>>
-            callbacks = new HashMap<>();
-    private @NonNull ToIntFunction<@NonNull List<@NonNull String>> filenameCallback = args -> 1;
-    private @NonNull Consumer<@NonNull String> unknownCallback = option -> {
+    private final Map<String, ToIntFunction<List<String>>> callbacks = new HashMap<>();
+    private ToIntFunction<List<String>> filenameCallback = args -> 1;
+    private Consumer<String> unknownCallback = option -> {
         throw new IllegalArgumentException("Unknown option: " + option);
     };
 
@@ -34,15 +31,13 @@ public final class ArgumentParser
     /**
      * Creates an independently configured argument parser.
      */
-    public static @NonNull ArgumentParser builder()
+    public static ArgumentParser builder()
     {
         return new ArgumentParser();
     }
 
     /* Model Lua's unpacked arguments with a stable snapshot, including an implicit first value. */
-    private static @NonNull List<@NonNull String> prepend(
-            @NonNull String first,
-            @NonNull List<@NonNull String> remaining)
+    private static List<String> prepend(String first, List<String> remaining)
     {
         List<String> arguments = new ArrayList<>(remaining.size() + 1);
         arguments.add(first);
@@ -53,9 +48,7 @@ public final class ArgumentParser
     /**
      * Registers a handler for an option name without its leading dashes.
      */
-    public @NonNull ArgumentParser onOption(
-            @NonNull String option,
-            @NonNull ToIntFunction<@NonNull List<@NonNull String>> callback)
+    public ArgumentParser onOption(String option, ToIntFunction<List<String>> callback)
     {
         callbacks.put(option, callback);
         return this;
@@ -64,8 +57,8 @@ public final class ArgumentParser
     /**
      * Registers a filename handler; by default each filename consumes one argument.
      */
-    public @NonNull ArgumentParser onFilenames(
-            @NonNull ToIntFunction<@NonNull List<@NonNull String>> callback)
+    public ArgumentParser onFilenames(
+            ToIntFunction<List<String>> callback)
     {
         filenameCallback = callback;
         return this;
@@ -74,7 +67,7 @@ public final class ArgumentParser
     /**
      * Registers an unknown-option handler; by default unknown options throw.
      */
-    public @NonNull ArgumentParser onUnknownOption(@NonNull Consumer<@NonNull String> callback)
+    public ArgumentParser onUnknownOption(Consumer<String> callback)
     {
         unknownCallback = callback;
         return this;
@@ -84,7 +77,7 @@ public final class ArgumentParser
      * Parses an argument array without modifying it. See the list overload for callback rules.
      * The array contains arguments only, excluding the executable name.
      */
-    public void parse(@NonNull String @NonNull [] argv)
+    public void parse(String[] argv)
     {
         parse(new ArrayList<>(Arrays.asList(argv)));
     }
@@ -100,7 +93,7 @@ public final class ArgumentParser
      * remaining list untouched. A negative consumption count throws IllegalArgumentException
      * (the Lua CLIError equivalent). Excess consumption simply empties the remaining list.
      */
-    public void parse(@NonNull List<@NonNull String> argv)
+    public void parse(List<String> argv)
     {
         /* Remove the current token before handing its remaining arguments to a callback. */
         while (!argv.isEmpty())
@@ -113,7 +106,7 @@ public final class ArgumentParser
                 String name = longOption ?
                         option.substring(2) :
                         option.length() > 1 ? option.substring(1, 2) : "";
-                ToIntFunction<@NonNull List<@NonNull String>> callback = callbacks.get(name);
+                ToIntFunction<List<String>> callback = callbacks.get(name);
                 if (callback == null)
                 {
                     unknownCallback.accept(name);

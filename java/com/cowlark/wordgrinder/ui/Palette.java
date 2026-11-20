@@ -10,7 +10,6 @@ import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -19,12 +18,10 @@ import org.jspecify.annotations.Nullable;
 public abstract class Palette
 {
     /* Retain each theme's immutable name and colour definitions. */
-    private final @NonNull String name;
-    private final @NonNull ImmutableMap<@NonNull String, @NonNull Colour> colours;
+    private final String name;
+    private final ImmutableMap<String, Colour> colours;
 
-    protected Palette(
-            @NonNull String name,
-            @NonNull ImmutableMap<@NonNull String, @NonNull Colour> colours)
+    protected Palette(String name, ImmutableMap<String, Colour> colours)
     {
         this.name = name;
         this.colours = colours;
@@ -33,7 +30,7 @@ public abstract class Palette
     /**
      * Fetches all themes.
      */
-    public static @NonNull ImmutableSet<@NonNull String> getThemes()
+    public static ImmutableSet<String> getThemes()
     {
         return Registry.PALETTES.keySet();
     }
@@ -41,7 +38,7 @@ public abstract class Palette
     /**
      * Fetches a named theme.
      */
-    public static @Nullable Palette getTheme(@NonNull String name)
+    public static @Nullable Palette getTheme(String name)
     {
         return Registry.PALETTES.get(name);
     }
@@ -49,7 +46,7 @@ public abstract class Palette
     /**
      * Returns the palette name.
      */
-    public final @NonNull String getName()
+    public final String getName()
     {
         return name;
     }
@@ -57,7 +54,7 @@ public abstract class Palette
     /**
      * Looks up a colour name, returning null if it is absent.
      */
-    public final @Nullable Colour getColour(@NonNull String colour)
+    public final @Nullable Colour getColour(String colour)
     {
         return colours.get(colour);
     }
@@ -65,10 +62,9 @@ public abstract class Palette
     /* Initialise the registry lazily so subclass colour maps are ready before construction. */
     private static final class Registry
     {
-        private static final @NonNull ImmutableMap<String, @NonNull Palette> PALETTES =
-                ImmutableList
-                        .of(new ClassicPalette(), new DarkPalette(), new LightPalette())
-                        .stream()
-                        .collect(toImmutableMap(p -> p.getName(), p -> p));
+        private static final ImmutableMap<String, Palette> PALETTES = ImmutableList
+                .of(new ClassicPalette(), new DarkPalette(), new LightPalette())
+                .stream()
+                .collect(toImmutableMap(p -> p.getName(), p -> p));
     }
 }

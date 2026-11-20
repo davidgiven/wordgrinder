@@ -1,7 +1,6 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
 import com.cowlark.wordgrinder.nativeinterface.Display;
-import org.jspecify.annotations.NonNull;
 
 import org.teavm.interop.Address;
 import org.teavm.interop.Import;
@@ -75,7 +74,7 @@ public final class DisplayImpl implements Display
      * Pass command-line options to the backend before dpy_start().
      */
     @Override
-    public void dpy_init(@NonNull String @NonNull [] args)
+    public void dpy_init(String[] args)
     {
         /* Retain every CString until the backend has consumed the complete argument vector. */
         CString[] strings = new CString[args.length];
@@ -127,7 +126,7 @@ public final class DisplayImpl implements Display
      * Returns {width, height}.
      */
     @Override
-    public int @NonNull [] dpy_getscreensize()
+    public int[] dpy_getscreensize()
     {
         int[] size = new int[2];
         getScreenSizeNative(Address.ofData(size));
@@ -136,7 +135,7 @@ public final class DisplayImpl implements Display
     }
 
     @Override
-    public @NonNull String dpy_getkeyname(int key)
+    public String dpy_getkeyname(int key)
     {
         Address text = getKeyNameNative(key);
         if (text == null)

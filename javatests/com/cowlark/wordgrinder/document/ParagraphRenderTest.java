@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.eventbus.DrawWord;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -166,7 +165,7 @@ public class ParagraphRenderTest
         }
 
         /* Keep proxy callbacks outside field initialisers so member rearrangement is harmless. */
-        private @NonNull Display createDisplay()
+        private Display createDisplay()
         {
             return (Display) Proxy.newProxyInstance(
                     Display.class.getClassLoader(),
@@ -192,7 +191,7 @@ public class ParagraphRenderTest
         }
 
         /* Give every paragraph the same renderer and shared listener registrations. */
-        @NonNull Paragraph paragraph(@NonNull String style, @NonNull String... words)
+        Paragraph paragraph(String style, String... words)
         {
             DocumentStyle documentStyle =
                     new DocumentStyle(style, style, 0, 0, null, null, null, null, null, null);

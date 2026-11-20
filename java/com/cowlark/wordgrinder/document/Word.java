@@ -7,7 +7,6 @@ package com.cowlark.wordgrinder.document;
 
 import com.cowlark.wordgrinder.nativeinterface.Display;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +34,9 @@ public final class Word
     public static final int STYLE_ALL = 15;
 
     /* Adapt the injected display to the styled-word renderer. */
-    private final @NonNull Renderer renderer;
+    private final Renderer renderer;
 
-    public Word(@NonNull Display display)
+    public Word(Display display)
     {
         renderer = new Renderer()
         {
@@ -64,7 +63,7 @@ public final class Word
     /**
      * Parses a word into nonempty text runs, combining each style with the default style.
      */
-    public static @NonNull List<StyledRun> parseWord(@NonNull String word, int defaultStyle)
+    public static List<StyledRun> parseWord(String word, int defaultStyle)
     {
         List<StyledRun> runs = new ArrayList<>();
         parseWord(word, defaultStyle, (style, text) -> runs.add(new StyledRun(style, text)));
@@ -75,9 +74,9 @@ public final class Word
      * Calls the callback with the style and text of each nonempty run.
      */
     public static void parseWord(
-            @NonNull String word,
+            String word,
             int defaultStyle,
-            @NonNull BiConsumer<Integer, String> callback)
+            BiConsumer<Integer, String> callback)
     {
         int start = 0;
         int style = 0;
@@ -110,12 +109,12 @@ public final class Word
     public static int writeStyled(
             int x,
             int y,
-            @NonNull String word,
+            String word,
             int oldAttributes,
             int reverseOn,
             int reverseOff,
             int defaultStyle,
-            @NonNull Renderer renderer)
+            Renderer renderer)
     {
         if (reverseOn != -1)
             checkOffset(word, reverseOn);
@@ -165,7 +164,7 @@ public final class Word
     /**
      * Returns the text of a word with its control/style characters removed.
      */
-    public static @NonNull String getWordText(@NonNull String word)
+    public static String getWordText(String word)
     {
         StringBuilder result = new StringBuilder(word.length());
         for (int i = 0; i < word.length(); )
@@ -181,7 +180,7 @@ public final class Word
     /**
      * Skips preceding style controls and one Unicode code point, or returns -1.
      */
-    public static int nextCharInWord(@NonNull String word, int offset)
+    public static int nextCharInWord(String word, int offset)
     {
         checkOffset(word, offset);
         while (offset < word.length() && isControlCode(word.charAt(offset)))
@@ -194,7 +193,7 @@ public final class Word
     /**
      * Backs up over one code point and its preceding style controls, or returns -1.
      */
-    public static int prevCharInWord(@NonNull String word, int offset)
+    public static int prevCharInWord(String word, int offset)
     {
         checkOffset(word, offset);
         int codePoint;
@@ -215,9 +214,9 @@ public final class Word
      * initialStyle applies until the inserted word's first explicit style change.
      * Returns the resulting string and the start/end offsets of the inserted section.
      */
-    public static @NonNull InsertResult insertIntoWord(
-            @NonNull String word,
-            @NonNull String insertion,
+    public static InsertResult insertIntoWord(
+            String word,
+            String insertion,
             int offset,
             int initialStyle)
     {
@@ -244,7 +243,7 @@ public final class Word
     /**
      * Deletes a range while retaining the source styles of the remaining characters.
      */
-    public static @NonNull String deleteFromWord(@NonNull String word, int start, int end)
+    public static String deleteFromWord(String word, int start, int end)
     {
         checkRange(word, start, end);
         Reader source = new Reader(word, 0);
@@ -263,8 +262,8 @@ public final class Word
      * bits are embedded. Returns the normalized word and the cursor's new offset.
      * A cursor at a newly emitted marker is moved past that marker to the text.
      */
-    public static @NonNull StyleResult applyStyleToWord(
-            @NonNull String word,
+    public static StyleResult applyStyleToWord(
+            String word,
             int styleOr,
             int styleAnd,
             int start,
@@ -299,7 +298,7 @@ public final class Word
     /**
      * Returns the style established strictly before the supplied UTF-16 offset.
      */
-    public static int getStyleFromWord(@NonNull String word, int offset)
+    public static int getStyleFromWord(String word, int offset)
     {
         checkOffset(word, offset);
         int style = 0;
@@ -316,7 +315,7 @@ public final class Word
     /**
      * Creates one embedded style character from the low four style bits.
      */
-    public static @NonNull String createStyleByte(int style)
+    public static String createStyleByte(int style)
     {
         return String.valueOf((char) ((style & STYLE_ALL) | STYLE_MARKER));
     }
@@ -326,7 +325,7 @@ public final class Word
         return codePoint >= 0 && codePoint <= 31;
     }
 
-    private static void checkOffset(@NonNull String word, int offset)
+    private static void checkOffset(String word, int offset)
     {
         if (offset < 0 || offset > word.length())
             throw new IndexOutOfBoundsException("word offset: " + offset);
@@ -336,7 +335,7 @@ public final class Word
             throw new IllegalArgumentException("offset splits a surrogate pair: " + offset);
     }
 
-    private static void checkRange(@NonNull String word, int start, int end)
+    private static void checkRange(String word, int start, int end)
     {
         checkOffset(word, start);
         checkOffset(word, end);
@@ -349,7 +348,7 @@ public final class Word
      */
     private static boolean copy(
             @Nullable Writer destination,
-            @NonNull Reader source,
+            Reader source,
             int styleOr,
             int styleAnd)
     {
@@ -385,7 +384,7 @@ public final class Word
     public int writeStyled(
             int x,
             int y,
-            @NonNull String word,
+            String word,
             int oldAttributes,
             int reverseOn,
             int reverseOff,
@@ -414,25 +413,25 @@ public final class Word
         int width(int codePoint);
     }
 
-    public record StyledRun(int style, @NonNull String text)
+    public record StyledRun(int style, String text)
     {
     }
 
-    public record InsertResult(@NonNull String word, int startOffset, int endOffset)
+    public record InsertResult(String word, int startOffset, int endOffset)
     {
     }
 
-    public record StyleResult(@NonNull String word, int cursorOffset)
+    public record StyleResult(String word, int cursorOffset)
     {
     }
 
     private static final class Reader
     {
-        final @NonNull String text;
+        final String text;
         int offset;
         int style;
 
-        Reader(@NonNull String text, int style)
+        Reader(String text, int style)
         {
             this.text = text;
             this.style = style & STYLE_ALL;

@@ -3,7 +3,6 @@ package com.cowlark.wordgrinder.teavm.impl;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import org.teavm.interop.Import;
 import org.teavm.interop.c.Include;
 
@@ -14,7 +13,7 @@ import org.teavm.interop.c.Include;
 public final class ScreenImpl implements Screen
 {
     /* Retain the supplied display and keep screen state local to this instance. */
-    private final @NonNull Display display;
+    private final Display display;
     private boolean running;
     private int cursorx;
     private int cursory;
@@ -22,7 +21,7 @@ public final class ScreenImpl implements Screen
     private boolean unicode = true;
     private boolean oldMouseButton;
 
-    public ScreenImpl(@NonNull Display display)
+    public ScreenImpl(Display display)
     {
         this.display = display;
     }
@@ -37,7 +36,7 @@ public final class ScreenImpl implements Screen
     private static native boolean defaultUnicode();
 
     @Override
-    public void screenInit(@NonNull String @NonNull [] args)
+    public void screenInit(String[] args)
     {
         display.dpy_init(args);
         unicode = defaultUnicode();
@@ -125,7 +124,7 @@ public final class ScreenImpl implements Screen
      * Each colour contains red, green, and blue components in the range 0 to 1.
      */
     @Override
-    public void setColour(@NonNull Colour foreground, @NonNull Colour background)
+    public void setColour(Colour foreground, Colour background)
     {
         display.dpy_setcolour(
                 foreground.red(),
@@ -143,7 +142,7 @@ public final class ScreenImpl implements Screen
     }
 
     @Override
-    public void write(int x, int y, @NonNull String text)
+    public void write(int x, int y, String text)
     {
         for (int i = 0; i < text.length(); )
         {
@@ -184,13 +183,13 @@ public final class ScreenImpl implements Screen
      * Returns {width, height}.
      */
     @Override
-    public int @NonNull [] getScreenSize()
+    public int[] getScreenSize()
     {
         return display.dpy_getscreensize();
     }
 
     @Override
-    public int getStringWidth(@NonNull String text)
+    public int getStringWidth(String text)
     {
         int width = 0;
         for (int i = 0; i < text.length(); )
@@ -204,7 +203,7 @@ public final class ScreenImpl implements Screen
     }
 
     @Override
-    public @NonNull String getBoundedString(@NonNull String text, int width)
+    public String getBoundedString(String text, int width)
     {
         for (int i = 0; i < text.length(); )
         {
@@ -244,14 +243,14 @@ public final class ScreenImpl implements Screen
     }
 
     @Override
-    public @NonNull MouseInputEvent decodeMouseEvent(int key)
+    public MouseInputEvent decodeMouseEvent(int key)
     {
         boolean button = (key & Display.KEYM_MOUSE) == Display.KEY_MOUSEDOWN;
         return new MouseInputEvent(key & 0xff, (key >> 8) & 0xff, button, false);
     }
 
     @Override
-    public @NonNull InputEvent getEvent()
+    public InputEvent getEvent()
     {
         return getEvent(-1.0);
     }
@@ -261,7 +260,7 @@ public final class ScreenImpl implements Screen
      * events.
      */
     @Override
-    public @NonNull InputEvent getEvent(double timeout)
+    public InputEvent getEvent(double timeout)
     {
         sync();
         for (; ; )

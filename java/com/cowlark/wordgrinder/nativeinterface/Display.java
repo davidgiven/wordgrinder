@@ -4,7 +4,6 @@
 
 package com.cowlark.wordgrinder.nativeinterface;
 
-import org.jspecify.annotations.NonNull;
 
 /**
  * Backend-independent display operations.
@@ -28,11 +27,11 @@ public interface Display
     public static final int KEY_QUIT = 8 << 24;
 
     /* Operations are supplied by an injected backend instance. */
-    void dpy_init(@NonNull String @NonNull [] args);
+    void dpy_init(String[] args);
 
-    int @NonNull [] dpy_getscreensize();
+    int[] dpy_getscreensize();
 
-    @NonNull String dpy_getkeyname(int key);
+    String dpy_getkeyname(int key);
 
     /**
      * Colour components are in the range 0 to 1.

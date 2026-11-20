@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.Widget.Action;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,15 +24,13 @@ import java.util.function.BiFunction;
 public final class Form
 {
     /* Keep the UI and its screen together with the widgets and form-level bindings. */
-    private final @NonNull Ui ui;
-    private final @NonNull Screen screen;
-    private final @NonNull List<@NonNull Widget<?>> widgets = new ArrayList<>();
-    private final @NonNull Map<@NonNull String, @NonNull BiFunction<@NonNull Form,
-            @NonNull String, @NonNull Action>>
-            actions = new HashMap<>();
+    private final Ui ui;
+    private final Screen screen;
+    private final List<Widget<?>> widgets = new ArrayList<>();
+    private final Map<String, BiFunction<Form, String, Action>> actions = new HashMap<>();
 
     /* Missing dimensions select the Lua 'large' size; focus is selected on first draw. */
-    private @NonNull String title = "";
+    private String title = "";
     private @Nullable Integer width;
     private @Nullable Integer height;
     private boolean stretchy;
@@ -43,7 +40,7 @@ public final class Form
     private @Nullable String helpText;
 
     /* Obtain the same injected screen used by the UI drawing helpers. */
-    public Form(@NonNull Ui ui)
+    public Form(Ui ui)
     {
         this.ui = ui;
         screen = ui.getScreen();
@@ -58,7 +55,7 @@ public final class Form
     /**
      * Appends a widget, preserving drawing, hit-testing and focus order.
      */
-    public @NonNull Form add(@NonNull Widget<?> widget)
+    public Form add(Widget<?> widget)
     {
         widget.attachScreen(screen);
         widgets.add(widget);
@@ -68,7 +65,7 @@ public final class Form
     /**
      * Sets the title drawn on the top border.
      */
-    public @NonNull Form setTitle(@NonNull String title)
+    public Form setTitle(String title)
     {
         this.title = title;
         return this;
@@ -77,7 +74,7 @@ public final class Form
     /**
      * Sets the interior width in cells; by default it is six sevenths of the screen.
      */
-    public @NonNull Form setWidth(int width)
+    public Form setWidth(int width)
     {
         this.width = width;
         return this;
@@ -86,7 +83,7 @@ public final class Form
     /**
      * Sets the interior height in cells; by default it is five sixths of the screen.
      */
-    public @NonNull Form setHeight(int height)
+    public Form setHeight(int height)
     {
         this.height = height;
         return this;
@@ -95,7 +92,7 @@ public final class Form
     /**
      * Sets both fixed dimensions.
      */
-    public @NonNull Form setSize(int width, int height)
+    public Form setSize(int width, int height)
     {
         return setWidth(width).setHeight(height);
     }
@@ -103,7 +100,7 @@ public final class Form
     /**
      * Adds the calculated height of the first widget spanning positive to negative rows.
      */
-    public @NonNull Form setStretchy(boolean stretchy)
+    public Form setStretchy(boolean stretchy)
     {
         this.stretchy = stretchy;
         return this;
@@ -112,7 +109,7 @@ public final class Form
     /**
      * Draws optional help text beneath the widgets, inside an extra row of the box.
      */
-    public @NonNull Form setHelpText(@Nullable String helpText)
+    public Form setHelpText(@Nullable String helpText)
     {
         this.helpText = helpText;
         return this;
@@ -121,7 +118,7 @@ public final class Form
     /**
      * Supplies the backdrop redraw operation, called before laying out the form.
      */
-    public @NonNull Form setRedraw(@NonNull Runnable redraw)
+    public Form setRedraw(Runnable redraw)
     {
         this.redraw = redraw;
         return this;
@@ -130,7 +127,7 @@ public final class Form
     /**
      * Selects a widget already added to the form as its initial focus.
      */
-    public @NonNull Form setFocus(@NonNull Widget<?> widget)
+    public Form setFocus(Widget<?> widget)
     {
         if (!widgets.contains(widget))
             throw new IllegalArgumentException("The focused widget must belong to the form");
@@ -141,7 +138,7 @@ public final class Form
     /**
      * Binds a key to a form command. Widget bindings take precedence.
      */
-    public @NonNull Form on(@NonNull String key, @NonNull Action action)
+    public Form on(String key, Action action)
     {
         return on(key, (form, pressedKey) -> action);
     }
@@ -149,9 +146,7 @@ public final class Form
     /**
      * Binds a key to a callback receiving this form and the key name.
      */
-    public @NonNull Form on(
-            @NonNull String key,
-            @NonNull BiFunction<@NonNull Form, @NonNull String, @NonNull Action> action)
+    public Form on(String key, BiFunction<Form, String, Action> action)
     {
         actions.put(key, action);
         return this;
@@ -160,7 +155,7 @@ public final class Form
     /**
      * Redraws transient screen contents after the next input event, before dispatching it.
      */
-    public @NonNull Form invalidate()
+    public Form invalidate()
     {
         transientDisplay = true;
         return this;
@@ -277,7 +272,7 @@ public final class Form
     }
 
     /* Search widget bindings, cancellation, form bindings, navigation, then generic keys. */
-    private @NonNull Action key(@NonNull KeyInputEvent event)
+    private Action key(KeyInputEvent event)
     {
         String key = event.key();
         if (focus != null)
@@ -299,7 +294,7 @@ public final class Form
     }
 
     /* Wrap around the widget list while skipping widgets which cannot take focus. */
-    private @NonNull Action moveFocus(int direction)
+    private Action moveFocus(int direction)
     {
         if (focus == null)
             return Action.NOP;
@@ -317,7 +312,7 @@ public final class Form
     }
 
     /* Hit-test in insertion order; button events may transfer focus before dispatch. */
-    private @NonNull Action mouse(@NonNull MouseInputEvent event)
+    private Action mouse(MouseInputEvent event)
     {
         for (Widget<?> widget : widgets)
         {

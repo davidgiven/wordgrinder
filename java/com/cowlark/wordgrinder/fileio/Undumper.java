@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.fileio;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -28,7 +27,7 @@ import java.util.TreeMap;
  */
 public class Undumper
 {
-    static @NonNull Object parse(@NonNull String raw)
+    static Object parse(String raw)
     {
         /* Recognise the two boolean literals. */
         if (raw.equals("true"))
@@ -72,7 +71,7 @@ public class Undumper
         return new BigDecimal(raw);
     }
 
-    public void undump(@NonNull Object object, @NonNull BufferedReader input) throws IOException
+    public void undump(Object object, BufferedReader input) throws IOException
     {
         /* Parse the complete input before making changes to the object. */
         Node root = readInput(input);
@@ -83,7 +82,7 @@ public class Undumper
             throw new IllegalArgumentException("The root object cannot be replaced");
     }
 
-    private @NonNull Node readInput(@NonNull BufferedReader input) throws IOException
+    private Node readInput(BufferedReader input) throws IOException
     {
         /* Read text without closing or replacing the caller's buffered reader. */
         Node root = new Node();
@@ -120,10 +119,10 @@ public class Undumper
     }
 
     private @Nullable Object read(
-            @NonNull Node node,
-            @NonNull Type type,
+            Node node,
+            Type type,
             @Nullable Object current,
-            @NonNull String path,
+            String path,
             @Nullable Remaining remaining)
     {
         /* Leaf nodes are scalar values, converted to the declared Java type. */
@@ -146,11 +145,11 @@ public class Undumper
     }
 
     @SuppressWarnings("unchecked")
-    private @NonNull Object readMap(
-            @NonNull Node node,
-            @NonNull Type type,
+    private Object readMap(
+            Node node,
+            Type type,
             @Nullable Object current,
-            @NonNull String path,
+            String path,
             @Nullable Remaining remaining)
     {
         /* Merge entries using the map's declared value type. */
@@ -168,11 +167,11 @@ public class Undumper
     }
 
     @SuppressWarnings("unchecked")
-    private @NonNull Object readList(
-            @NonNull Node node,
-            @NonNull Type type,
+    private Object readList(
+            Node node,
+            Type type,
             @Nullable Object current,
-            @NonNull String path,
+            String path,
             @Nullable Remaining remaining)
     {
         /* Grow the list to accommodate the dump's one-based indices. */
@@ -194,11 +193,11 @@ public class Undumper
         return list;
     }
 
-    private @NonNull Object readArray(
-            @NonNull Node node,
-            @NonNull Class<?> elementType,
+    private Object readArray(
+            Node node,
+            Class<?> elementType,
             @Nullable Object current,
-            @NonNull String path,
+            String path,
             @Nullable Remaining remaining)
     {
         /* Allocate enough room while retaining any existing elements. */
@@ -228,11 +227,11 @@ public class Undumper
         return array;
     }
 
-    private @NonNull Object readObject(
-            @NonNull Node node,
-            @NonNull Class<?> cls,
+    private Object readObject(
+            Node node,
+            Class<?> cls,
             @Nullable Object current,
-            @NonNull String path,
+            String path,
             @Nullable Remaining remaining)
     {
         try
@@ -286,10 +285,8 @@ public class Undumper
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable Remaining remainingFor(
-            @NonNull Object target,
-            @NonNull String path,
-            @Nullable Remaining parent) throws IllegalAccessException
+    private @Nullable Remaining remainingFor(Object target, String path, @Nullable Remaining parent)
+            throws IllegalAccessException
     {
         /* Inherit the enclosing catch-all unless this object declares its own. */
         Field field = DumpFields.remaining(target.getClass());
@@ -307,7 +304,7 @@ public class Undumper
         return new Remaining(path, values);
     }
 
-    private void preserve(@NonNull Node node, @NonNull String path, @Nullable Remaining remaining)
+    private void preserve(Node node, String path, @Nullable Remaining remaining)
     {
         /* Store unknown leaves relative to their owner's path, without parsing again. */
         if (node.raw != null)
@@ -323,7 +320,7 @@ public class Undumper
             preserve(entry.getValue(), path + "." + entry.getKey(), remaining);
     }
 
-    private @NonNull Class<?> rawType(@NonNull Type type)
+    private Class<?> rawType(Type type)
     {
         /* Collection fields retain their generic arguments separately from their class. */
         return switch (type)
@@ -334,7 +331,7 @@ public class Undumper
         };
     }
 
-    private @NonNull Type argument(@NonNull Type type, int index)
+    private Type argument(Type type, int index)
     {
         /* Raw collections have no declared element type. */
         return type instanceof ParameterizedType parameterized ?
@@ -342,7 +339,7 @@ public class Undumper
                 Object.class;
     }
 
-    private int index(@NonNull String key)
+    private int index(String key)
     {
         /* Reject zero, negative indices, and noncanonical spellings such as 01. */
         int index = Integer.parseInt(key);
@@ -351,10 +348,7 @@ public class Undumper
         return index - 1;
     }
 
-    private @NonNull Object convert(
-            @NonNull String raw,
-            @NonNull Class<?> type,
-            @NonNull String path)
+    private Object convert(String raw, Class<?> type, String path)
     {
         /* Decode the value before checking whether the destination can hold it. */
         Object value = parse(raw);
@@ -422,14 +416,14 @@ public class Undumper
     }
 
     /* The nearest object's catch-all map and the path to which its keys are relative. */
-    private record Remaining(@NonNull String path, @NonNull Map<String, String> values)
+    private record Remaining(String path, Map<String, String> values)
     {
     }
 
     /* A property is either a raw scalar value or a collection of child properties. */
     private static final class Node
     {
-        final @NonNull Map<String, Node> children = new TreeMap<>();
+        final Map<String, Node> children = new TreeMap<>();
         @Nullable String raw;
     }
 }

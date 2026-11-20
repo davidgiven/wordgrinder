@@ -5,7 +5,6 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,8 +17,7 @@ import java.util.function.Function;
 public abstract class Widget<T extends Widget<T>>
 {
     /* Bind handlers to this instance, independently of its overridable methods. */
-    public final @NonNull Map<@NonNull String, @NonNull Function<@NonNull String, @NonNull Action>>
-            keybindings = new HashMap<>();
+    public final Map<String, Function<String, Action>> keybindings = new HashMap<>();
     /* Keep requested bounds separate from the bounds assigned by the form. */
     public int x1, y1, x2, y2;
     public int realx1, realy1, realx2, realy2, realwidth, realheight;
@@ -30,13 +28,13 @@ public abstract class Widget<T extends Widget<T>>
 
     /* Preserve the concrete widget type through inherited fluent setters. */
     @SuppressWarnings("unchecked")
-    protected final @NonNull T self()
+    protected final T self()
     {
         return (T) this;
     }
 
     /* Only the form supplies the backend; construction and configuration need none. */
-    final void attachScreen(@NonNull Screen screen)
+    final void attachScreen(Screen screen)
     {
         this.screen = screen;
     }
@@ -44,7 +42,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Returns the owning form's screen; drawing requires the widget to have been added.
      */
-    protected final @NonNull Screen getScreen()
+    protected final Screen getScreen()
     {
         if (screen == null)
             throw new IllegalStateException("Add the widget to a form before drawing it");
@@ -54,7 +52,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets the requested left bound.
      */
-    public @NonNull T setX1(int x1)
+    public T setX1(int x1)
     {
         this.x1 = x1;
         return self();
@@ -63,7 +61,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets the requested top bound.
      */
-    public @NonNull T setY1(int y1)
+    public T setY1(int y1)
     {
         this.y1 = y1;
         return self();
@@ -72,7 +70,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets the requested right bound.
      */
-    public @NonNull T setX2(int x2)
+    public T setX2(int x2)
     {
         this.x2 = x2;
         return self();
@@ -81,7 +79,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets the requested bottom bound.
      */
-    public @NonNull T setY2(int y2)
+    public T setY2(int y2)
     {
         this.y2 = y2;
         return self();
@@ -90,7 +88,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets whether the widget can receive focus.
      */
-    public @NonNull T setFocusable(boolean focusable)
+    public T setFocusable(boolean focusable)
     {
         this.focusable = focusable;
         return self();
@@ -99,7 +97,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Sets the requested bounds; negative values count back from the form's size.
      */
-    public @NonNull T setBounds(int x1, int y1, int x2, int y2)
+    public T setBounds(int x1, int y1, int x2, int y2)
     {
         return setX1(x1).setY1(y1).setX2(x2).setY2(y2);
     }
@@ -107,9 +105,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Installs or replaces a keybinding on this widget.
      */
-    public @NonNull T setKeybinding(
-            @NonNull String key,
-            @NonNull Function<@NonNull String, @NonNull Action> action)
+    public T setKeybinding(String key, Function<String, Action> action)
     {
         keybindings.put(key, action);
         return self();
@@ -125,12 +121,12 @@ public abstract class Widget<T extends Widget<T>>
         return 1;
     }
 
-    public @NonNull Action changed()
+    public Action changed()
     {
         return Action.NOP;
     }
 
-    public @NonNull Action key(Screen.@NonNull KeyInputEvent event)
+    public Action key(Screen.KeyInputEvent event)
     {
         return Action.NOP;
     }
@@ -138,7 +134,7 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Returns null when no click handler is installed, allowing mouse fallback.
      */
-    public @Nullable Action click(Screen.@NonNull MouseInputEvent event)
+    public @Nullable Action click(Screen.MouseInputEvent event)
     {
         return null;
     }
@@ -146,12 +142,12 @@ public abstract class Widget<T extends Widget<T>>
     /**
      * Handles other mouse events; null requests the form's default redraw.
      */
-    public @Nullable Action mouse(Screen.@NonNull MouseInputEvent event)
+    public @Nullable Action mouse(Screen.MouseInputEvent event)
     {
         return null;
     }
 
-    public @NonNull Action action(Screen.@NonNull InputEvent event)
+    public Action action(Screen.InputEvent event)
     {
         return Action.NOP;
     }

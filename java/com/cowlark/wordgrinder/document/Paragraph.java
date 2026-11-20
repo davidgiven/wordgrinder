@@ -10,7 +10,6 @@ import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,23 +20,23 @@ import java.util.List;
  * Word and line indices are zero-based. Layout uses terminal cell widths from the
  * injected screen. Line rendering uses the supplied word renderer and event bus.
  */
-public final class Paragraph implements Iterable<@NonNull String>
+public final class Paragraph implements Iterable<String>
 {
     /* Paragraph content and style remain fixed after construction. */
-    public final @NonNull ImmutableList<@NonNull String> words;
-    public final @NonNull DocumentStyle style;
+    public final ImmutableList<String> words;
+    public final DocumentStyle style;
     public final int number = 0;
 
     /* Screen metrics remain fixed for this paragraph; only the most recent layout is cached. */
-    private final @NonNull Screen screen;
+    private final Screen screen;
 
     /* Rendering uses the supplied word renderer and the application's shared event bus. */
-    private final @NonNull Word wordRenderer;
-    private final @NonNull EventBus eventBus;
+    private final Word wordRenderer;
+    private final EventBus eventBus;
     private @Nullable WrapData wrapData;
 
     /* Build immutable paragraphs from the builder's captured dependencies and content. */
-    private Paragraph(@NonNull Builder builder, @NonNull DocumentStyle style)
+    private Paragraph(Builder builder, DocumentStyle style)
     {
         screen = builder.screen;
         wordRenderer = builder.wordRenderer;
@@ -49,10 +48,7 @@ public final class Paragraph implements Iterable<@NonNull String>
     /**
      * Creates a paragraph builder with the injected layout and rendering collaborators.
      */
-    public static @NonNull Builder builder(
-            @NonNull Screen screen,
-            @NonNull Word wordRenderer,
-            @NonNull EventBus eventBus)
+    public static Builder builder(Screen screen, Word wordRenderer, EventBus eventBus)
     {
         return new Builder(screen, wordRenderer, eventBus);
     }
@@ -61,7 +57,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * Iterates over the words in order. The iterator does not support removal.
      */
     @Override
-    public @NonNull Iterator<@NonNull String> iterator()
+    public Iterator<String> iterator()
     {
         /* Match Lua's iteration over words without including paragraph metadata. */
         return words.iterator();
@@ -71,7 +67,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * Creates a paragraph with the same style and immutable words.
      * As in Lua, the document-assigned paragraph number is not copied.
      */
-    public @NonNull Paragraph copy()
+    public Paragraph copy()
     {
         /* Copy words and style without the assigned paragraph number. */
         return builder(screen, wordRenderer, eventBus)
@@ -106,7 +102,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * As in Lua, a word and its trailing spacing move to the next line when they reach
      * or exceed the available width. An oversized first word leaves an empty first line.
      */
-    public @NonNull WrapData wrap(int width, boolean fullStopSpaces)
+    public WrapData wrap(int width, boolean fullStopSpaces)
     {
         /* Both layout inputs participate in the cache, since either can change line breaks. */
         if (wrapData != null && wrapData.wrapWidth() == width &&
@@ -185,7 +181,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * When enabled, DrawWord listeners may change the rendered word and its styles;
      * cached word positions and the paragraph's immutable content remain unchanged.
      */
-    public void renderLine(@NonNull Line line, int x, int y, boolean fireDrawWord)
+    public void renderLine(Line line, int x, int y, boolean fireDrawWord)
     {
         /* Rendering requires the cached positions and sentence markers from wrapping. */
         WrapData layout = wrapData;
@@ -225,7 +221,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      *
      * @throws IndexOutOfBoundsException if start is outside zero through the word count
      */
-    public @NonNull ImmutableList<@NonNull String> sub(int start)
+    public ImmutableList<String> sub(int start)
     {
         /* Without a count, copy all remaining words. */
         return sub(start, words.size() - start);
@@ -239,7 +235,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * @throws IndexOutOfBoundsException if start is outside zero through the word count,
      *                                   or count is negative
      */
-    public @NonNull ImmutableList<@NonNull String> sub(int start, int count)
+    public ImmutableList<String> sub(int start, int count)
     {
         /* Clamp the requested count to the available words, as in Lua. */
         if (start < 0 || start > words.size() || count < 0)
@@ -253,7 +249,7 @@ public final class Paragraph implements Iterable<@NonNull String>
      * An empty paragraph produces an empty string.
      */
     @Override
-    public @NonNull String toString()
+    public String toString()
     {
         /* Remove embedded word styles and separate words with a single space. */
         List<String> text = new ArrayList<>(words.size());
@@ -268,16 +264,13 @@ public final class Paragraph implements Iterable<@NonNull String>
     public static final class Builder
     {
         /* Dependencies stay fixed; style is required and words default to an empty paragraph. */
-        private final @NonNull Screen screen;
-        private final @NonNull Word wordRenderer;
-        private final @NonNull EventBus eventBus;
+        private final Screen screen;
+        private final Word wordRenderer;
+        private final EventBus eventBus;
         private @Nullable DocumentStyle documentStyle;
-        private @NonNull ImmutableList<@NonNull String> words = ImmutableList.of();
+        private ImmutableList<String> words = ImmutableList.of();
 
-        private Builder(
-                @NonNull Screen screen,
-                @NonNull Word wordRenderer,
-                @NonNull EventBus eventBus)
+        private Builder(Screen screen, Word wordRenderer, EventBus eventBus)
         {
             this.screen = screen;
             this.wordRenderer = wordRenderer;
@@ -287,7 +280,7 @@ public final class Paragraph implements Iterable<@NonNull String>
         /**
          * Sets the paragraph's document style.
          */
-        public @NonNull Builder setDocumentStyle(@NonNull DocumentStyle documentStyle)
+        public Builder setDocumentStyle(DocumentStyle documentStyle)
         {
             this.documentStyle = documentStyle;
             return this;
@@ -296,7 +289,7 @@ public final class Paragraph implements Iterable<@NonNull String>
         /**
          * Captures an immutable snapshot of the supplied styled words.
          */
-        public @NonNull Builder setWords(@NonNull Iterable<@NonNull String> words)
+        public Builder setWords(Iterable<String> words)
         {
             this.words = ImmutableList.copyOf(words);
             return this;
@@ -305,7 +298,7 @@ public final class Paragraph implements Iterable<@NonNull String>
         /**
          * Captures individual styled words; no words creates an empty paragraph.
          */
-        public @NonNull Builder setWords(@NonNull String... words)
+        public Builder setWords(String... words)
         {
             this.words = ImmutableList.copyOf(words);
             return this;
@@ -314,7 +307,7 @@ public final class Paragraph implements Iterable<@NonNull String>
         /**
          * Splits text on spaces, tabs, CR and LF, matching Lua's ParseStringIntoWords.
          */
-        public @NonNull Builder setText(@NonNull String text)
+        public Builder setText(String text)
         {
             /* Preserve embedded styles and other characters within each word. */
             ImmutableList.Builder<String> words = ImmutableList.builder();
@@ -340,11 +333,11 @@ public final class Paragraph implements Iterable<@NonNull String>
         /**
          * Builds an independent paragraph; the builder can subsequently be reused.
          */
-        public @NonNull Paragraph build()
+        public Paragraph build()
         {
             if (documentStyle == null)
-                throw new IllegalStateException("Set the document style before building a " +
-                        "paragraph");
+                throw new IllegalStateException(
+                        "Set the document style before building a " + "paragraph");
             return new Paragraph(this, documentStyle);
         }
     }
@@ -352,7 +345,7 @@ public final class Paragraph implements Iterable<@NonNull String>
     /**
      * A wrapped line's first paragraph word and its zero-based paragraph word indices.
      */
-    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words)
+    public record Line(int firstWord, ImmutableList<Integer> words)
     {
     }
 
@@ -360,10 +353,8 @@ public final class Paragraph implements Iterable<@NonNull String>
      * Cached layout data. Sentence markers identify the initial word, words following a raw
      * non-alphabetic ending, and the final word. Empty paragraphs have no markers or lines.
      */
-    public record WrapData(int wrapWidth, boolean fullStopSpaces,
-                           @NonNull ImmutableSet<@NonNull Integer> sentences,
-                           @NonNull ImmutableList<@NonNull Line> lines,
-                           @NonNull ImmutableList<@NonNull Integer> xs)
+    public record WrapData(int wrapWidth, boolean fullStopSpaces, ImmutableSet<Integer> sentences,
+                           ImmutableList<Line> lines, ImmutableList<Integer> xs)
     {
     }
 }

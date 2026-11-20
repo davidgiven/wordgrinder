@@ -9,7 +9,6 @@ import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.google.common.collect.ImmutableList;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
@@ -20,7 +19,7 @@ import java.util.Set;
 public final class ParagraphTest
 {
     /* Supply deterministic terminal widths; wrapping must not invoke any drawing operations. */
-    private static @NonNull Screen screen()
+    private static Screen screen()
     {
         return (Screen) Proxy.newProxyInstance(
                 Screen.class.getClassLoader(),
@@ -40,7 +39,7 @@ public final class ParagraphTest
     }
 
     /* Pure paragraph operations must not attempt to draw through their injected renderer. */
-    private static @NonNull Word wordRenderer()
+    private static Word wordRenderer()
     {
         Display display = (Display) Proxy.newProxyInstance(
                 Display.class.getClassLoader(),
@@ -51,9 +50,7 @@ public final class ParagraphTest
         return new Word(display);
     }
 
-    private static @NonNull DocumentStyle style(
-            @Nullable Integer indent,
-            @Nullable Integer firstIndent)
+    private static DocumentStyle style(@Nullable Integer indent, @Nullable Integer firstIndent)
     {
         /* Only indentation fields matter for these paragraph queries. */
         return new DocumentStyle(

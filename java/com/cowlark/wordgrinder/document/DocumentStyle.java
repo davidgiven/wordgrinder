@@ -10,7 +10,6 @@ import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_BRIGHT;
 import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_ITALIC;
 import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_UNDERLINE;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -30,15 +29,15 @@ import org.jspecify.annotations.Nullable;
  * @param nextStyle   style for a following paragraph, or null to retain this style
  * @param cstyle      precomputed display attributes applied to every word
  */
-public record DocumentStyle(@NonNull String desc, @NonNull String name, int above, int below,
+public record DocumentStyle(String desc, String name, int above, int below,
                             @Nullable Integer indent, @Nullable String bullet,
                             @Nullable Boolean list, @Nullable Integer firstIndent,
                             @Nullable Boolean numbered, @Nullable String nextStyle, int cstyle)
 {
     /* Precompute the Lua heading markup once when constructing a named style. */
     public DocumentStyle(
-            @NonNull String desc,
-            @NonNull String name,
+            String desc,
+            String name,
             int above,
             int below,
             @Nullable Integer indent,

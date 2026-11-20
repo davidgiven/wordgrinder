@@ -8,7 +8,6 @@ import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.EventBus;
-import org.jspecify.annotations.NonNull;
 
 /**
  * A label laid out and drawn as an ordinary paragraph, without DrawWord events.
@@ -16,16 +15,16 @@ import org.jspecify.annotations.NonNull;
 public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
 {
     /* Label paragraphs have no document indentation or heading attributes. */
-    private static final @NonNull DocumentStyle STYLE =
+    private static final DocumentStyle STYLE =
             new DocumentStyle("Paragraph", "P", 0, 0, null, null, null, null, null, null);
 
     /* Retain rendering collaborators; Form.add() supplies the screen separately. */
-    private final @NonNull Word wordRenderer;
-    private final @NonNull EventBus eventBus;
-    public @NonNull String value = "";
+    private final Word wordRenderer;
+    private final EventBus eventBus;
+    public String value = "";
     public boolean fullStopSpaces;
 
-    public WrappedLabelWidget(@NonNull Word wordRenderer, @NonNull EventBus eventBus)
+    public WrappedLabelWidget(Word wordRenderer, EventBus eventBus)
     {
         this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
@@ -34,7 +33,7 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
     /**
      * Sets the text to wrap, preserving any embedded word styles.
      */
-    public @NonNull WrappedLabelWidget setValue(@NonNull String value)
+    public WrappedLabelWidget setValue(String value)
     {
         this.value = value;
         return self();
@@ -43,14 +42,14 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
     /**
      * Selects double spacing after full stops without consulting document preferences.
      */
-    public @NonNull WrappedLabelWidget setFullStopSpaces(boolean fullStopSpaces)
+    public WrappedLabelWidget setFullStopSpaces(boolean fullStopSpaces)
     {
         this.fullStopSpaces = fullStopSpaces;
         return self();
     }
 
     /* Build the ordinary paragraph shared by height calculation and drawing. */
-    private @NonNull Paragraph paragraph()
+    private Paragraph paragraph()
     {
         return Paragraph
                 .builder(getScreen(), wordRenderer, eventBus)

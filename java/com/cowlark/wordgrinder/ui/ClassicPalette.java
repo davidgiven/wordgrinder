@@ -7,7 +7,6 @@ package com.cowlark.wordgrinder.ui;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 
 import com.google.common.collect.ImmutableMap;
-import org.jspecify.annotations.NonNull;
 
 /**
  * The Classic theme from colours.lua.
@@ -15,10 +14,10 @@ import org.jspecify.annotations.NonNull;
 public final class ClassicPalette extends Palette
 {
     /* Share the immutable colours used by multiple paragraph styles. */
-    private static final @NonNull Colour INK = new Colour(0.8f, 0.8f, 0.8f);
-    private static final @NonNull Colour WHITE = new Colour(1f, 1f, 1f);
-    private static final @NonNull Colour BLACK = new Colour(0f, 0f, 0f);
-    private static final @NonNull Colour YELLOW = new Colour(1f, 1f, 0f);
+    private static final Colour INK = new Colour(0.8f, 0.8f, 0.8f);
+    private static final Colour WHITE = new Colour(1f, 1f, 1f);
+    private static final Colour BLACK = new Colour(0f, 0f, 0f);
+    private static final Colour YELLOW = new Colour(1f, 1f, 0f);
 
     /* Supply the shared palette implementation with this theme's definitions. */
     public ClassicPalette()

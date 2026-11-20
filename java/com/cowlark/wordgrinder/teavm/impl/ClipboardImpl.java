@@ -1,7 +1,6 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
 import com.cowlark.wordgrinder.nativeinterface.Clipboard;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import org.teavm.interop.Address;
@@ -77,7 +76,7 @@ public final class ClipboardImpl implements Clipboard
     }
 
     @Override
-    public @NonNull Contents clipboardGet()
+    public Contents clipboardGet()
     {
         clipboardInit();
         Address snapshot = getNative();
