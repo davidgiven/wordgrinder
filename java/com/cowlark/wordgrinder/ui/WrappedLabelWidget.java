@@ -4,9 +4,9 @@
 
 package com.cowlark.wordgrinder.ui;
 
+import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import org.jspecify.annotations.NonNull;
 

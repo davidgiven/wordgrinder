@@ -1,12 +1,17 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
-import org.junit.Test;
-import static org.junit.Assert.*;
 
-/** Runs the native probe through JUnit4 so the standard test target covers C string interop. */
+/**
+ * Runs the native probe through JUnit4 so the standard test target covers C string interop.
+ */
 public class CStringTest
 {
     /* Extract the packaged native executable and check its assertions and exit status. */
@@ -31,14 +36,12 @@ public class CStringTest
             {
                 assertTrue("Native probe timed out", process.waitFor(30, TimeUnit.SECONDS));
                 assertEquals("Native probe failed", 0, process.exitValue());
-            }
-            finally
+            } finally
             {
                 if (process.isAlive())
                     process.destroyForcibly();
             }
-        }
-        finally
+        } finally
         {
             Files.deleteIfExists(executable);
         }

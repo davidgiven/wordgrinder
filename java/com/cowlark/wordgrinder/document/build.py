@@ -1,4 +1,5 @@
 from build.java import javalibrary
+
 from java.com.cowlark.wordgrinder.build import GUAVA_DEPS
 
 javalibrary(

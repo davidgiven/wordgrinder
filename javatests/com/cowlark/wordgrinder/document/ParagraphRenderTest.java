@@ -159,6 +159,12 @@ public class ParagraphRenderTest
         final Display display = createDisplay();
         int attributes;
 
+        /* Supplementary and East Asian characters occupy two cells in these fixtures. */
+        private static int width(int cp)
+        {
+            return cp == 0x1f600 || cp == '界' ? 2 : cp == 0x301 ? 0 : 1;
+        }
+
         /* Keep proxy callbacks outside field initialisers so member rearrangement is harmless. */
         private @NonNull Display createDisplay()
         {
@@ -183,13 +189,6 @@ public class ParagraphRenderTest
                         }
                         return null;
                     });
-        }
-
-
-        /* Supplementary and East Asian characters occupy two cells in these fixtures. */
-        private static int width(int cp)
-        {
-            return cp == 0x1f600 || cp == '界' ? 2 : cp == 0x301 ? 0 : 1;
         }
 
         /* Give every paragraph the same renderer and shared listener registrations. */

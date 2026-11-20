@@ -6,7 +6,9 @@ import org.teavm.interop.Address;
 import org.teavm.interop.Import;
 import org.teavm.interop.c.Include;
 
-/** Runs against the real TeaVM C runtime, including the native-call argument lifetimes. */
+/**
+ * Runs against the real TeaVM C runtime, including the native-call argument lifetimes.
+ */
 @Include("cstring-probe.h")
 public final class CStringProbe
 {
@@ -35,13 +37,13 @@ public final class CStringProbe
     {
         initialiseLocale();
         int example = 0;
-        for (String text : new String[] {"", "ASCII", "café 😀", "before\0after"})
+        for (String text : new String[]{"", "ASCII", "café 😀", "before\0after"})
             checkString(text, example++);
         DisplayImpl display = new DisplayImpl();
-        display.dpy_init(new String[] {"--demo", "café 😀", ""});
+        display.dpy_init(new String[]{"--demo", "café 😀", ""});
         display.dpy_init(new String[0]);
         ClipboardImpl clipboard = new ClipboardImpl();
-        clipboard.clipboardSet("before\0after 😀", new byte[] {0, 1, -1});
+        clipboard.clipboardSet("before\0after 😀", new byte[]{0, 1, -1});
         clipboard.clipboardSet(null, null);
         clipboard.clipboardSet("", new byte[0]);
 

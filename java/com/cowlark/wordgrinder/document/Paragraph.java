@@ -46,83 +46,15 @@ public final class Paragraph implements Iterable<@NonNull String>
         words = builder.words;
     }
 
-    /** Creates a paragraph builder with the injected layout and rendering collaborators. */
+    /**
+     * Creates a paragraph builder with the injected layout and rendering collaborators.
+     */
     public static @NonNull Builder builder(
-            @NonNull Screen screen, @NonNull Word wordRenderer, @NonNull EventBus eventBus)
+            @NonNull Screen screen,
+            @NonNull Word wordRenderer,
+            @NonNull EventBus eventBus)
     {
         return new Builder(screen, wordRenderer, eventBus);
-    }
-
-    /** Configures immutable paragraph content while retaining the injected collaborators. */
-    public static final class Builder
-    {
-        /* Dependencies stay fixed; style is required and words default to an empty paragraph. */
-        private final @NonNull Screen screen;
-        private final @NonNull Word wordRenderer;
-        private final @NonNull EventBus eventBus;
-        private @Nullable DocumentStyle documentStyle;
-        private @NonNull ImmutableList<@NonNull String> words = ImmutableList.of();
-
-        private Builder(@NonNull Screen screen, @NonNull Word wordRenderer, @NonNull EventBus eventBus)
-        {
-            this.screen = screen;
-            this.wordRenderer = wordRenderer;
-            this.eventBus = eventBus;
-        }
-
-        /** Sets the paragraph's document style. */
-        public @NonNull Builder setDocumentStyle(@NonNull DocumentStyle documentStyle)
-        {
-            this.documentStyle = documentStyle;
-            return this;
-        }
-
-        /** Captures an immutable snapshot of the supplied styled words. */
-        public @NonNull Builder setWords(@NonNull Iterable<@NonNull String> words)
-        {
-            this.words = ImmutableList.copyOf(words);
-            return this;
-        }
-
-        /** Captures individual styled words; no words creates an empty paragraph. */
-        public @NonNull Builder setWords(@NonNull String... words)
-        {
-            this.words = ImmutableList.copyOf(words);
-            return this;
-        }
-
-        /** Splits text on spaces, tabs, CR and LF, matching Lua's ParseStringIntoWords. */
-        public @NonNull Builder setText(@NonNull String text)
-        {
-            /* Preserve embedded styles and other characters within each word. */
-            ImmutableList.Builder<String> words = ImmutableList.builder();
-            int start = -1;
-            for (int i = 0; i <= text.length(); i++)
-            {
-                char character = i < text.length() ? text.charAt(i) : ' ';
-                boolean separator = character == ' ' || character == '\t'
-                        || character == '\r' || character == '\n';
-                if (separator && start >= 0)
-                {
-                    words.add(text.substring(start, i));
-                    start = -1;
-                }
-                else if (!separator && start < 0)
-                    start = i;
-            }
-
-            /* Lua represents empty or whitespace-only text as a single empty word. */
-            ImmutableList<String> content = words.build();
-            return setWords(content.isEmpty() ? ImmutableList.of("") : content);
-        }
-
-        /** Builds an independent paragraph; the builder can subsequently be reused. */
-        public @NonNull Paragraph build()
-        {
-            if (documentStyle == null)
-                throw new IllegalStateException("Set the document style before building a paragraph");
-            return new Paragraph(this, documentStyle);
-        }
     }
 
     /**
@@ -142,7 +74,10 @@ public final class Paragraph implements Iterable<@NonNull String>
     public @NonNull Paragraph copy()
     {
         /* Copy words and style without the assigned paragraph number. */
-        return builder(screen, wordRenderer, eventBus).setDocumentStyle(style).setWords(words).build();
+        return builder(screen, wordRenderer, eventBus)
+                .setDocumentStyle(style)
+                .setWords(words)
+                .build();
     }
 
     /**
@@ -266,33 +201,22 @@ public final class Paragraph implements Iterable<@NonNull String>
             int wordStyle = currentStyle;
             if (fireDrawWord)
             {
-                DrawWord payload = new DrawWord(word, oldStyle, currentStyle, layout.sentences().contains(wn));
+                DrawWord payload =
+                        new DrawWord(word, oldStyle, currentStyle, layout.sentences().contains(wn));
                 eventBus.fireEvent(payload);
                 word = payload.word;
                 oldStyle = payload.oldStyle;
                 wordStyle = payload.currentStyle;
             }
             oldStyle = wordRenderer.writeStyled(
-                    x + layout.xs().get(wn), y, word, oldStyle, -1, -1, wordStyle);
+                    x + layout.xs().get(wn),
+                    y,
+                    word,
+                    oldStyle,
+                    -1,
+                    -1,
+                    wordStyle);
         }
-    }
-
-    /**
-     * A wrapped line's first paragraph word and its zero-based paragraph word indices.
-     */
-    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words)
-    {
-    }
-
-    /**
-     * Cached layout data. Sentence markers identify the initial word, words following a raw
-     * non-alphabetic ending, and the final word. Empty paragraphs have no markers or lines.
-     */
-    public record WrapData(int wrapWidth, boolean fullStopSpaces,
-                           @NonNull ImmutableSet<@NonNull Integer> sentences,
-                           @NonNull ImmutableList<@NonNull Line> lines,
-                           @NonNull ImmutableList<@NonNull Integer> xs)
-    {
     }
 
     /**
@@ -336,5 +260,110 @@ public final class Paragraph implements Iterable<@NonNull String>
         for (String word : words)
             text.add(Word.getWordText(word));
         return String.join(" ", text);
+    }
+
+    /**
+     * Configures immutable paragraph content while retaining the injected collaborators.
+     */
+    public static final class Builder
+    {
+        /* Dependencies stay fixed; style is required and words default to an empty paragraph. */
+        private final @NonNull Screen screen;
+        private final @NonNull Word wordRenderer;
+        private final @NonNull EventBus eventBus;
+        private @Nullable DocumentStyle documentStyle;
+        private @NonNull ImmutableList<@NonNull String> words = ImmutableList.of();
+
+        private Builder(
+                @NonNull Screen screen,
+                @NonNull Word wordRenderer,
+                @NonNull EventBus eventBus)
+        {
+            this.screen = screen;
+            this.wordRenderer = wordRenderer;
+            this.eventBus = eventBus;
+        }
+
+        /**
+         * Sets the paragraph's document style.
+         */
+        public @NonNull Builder setDocumentStyle(@NonNull DocumentStyle documentStyle)
+        {
+            this.documentStyle = documentStyle;
+            return this;
+        }
+
+        /**
+         * Captures an immutable snapshot of the supplied styled words.
+         */
+        public @NonNull Builder setWords(@NonNull Iterable<@NonNull String> words)
+        {
+            this.words = ImmutableList.copyOf(words);
+            return this;
+        }
+
+        /**
+         * Captures individual styled words; no words creates an empty paragraph.
+         */
+        public @NonNull Builder setWords(@NonNull String... words)
+        {
+            this.words = ImmutableList.copyOf(words);
+            return this;
+        }
+
+        /**
+         * Splits text on spaces, tabs, CR and LF, matching Lua's ParseStringIntoWords.
+         */
+        public @NonNull Builder setText(@NonNull String text)
+        {
+            /* Preserve embedded styles and other characters within each word. */
+            ImmutableList.Builder<String> words = ImmutableList.builder();
+            int start = -1;
+            for (int i = 0; i <= text.length(); i++)
+            {
+                char character = i < text.length() ? text.charAt(i) : ' ';
+                boolean separator = character == ' ' || character == '\t' || character == '\r' ||
+                        character == '\n';
+                if (separator && start >= 0)
+                {
+                    words.add(text.substring(start, i));
+                    start = -1;
+                } else if (!separator && start < 0)
+                    start = i;
+            }
+
+            /* Lua represents empty or whitespace-only text as a single empty word. */
+            ImmutableList<String> content = words.build();
+            return setWords(content.isEmpty() ? ImmutableList.of("") : content);
+        }
+
+        /**
+         * Builds an independent paragraph; the builder can subsequently be reused.
+         */
+        public @NonNull Paragraph build()
+        {
+            if (documentStyle == null)
+                throw new IllegalStateException("Set the document style before building a " +
+                        "paragraph");
+            return new Paragraph(this, documentStyle);
+        }
+    }
+
+    /**
+     * A wrapped line's first paragraph word and its zero-based paragraph word indices.
+     */
+    public record Line(int firstWord, @NonNull ImmutableList<@NonNull Integer> words)
+    {
+    }
+
+    /**
+     * Cached layout data. Sentence markers identify the initial word, words following a raw
+     * non-alphabetic ending, and the final word. Empty paragraphs have no markers or lines.
+     */
+    public record WrapData(int wrapWidth, boolean fullStopSpaces,
+                           @NonNull ImmutableSet<@NonNull Integer> sentences,
+                           @NonNull ImmutableList<@NonNull Line> lines,
+                           @NonNull ImmutableList<@NonNull Integer> xs)
+    {
     }
 }

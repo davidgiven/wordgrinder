@@ -1,7 +1,6 @@
 package com.cowlark.wordgrinder;
 
 import com.cowlark.wordgrinder.document.Word;
-
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;
@@ -10,6 +9,7 @@ import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
 import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
+import com.cowlark.wordgrinder.utils.ArgumentParser;
 import org.jspecify.annotations.NonNull;
 import java.io.IOException;
 
@@ -43,10 +43,24 @@ public class Main
                 args);
     }
 
+    private int doHelp(String[] args)
+    {
+        return 0;
+    }
+
     public void run(@NonNull String[] args) throws IOException
     {
         try
         {
+            ArgumentParser
+                    .builder()
+                    .onOption("h", a -> 0)
+                    .onOption("help", a -> 0)
+                    .onFilenames(filenames -> 0)
+                    .onUnknownOption(option -> {
+                    })
+                    .parse(args);
+
             screen.screenInit(args);
             screen.initScreen();
             try

@@ -1,7 +1,7 @@
 package com.cowlark.wordgrinder.teavm.impl;
 
-import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
+import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import org.jspecify.annotations.NonNull;
 import org.teavm.interop.Import;

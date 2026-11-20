@@ -128,6 +128,12 @@ public class WrappedLabelWidgetTest
         final Word renderer = new Word(display);
         int attributes;
 
+        /* No label operation may notify spellcheckers or any other word listeners. */
+        Drawing()
+        {
+            events.addEventListener(DrawWord.class, event -> fail("Labels must suppress DrawWord"));
+        }
+
         /* Keep proxy callbacks outside field initialisers so member rearrangement is harmless. */
         private @NonNull Display createDisplay()
         {
@@ -152,13 +158,6 @@ public class WrappedLabelWidgetTest
                         }
                         return null;
                     });
-        }
-
-
-        /* No label operation may notify spellcheckers or any other word listeners. */
-        Drawing()
-        {
-            events.addEventListener(DrawWord.class, event -> fail("Labels must suppress DrawWord"));
         }
 
         /* Attach the screen as Form.add normally does, without needing to run an input loop. */

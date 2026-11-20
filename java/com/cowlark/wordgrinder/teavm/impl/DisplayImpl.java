@@ -87,12 +87,13 @@ public final class DisplayImpl implements Display
             for (int i = 0; i < args.length; i++)
             {
                 strings[i] = new CString(args[i]);
-                argv.add(i * Address.sizeOf()).putAddress(strings[i].getAddress());
+                argv
+                        .add(i * Address.sizeOf()).putAddress(strings[i].getAddress());
             }
-            argv.add(args.length * Address.sizeOf()).putAddress(null);
+            argv
+                    .add(args.length * Address.sizeOf()).putAddress(null);
             initNative(argv);
-        }
-        finally
+        } finally
         {
             for (CString string : strings)
                 if (string != null)

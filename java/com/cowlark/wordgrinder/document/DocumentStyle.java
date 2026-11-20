@@ -5,9 +5,9 @@
 
 package com.cowlark.wordgrinder.document;
 
-import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_ITALIC;
-import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_BRIGHT;
 import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_BOLD;
+import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_BRIGHT;
+import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_ITALIC;
 import static com.cowlark.wordgrinder.nativeinterface.Display.DPY_UNDERLINE;
 
 import org.jspecify.annotations.NonNull;
@@ -37,12 +37,28 @@ public record DocumentStyle(@NonNull String desc, @NonNull String name, int abov
 {
     /* Precompute the Lua heading markup once when constructing a named style. */
     public DocumentStyle(
-            @NonNull String desc, @NonNull String name, int above, int below,
-            @Nullable Integer indent, @Nullable String bullet,
-            @Nullable Boolean list, @Nullable Integer firstIndent,
-            @Nullable Boolean numbered, @Nullable String nextStyle)
+            @NonNull String desc,
+            @NonNull String name,
+            int above,
+            int below,
+            @Nullable Integer indent,
+            @Nullable String bullet,
+            @Nullable Boolean list,
+            @Nullable Integer firstIndent,
+            @Nullable Boolean numbered,
+            @Nullable String nextStyle)
     {
-        this(desc, name, above, below, indent, bullet, list, firstIndent, numbered, nextStyle,
+        this(
+                desc,
+                name,
+                above,
+                below,
+                indent,
+                bullet,
+                list,
+                firstIndent,
+                numbered,
+                nextStyle,
                 switch (name)
                 {
                     case "H1" -> DPY_ITALIC | DPY_BRIGHT | DPY_BOLD | DPY_UNDERLINE;

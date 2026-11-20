@@ -1,6 +1,7 @@
 from build.ab import filenameof, simplerule
 from build.java import javalibrary
 from build.junit4 import junit4
+
 from java.com.cowlark.wordgrinder.build import teavm_native
 
 # Reuse the application's compiler/runtime classpath for the native interop probe.
