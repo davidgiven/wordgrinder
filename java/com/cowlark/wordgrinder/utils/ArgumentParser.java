@@ -4,10 +4,8 @@
 
 package com.cowlark.wordgrinder.utils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
@@ -18,8 +16,8 @@ import java.util.function.ToIntFunction;
 public final class ArgumentParser
 {
     /* Store handlers independently for each parser; unhandled filenames are skipped. */
-    private final Map<String, ToIntFunction<List<String>>> callbacks = new HashMap<>();
-    private ToIntFunction<List<String>> filenameCallback = args -> 1;
+    private final Map<String, ToIntFunction<ImmutableList<String>>> callbacks = new HashMap<>();
+    private ToIntFunction<ImmutableList<String>> filenameCallback = args -> 1;
     private Consumer<String> unknownCallback = option -> {
         throw new IllegalArgumentException("Unknown option: " + option);
     };
@@ -37,18 +35,16 @@ public final class ArgumentParser
     }
 
     /* Model Lua's unpacked arguments with a stable snapshot, including an implicit first value. */
-    private static List<String> prepend(String first, List<String> remaining)
+    private static ImmutableList<String> prepend(String first, ImmutableList<String> remaining)
     {
-        List<String> arguments = new ArrayList<>(remaining.size() + 1);
-        arguments.add(first);
-        arguments.addAll(remaining);
-        return List.copyOf(arguments);
+        return ImmutableList.<String>builder()
+                .add(first).addAll(remaining).build();
     }
 
     /**
      * Registers a handler for an option name without its leading dashes.
      */
-    public ArgumentParser onOption(String option, ToIntFunction<List<String>> callback)
+    public ArgumentParser onOption(String option, ToIntFunction<ImmutableList<String>> callback)
     {
         callbacks.put(option, callback);
         return this;
@@ -58,7 +54,7 @@ public final class ArgumentParser
      * Registers a filename handler; by default each filename consumes one argument.
      */
     public ArgumentParser onFilenames(
-            ToIntFunction<List<String>> callback)
+            ToIntFunction<ImmutableList<String>> callback)
     {
         filenameCallback = callback;
         return this;
@@ -74,31 +70,25 @@ public final class ArgumentParser
     }
 
     /**
-     * Parses an argument array without modifying it. See the list overload for callback rules.
-     * The array contains arguments only, excluding the executable name.
-     */
-    public void parse(String[] argv)
-    {
-        parse(new ArrayList<>(Arrays.asList(argv)));
-    }
-
-    /**
-     * Consumes a mutable argument list using callbacks keyed by option name, without dashes.
+     * Parses an immutable argument list using callbacks keyed by option name, without dashes.
+     * The list excludes the executable name and is never modified.
      * Each callback receives an immutable snapshot of all remaining arguments and returns
      * the number it consumed. Flag options return zero. For -pvalue, value is prepended to
      * the callback's arguments; filenames are similarly prepended to filenameCallback's
      * arguments, so those callbacks must consume at least one argument.
      * <p>
      * Unknown options call unknownCallback with their name and stop parsing, leaving the
-     * remaining list untouched. A negative consumption count throws IllegalArgumentException
-     * (the Lua CLIError equivalent). Excess consumption simply empties the remaining list.
+     * input unchanged. A negative consumption count throws IllegalArgumentException
+     * (the Lua CLIError equivalent). Excess consumption stops at the end of the input.
      */
-    public void parse(List<String> argv)
+    public void parse(ImmutableList<String> argv)
     {
-        /* Remove the current token before handing its remaining arguments to a callback. */
-        while (!argv.isEmpty())
+        /* Advance a local cursor while callbacks receive immutable views of the remaining input. */
+        int position = 0;
+        while (position < argv.size())
         {
-            String option = argv.remove(0);
+            String option = argv.get(position++);
+            ImmutableList<String> remaining = argv.subList(position, argv.size());
             long consumed;
             if (option.startsWith("-"))
             {
@@ -106,7 +96,7 @@ public final class ArgumentParser
                 String name = longOption ?
                         option.substring(2) :
                         option.length() > 1 ? option.substring(1, 2) : "";
-                ToIntFunction<List<String>> callback = callbacks.get(name);
+                ToIntFunction<ImmutableList<String>> callback = callbacks.get(name);
                 if (callback == null)
                 {
                     unknownCallback.accept(name);
@@ -116,16 +106,16 @@ public final class ArgumentParser
                 /* The suffix of a short option is a single attached argument, as in Lua. */
                 String attached = !longOption && option.length() > 2 ? option.substring(2) : "";
                 if (attached.isEmpty())
-                    consumed = callback.applyAsInt(List.copyOf(argv));
+                    consumed = callback.applyAsInt(remaining);
                 else
-                    consumed = callback.applyAsInt(prepend(attached, argv)) - 1L;
+                    consumed = callback.applyAsInt(prepend(attached, remaining)) - 1L;
             } else
-                consumed = filenameCallback.applyAsInt(prepend(option, argv)) - 1L;
+                consumed = filenameCallback.applyAsInt(prepend(option, remaining)) - 1L;
 
             /* Callback counts refer to arguments after the option token, excluding attachments. */
             if (consumed < 0)
                 throw new IllegalArgumentException("malformed argument");
-            argv.subList(0, (int) Math.min(consumed, argv.size())).clear();
+            position += (int) Math.min(consumed, argv.size() - position);
         }
     }
 }

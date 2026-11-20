@@ -10,6 +10,7 @@ import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
 import com.cowlark.wordgrinder.utils.ArgumentParser;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 
 public class Main
@@ -54,7 +55,7 @@ public class Main
                     .onFilenames(filenames -> 0)
                     .onUnknownOption(option -> {
                     })
-                    .parse(args);
+                    .parse(ImmutableList.copyOf(args));
 
             screen.screenInit(args);
             screen.initScreen();

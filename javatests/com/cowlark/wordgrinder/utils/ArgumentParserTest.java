@@ -1,10 +1,10 @@
 package com.cowlark.wordgrinder.utils;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class ArgumentParserTest
         for (Example example : examples)
         {
             List<String> log = new ArrayList<>();
-            Map<String, ToIntFunction<List<String>>> callbacks = Map.of(
+            Map<String, ToIntFunction<ImmutableList<String>>> callbacks = Map.of(
                     "long", args -> {
                         log.add("long");
                         return 0;
@@ -58,7 +58,7 @@ public class ArgumentParserTest
                         return 1;
                     })
                     .onUnknownOption(option -> log.add("unknown=" + option))
-                    .parse(new ArrayList<>(example.arguments()));
+                    .parse(ImmutableList.copyOf(example.arguments()));
             assertEquals(example.arguments().toString(), example.expected(), log);
         }
     }
@@ -67,9 +67,10 @@ public class ArgumentParserTest
     @Test
     public void suppliesAllRemainingArgumentsAndHonoursConsumptionCounts()
     {
-        List<String> argv = new ArrayList<>(List.of("--pair", "a", "b", "-pvalue", "file", "tail"));
-        List<List<String>> supplied = new ArrayList<>();
-        Map<String, ToIntFunction<List<String>>> callbacks = Map.of(
+        ImmutableList<String> argv =
+                ImmutableList.of("--pair", "a", "b", "-pvalue", "file", "tail");
+        List<ImmutableList<String>> supplied = new ArrayList<>();
+        Map<String, ToIntFunction<ImmutableList<String>>> callbacks = Map.of(
                 "pair", args -> {
                     supplied.add(args);
                     return 2;
@@ -81,7 +82,7 @@ public class ArgumentParserTest
             supplied.add(args);
             return 2;
         }).onUnknownOption(option -> fail("Unexpected option " + option)).parse(argv);
-        assertEquals(List.of(), argv);
+        assertEquals(List.of("--pair", "a", "b", "-pvalue", "file", "tail"), argv);
         assertEquals(
                 List.of(
                         List.of("a", "b", "-pvalue", "file", "tail"),
@@ -90,13 +91,13 @@ public class ArgumentParserTest
         assertThrows(UnsupportedOperationException.class, () -> supplied.get(0).clear());
     }
 
-    /* Unknown options stop immediately after consuming their own token. */
+    /* Unknown options stop immediately without changing the input. */
     @Test
-    public void reportsUnknownNamesAndLeavesTheRemainder()
+    public void reportsUnknownNamesAndPreservesInput()
     {
         for (String option : List.of("--unknown", "-unknown", "--", "-", "--long=value"))
         {
-            List<String> argv = new ArrayList<>(List.of(option, "remaining"));
+            ImmutableList<String> argv = ImmutableList.of(option, "remaining");
             List<String> unknown = new ArrayList<>();
             ArgumentParser.builder().onFilenames(args -> {
                 fail("Unexpected filename");
@@ -106,7 +107,7 @@ public class ArgumentParserTest
                     option.substring(2) :
                     option.length() > 1 ? option.substring(1, 2) : "";
             assertEquals(List.of(expected), unknown);
-            assertEquals(List.of("remaining"), argv);
+            assertEquals(List.of(option, "remaining"), argv);
         }
     }
 
@@ -114,11 +115,11 @@ public class ArgumentParserTest
     @Test
     public void rejectsMalformedConsumptionCounts()
     {
-        Map<String, ToIntFunction<List<String>>> callbacks =
+        Map<String, ToIntFunction<ImmutableList<String>>> callbacks =
                 Map.of("bad", args -> -1, "p", args -> 0, "m", args -> Integer.MIN_VALUE);
         for (String option : List.of("--bad", "-pattached", "filename", "-mattached"))
         {
-            List<String> argv = new ArrayList<>(List.of(option, "remaining"));
+            ImmutableList<String> argv = ImmutableList.of(option, "remaining");
             IllegalArgumentException error = assertThrows(
                     IllegalArgumentException.class,
                     () -> parser(callbacks)
@@ -126,34 +127,33 @@ public class ArgumentParserTest
                             .onUnknownOption(unknown -> fail("Unexpected unknown option"))
                             .parse(argv));
             assertEquals("malformed argument", error.getMessage());
-            assertEquals(List.of("remaining"), argv);
+            assertEquals(List.of(option, "remaining"), argv);
         }
     }
 
-    /* Excess counts empty the remaining list, matching repeated Lua table.remove calls. */
+    /* Excess counts stop parsing while preserving the original input. */
     @Test
-    public void excessConsumptionEmptiesRemainingArguments()
+    public void excessConsumptionStopsAtEndOfInput()
     {
-        List<String> argv = new ArrayList<>(List.of("--consume", "one"));
+        ImmutableList<String> argv = ImmutableList.of("--consume", "one");
         ArgumentParser.builder().onOption("consume", args -> 5).onFilenames(args -> {
             fail("Consumed filename reached callback");
             return 1;
         }).onUnknownOption(unknown -> fail("Unexpected unknown option")).parse(argv);
-        assertEquals(List.of(), argv);
+        assertEquals(List.of("--consume", "one"), argv);
     }
 
-    /* The convenience overload preserves its caller's array and treats empty strings as
-    filenames. */
+    /* Empty strings are filenames and the original input remains intact. */
     @Test
-    public void arrayInputIsPreserved()
+    public void immutableInputIsPreserved()
     {
-        String[] argv = {"-s", ""};
+        ImmutableList<String> argv = ImmutableList.of("-s", "");
         List<String> filenames = new ArrayList<>();
         ArgumentParser.builder().onOption("s", args -> 0).onFilenames(args -> {
             filenames.add(args.get(0));
             return 1;
         }).onUnknownOption(unknown -> fail("Unexpected unknown option")).parse(argv);
-        assertArrayEquals(new String[]{"-s", ""}, argv);
+        assertEquals(ImmutableList.of("-s", ""), argv);
         assertEquals(List.of(""), filenames);
     }
 
@@ -170,16 +170,16 @@ public class ArgumentParserTest
             log.add(args.get(0));
             return 1;
         });
-        parser.parse(new String[]{"-s", "first"});
-        parser.parse(new String[]{"second", "-s"});
+        parser.parse(ImmutableList.of("-s", "first"));
+        parser.parse(ImmutableList.of("second", "-s"));
         assertEquals(List.of("s", "first", "second", "s"), log);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ArgumentParser.builder().parse(new String[]{"-s"}));
+                () -> ArgumentParser.builder().parse(ImmutableList.of("-s")));
     }
 
     /* Register fixture handlers through the same fluent API as application callers. */
-    private ArgumentParser parser(Map<String, ToIntFunction<List<String>>> callbacks)
+    private ArgumentParser parser(Map<String, ToIntFunction<ImmutableList<String>>> callbacks)
     {
         ArgumentParser parser = ArgumentParser.builder();
         callbacks.forEach(parser::onOption);
