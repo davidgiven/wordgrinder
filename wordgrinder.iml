@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/bin" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/javatests" isTestSource="true" />
+    </content>
+    <orderEntry type="jdk" jdkName="25 (2)" jdkType="JavaSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library name="Maven dependencies">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_carrotsearch_hppc/hppc-0.10.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_google_errorprone_error_prone_annotations/error_prone_annotations-2.52.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_google_guava_failureaccess/failureaccess-1.0.3.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_google_guava_guava/guava-33.8.0-android.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_google_j2objc_j2objc_annotations/j2objc-annotations-3.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+com_jcraft_jzlib/jzlib-1.1.3.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+commons_cli_commons_cli/commons-cli-1.11.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+joda_time_joda_time/joda-time-2.12.2.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_jspecify_jspecify/jspecify-1.0.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_mozilla_rhino/rhino-1.9.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_ow2_asm_asm/asm-9.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_ow2_asm_asm_analysis/asm-analysis-9.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_ow2_asm_asm_commons/asm-commons-9.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_ow2_asm_asm_tree/asm-tree-9.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_ow2_asm_asm_util/asm-util-9.10.1.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_cli/cli-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_c_incremental/teavm-c-incremental-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_classlib/teavm-classlib-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_core/teavm-core-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_extension_apis/teavm-extension-apis-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_extension_spi/teavm-extension-spi-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_extension_spi_util/teavm-extension-spi-util-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_interop/teavm-interop-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_jso/teavm-jso-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_jso_apis/teavm-jso-apis-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_jso_impl/teavm-jso-impl-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_metaprogramming_api/teavm-metaprogramming-api-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_metaprogramming_impl/teavm-metaprogramming-impl-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_platform/teavm-platform-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_asm/teavm-relocated-libs-asm-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_asm_analysis/teavm-relocated-libs-asm-analysis-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_asm_commons/teavm-relocated-libs-asm-commons-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_asm_tree/teavm-relocated-libs-asm-tree-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_asm_util/teavm-relocated-libs-asm-util-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_hppc/teavm-relocated-libs-hppc-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_relocated_libs_rhino/teavm-relocated-libs-rhino-0.16.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/third_party/+org_teavm_teavm_tooling/teavm-tooling-0.16.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="TEST">
+      <library name="JUnit dependencies">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/.obj/unix/build/+hamcrest/hamcrest-core-1.3.jar!/" />
+          <root url="jar://$MODULE_DIR$/.obj/unix/build/+junit4/junit-4.13.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>

@@ -4,5 +4,4 @@ bin/
 .ninja_log
 compile_commands.json
 .idea/
-wordgrinder.iml
 
