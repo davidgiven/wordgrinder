@@ -11,9 +11,9 @@ javalibrary(
         ]
     },
     deps=[
-        "java/com/cowlark/wordgrinder+teavm-extension-apis",
-        "java/com/cowlark/wordgrinder+teavm-extension-spi",
-        "java/com/cowlark/wordgrinder+teavm-extension-spi-util",
+        "third_party+org_teavm_teavm_extension_apis",
+        "third_party+org_teavm_teavm_extension_spi",
+        "third_party+org_teavm_teavm_extension_spi_util",
     ],
 )
 

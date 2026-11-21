@@ -7,5 +7,5 @@ javalibrary(
         f"com/cowlark/wordgrinder/nativeinterface/{f}": f"./{f}"
         for f in ["Colour.java", "Clipboard.java", "Display.java", "Screen.java", "System.java"]
     },
-    deps=["java/com/cowlark/wordgrinder+jspecify"],
+    deps=["third_party+org_jspecify_jspecify"],
 )

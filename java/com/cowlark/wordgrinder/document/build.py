@@ -15,7 +15,7 @@ javalibrary(
     },
     deps=GUAVA_DEPS + [
         "java/com/cowlark/wordgrinder/eventbus",
-        "java/com/cowlark/wordgrinder+jspecify",
+        "third_party+org_jspecify_jspecify",
         "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder/fileio",
         "java/com/cowlark/wordgrinder/addons/debug+settings",

@@ -16,9 +16,9 @@ javalibrary(
     },
     deps=[
         "java/com/cowlark/wordgrinder/nativeinterface",
-        "java/com/cowlark/wordgrinder+jspecify",
-        "java/com/cowlark/wordgrinder+teavm-interop",
-        "java/com/cowlark/wordgrinder+teavm-core",
+        "third_party+org_jspecify_jspecify",
+        "third_party+org_teavm_teavm_interop",
+        "third_party+org_teavm_teavm_core",
     ],
 )
 

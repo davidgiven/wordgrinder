@@ -8,5 +8,5 @@ javalibrary(
             "ScrapbookDocumentSetSettings.java",
         ]
     },
-    deps=["java/com/cowlark/wordgrinder/fileio", "java/com/cowlark/wordgrinder+jspecify"],
+    deps=["java/com/cowlark/wordgrinder/fileio", "third_party+org_jspecify_jspecify"],
 )

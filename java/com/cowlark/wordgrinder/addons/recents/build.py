@@ -8,5 +8,5 @@ javalibrary(
             "RecentsGlobalSettings.java",
         ]
     },
-    deps=["java/com/cowlark/wordgrinder+jspecify"],
+    deps=["third_party+org_jspecify_jspecify"],
 )

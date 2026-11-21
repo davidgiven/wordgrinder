@@ -11,7 +11,7 @@ junit4(
     deps=[
         "java/com/cowlark/wordgrinder/document",
         "java/com/cowlark/wordgrinder/nativeinterface",
-        "java/com/cowlark/wordgrinder+jspecify",
+        "third_party+org_jspecify_jspecify",
     ],
 )
 
@@ -38,6 +38,6 @@ junit4(
         "java/com/cowlark/wordgrinder/document",
         "java/com/cowlark/wordgrinder/eventbus",
         "java/com/cowlark/wordgrinder/nativeinterface",
-        "java/com/cowlark/wordgrinder+jspecify",
+        "third_party+org_jspecify_jspecify",
     ],
 )

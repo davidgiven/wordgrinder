@@ -7,7 +7,7 @@ junit4(
         for f in ["SettingsTest.java"]
     },
     deps=[
-        "java/com/cowlark/wordgrinder+jspecify",
+        "third_party+org_jspecify_jspecify",
         "java/com/cowlark/wordgrinder/fileio",
         "java/com/cowlark/wordgrinder/document",
         "java/com/cowlark/wordgrinder/addons/debug+settings",
