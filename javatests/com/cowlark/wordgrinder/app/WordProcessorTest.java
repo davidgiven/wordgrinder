@@ -50,7 +50,7 @@ public class WordProcessorTest
         fixture.keys("x");
         fixture.run();
         assertEquals(List.of("changed", "waiting", "idle", "x", "waiting"), events);
-        assertEquals(2, fixture.processor.redraws);
+        assertEquals(2, fixture.redraws);
     }
 
     /* Every grouped master binding is inert; the direct redraw binding still runs. */
@@ -70,8 +70,7 @@ public class WordProcessorTest
                 "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
-        assertEquals(0, fixture.processor.resizes);
-        assertEquals(2, fixture.processor.redraws);
+        assertEquals(2, fixture.redraws);
     }
 
     /* Unknown keys replace dismissed messages; resizing retains the current warning. */
@@ -92,7 +91,7 @@ public class WordProcessorTest
                         "Welcome to WordGrinder! Press ESC to show the menu.",
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
                         "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.writes);
-        assertEquals(4, fixture.processor.redraws);
+        assertEquals(4, fixture.redraws);
     }
 
     /* Multiple queued messages appear newest first from the bottom upwards. */
@@ -106,7 +105,7 @@ public class WordProcessorTest
         assertEquals(
                 List.of("Welcome to WordGrinder! Press ESC to show the menu.", "second", "first"),
                 fixture.writes);
-        assertEquals(1, fixture.processor.redraws);
+        assertEquals(1, fixture.redraws);
     }
 
     /* Mouse events bypass text dispatch, and system quit requests are cancelled after input. */
@@ -149,7 +148,7 @@ public class WordProcessorTest
         assertTrue(fixture.processor.dialogues
                 .get(0)
                 .contains("IllegalStateException: test failure"));
-        assertEquals(2, fixture.processor.redraws);
+        assertEquals(2, fixture.redraws);
     }
 
     /* An Error terminates the intentionally endless loop without entering its recovery handler. */
@@ -159,26 +158,11 @@ public class WordProcessorTest
 
     private static class RecordingProcessor extends WordProcessor
     {
-        int redraws;
-        int resizes;
         final List<String> dialogues = new ArrayList<>();
 
         RecordingProcessor(Ui ui, Word renderer, EventBus bus)
         {
             super(ui, renderer, bus);
-        }
-
-        @Override
-        protected void redrawScreen()
-        {
-            redraws++;
-            super.redrawScreen();
-        }
-
-        @Override
-        protected void resizeScreen()
-        {
-            resizes++;
         }
 
         @Override
@@ -195,6 +179,7 @@ public class WordProcessorTest
         final Queue<InputEvent> input = new ArrayDeque<>();
         final List<String> writes = new ArrayList<>();
         final EventBus bus = new EventBus();
+        int redraws;
         boolean idling;
         final Screen screen = (Screen) Proxy.newProxyInstance(
                 Screen.class.getClassLoader(),
@@ -203,6 +188,11 @@ public class WordProcessorTest
                     return switch (method.getName())
                     {
                         case "getScreenSize" -> new int[]{80, 24};
+                        case "clearScreen" ->
+                        {
+                            redraws++;
+                            yield null;
+                        }
                         case "write" ->
                         {
                             writes.add((String) args[2]);

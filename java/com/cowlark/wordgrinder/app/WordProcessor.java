@@ -1,5 +1,6 @@
 package com.cowlark.wordgrinder.app;
 
+import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.Idle;
@@ -9,26 +10,33 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import com.cowlark.wordgrinder.ui.Action;
+import com.cowlark.wordgrinder.ui.Action.ActionResult;
 import com.cowlark.wordgrinder.ui.Ui;
-import com.cowlark.wordgrinder.ui.Widget.Action;
+import com.cowlark.wordgrinder.ui.Widget;
 import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
+import com.cowlark.wordgrinder.utils.Injector;
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableMap;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+
+import static com.cowlark.wordgrinder.ui.Action.ActionResult.SUCCEEDED;
 
 /**
  * The word-processor input loop, translated from main.lua.
  */
 public class WordProcessor
 {
-    /* Retain the injected UI, renderer and application event bus. */
+    private final Injector injector;
     private final Ui ui;
     private final Screen screen;
     private final Word wordRenderer;
+    private final Navigation navigation;
     private final EventBus eventBus;
     private static final double IDLE_TIME = (Ui.BLINK_ON_TIME + Ui.BLINK_OFF_TIME) * 5;
 
@@ -43,10 +51,15 @@ public class WordProcessor
 
     public WordProcessor(Ui ui, Word wordRenderer, EventBus eventBus)
     {
+        this.injector = new Injector();
         this.ui = ui;
         screen = ui.getScreen();
         this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
+        this.navigation = new Navigation(this);
+
+        /* Inject this processor into actions that operate on its current state. */
+        injector.bindInstance(WordProcessor.class, this);
     }
 
     /**
@@ -74,36 +87,45 @@ public class WordProcessor
         messages.clear();
     }
 
-    /* Grouped callbacks intentionally do nothing until command dispatch is ported. */
-    private Runnable groupCallback(Runnable... callbacks)
+    private <T extends Action> T callback(Class<T> callback)
     {
-        return () -> {
-        };
+        return injector.create(callback);
+    }
+
+    /* Grouped callbacks intentionally do nothing until command dispatch is ported. */
+    private Action callbacks(Action... callbacks)
+    {
+        return () -> SUCCEEDED;
     }
 
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
-    protected void resizeScreen()
+    public static class ResizeScreenAction implements Action
     {
-        command(ResizeScreenCommand::new).run();
-    }
 
-    private class ResizeScreenCommand extends Command<ResizeScreenCommand>
-    {
-        public void run()
+        @Override
+        public ActionResult execute()
         {
-
+            return SUCCEEDED;
         }
     }
 
     /* Draw the available desktop and messages; document and status-bar rendering are pending. */
-    protected void redrawScreen()
+    public static class RedrawScreenAction implements Action
     {
-        command(RedrawScreenCommand::new).run();
-    }
+        private WordProcessor wordProcessor;
+        private Ui ui;
+        private Screen screen;
 
-    private class RedrawScreenCommand extends Command<RedrawScreenCommand>
-    {
-        public void run()
+        @Inject
+        public RedrawScreenAction(WordProcessor wp)
+        {
+            wordProcessor = wp;
+            ui = wp.ui;
+            screen = wp.screen;
+        }
+
+        @Override
+        public ActionResult execute()
         {
             ui.setColour(null, "Desktop");
             screen.clearScreen();
@@ -111,33 +133,46 @@ public class WordProcessor
             /* Stack messages upwards from the bottom, with the newest message last on screen. */
             int[] size = screen.getScreenSize();
             int y = size[1] - 1;
-            if (!messages.isEmpty())
+            if (!wordProcessor.messages.isEmpty())
             {
                 ui.setColour("MessageFG", "MessageBG");
                 screen.setReverse();
-                for (int i = messages.size() - 1; i >= 0 && y >= 0; i--, y--)
+                for (int i = wordProcessor.messages.size() - 1; i >= 0 && y >= 0; i--, y--)
                 {
                     screen.clearArea(0, y, size[0] - 1, y);
-                    screen.write(0, y, messages.get(i));
+                    screen.write(0, y, wordProcessor.messages.get(i));
                 }
                 screen.setNormal();
             }
+
+            return SUCCEEDED;
+        }
+    }
+
+    public static class TerminateProgramAction implements Action
+    {
+        @Override
+        public ActionResult execute()
+        {
+            return SUCCEEDED;
         }
     }
 
     /* Master bindings take precedence over printable input and future menu accelerators. */
-    private void handleKeyEvent(String key, Map<String, Runnable> masterKeymap)
+    private void handleKeyEvent(String key, Map<String, Action> masterKeymap)
     {
-        Runnable callback = masterKeymap.get(key);
+        Action callback = masterKeymap.get(key);
         if (callback != null)
-            callback.run();
+            callback.execute();
         else if (!key.startsWith("KEY_"))
         {
+            execute(CheckpointAction.class);
             /* TODO: Cmd.Checkpoint() and Cmd.TypeWhileSelected(). */
             KeyTyped payload = new KeyTyped(key);
             eventBus.fireEvent(payload);
             /* TODO: Cmd.InsertStringIntoWord(payload.value). */
-        } else
+        }
+        else
         {
             /* Menu accelerator lookup is deferred until menus are ported. */
             nonmodalMessage(key.substring(4) + " is not bound --- try ESCAPE for a menu");
@@ -154,7 +189,8 @@ public class WordProcessor
                 oldMouseX = mouse.x();
                 oldMouseY = mouse.y();
                 /* TODO: Cmd.UnsetMark(), Cmd.GotoXYPosition(x, y), Cmd.SetMark(). */
-            } else
+            }
+            else
             {
                 /* TODO: Cmd.GotoXYPosition(mouse.x(), mouse.y()). */
             }
@@ -166,9 +202,13 @@ public class WordProcessor
         oldMouseButton = mouse.b();
     }
 
-    /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives
-    . */
-    private void eventLoop(Map<String, Runnable> masterKeymap)
+    public <T extends Action> void execute(Class<T> theClass)
+    {
+        callback(theClass).execute();
+    }
+
+    /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives. */
+    private void eventLoop(Map<String, Action> masterKeymap)
     {
         while (true)
         {
@@ -180,7 +220,7 @@ public class WordProcessor
             {
                 if (redrawPending)
                 {
-                    redrawScreen();
+                    execute(RedrawScreenAction.class);
                     redrawPending = false;
                 }
                 input = ui.getCharWithBlinkingCursor(IDLE_TIME);
@@ -213,22 +253,14 @@ public class WordProcessor
                 .setTitle(title)
                 .setHeight(2)
                 .setStretchy(true)
-                .setRedraw(this::redrawScreen)
+                .setRedraw(() -> execute(RedrawScreenAction.class))
                 .setHelpText("press SPACE to continue")
-                .on(" ", Action.CONFIRM)
+                .on(" ", Widget.Action.CONFIRM)
                 .add(new WrappedLabelWidget(wordRenderer, eventBus)
-                        .setBounds(1, 1, -1, -3)
-                        .setValue(text))
+                             .setBounds(1, 1, -1, -3)
+                             .setValue(text))
                 .run();
         queueRedraw();
-    }
-
-    /**
-     * Creates a Command ready for execution.
-     */
-    public <T extends Command<T>> T command(Supplier<T> constructor)
-    {
-        return constructor.get().init(this);
     }
 
     /**
@@ -237,30 +269,31 @@ public class WordProcessor
     public void run()
     {
         /* Cmd-based groups remain inert, including resize's grouped redraw callback. */
-        ImmutableMap<String, Runnable> masterKeymap = ImmutableMap
-                .<String, Runnable>builder()
-                .put("KEY_RESIZE", groupCallback(this::resizeScreen, this::redrawScreen))
-                .put("KEY_REDRAW", this::redrawScreen)
+        ImmutableMap<String, Action> masterKeymap = ImmutableMap
+                .<String, Action>builder()
+                .put("KEY_RESIZE", callbacks(callback(ResizeScreenAction.class), callback(RedrawScreenAction.class)))
+                .put("KEY_REDRAW", callback(RedrawScreenAction.class))
                 .put(
                         " ",
-                        groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
-                 */.put("KEY_RETURN", groupCallback()) /* Cmd.Checkpoint, TypeWhileSelected,
+                        callback(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
+                 */.put("KEY_RETURN", callback(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
                         SplitCurrentParagraph. */.put(
                         "KEY_ESCAPE",
-                        groupCallback()) /* Cmd.ActivateMenu. */.put(
+                        callbacks()) /* Cmd.ActivateMenu. */.put(
                         "KEY_MENU",
-                        groupCallback()) /* Cmd.ActivateMenu. */.put(
+                        callbacks()) /* Cmd.ActivateMenu. */.put(
                         "KEY_QUIT",
-                        groupCallback()) /* Cmd.TerminateProgram. */.build();
+                        callback(TerminateProgramAction.class)).build();
 
         /* Keep the welcome message and restart after reporting an internal error. */
         nonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.");
-        while (true)
+        for (; ; )
         {
             try
             {
                 eventLoop(masterKeymap);
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 StringWriter traceback = new StringWriter();
                 e.printStackTrace(new PrintWriter(traceback));

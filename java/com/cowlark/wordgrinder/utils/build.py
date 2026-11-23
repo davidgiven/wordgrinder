@@ -5,7 +5,7 @@ javalibrary(
     name="utils",
     srcitems={
         f"com/cowlark/wordgrinder/utils/{f}": f"./{f}"
-        for f in ["ArgumentParser.java"]
+        for f in ["ArgumentParser.java", "Injector.java"]
     },
     deps=GUAVA_DEPS,
 )

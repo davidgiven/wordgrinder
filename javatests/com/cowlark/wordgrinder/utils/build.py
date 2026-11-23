@@ -8,3 +8,12 @@ junit4(
     },
     deps=["java/com/cowlark/wordgrinder/utils"],
 )
+
+junit4(
+    name="injector-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/utils/{f}": f"./{f}"
+        for f in ["InjectorTest.java"]
+    },
+    deps=["java/com/cowlark/wordgrinder/utils"],
+)
