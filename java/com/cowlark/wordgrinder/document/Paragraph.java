@@ -69,10 +69,16 @@ public final class Paragraph implements Iterable<String>
      */
     public Paragraph copy()
     {
-        /* Copy words and style without the assigned paragraph number. */
+        return withWords(words);
+    }
+
+    /** Replaces the words while preserving paragraph style and rendering collaborators. */
+    public Paragraph withWords(Iterable<String> replacement)
+    {
+        /* Rebuild the paragraph so its cached layout is recalculated for the new text. */
         return builder(screen, wordRenderer, eventBus)
                 .setDocumentStyle(style)
-                .setWords(words)
+                .setWords(replacement)
                 .build();
     }
 

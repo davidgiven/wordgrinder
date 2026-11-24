@@ -1,12 +1,18 @@
 package com.cowlark.wordgrinder.document;
 
+import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.fileio.Dumpable;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import java.util.ArrayList;
 import java.util.List;
 
 /** The stored and transient state of a document. Position fields retain Lua's one-based values. */
 public class Document
 {
+    /* Share the normal paragraph style among newly created documents. */
+    private static final DocumentStyle DEFAULT_STYLE =
+            new DocumentStyle("Plain text", "P", 1, 1, null, null, null, 0, null, null);
+
     /* Store the document's paragraphs and view settings. */
     @Dumpable public List<Paragraph> paragraphs = new ArrayList<>();
     @Dumpable public String name;
@@ -38,6 +44,15 @@ public class Document
     public int bottomWord;
     public int redrawParagraph;
     public int redrawWord;
+
+    /** Starts the cursor in a single blank paragraph containing one empty word. */
+    public Document(Screen screen, Word wordRenderer, EventBus eventBus)
+    {
+        paragraphs.add(Paragraph.builder(screen, wordRenderer, eventBus)
+                .setDocumentStyle(DEFAULT_STYLE)
+                .setWords("")
+                .build());
+    }
 
     /** An undo or redo snapshot containing paragraphs and a cursor position. */
     public record ShadowDocument(List<Paragraph> paragraphs, int cursorParagraph, int cursorWord, int cursorOffset)

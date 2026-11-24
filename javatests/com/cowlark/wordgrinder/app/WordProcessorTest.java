@@ -2,9 +2,13 @@ package com.cowlark.wordgrinder.app;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.cowlark.wordgrinder.document.Document;
+import com.cowlark.wordgrinder.document.DocumentStyle;
+import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.*;
 import com.cowlark.wordgrinder.nativeinterface.Display;
@@ -26,6 +30,70 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* New editors can navigate immediately with the cursor on a blank word. */
+    @Test
+    public void startsWithOneSelectedDocumentAndOneBlankParagraph()
+    {
+        Fixture fixture = new Fixture();
+        var set = fixture.processor.getDocumentSet();
+        Document current = fixture.processor.getCurrentDocument();
+
+        /* Use the same document for the selection, list and name index. */
+        assertEquals(List.of(current), set.documents);
+        assertSame(current, set.documentIndex.get("main"));
+        assertEquals(1, current.paragraphs.size());
+        assertEquals(List.of(""), current.paragraphs.getFirst().words);
+        assertSame(ActionResult.SUCCEEDED, new Navigation.GotoEndOfDocumentAction(fixture.processor).execute());
+        assertEquals(1, current.cursorOffset);
+    }
+
+    /* Preserve one-based offsets while moving over supplementary Unicode characters. */
+    @Test
+    public void navigationMovesOverCodePointsAndAcrossParagraphs()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        document.paragraphs.set(0, fixture.paragraph("first", "😀z"));
+        document.paragraphs.add(fixture.paragraph("last"));
+        document.cursorWord = 2;
+
+        /* Moving back within the second word must stay in that word. */
+        assertSame(ActionResult.SUCCEEDED, new Navigation.GotoNextCharAction(fixture.processor).execute());
+        assertEquals(3, document.cursorOffset);
+        assertSame(ActionResult.SUCCEEDED, new Navigation.GotoPreviousWordAction(fixture.processor).execute());
+        assertEquals(2, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+
+        /* A wrapped character move at the end of the word enters the next paragraph. */
+        new Navigation.GotoEndOfWordAction(fixture.processor).execute();
+        assertSame(ActionResult.SUCCEEDED, new Navigation.GotoNextCharWAction(fixture.processor).execute());
+        assertEquals(2, document.cursorParagraph);
+        assertEquals(1, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+        assertSame(ActionResult.FAILED, new Navigation.GotoNextParagraphAction(fixture.processor).execute());
+    }
+
+    /* Join styled text across a paragraph boundary and mark the document set dirty. */
+    @Test
+    public void navigationDeletesAcrossParagraphBoundaries()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        String bold = Word.createStyleByte(Word.BOLD);
+        document.paragraphs.set(0, fixture.paragraph(bold + "first"));
+        document.paragraphs.add(fixture.paragraph("second", "third"));
+        document.cursorOffset = bold.length() + "first".length() + 1;
+
+        /* Delete at the word end to merge it with the first word of the next paragraph. */
+        assertSame(ActionResult.SUCCEEDED, new Navigation.DeleteNextCharAction(fixture.processor).execute());
+        assertEquals(1, document.paragraphs.size());
+        assertEquals(List.of(bold + "first" + Word.createStyleByte(0) + "second", "third"),
+                document.paragraphs.getFirst().words);
+        assertEquals(bold.length() + "first".length() + 1, document.cursorOffset);
+        assertTrue(fixture.processor.getDocumentSet().changed);
+        assertTrue(fixture.processor.getDocumentSet().justChanged);
+    }
+
     /* Flush deferred events before waiting and defer idle redraws until the next loop pass. */
     @Test
     public void dispatchesEventsAndRedrawsAfterIdle()
@@ -282,6 +350,16 @@ public class WordProcessorTest
                 });
         final RecordingProcessor processor =
                 new RecordingProcessor(new Injector(), ui, screen, new Word(display), bus);
+
+        /* Build model paragraphs with the same rendering environment as the editor. */
+        Paragraph paragraph(String... words)
+        {
+            return Paragraph.builder(screen, new Word(display), bus)
+                    .setDocumentStyle(new DocumentStyle("Paragraph", "P", 0, 0, null, null,
+                            null, null, null, null))
+                    .setWords(words)
+                    .build();
+        }
 
         void keys(String... keys)
         {

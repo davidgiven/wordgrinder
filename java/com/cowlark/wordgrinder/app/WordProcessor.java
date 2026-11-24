@@ -35,7 +35,7 @@ public class WordProcessor
     private final MenuTree menuTree;
 
     /* Own the active document set and its per-set preferences. */
-    private final DocumentSet documentSet = new DocumentSet();
+    private final DocumentSet documentSet;
 
     /* Dispatch editor events and determine when the input loop is idle. */
     private final EventBus eventBus;
@@ -59,6 +59,9 @@ public class WordProcessor
         this.eventBus = eventBus;
         this.navigation = navigation;
         this.menuTree = menuTree;
+
+        /* Create the initial document with the editor's rendering collaborators. */
+        this.documentSet = new DocumentSet(screen, wordRenderer, eventBus);
     }
 
     /** Returns the document set owned by this editor. */
@@ -79,6 +82,12 @@ public class WordProcessor
     public void nonmodalMessage(String text)
     {
         messages.add(text);
+        queueRedraw();
+    }
+
+    /* Schedule a repaint on the next pass through the input loop. */
+    void queueRedraw()
+    {
         eventBus.fireAsyncEvent(RedrawEvent.INSTANCE);
     }
 

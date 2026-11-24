@@ -16,7 +16,8 @@ public interface Action
     /* Distinguish successful operations from failed ones. */
     class ActionResult
     {
-        public static ActionResult SUCCEEDED = new ActionResult();
+        public static final ActionResult SUCCEEDED = new ActionResult();
+        public static final ActionResult FAILED = new ActionResult();
 
         private @Nullable String message = null;
         private @Nullable Menu menu = null;
