@@ -5,6 +5,7 @@
 
 package com.cowlark.wordgrinder.document;
 
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 
 import org.jspecify.annotations.Nullable;
@@ -36,6 +37,7 @@ public final class Word
     /* Adapt the injected display to the styled-word renderer. */
     private final Renderer renderer;
 
+    @Inject
     public Word(Display display)
     {
         renderer = new Renderer()

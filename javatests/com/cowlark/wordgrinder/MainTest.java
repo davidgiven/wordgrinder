@@ -1,9 +1,7 @@
 package com.cowlark.wordgrinder;
 
-import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.EventBus;
-import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
+import com.cowlark.wordgrinder.utils.Injector;
 import com.cowlark.wordgrinder.nativeinterface.System;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
@@ -155,8 +153,17 @@ public class MainTest
             public String getExecutablePath() { return null; }
             public void exit(int status) { exits.add(status); }
         };
-        final Main main = new Main(unusedBackend(Screen.class), system,
-                new Word(unusedBackend(Display.class)), new EventBus());
+        final Main main = createMain();
+
+        /* Resolve the entry point with a backend that rejects display initialisation. */
+        private Main createMain()
+        {
+            Injector injector = new Injector();
+            injector.bindInstance(Injector.class, injector);
+            injector.bindInstance(Screen.class, unusedBackend(Screen.class));
+            injector.bindInstance(System.class, system);
+            return injector.create(Main.class);
+        }
     }
 
     private record Result(String output, List<Integer> exits) {}

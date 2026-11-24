@@ -3,15 +3,15 @@ package com.cowlark.wordgrinder;
 import static java.lang.System.err;
 
 import com.cowlark.wordgrinder.app.WordProcessor;
-import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.EventBus;
+import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
 import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
 import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
-import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.utils.ArgumentParser;
+import com.cowlark.wordgrinder.utils.Injector;
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -20,31 +20,33 @@ public class Main
 {
     /* Keep backend selection separate from application execution. */
     private final Screen screen;
-    private final Ui ui;
+    private final Injector injector;
     private final System system;
-    private final Word wordRenderer;
-    private final EventBus eventBus;
 
     /* Retain configuration overrides and command-line exit state. */
     private String configFile;
     private boolean exitRequested;
 
-    public Main(Screen screen, System system, Word wordRenderer, EventBus eventBus)
+    /* Receive the selected backend and defer editor construction until startup. */
+    @Inject
+    public Main(Injector injector, Screen screen, System system)
     {
         this.screen = screen;
         this.system = system;
-        this.wordRenderer = wordRenderer;
-        this.eventBus = eventBus;
-        ui = new Ui(screen);
+        this.injector = injector;
         configFile = system.getConfigDirectory() + "/startup.lua";
     }
 
     /* The entry point chooses the backend; application logic receives its interface. */
     public static void main(String[] args) throws IOException
     {
-        DisplayImpl display = new DisplayImpl();
-        new Main(new ScreenImpl(display), new SystemImpl(), new Word(display), new EventBus()).run(
-                args);
+        Injector injector = new Injector();
+        Display display = new DisplayImpl();
+        injector.bindInstance(Injector.class, injector);
+        injector.bindInstance(Display.class, display);
+        injector.bindInstance(Screen.class, new ScreenImpl(display));
+        injector.bindInstance(System.class, new SystemImpl());
+        injector.create(Main.class).run(args);
     }
 
     /* Preserve the Lua help text, including its configuration-file placeholder. */
@@ -196,7 +198,7 @@ public class Main
             screen.initScreen();
             try
             {
-                new WordProcessor(ui, wordRenderer, eventBus).run();
+                injector.create(WordProcessor.class).run();
             } finally
             {
                 screen.deinitScreen();

@@ -1,12 +1,11 @@
 package com.cowlark.wordgrinder.app;
 
-import com.cowlark.wordgrinder.ui.Action;
-import com.cowlark.wordgrinder.ui.Action.ActionResult;
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 
-public class Navigation {
-    private final WordProcessor wordProcessor;
-
-    public Navigation(WordProcessor wordProcessor){
-        this.wordProcessor = wordProcessor;
+public class Navigation
+{
+    @Inject
+    public Navigation()
+    {
     }
 }

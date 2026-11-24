@@ -5,6 +5,7 @@
 
 package com.cowlark.wordgrinder.eventbus;
 
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +26,7 @@ public final class EventBus
     /**
      * Creates an independent bus with no listeners or pending events.
      */
+    @Inject
     public EventBus()
     {
     }

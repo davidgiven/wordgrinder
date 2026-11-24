@@ -4,6 +4,7 @@
 
 package com.cowlark.wordgrinder.ui;
 
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
@@ -26,6 +27,7 @@ public final class Ui
     private boolean quitting;
     private Palette palette = new DarkPalette();
 
+    @Inject
     public Ui(Screen screen)
     {
         this.screen = screen;

@@ -8,6 +8,7 @@ junit4(
         for f in ["WordProcessorTest.java"]
     },
     deps=GUAVA_DEPS + [
+        "java/com/cowlark/wordgrinder/utils",
         "java/com/cowlark/wordgrinder/app",
         "java/com/cowlark/wordgrinder/document",
         "java/com/cowlark/wordgrinder/nativeinterface",

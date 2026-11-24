@@ -9,5 +9,5 @@ javalibrary(
             "UndoAddon.java",
         ]
     },
-    deps = ["java/com/cowlark/wordgrinder/ui"]
+    deps=["java/com/cowlark/wordgrinder/utils", "java/com/cowlark/wordgrinder/ui"]
 )

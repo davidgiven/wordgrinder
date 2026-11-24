@@ -49,17 +49,16 @@ public class WordProcessor
     private int oldMouseX;
     private int oldMouseY;
 
-    public WordProcessor(Ui ui, Word wordRenderer, EventBus eventBus)
+    /* Share the application injector with the action dispatcher. */
+    @Inject
+    public WordProcessor(Injector injector, Ui ui, Screen screen, Word wordRenderer, EventBus eventBus, Navigation navigation)
     {
-        this.injector = new Injector();
+        this.injector = injector;
         this.ui = ui;
-        screen = ui.getScreen();
+        this.screen = screen;
         this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
-        this.navigation = new Navigation(this);
-
-        /* Inject this processor into actions that operate on its current state. */
-        injector.bindInstance(WordProcessor.class, this);
+        this.navigation = navigation;
     }
 
     /**
@@ -101,6 +100,12 @@ public class WordProcessor
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
     public static class ResizeScreenAction implements Action
     {
+        /* Expose this constructor to the action injector. */
+        @Inject
+        public ResizeScreenAction()
+        {
+        }
+
 
         @Override
         public ActionResult execute()
@@ -151,6 +156,12 @@ public class WordProcessor
 
     public static class TerminateProgramAction implements Action
     {
+        /* Expose this constructor to the action injector. */
+        @Inject
+        public TerminateProgramAction()
+        {
+        }
+
         @Override
         public ActionResult execute()
         {

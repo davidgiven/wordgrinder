@@ -16,5 +16,5 @@ javalibrary(
             "EventToken.java",
         ]
     },
-    deps=["third_party+org_jspecify_jspecify"],
+    deps=["java/com/cowlark/wordgrinder/utils", "third_party+org_jspecify_jspecify"],
 )

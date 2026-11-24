@@ -17,6 +17,7 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.Ui;
+import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayDeque;
@@ -160,9 +161,12 @@ public class WordProcessorTest
     {
         final List<String> dialogues = new ArrayList<>();
 
-        RecordingProcessor(Ui ui, Word renderer, EventBus bus)
+        /* Register the recording subclass under the type used by injected actions. */
+        RecordingProcessor(Injector injector, Ui ui, Screen screen, Word renderer, EventBus bus)
         {
-            super(ui, renderer, bus);
+            /* Navigation is unused by the input-loop scenarios in this fixture. */
+            super(injector, ui, screen, renderer, bus, null);
+            injector.bindInstance(WordProcessor.class, this);
         }
 
         @Override
@@ -222,7 +226,8 @@ public class WordProcessorTest
                 (proxy, method, args) -> {
                     throw new AssertionError("Unexpected display call: " + method.getName());
                 });
-        final RecordingProcessor processor = new RecordingProcessor(ui, new Word(display), bus);
+        final RecordingProcessor processor =
+                new RecordingProcessor(new Injector(), ui, screen, new Word(display), bus);
 
         void keys(String... keys)
         {

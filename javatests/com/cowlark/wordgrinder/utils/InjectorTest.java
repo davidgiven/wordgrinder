@@ -1,5 +1,6 @@
 package com.cowlark.wordgrinder.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
@@ -17,11 +18,18 @@ public class InjectorTest
     public void rejectsRecursiveConstructorDependencies()
     {
         Injector injector = new Injector();
-        for (Class<?> type : new Class<?>[] {SelfDependent.class, First.class}) {
-            IllegalStateException failure =
-                    assertThrows(IllegalStateException.class, () -> injector.create(type));
-            assertTrue(failure.getMessage().contains(type.getName()));
-        }
+        String prefix = "Recursive constructor dependency: ";
+        String self = SelfDependent.class.getName();
+        String first = First.class.getName();
+        String second = Second.class.getName();
+
+        /* Include the repeated type at the end of each chain. */
+        assertEquals(prefix + self + " -> " + self,
+                assertThrows(IllegalStateException.class,
+                        () -> injector.create(SelfDependent.class)).getMessage());
+        assertEquals(prefix + first + " -> " + second + " -> " + first,
+                assertThrows(IllegalStateException.class,
+                        () -> injector.create(First.class)).getMessage());
     }
 
     /* Select the annotated constructor and resolve both direct and transitive dependencies. */

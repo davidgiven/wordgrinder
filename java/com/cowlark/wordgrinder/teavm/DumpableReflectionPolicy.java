@@ -3,13 +3,18 @@ package com.cowlark.wordgrinder.teavm;
 import org.teavm.extension.spi.reflection.SimpleReflectionPolicy;
 
 /**
- * Enables serialization field access and nested-object construction in the compiled application.
+ * Enables reflection for serialisation and constructor injection.
  */
 public final class DumpableReflectionPolicy extends SimpleReflectionPolicy
 {
     @Override
     protected void setup()
     {
+        /* Preserve injectable constructors in the native build. */
+        var injectable = withAnnotation("com.cowlark.wordgrinder.utils.Injector$Inject");
+        allClasses().reflectableMethods(method -> injectable.test(method));
+
+        /* Preserve serialised fields and constructors for nested values. */
         var dumpable = withAnnotation("com.cowlark.wordgrinder.fileio.Dumpable");
         var remaining = withAnnotation("com.cowlark.wordgrinder.fileio.RemainingDumpables");
         allClasses().reflectableFields(dumpable.or(remaining));
