@@ -136,7 +136,7 @@ public class WordProcessorTest
         List<String> positions = new ArrayList<>();
         var original = Action.of(Navigation.GotoXYPositionAction.class);
         Injector.INSTANCE.bindInstance(Navigation.GotoXYPositionAction.class,
-                new Navigation.GotoXYPositionAction()
+                new Navigation.GotoXYPositionAction(fixture.processor)
                 {
                     @Override
                     public ActionResult execute(int x, int y)

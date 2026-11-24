@@ -14,9 +14,8 @@ public final class DumpableReflectionPolicy extends SimpleReflectionPolicy
         var injectable = withAnnotation("com.cowlark.wordgrinder.utils.Injector$Inject");
         allClasses().reflectableMethods(method -> injectable.test(method));
 
-        /* Keep the implicit constructors on Navigation and its commands injectable. */
-        String navigation = "com.cowlark.wordgrinder.app.Navigation";
-        selectClasses(cls -> cls.name().equals(navigation) || cls.name().startsWith(navigation + "$"))
+        /* Keep Navigation's implicit constructor available to the injector. */
+        selectClass("com.cowlark.wordgrinder.app.Navigation")
                 .reflectableMethods(withParameterCount(0).and(named("<init>")).and(PUBLIC));
 
         /* Preserve serialised fields and constructors for nested values. */

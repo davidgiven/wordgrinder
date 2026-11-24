@@ -1,6 +1,8 @@
 package com.cowlark.wordgrinder.app;
 
 import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
+import com.cowlark.wordgrinder.document.Document;
+import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.*;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
@@ -32,8 +34,10 @@ public class WordProcessor
     private final Navigation navigation;
     private final MenuTree menuTree;
 
-    /* Keep menu preferences across activations until an active document set supplies them. */
-    private final MenuSettings menuSettings = new MenuSettings();
+    /* Own the active document set and its per-set preferences. */
+    private final DocumentSet documentSet = new DocumentSet();
+
+    /* Dispatch editor events and determine when the input loop is idle. */
     private final EventBus eventBus;
     private static final double IDLE_TIME = (Ui.BLINK_ON_TIME + Ui.BLINK_OFF_TIME) * 5;
 
@@ -55,6 +59,18 @@ public class WordProcessor
         this.eventBus = eventBus;
         this.navigation = navigation;
         this.menuTree = menuTree;
+    }
+
+    /** Returns the document set owned by this editor. */
+    public DocumentSet getDocumentSet()
+    {
+        return documentSet;
+    }
+
+    /** Returns the current selection in the document set. */
+    public Document getCurrentDocument()
+    {
+        return getDocumentSet().current;
     }
 
     /**
@@ -258,7 +274,7 @@ public class WordProcessor
         public ActionResult execute()
         {
             return menuTree.activate(MenuDefinitions.TOPLEVEL,
-                    wordProcessor.menuSettings,
+                    wordProcessor.getDocumentSet().menu,
                     () -> eventBus.fireEvent(RedrawEvent.INSTANCE),
                     wordProcessor::nonmodalMessage);
         }
