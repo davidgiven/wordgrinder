@@ -14,6 +14,8 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.Ui;
+import com.cowlark.wordgrinder.ui.Action;
+import com.cowlark.wordgrinder.ui.Action.ActionResult;
 import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
@@ -129,7 +131,31 @@ public class WordProcessorTest
                 new MouseInputEvent(4, 5, false, false)));
         fixture.keys("z");
         fixture.ui.requestQuit();
-        fixture.run();
+
+        /* Record mouse dispatch independently of the unimplemented navigation command. */
+        List<String> positions = new ArrayList<>();
+        var original = Action.of(Navigation.GotoXYPositionAction.class);
+        Injector.INSTANCE.bindInstance(Navigation.GotoXYPositionAction.class,
+                new Navigation.GotoXYPositionAction()
+                {
+                    @Override
+                    public ActionResult execute(int x, int y)
+                    {
+                        positions.add(x + "," + y);
+                        return ActionResult.SUCCEEDED;
+                    }
+                });
+        try
+        {
+            fixture.run();
+        }
+        finally
+        {
+            Injector.INSTANCE.bindInstance(Navigation.GotoXYPositionAction.class, original);
+        }
+
+        /* Press and drag move the cursor, and printable input still reaches the event bus. */
+        assertEquals(List.of("2,3", "4,5"), positions);
         assertEquals(List.of("z"), typed);
         assertFalse(fixture.ui.isQuitting());
     }
@@ -185,6 +211,7 @@ public class WordProcessorTest
             injector.bindInstance(WordProcessor.class, this);
 
             /* Replace shared actions that retain dependencies from the previous fixture. */
+            Injector.INSTANCE.bindInstance(WordProcessor.class, this);
             Injector.INSTANCE.bindInstance(RedrawScreenAction.class, injector.create(RedrawScreenAction.class));
             Injector.INSTANCE.bindInstance(ActivateMenuAction.class, injector.create(ActivateMenuAction.class));
         }
