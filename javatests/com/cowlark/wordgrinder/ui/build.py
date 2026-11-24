@@ -52,3 +52,18 @@ junit4(
         "third_party+org_jspecify_jspecify",
     ],
 )
+
+junit4(
+    name="menu-tree-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
+        for f in ["MenuTreeTest.java", "TestScreen.java"]
+    },
+    deps=[
+        "java/com/cowlark/wordgrinder/ui",
+        "java/com/cowlark/wordgrinder/document",
+        "java/com/cowlark/wordgrinder/eventbus",
+        "java/com/cowlark/wordgrinder/nativeinterface",
+        "java/com/cowlark/wordgrinder/utils",
+    ],
+)

@@ -10,6 +10,7 @@ javalibrary(
             "WaitingForUserEvent.java",
             "IdleEvent.java",
             "KeyTypedEvent.java",
+            "RedrawEvent.java",
             "Event.java",
             "EventBus.java",
             "EventCallback.java",

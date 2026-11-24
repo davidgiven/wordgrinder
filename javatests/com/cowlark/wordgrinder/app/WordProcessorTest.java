@@ -12,6 +12,7 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
@@ -50,9 +51,9 @@ public class WordProcessorTest
         assertEquals(2, fixture.redraws);
     }
 
-    /* Every grouped master binding is inert; the direct redraw binding still runs. */
+    /* Master bindings consume input and closing the menu queues a redraw. */
     @Test
-    public void masterBindingsOverrideTypingAndGroupsDoNothing()
+    public void masterBindingsOverrideTypingAndMenuCloseQueuesRedraw()
     {
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
@@ -62,12 +63,13 @@ public class WordProcessorTest
                 " ",
                 "KEY_RETURN",
                 "KEY_ESCAPE",
+                "KEY_ESCAPE",
                 "KEY_MENU",
                 "KEY_QUIT",
                 "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
-        assertEquals(2, fixture.redraws);
+        assertEquals(3, fixture.redraws);
     }
 
     /* Unknown keys replace dismissed messages; resizing retains the current warning. */
@@ -161,7 +163,7 @@ public class WordProcessorTest
         RecordingProcessor(Injector injector, Ui ui, Screen screen, Word renderer, EventBus bus)
         {
             /* Navigation is unused by the input-loop scenarios in this fixture. */
-            super(injector, ui, screen, renderer, bus, null);
+            super(injector, ui, screen, renderer, bus, null, new MenuTree(ui, renderer, bus));
             injector.bindInstance(WordProcessor.class, this);
         }
 
@@ -188,6 +190,13 @@ public class WordProcessorTest
                     return switch (method.getName())
                     {
                         case "getScreenSize" -> new int[]{80, 24};
+                        case "useUnicode" -> false;
+                        case "getStringWidth" -> ((String) args[0]).length();
+                        case "getBoundedString" ->
+                        {
+                            String text = (String) args[0];
+                            yield text.substring(0, Math.min(text.length(), (int) args[1]));
+                        }
                         case "clearScreen" ->
                         {
                             redraws++;

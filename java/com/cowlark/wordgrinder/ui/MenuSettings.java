@@ -7,6 +7,9 @@ import java.util.Map;
 /** Accelerator bindings stored for a document set. */
 public class MenuSettings
 {
+    /* Distinguish a new set from one whose accelerators were all removed. */
+    @Dumpable public boolean initialised;
+
     /* Resolve a key press to a menu item ID. */
     @Dumpable public Map<String, String> itemIdsByAccelerator = new LinkedHashMap<>();
 

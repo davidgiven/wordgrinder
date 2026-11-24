@@ -7,10 +7,7 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
-import com.cowlark.wordgrinder.ui.Action;
-import com.cowlark.wordgrinder.ui.Ui;
-import com.cowlark.wordgrinder.ui.Widget;
-import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
+import com.cowlark.wordgrinder.ui.*;
 import com.cowlark.wordgrinder.utils.Injector;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +30,10 @@ public class WordProcessor
     private final Screen screen;
     private final Word wordRenderer;
     private final Navigation navigation;
+    private final MenuTree menuTree;
+
+    /* Keep menu preferences across activations until an active document set supplies them. */
+    private final MenuSettings menuSettings = new MenuSettings();
     private final EventBus eventBus;
     private static final double IDLE_TIME = (Ui.BLINK_ON_TIME + Ui.BLINK_OFF_TIME) * 5;
 
@@ -47,7 +48,7 @@ public class WordProcessor
 
     /* Share the application injector with the action dispatcher. */
     @Inject
-    public WordProcessor(Injector injector, Ui ui, Screen screen, Word wordRenderer, EventBus eventBus, Navigation navigation)
+    public WordProcessor(Injector injector, Ui ui, Screen screen, Word wordRenderer, EventBus eventBus, Navigation navigation, MenuTree menuTree)
     {
         this.injector = injector;
         this.ui = ui;
@@ -55,6 +56,7 @@ public class WordProcessor
         this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
         this.navigation = navigation;
+        this.menuTree = menuTree;
     }
 
     /**
@@ -275,6 +277,8 @@ public class WordProcessor
      */
     public void run()
     {
+        eventBus.addEventListener(RedrawEvent.class, e -> queueRedraw());
+
         /* Cmd-based groups remain inert, including resize's grouped redraw callback. */
         ImmutableMap<String, Action> masterKeymap = ImmutableMap
                 .<String, Action>builder()
@@ -286,7 +290,9 @@ public class WordProcessor
                  */.put("KEY_RETURN", callback(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
                         SplitCurrentParagraph. */.put(
                         "KEY_ESCAPE",
-                        callbacks()) /* Cmd.ActivateMenu. */.put(
+                        () -> menuTree.activate(MenuDefinitions.TOPLEVEL, menuSettings, () ->
+                                execute(RedrawScreenAction.class), s -> nonmodalMessage(s))
+                ) /* Cmd.ActivateMenu. */.put(
                         "KEY_MENU",
                         callbacks()) /* Cmd.ActivateMenu. */.put(
                         "KEY_QUIT",

@@ -5,7 +5,7 @@ javalibrary(
     name="app",
     srcitems={
         f"com/cowlark/wordgrinder/app/{f}": f"./{f}"
-        for f in ["Navigation.java","WordProcessor.java"]
+        for f in ["Navigation.java", "MenuDefinitions.java", "WordProcessor.java"]
     },
     deps=GUAVA_DEPS + [
         "java/com/cowlark/wordgrinder/document",
