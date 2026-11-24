@@ -8,11 +8,70 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.cowlark.wordgrinder.utils.Injector.Inject;
+import com.cowlark.wordgrinder.utils.Injector.Provider;
 import java.lang.reflect.InvocationTargetException;
 import org.junit.Test;
 
 public class InjectorTest
 {
+    /* Defer the back reference until its target is available in the injector cache. */
+    @Test
+    public void providerBreaksConstructorCycle()
+    {
+        Injector injector = new Injector();
+        LazyFirst first = injector.create(LazyFirst.class);
+        LazySecond second = first.second.get();
+
+        /* Both directions use the same instances as ordinary injection. */
+        assertSame(first, second.first);
+        assertSame(second, first.second.get());
+        assertSame(second, injector.create(LazySecond.class));
+    }
+
+    /* A provider called inside the constructor still participates in cycle detection. */
+    @Test
+    public void providerCalledTooEarlyReportsCycle()
+    {
+        RuntimeException failure =
+                assertThrows(RuntimeException.class, () -> new Injector().create(EagerProvider.class));
+        assertTrue(failure.getCause() instanceof InvocationTargetException);
+        assertTrue(failure.getCause().getCause() instanceof IllegalStateException);
+    }
+
+    /* Hold a lazy reference to a type that has a direct dependency on this one. */
+    public static class LazyFirst
+    {
+        final Provider<LazySecond> second;
+
+        @Inject
+        public LazyFirst(Provider<LazySecond> second)
+        {
+            this.second = second;
+        }
+    }
+
+    /* Require the original instance when this dependency is finally created. */
+    public static class LazySecond
+    {
+        final LazyFirst first;
+
+        @Inject
+        public LazySecond(LazyFirst first)
+        {
+            this.first = first;
+        }
+    }
+
+    /* Force the provider before the injector has cached its target. */
+    public static class EagerProvider
+    {
+        @Inject
+        public EagerProvider(Provider<EagerProvider> self)
+        {
+            self.get();
+        }
+    }
+
     /* Reject self-injection and cycles that pass through a second type. */
     @Test
     public void rejectsRecursiveConstructorDependencies()

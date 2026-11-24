@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -22,15 +24,24 @@ public class Injector
         objects.put(type, instance);
     }
 
+    /** Annotates a constructor as being eligible for injection. */
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.CONSTRUCTOR)
     public @interface Inject
     {
     }
 
+    /** Looks up a dependency on demand using this injector's instance cache. */
+    @FunctionalInterface
+    public interface Provider<T>
+    {
+        T get();
+    }
+
     /**
      * Creates an instance using a public {@link Inject @Inject} constructor or a public
-     * no-argument constructor. Constructor parameters are resolved recursively.
+     * no-argument constructor. Constructor parameters are resolved recursively, except for
+     * {@code Provider<T>} parameters, which look up their dependencies when called.
      *
      * @throws IllegalStateException if constructor dependencies form a cycle
      */
@@ -64,7 +75,11 @@ public class Injector
             Class<?>[] parameterTypes = constructor.getParameterTypes();
             Object[] parameters = new Object[parameterTypes.length];
             for (int i = 0; i < parameterTypes.length; i++)
-                parameters[i] = create(parameterTypes[i], resolving);
+            {
+                parameters[i] = parameterTypes[i] == Provider.class
+                        ? providerFor(constructor.getGenericParameterTypes()[i], resolving)
+                        : create(parameterTypes[i], resolving);
+            }
 
             /* Cache only successfully created instances. */
             obj = constructor.newInstance(parameters);
@@ -82,6 +97,16 @@ public class Injector
         {
             resolving.remove(theClass);
         }
+    }
+
+    /* Resolve the provider's type now and defer creating the instance until get(). */
+    private Provider<?> providerFor(Type parameter, Set<Class<?>> resolving)
+    {
+        if (parameter instanceof ParameterizedType provider
+                && provider.getActualTypeArguments()[0] instanceof Class<?> dependency)
+            return () -> create(dependency, resolving);
+
+        throw new IllegalArgumentException("Provider requires a concrete dependency type: " + parameter);
     }
 
     @SuppressWarnings("unchecked")
