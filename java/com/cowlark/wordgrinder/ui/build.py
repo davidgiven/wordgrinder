@@ -3,6 +3,15 @@ from build.java import javalibrary
 from java.com.cowlark.wordgrinder.build import GUAVA_DEPS
 
 javalibrary(
+    name="menu-settings",
+    srcitems={
+        f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
+        for f in ["MenuSettings.java"]
+    },
+    deps=["java/com/cowlark/wordgrinder/fileio"],
+)
+
+javalibrary(
     name="ui",
     srcitems={
         f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
@@ -14,6 +23,7 @@ javalibrary(
             "ClassicPalette.java",
             "Ui.java",
             "Form.java",
+            "Menu.java",
             "Widget.java",
             "DividerWidget.java",
             "LabelWidget.java",

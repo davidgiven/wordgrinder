@@ -7,6 +7,8 @@ javalibrary(
     srcitems={
         f"com/cowlark/wordgrinder/document/{f}": f"./{f}"
         for f in [
+            "Document.java",
+            "DocumentSet.java",
             "Paragraph.java",
             "Word.java",
             "DocumentStyle.java",
@@ -19,6 +21,7 @@ javalibrary(
         "third_party+org_jspecify_jspecify",
         "java/com/cowlark/wordgrinder/nativeinterface",
         "java/com/cowlark/wordgrinder/fileio",
+        "java/com/cowlark/wordgrinder/ui+menu-settings",
         "java/com/cowlark/wordgrinder/addons/debug+settings",
         "java/com/cowlark/wordgrinder/addons/directories+settings",
         "java/com/cowlark/wordgrinder/addons/gui+settings",

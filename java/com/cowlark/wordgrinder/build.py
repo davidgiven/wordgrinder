@@ -50,6 +50,7 @@ javalibrary(
              "./document",
              "./fileio",
              "./ui",
+             "./ui+menu-settings",
              "./app",
              "./utils",
              "./addons/debug+settings",
