@@ -44,10 +44,27 @@ public class WordProcessorTest
         assertEquals(1, current.paragraphs.size());
         assertEquals(List.of(""), current.paragraphs.getFirst().words);
         assertSame(ActionResult.SUCCEEDED, new Navigation.GotoEndOfDocumentAction(fixture.processor).execute());
-        assertEquals(1, current.cursorOffset);
+        assertEquals(0, current.cursorOffset);
     }
 
-    /* Preserve one-based offsets while moving over supplementary Unicode characters. */
+    /* A selection starting at index zero is distinct from an unset mark. */
+    @Test
+    public void setsAndClearsMarkAtDocumentStart()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        assertEquals(-1, document.markParagraph);
+        assertSame(ActionResult.SUCCEEDED, new Navigation.SetMarkAction(fixture.processor).execute());
+        assertEquals(0, document.markParagraph);
+        assertEquals(0, document.markWord);
+        assertEquals(0, document.markOffset);
+        assertSame(ActionResult.SUCCEEDED, new Navigation.UnsetMarkAction(fixture.processor).execute());
+        assertEquals(-1, document.markParagraph);
+        assertEquals(-1, document.markWord);
+        assertEquals(-1, document.markOffset);
+    }
+
+    /* Preserve zero-based offsets while moving over supplementary Unicode characters. */
     @Test
     public void navigationMovesOverCodePointsAndAcrossParagraphs()
     {
@@ -55,21 +72,21 @@ public class WordProcessorTest
         Document document = fixture.processor.getCurrentDocument();
         document.paragraphs.set(0, fixture.paragraph("first", "😀z"));
         document.paragraphs.add(fixture.paragraph("last"));
-        document.cursorWord = 2;
+        document.cursorWord = 1;
 
         /* Moving back within the second word must stay in that word. */
         assertSame(ActionResult.SUCCEEDED, new Navigation.GotoNextCharAction(fixture.processor).execute());
-        assertEquals(3, document.cursorOffset);
+        assertEquals(2, document.cursorOffset);
         assertSame(ActionResult.SUCCEEDED, new Navigation.GotoPreviousWordAction(fixture.processor).execute());
-        assertEquals(2, document.cursorWord);
-        assertEquals(1, document.cursorOffset);
+        assertEquals(1, document.cursorWord);
+        assertEquals(0, document.cursorOffset);
 
         /* A wrapped character move at the end of the word enters the next paragraph. */
         new Navigation.GotoEndOfWordAction(fixture.processor).execute();
         assertSame(ActionResult.SUCCEEDED, new Navigation.GotoNextCharWAction(fixture.processor).execute());
-        assertEquals(2, document.cursorParagraph);
-        assertEquals(1, document.cursorWord);
-        assertEquals(1, document.cursorOffset);
+        assertEquals(1, document.cursorParagraph);
+        assertEquals(0, document.cursorWord);
+        assertEquals(0, document.cursorOffset);
         assertSame(ActionResult.FAILED, new Navigation.GotoNextParagraphAction(fixture.processor).execute());
     }
 
@@ -82,14 +99,14 @@ public class WordProcessorTest
         String bold = Word.createStyleByte(Word.BOLD);
         document.paragraphs.set(0, fixture.paragraph(bold + "first"));
         document.paragraphs.add(fixture.paragraph("second", "third"));
-        document.cursorOffset = bold.length() + "first".length() + 1;
+        document.cursorOffset = bold.length() + "first".length();
 
         /* Delete at the word end to merge it with the first word of the next paragraph. */
         assertSame(ActionResult.SUCCEEDED, new Navigation.DeleteNextCharAction(fixture.processor).execute());
         assertEquals(1, document.paragraphs.size());
         assertEquals(List.of(bold + "first" + Word.createStyleByte(0) + "second", "third"),
                 document.paragraphs.getFirst().words);
-        assertEquals(bold.length() + "first".length() + 1, document.cursorOffset);
+        assertEquals(bold.length() + "first".length(), document.cursorOffset);
         assertTrue(fixture.processor.getDocumentSet().changed);
         assertTrue(fixture.processor.getDocumentSet().justChanged);
     }

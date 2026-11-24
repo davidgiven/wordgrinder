@@ -23,6 +23,10 @@ final class DumpFields
                 if (annotation == null || field.isSynthetic() ||
                         Modifier.isStatic(field.getModifiers()))
                     continue;
+                /* Offset conversion applies only to primitive int fields. */
+                if (annotation.oneOffset() && field.getType() != int.class)
+                    throw new IllegalArgumentException("@Dumpable(oneOffset = true) requires an int field: " + field);
+
                 String name = annotation.value().isEmpty() ? field.getName() : annotation.value();
                 if (fields.put(name, field) != null)
                     throw new IllegalArgumentException(

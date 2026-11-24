@@ -36,27 +36,27 @@ public class Navigation
             return wordProcessor.getCurrentDocument();
         }
 
-        /* Look up the Lua-style one-based paragraph and word positions. */
+        /* Look up the paragraph and word at the current cursor. */
         protected static Paragraph paragraph(Document document)
         {
-            return document.paragraphs.get(document.cursorParagraph - 1);
+            return document.paragraphs.get(document.cursorParagraph);
         }
 
         protected static String word(Document document)
         {
-            return paragraph(document).words.get(document.cursorWord - 1);
+            return paragraph(document).words.get(document.cursorWord);
         }
 
         /* Java word procedures take zero-based UTF-16 offsets. */
         protected boolean moveCharacter(Document document, boolean forward)
         {
             String word = word(document);
-            int offset = document.cursorOffset - 1;
+            int offset = document.cursorOffset;
             int next = forward ? Word.nextCharInWord(word, offset) : Word.prevCharInWord(word, offset);
             if (next < 0)
                 return false;
 
-            document.cursorOffset = next + 1;
+            document.cursorOffset = next;
             wordProcessor.queueRedraw();
             return true;
         }
@@ -66,20 +66,20 @@ public class Navigation
         {
             int next = document.cursorParagraph + delta;
             wordProcessor.queueRedraw();
-            if (next < 1 || next > document.paragraphs.size())
+            if (next < 0 || next >= document.paragraphs.size())
                 return false;
 
             document.cursorParagraph = next;
-            document.cursorWord = 1;
-            document.cursorOffset = 1;
+            document.cursorWord = 0;
+            document.cursorOffset = 0;
             return true;
         }
 
         /* Position the cursor after the last word of its current paragraph. */
         protected static void endOfParagraph(Document document)
         {
-            document.cursorWord = paragraph(document).words.size();
-            document.cursorOffset = word(document).length() + 1;
+            document.cursorWord = paragraph(document).words.size() - 1;
+            document.cursorOffset = word(document).length();
         }
 
         /* Move to the beginning of a word, optionally crossing a paragraph boundary. */
@@ -88,24 +88,24 @@ public class Navigation
             boolean moved;
             if (forward)
             {
-                moved = document.cursorWord < paragraph(document).words.size();
+                moved = document.cursorWord + 1 < paragraph(document).words.size();
                 if (moved)
                 {
                     document.cursorWord++;
-                    document.cursorOffset = 1;
+                    document.cursorOffset = 0;
                 }
                 else
-                    document.cursorOffset = word(document).length() + 1;
+                    document.cursorOffset = word(document).length();
             }
             else
             {
                 boolean insideWord = moveCharacter(document, false);
-                moved = insideWord || document.cursorWord > 1;
+                moved = insideWord || document.cursorWord > 0;
                 if (moved)
                 {
                     if (!insideWord)
                         document.cursorWord--;
-                    document.cursorOffset = 1;
+                    document.cursorOffset = 0;
                 }
             }
 
@@ -124,19 +124,19 @@ public class Navigation
         protected static void setMark(Document document, boolean sticky)
         {
             String word = word(document);
-            int previous = Word.prevCharInWord(word, document.cursorOffset - 1);
+            int previous = Word.prevCharInWord(word, document.cursorOffset);
             document.markParagraph = document.cursorParagraph;
             document.markWord = document.cursorWord;
-            document.markOffset = previous < 0 ? 1 : Word.nextCharInWord(word, previous) + 1;
+            document.markOffset = previous < 0 ? 0 : Word.nextCharInWord(word, previous);
             document.stickySelection = sticky;
         }
 
         /* Clear positional marks and schedule a redraw of the selection. */
         protected void unsetMark(Document document)
         {
-            document.markParagraph = 0;
-            document.markWord = 0;
-            document.markOffset = 0;
+            document.markParagraph = -1;
+            document.markWord = -1;
+            document.markOffset = -1;
             wordProcessor.queueRedraw();
         }
 
@@ -152,7 +152,7 @@ public class Navigation
         /* Join the current paragraph to its successor while retaining its style. */
         protected boolean joinParagraph(Document document)
         {
-            int index = document.cursorParagraph - 1;
+            int index = document.cursorParagraph;
             if (index + 1 >= document.paragraphs.size())
                 return false;
 
@@ -169,14 +169,14 @@ public class Navigation
         protected boolean joinWord(Document document)
         {
             Paragraph paragraph = paragraph(document);
-            if (document.cursorWord == paragraph.words.size())
+            if (document.cursorWord + 1 == paragraph.words.size())
             {
                 if (!joinParagraph(document))
                     return false;
                 paragraph = paragraph(document);
             }
 
-            int index = document.cursorWord - 1;
+            int index = document.cursorWord;
             if (index + 1 >= paragraph.words.size())
                 return false;
             Word.InsertResult joined = Word.insertIntoWord(
@@ -187,8 +187,8 @@ public class Navigation
             var words = new ArrayList<>(paragraph.words);
             words.set(index, joined.word());
             words.remove(index + 1);
-            document.paragraphs.set(document.cursorParagraph - 1, paragraph.withWords(words));
-            document.cursorOffset = joined.endOffset() + 1;
+            document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
+            document.cursorOffset = joined.endOffset();
             textChanged();
             return true;
         }
@@ -197,17 +197,17 @@ public class Navigation
         protected void deleteWordRange(Document document, int start, int end)
         {
             Paragraph paragraph = paragraph(document);
-            int index = document.cursorWord - 1;
+            int index = document.cursorWord;
             var words = new ArrayList<>(paragraph.words);
             words.set(index, Word.deleteFromWord(words.get(index), start, end));
-            document.paragraphs.set(document.cursorParagraph - 1, paragraph.withWords(words));
+            document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
             textChanged();
         }
 
         /* Delete forward across characters, words or paragraphs. */
         protected boolean deleteNextCharacter(Document document)
         {
-            int start = document.cursorOffset - 1;
+            int start = document.cursorOffset;
             int end = Word.nextCharInWord(word(document), start);
             if (end < 0)
                 return joinWord(document);
@@ -224,7 +224,7 @@ public class Navigation
             if (!moveWord(document, forward, true))
                 return false;
 
-            document.cursorOffset = forward ? 1 : word(document).length() + 1;
+            document.cursorOffset = forward ? 0 : word(document).length();
             wordProcessor.queueRedraw();
             return true;
         }
@@ -244,7 +244,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            document.cursorOffset = 1;
+            document.cursorOffset = 0;
             wordProcessor.queueRedraw();
             return SUCCEEDED;
         }
@@ -264,7 +264,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            document.cursorOffset = word(document).length() + 1;
+            document.cursorOffset = word(document).length();
             wordProcessor.queueRedraw();
             return SUCCEEDED;
         }
@@ -284,8 +284,8 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            document.cursorWord = 1;
-            document.cursorOffset = 1;
+            document.cursorWord = 0;
+            document.cursorOffset = 0;
             wordProcessor.queueRedraw();
             return SUCCEEDED;
         }
@@ -325,9 +325,9 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            document.cursorParagraph = 1;
-            document.cursorWord = 1;
-            document.cursorOffset = 1;
+            document.cursorParagraph = 0;
+            document.cursorWord = 0;
+            document.cursorOffset = 0;
             wordProcessor.queueRedraw();
             return SUCCEEDED;
         }
@@ -347,7 +347,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            document.cursorParagraph = document.paragraphs.size();
+            document.cursorParagraph = document.paragraphs.size() - 1;
             endOfParagraph(document);
             wordProcessor.queueRedraw();
             return SUCCEEDED;
@@ -739,8 +739,8 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            deleteWordRange(document, 0, document.cursorOffset - 1);
-            document.cursorOffset = 1;
+            deleteWordRange(document, 0, document.cursorOffset);
+            document.cursorOffset = 0;
             return SUCCEEDED;
         }
     }
@@ -760,16 +760,16 @@ public class Navigation
         {
             Document document = getCurrentDocument();
             /* At a paragraph start Lua deletes backwards across the boundary. */
-            if (document.cursorOffset == 1 && document.cursorWord == 1)
+            if (document.cursorOffset == 0 && document.cursorWord == 0)
                 return moveCharacterAcrossWords(document, false) && deleteNextCharacter(document)
                         ? SUCCEEDED : FAILED;
-            if (document.cursorOffset == 1 && moveCharacterAcrossWords(document, false))
+            if (document.cursorOffset == 0 && moveCharacterAcrossWords(document, false))
                 deleteNextCharacter(document);
 
             /* Remove the whole current word, then join away its preceding boundary. */
             deleteWordRange(document, 0, word(document).length());
-            document.cursorOffset = 1;
-            if (document.cursorWord != 1 && moveCharacterAcrossWords(document, false))
+            document.cursorOffset = 0;
+            if (document.cursorWord != 0 && moveCharacterAcrossWords(document, false))
                 deleteNextCharacter(document);
             return SUCCEEDED;
         }
@@ -954,7 +954,7 @@ public class Navigation
         public ActionResult execute(String style)
         {
             Document document = getCurrentDocument();
-            if (document.markParagraph == 0)
+            if (document.markParagraph == -1)
                 return FAILED;
 
             /* Resolve the Lua style masks and order the selection's endpoints. */
@@ -978,23 +978,23 @@ public class Navigation
             /* Apply the style to the selected part of each paragraph. */
             for (int p = first.paragraph(); p <= last.paragraph(); p++)
             {
-                Paragraph paragraph = document.paragraphs.get(p - 1);
+                Paragraph paragraph = document.paragraphs.get(p);
                 var words = new ArrayList<>(paragraph.words);
-                int start = p == first.paragraph() ? first.word() : 1;
-                int end = p == last.paragraph() ? last.word() : words.size();
+                int start = p == first.paragraph() ? first.word() : 0;
+                int end = p == last.paragraph() ? last.word() : words.size() - 1;
                 for (int w = start; w <= end; w++)
                 {
-                    String word = words.get(w - 1);
-                    int from = p == first.paragraph() && w == first.word() ? first.offset() - 1 : 0;
-                    int to = p == last.paragraph() && w == last.word() ? last.offset() - 1 : word.length();
+                    String word = words.get(w);
+                    int from = p == first.paragraph() && w == first.word() ? first.offset() : 0;
+                    int to = p == last.paragraph() && w == last.word() ? last.offset() : word.length();
                     boolean atCursor = p == cursor.paragraph() && w == cursor.word();
                     Word.StyleResult styled = Word.applyStyleToWord(
-                            word, styleOr, styleAnd, from, to, atCursor ? cursor.offset() - 1 : 0);
-                    words.set(w - 1, styled.word());
+                            word, styleOr, styleAnd, from, to, atCursor ? cursor.offset() : 0);
+                    words.set(w, styled.word());
                     if (atCursor)
-                        document.cursorOffset = styled.cursorOffset() + 1;
+                        document.cursorOffset = styled.cursorOffset();
                 }
-                document.paragraphs.set(p - 1, paragraph.withWords(words));
+                document.paragraphs.set(p, paragraph.withWords(words));
             }
 
             /* Clear the selection and mark the document set dirty. */
@@ -1083,7 +1083,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            if (document.markParagraph != 0)
+            if (document.markParagraph != -1)
             {
                 unsetMark(document);
                 document.stickySelection = false;
@@ -1111,7 +1111,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            if (document.markParagraph == 0)
+            if (document.markParagraph == -1)
                 setMark(document, false);
             return SUCCEEDED;
         }
@@ -1150,7 +1150,7 @@ public class Navigation
         public ActionResult execute()
         {
             Document document = getCurrentDocument();
-            if (document.markParagraph != 0 && !document.stickySelection)
+            if (document.markParagraph != -1 && !document.stickySelection)
                 unsetMark(document);
             return SUCCEEDED;
         }
@@ -1188,9 +1188,9 @@ public class Navigation
         {
             Document document = getCurrentDocument();
             unsetMark(document);
-            document.cursorOffset = 1;
+            document.cursorOffset = 0;
             setMark(document, false);
-            document.cursorOffset = word(document).length() + 1;
+            document.cursorOffset = word(document).length();
             wordProcessor.queueRedraw();
             return SUCCEEDED;
         }

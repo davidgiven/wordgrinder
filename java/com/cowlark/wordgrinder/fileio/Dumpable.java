@@ -13,4 +13,7 @@ import java.lang.annotation.Target;
 public @interface Dumpable
 {
     String value() default "";
+
+    /** Stores an int field one higher than its Java value, omitting an unset value of -1. */
+    boolean oneOffset() default false;
 }

@@ -128,7 +128,7 @@ public class Undumper
         /* Leaf nodes are scalar values, converted to the declared Java type. */
         Class<?> cls = rawType(type);
         if (node.raw != null)
-            return convert(node.raw, cls, path);
+            return convert(node.raw, cls, path, false);
 
         /* Untyped containers use their existing type, or a map when starting empty. */
         if (cls == Object.class)
@@ -266,8 +266,17 @@ public class Undumper
                 if (entry.getValue().raw != null && isFinal)
                     throw new IllegalArgumentException(
                             "Cannot assign final dump field " + childPath);
-                Object value =
-                        read(entry.getValue(), field.getGenericType(), old, childPath, remaining);
+                /* Convert on the file side of the integral range check. */
+                Node child = entry.getValue();
+                Object value;
+                if (field.getAnnotation(Dumpable.class).oneOffset())
+                {
+                    if (child.raw == null)
+                        throw new IllegalArgumentException("Expected an integer value at " + childPath);
+                    value = convert(child.raw, field.getType(), childPath, true);
+                }
+                else
+                    value = read(child, field.getGenericType(), old, childPath, remaining);
                 if (value != old)
                 {
                     if (isFinal)
@@ -348,7 +357,7 @@ public class Undumper
         return index - 1;
     }
 
-    private Object convert(String raw, Class<?> type, String path)
+    private Object convert(String raw, Class<?> type, String path, boolean oneOffset)
     {
         /* Decode the value before checking whether the destination can hold it. */
         Object value = parse(raw);
@@ -374,6 +383,9 @@ public class Undumper
             /* Numeric conversions must fit exactly, except for floating-point rounding. */
             if (value instanceof BigDecimal number)
             {
+                if (oneOffset)
+                    number = number.subtract(BigDecimal.ONE);
+
                 /* Integral fields require an exact, in-range value. */
                 if (type == byte.class || type == Byte.class)
                     return number.byteValueExact();

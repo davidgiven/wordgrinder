@@ -154,7 +154,17 @@ public class Dumper
                         try
                         {
                             field.setAccessible(true);
-                            save(path + "." + entry.getKey(), field.get(value), values, active);
+                            String fieldPath = path + "." + entry.getKey();
+
+                            /* Omit an unset index and widen before converting set indices. */
+                            if (field.getAnnotation(Dumpable.class).oneOffset())
+                            {
+                                int index = (int) field.get(value);
+                                if (index != -1)
+                                    writeValue(fieldPath, Long.toString((long) index + 1), values);
+                            }
+                            else
+                                save(fieldPath, field.get(value), values, active);
                         } catch (IllegalAccessException e)
                         {
                             throw new IllegalArgumentException(

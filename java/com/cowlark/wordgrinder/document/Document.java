@@ -6,7 +6,7 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The stored and transient state of a document. Position fields retain Lua's one-based values. */
+/** The stored and transient state of a document. Position fields use zero-based indices. */
 public class Document
 {
     /* Share the normal paragraph style among newly created documents. */
@@ -21,29 +21,29 @@ public class Document
     @Dumpable public int margin;
 
     /* Store the cursor and selection mode. */
-    @Dumpable("cp") public int cursorParagraph = 1;
-    @Dumpable("cw") public int cursorWord = 1;
-    @Dumpable("co") public int cursorOffset = 1;
+    @Dumpable(value = "cp", oneOffset = true) public int cursorParagraph;
+    @Dumpable(value = "cw", oneOffset = true) public int cursorWord;
+    @Dumpable(value = "co", oneOffset = true) public int cursorOffset;
     @Dumpable("sticky_selection") public boolean stickySelection;
 
-    /* Use zero for an unset mark and one-based coordinates for a set mark. */
-    @Dumpable("mp") public int markParagraph;
-    @Dumpable("mw") public int markWord;
-    @Dumpable("mo") public int markOffset;
+    /* Use -1 for an unset mark and zero-based coordinates for a set mark. */
+    @Dumpable(value = "mp", oneOffset = true) public int markParagraph = -1;
+    @Dumpable(value = "mw", oneOffset = true) public int markWord = -1;
+    @Dumpable(value = "mo", oneOffset = true) public int markOffset = -1;
 
     /* Keep change tracking and undo history in memory. */
     public boolean changed;
     public List<ShadowDocument> undoStack;
     public List<ShadowDocument> redoStack;
 
-    /* Cache viewport positions, using zero for an unset one-based position. */
+    /* Cache viewport positions, using -1 for an unset position. */
     public int wrapWidth;
-    public int topParagraph;
-    public int topWord;
-    public int bottomParagraph;
-    public int bottomWord;
-    public int redrawParagraph;
-    public int redrawWord;
+    public int topParagraph = -1;
+    public int topWord = -1;
+    public int bottomParagraph = -1;
+    public int bottomWord = -1;
+    public int redrawParagraph = -1;
+    public int redrawWord = -1;
 
     /** Starts the cursor in a single blank paragraph containing one empty word. */
     public Document(Screen screen, Word wordRenderer, EventBus eventBus)

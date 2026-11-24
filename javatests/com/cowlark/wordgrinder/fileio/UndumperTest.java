@@ -30,6 +30,7 @@ public final class UndumperTest
         tests.constructsNestedObjectsAndTypedContainers();
         tests.unknownNestedPathsAndRawValuesSurviveRepeatedRoundTrips();
         tests.nearestRemainingFieldOwnsRelativeUnknownPaths();
+        tests.roundTripsOneOffsetFields();
         System.out.println("Undumper TeaVM checks passed");
     }
 
@@ -44,6 +45,37 @@ public final class UndumperTest
         var output = new StringWriter();
         new Dumper().dump(target, new PrintWriter(output));
         return output.toString();
+    }
+
+    /* Translate opted-in fields in both directions, including the unset sentinel. */
+    @Test
+    public void roundTripsOneOffsetFields() throws IOException
+    {
+        var offsets = new Offsets();
+        String text = ".cp: 1\n.unchanged: 4\n.wide: 2147483648\n";
+        assertEquals(text, dump(offsets));
+
+        /* Load one-based offsets and retain the default for the omitted mark. */
+        var loaded = new Offsets();
+        load(loaded, text.replace(".cp: 1", ".cp: 3"));
+        assertEquals(2, loaded.cursor);
+        assertEquals(-1, loaded.mark);
+        assertEquals(4, loaded.unchanged);
+        assertEquals(Integer.MAX_VALUE, loaded.wide);
+
+        /* Older dumps may still contain an explicit zero for an unset mark. */
+        loaded.mark = 2;
+        load(loaded, ".mark: 0\n");
+        assertEquals(-1, loaded.mark);
+    }
+
+    /* Include an aliased index, a sentinel and an ordinary scalar. */
+    private static final class Offsets
+    {
+        @Dumpable(value = "cp", oneOffset = true) int cursor;
+        @Dumpable(oneOffset = true) int mark = -1;
+        @Dumpable int unchanged = 4;
+        @Dumpable(oneOffset = true) int wide = Integer.MAX_VALUE;
     }
 
     @Test
