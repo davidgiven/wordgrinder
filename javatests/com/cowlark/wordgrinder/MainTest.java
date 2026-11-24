@@ -158,11 +158,10 @@ public class MainTest
         /* Resolve the entry point with a backend that rejects display initialisation. */
         private Main createMain()
         {
-            Injector injector = new Injector();
-            injector.bindInstance(Injector.class, injector);
-            injector.bindInstance(Screen.class, unusedBackend(Screen.class));
-            injector.bindInstance(System.class, system);
-            return injector.create(Main.class);
+            Injector.resetForTesting();
+            Injector.bindInstance(Screen.class, unusedBackend(Screen.class));
+            Injector.bindInstance(System.class, system);
+            return Injector.create(Main.class);
         }
     }
 

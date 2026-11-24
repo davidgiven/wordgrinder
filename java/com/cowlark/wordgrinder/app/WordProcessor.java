@@ -3,14 +3,12 @@ package com.cowlark.wordgrinder.app;
 import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
-import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.*;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.*;
-import com.cowlark.wordgrinder.utils.Injector;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableMap;
 
@@ -29,10 +27,8 @@ import static java.lang.Math.max;
  */
 public class WordProcessor
 {
-    private final Injector injector;
     private final Ui ui;
     private final Screen screen;
-    private final Word wordRenderer;
     private final Navigation navigation;
     private final MenuTree menuTree;
 
@@ -50,20 +46,18 @@ public class WordProcessor
     private int oldMouseX;
     private int oldMouseY;
 
-    /* Share the application injector with the action dispatcher. */
+    /* Receive the editor services and create the initial document set. */
     @Inject
-    public WordProcessor(Injector injector, Ui ui, Screen screen, Word wordRenderer, EventBus eventBus, Navigation navigation, MenuTree menuTree)
+    public WordProcessor(Ui ui, Screen screen, EventBus eventBus, Navigation navigation, MenuTree menuTree)
     {
-        this.injector = injector;
         this.ui = ui;
         this.screen = screen;
-        this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
         this.navigation = navigation;
         this.menuTree = menuTree;
 
         /* Create the initial document with the editor's rendering collaborators. */
-        this.documentSet = new DocumentSet(screen, wordRenderer, eventBus);
+        this.documentSet = new DocumentSet();
     }
 
     /** Returns the document set owned by this editor. */
@@ -304,7 +298,7 @@ public class WordProcessor
                 .setRedraw(() -> Action.of(RedrawScreenAction.class).execute())
                 .setHelpText("press SPACE to continue")
                 .on(" ", Widget.Action.CONFIRM)
-                .add(new WrappedLabelWidget(wordRenderer, eventBus).setBounds(1, 1, -1, -3).setValue(text))
+                .add(new WrappedLabelWidget().setBounds(1, 1, -1, -3).setValue(text))
                 .run();
         eventBus.fireEvent(RedrawEvent.INSTANCE);
     }

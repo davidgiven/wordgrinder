@@ -8,6 +8,8 @@ package com.cowlark.wordgrinder.document;
 import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
+import com.cowlark.wordgrinder.utils.Injector;
+import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import org.jspecify.annotations.Nullable;
@@ -23,8 +25,8 @@ import java.util.List;
 public final class Paragraph implements Iterable<String>
 {
     /* Paragraph content and style remain fixed after construction. */
-    public final ImmutableList<String> words;
-    public final DocumentStyle style;
+    private ImmutableList<String> words;
+    private DocumentStyle style;
     public final int number = 0;
 
     /* Screen metrics remain fixed for this paragraph; only the most recent layout is cached. */
@@ -35,22 +37,38 @@ public final class Paragraph implements Iterable<String>
     private final EventBus eventBus;
     private @Nullable WrapData wrapData;
 
-    /* Build immutable paragraphs from the builder's captured dependencies and content. */
-    private Paragraph(Builder builder, DocumentStyle style)
+    /* Receive the collaborators shared by layout and rendering. */
+    @Inject
+    public Paragraph(Screen screen, Word wordRenderer, EventBus eventBus)
     {
-        screen = builder.screen;
-        wordRenderer = builder.wordRenderer;
-        eventBus = builder.eventBus;
-        this.style = style;
-        words = builder.words;
+        this.screen = screen;
+        this.wordRenderer = wordRenderer;
+        this.eventBus = eventBus;
     }
 
-    /**
-     * Creates a paragraph builder with the injected layout and rendering collaborators.
-     */
-    public static Builder builder(Screen screen, Word wordRenderer, EventBus eventBus)
+    /* Initialise the paragraph's immutable content before returning it to the caller. */
+    private void setContent(DocumentStyle style, ImmutableList<String> words)
     {
-        return new Builder(screen, wordRenderer, eventBus);
+        this.style = style;
+        this.words = words;
+    }
+
+    /** Creates a builder backed by the application injector. */
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    /** Returns the immutable words in document order. */
+    public ImmutableList<String> words()
+    {
+        return words;
+    }
+
+    /** Returns the paragraph style. */
+    public DocumentStyle style()
+    {
+        return style;
     }
 
     /**
@@ -76,10 +94,9 @@ public final class Paragraph implements Iterable<String>
     public Paragraph withWords(Iterable<String> replacement)
     {
         /* Rebuild the paragraph so its cached layout is recalculated for the new text. */
-        return builder(screen, wordRenderer, eventBus)
-                .setDocumentStyle(style)
-                .setWords(replacement)
-                .build();
+        Paragraph paragraph = new Paragraph(screen, wordRenderer, eventBus);
+        paragraph.setContent(style, ImmutableList.copyOf(replacement));
+        return paragraph;
     }
 
     /**
@@ -269,18 +286,12 @@ public final class Paragraph implements Iterable<String>
      */
     public static final class Builder
     {
-        /* Dependencies stay fixed; style is required and words default to an empty paragraph. */
-        private final Screen screen;
-        private final Word wordRenderer;
-        private final EventBus eventBus;
+        /* Resolve collaborators from the injector; require a style before building. */
         private @Nullable DocumentStyle documentStyle;
         private ImmutableList<String> words = ImmutableList.of();
 
-        private Builder(Screen screen, Word wordRenderer, EventBus eventBus)
+        private Builder()
         {
-            this.screen = screen;
-            this.wordRenderer = wordRenderer;
-            this.eventBus = eventBus;
         }
 
         /**
@@ -344,7 +355,10 @@ public final class Paragraph implements Iterable<String>
             if (documentStyle == null)
                 throw new IllegalStateException(
                         "Set the document style before building a " + "paragraph");
-            return new Paragraph(this, documentStyle);
+            /* Each build receives its own content and layout cache. */
+            Paragraph paragraph = Injector.createFresh(Paragraph.class);
+            paragraph.setContent(documentStyle, words);
+            return paragraph;
         }
     }
 

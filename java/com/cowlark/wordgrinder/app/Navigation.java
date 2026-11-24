@@ -44,7 +44,7 @@ public class Navigation
 
         protected static String word(Document document)
         {
-            return paragraph(document).words.get(document.cursorWord);
+            return paragraph(document).words().get(document.cursorWord);
         }
 
         /* Java word procedures take zero-based UTF-16 offsets. */
@@ -78,7 +78,7 @@ public class Navigation
         /* Position the cursor after the last word of its current paragraph. */
         protected static void endOfParagraph(Document document)
         {
-            document.cursorWord = paragraph(document).words.size() - 1;
+            document.cursorWord = paragraph(document).words().size() - 1;
             document.cursorOffset = word(document).length();
         }
 
@@ -88,7 +88,7 @@ public class Navigation
             boolean moved;
             if (forward)
             {
-                moved = document.cursorWord + 1 < paragraph(document).words.size();
+                moved = document.cursorWord + 1 < paragraph(document).words().size();
                 if (moved)
                 {
                     document.cursorWord++;
@@ -157,8 +157,8 @@ public class Navigation
                 return false;
 
             Paragraph paragraph = paragraph(document);
-            var words = new ArrayList<>(paragraph.words);
-            words.addAll(document.paragraphs.get(index + 1).words);
+            var words = new ArrayList<>(paragraph.words());
+            words.addAll(document.paragraphs.get(index + 1).words());
             document.paragraphs.set(index, paragraph.withWords(words));
             document.paragraphs.remove(index + 1);
             textChanged();
@@ -169,7 +169,7 @@ public class Navigation
         protected boolean joinWord(Document document)
         {
             Paragraph paragraph = paragraph(document);
-            if (document.cursorWord + 1 == paragraph.words.size())
+            if (document.cursorWord + 1 == paragraph.words().size())
             {
                 if (!joinParagraph(document))
                     return false;
@@ -177,14 +177,14 @@ public class Navigation
             }
 
             int index = document.cursorWord;
-            if (index + 1 >= paragraph.words.size())
+            if (index + 1 >= paragraph.words().size())
                 return false;
             Word.InsertResult joined = Word.insertIntoWord(
-                    paragraph.words.get(index + 1), paragraph.words.get(index), 0, 0);
+                    paragraph.words().get(index + 1), paragraph.words().get(index), 0, 0);
             if (joined.endOffset() < 0)
                 return false;
 
-            var words = new ArrayList<>(paragraph.words);
+            var words = new ArrayList<>(paragraph.words());
             words.set(index, joined.word());
             words.remove(index + 1);
             document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
@@ -198,7 +198,7 @@ public class Navigation
         {
             Paragraph paragraph = paragraph(document);
             int index = document.cursorWord;
-            var words = new ArrayList<>(paragraph.words);
+            var words = new ArrayList<>(paragraph.words());
             words.set(index, Word.deleteFromWord(words.get(index), start, end));
             document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
             textChanged();
@@ -979,7 +979,7 @@ public class Navigation
             for (int p = first.paragraph(); p <= last.paragraph(); p++)
             {
                 Paragraph paragraph = document.paragraphs.get(p);
-                var words = new ArrayList<>(paragraph.words);
+                var words = new ArrayList<>(paragraph.words());
                 int start = p == first.paragraph() ? first.word() : 0;
                 int end = p == last.paragraph() ? last.word() : words.size() - 1;
                 for (int w = start; w <= end; w++)

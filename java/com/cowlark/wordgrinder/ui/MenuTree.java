@@ -1,6 +1,5 @@
 package com.cowlark.wordgrinder.ui;
 
-import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.RedrawEvent;
@@ -26,18 +25,16 @@ import static java.lang.Math.*;
 /** Runs a caller-supplied menu hierarchy against a document set's accelerator bindings. */
 public final class MenuTree
 {
-    /* Share the application's screen, renderer and event bus. */
+    /* Share the application's screen and event bus. */
     private final Ui ui;
     private final Screen screen;
-    private final Word wordRenderer;
     private final EventBus eventBus;
 
     @Inject
-    public MenuTree(Ui ui, Word wordRenderer, EventBus eventBus)
+    public MenuTree(Ui ui, EventBus eventBus)
     {
         this.ui = ui;
         this.screen = ui.getScreen();
-        this.wordRenderer = wordRenderer;
         this.eventBus = eventBus;
     }
 
@@ -358,7 +355,7 @@ public final class MenuTree
                     .setStretchy(true)
                     .setRedraw(redraw)
                     .setHelpText("Y for yes, N for no, or ESCAPE to cancel")
-                    .add(new WrappedLabelWidget(wordRenderer, eventBus)
+                    .add(new WrappedLabelWidget()
                             .setBounds(1, 1, -1, -3)
                             .setValue("Are you sure you want to reset all the menu keybindings back to their defaults?"))
                     .on("y", Widget.Action.CONFIRM).on("Y", Widget.Action.CONFIRM)

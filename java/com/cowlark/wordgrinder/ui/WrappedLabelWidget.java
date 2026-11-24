@@ -6,8 +6,6 @@ package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.document.DocumentStyle;
 import com.cowlark.wordgrinder.document.Paragraph;
-import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.EventBus;
 
 /**
  * A label laid out and drawn as an ordinary paragraph, without DrawWord events.
@@ -18,17 +16,8 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
     private static final DocumentStyle STYLE =
             new DocumentStyle("Paragraph", "P", 0, 0, null, null, null, null, null, null);
 
-    /* Retain rendering collaborators; Form.add() supplies the screen separately. */
-    private final Word wordRenderer;
-    private final EventBus eventBus;
     public String value = "";
     public boolean fullStopSpaces;
-
-    public WrappedLabelWidget(Word wordRenderer, EventBus eventBus)
-    {
-        this.wordRenderer = wordRenderer;
-        this.eventBus = eventBus;
-    }
 
     /**
      * Sets the text to wrap, preserving any embedded word styles.
@@ -52,7 +41,7 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
     private Paragraph paragraph()
     {
         return Paragraph
-                .builder(getScreen(), wordRenderer, eventBus)
+                .builder()
                 .setDocumentStyle(STYLE)
                 .setText(value)
                 .build();

@@ -132,9 +132,10 @@ def javalibrary(
         + [abspath(f) for f in filenamesof(srcfiles)]
     )
 
+    # Mount every compiler classpath entry and rebuild when any of them changes.
     simplerule(
         replaces=self,
-        ins=externaljars + srcdeps + srcfiles + deps + ["build/JavaSrcC.java"],
+        ins=classpath + srcdeps + srcfiles + deps + ["build/JavaSrcC.java"],
         outs=[f"={self.localname}.jar"],
         commands=[command],
         label="JAVALIBRARY",

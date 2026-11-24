@@ -1,8 +1,6 @@
 package com.cowlark.wordgrinder.document;
 
-import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.fileio.Dumpable;
-import com.cowlark.wordgrinder.nativeinterface.Screen;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,9 +44,9 @@ public class Document
     public int redrawWord = -1;
 
     /** Starts the cursor in a single blank paragraph containing one empty word. */
-    public Document(Screen screen, Word wordRenderer, EventBus eventBus)
+    public Document()
     {
-        paragraphs.add(Paragraph.builder(screen, wordRenderer, eventBus)
+        paragraphs.add(Paragraph.builder()
                 .setDocumentStyle(DEFAULT_STYLE)
                 .setWords("")
                 .build());

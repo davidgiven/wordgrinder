@@ -1,5 +1,6 @@
 package com.cowlark.wordgrinder.utils;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -12,18 +13,35 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class Injector
+public final class Injector
 {
-    public static final Injector INSTANCE = new Injector();
+    /* Share explicit bindings and constructed instances across the application. */
+    private static final HashMap<Class<?>, Object> objects = new HashMap<>();
 
-    private final HashMap<Class<?>, Object> objects = new HashMap<>();
+    private Injector()
+    {
+    }
 
     /**
      * Supplies an existing instance for constructor injection.
      */
-    public <T> void bindInstance(Class<T> type, T instance)
+    public static <T> void bindInstance(Class<T> type, T instance)
     {
         objects.put(type, instance);
+    }
+
+    /** Clears all bindings and cached instances before setting up a test. */
+    @VisibleForTesting
+    public static void resetForTesting()
+    {
+        objects.clear();
+    }
+
+    /** Removes a test binding so the next lookup can resolve the type normally. */
+    @VisibleForTesting
+    public static void removeBindingForTesting(Class<?> type)
+    {
+        objects.remove(type);
     }
 
     /** Annotates a constructor as being eligible for injection. */
@@ -33,7 +51,7 @@ public class Injector
     {
     }
 
-    /** Looks up a dependency on demand using this injector's instance cache. */
+    /** Looks up a dependency on demand using the shared instance cache. */
     @FunctionalInterface
     public interface Provider<T>
     {
@@ -47,19 +65,28 @@ public class Injector
      *
      * @throws IllegalStateException if constructor dependencies form a cycle
      */
-    public <T> T create(Class<T> theClass)
+    public static <T> T create(Class<T> theClass)
     {
         /* Track only the constructors on this resolution path. */
-        return create(theClass, new LinkedHashSet<>());
+        return create(theClass, new LinkedHashSet<>(), true);
+    }
+
+    /** Constructs a fresh instance while resolving its dependencies through the usual cache. */
+    public static <T> T createFresh(Class<T> type)
+    {
+        return create(type, new LinkedHashSet<>(), false);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> T create(Class<T> theClass, Set<Class<?>> resolving)
+    private static <T> T create(Class<T> theClass, Set<Class<?>> resolving, boolean reuse)
     {
         /* Reuse completed instances, including dependencies shared by multiple branches. */
-        T obj = (T) objects.get(theClass);
-        if (obj != null)
-            return obj;
+        if (reuse)
+        {
+            T cached = (T) objects.get(theClass);
+            if (cached != null)
+                return cached;
+        }
 
         /* Reject a constructor that needs an instance already under construction. */
         if (!resolving.add(theClass))
@@ -80,12 +107,13 @@ public class Injector
             {
                 parameters[i] = parameterTypes[i] == Provider.class
                         ? providerFor(constructor.getGenericParameterTypes()[i], resolving)
-                        : create(parameterTypes[i], resolving);
+                        : create(parameterTypes[i], resolving, true);
             }
 
-            /* Cache only successfully created instances. */
-            obj = constructor.newInstance(parameters);
-            objects.put(theClass, obj);
+            /* Cache successfully created instances only when reuse was requested. */
+            T obj = constructor.newInstance(parameters);
+            if (reuse)
+                objects.put(theClass, obj);
             return obj;
         }
         catch (NoSuchMethodException | InvocationTargetException | InstantiationException |
@@ -102,11 +130,11 @@ public class Injector
     }
 
     /* Resolve the provider's type now and defer creating the instance until get(). */
-    private Provider<?> providerFor(Type parameter, Set<Class<?>> resolving)
+    private static Provider<?> providerFor(Type parameter, Set<Class<?>> resolving)
     {
         if (parameter instanceof ParameterizedType provider
                 && provider.getActualTypeArguments()[0] instanceof Class<?> dependency)
-            return () -> create(dependency, resolving);
+            return () -> create(dependency, resolving, true);
 
         throw new IllegalArgumentException("Provider requires a concrete dependency type: " + parameter);
     }

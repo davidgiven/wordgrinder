@@ -20,7 +20,6 @@ public class Main
 {
     /* Keep backend selection separate from application execution. */
     private final Screen screen;
-    private final Injector injector;
     private final System system;
 
     /* Retain configuration overrides and command-line exit state. */
@@ -29,11 +28,10 @@ public class Main
 
     /* Receive the selected backend and defer editor construction until startup. */
     @Inject
-    public Main(Injector injector, Screen screen, System system)
+    public Main(Screen screen, System system)
     {
         this.screen = screen;
         this.system = system;
-        this.injector = injector;
         configFile = system.getConfigDirectory() + "/startup.lua";
     }
 
@@ -41,11 +39,10 @@ public class Main
     public static void main(String[] args) throws IOException
     {
         Display display = new DisplayImpl();
-        Injector.INSTANCE.bindInstance(Injector.class, Injector.INSTANCE);
-        Injector.INSTANCE.bindInstance(Display.class, display);
-        Injector.INSTANCE.bindInstance(Screen.class, new ScreenImpl(display));
-        Injector.INSTANCE.bindInstance(System.class, new SystemImpl());
-        Injector.INSTANCE.create(Main.class).run(args);
+        Injector.bindInstance(Display.class, display);
+        Injector.bindInstance(Screen.class, new ScreenImpl(display));
+        Injector.bindInstance(System.class, new SystemImpl());
+        Injector.create(Main.class).run(args);
     }
 
     /* Preserve the Lua help text, including its configuration-file placeholder. */
@@ -197,7 +194,7 @@ public class Main
             screen.initScreen();
             try
             {
-                injector.create(WordProcessor.class).run();
+                Injector.create(WordProcessor.class).run();
             } finally
             {
                 screen.deinitScreen();

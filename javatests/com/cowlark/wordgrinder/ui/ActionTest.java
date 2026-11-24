@@ -19,7 +19,7 @@ public class ActionTest
     {
         Trace trace = prepare(SUCCEEDED);
         CoordinateAction action = Action.of(CoordinateAction.class);
-        assertSame(action, Injector.INSTANCE.create(CoordinateAction.class));
+        assertSame(action, Injector.create(CoordinateAction.class));
         assertEquals(List.of(), trace.calls);
         assertSame(SUCCEEDED, action.execute(3, 7));
         assertEquals(List.of("3,7"), trace.calls);
@@ -49,11 +49,11 @@ public class ActionTest
         }
     }
 
-    /* Reset the shared test dependency without replacing the cached action instances. */
+    /* Start each scenario with fresh dependencies and action instances. */
     private static Trace prepare(ActionResult result)
     {
-        Trace trace = Injector.INSTANCE.create(Trace.class);
-        trace.calls.clear();
+        Injector.resetForTesting();
+        Trace trace = Injector.create(Trace.class);
         trace.result = result;
         return trace;
     }

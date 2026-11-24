@@ -5,14 +5,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.RedrawEvent;
-import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.utils.Injector;
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -84,16 +81,10 @@ public class MenuTreeTest
         Fixture()
         {
             /* Inject the menu tree with the same collaborators its caller owns. */
-            Injector injector = new Injector();
-            Display display = (Display) Proxy.newProxyInstance(
-                    Display.class.getClassLoader(), new Class<?>[]{Display.class},
-                    (proxy, method, args) -> {
-                        throw new AssertionError("Unexpected display call: " + method.getName());
-                    });
-            injector.bindInstance(Ui.class, new Ui(screen));
-            injector.bindInstance(Word.class, new Word(display));
-            injector.bindInstance(EventBus.class, bus);
-            tree = injector.create(MenuTree.class);
+            Injector.resetForTesting();
+            Injector.bindInstance(Ui.class, new Ui(screen));
+            Injector.bindInstance(EventBus.class, bus);
+            tree = Injector.create(MenuTree.class);
 
             /* Record queued redraws and edits to accelerator bindings. */
             bus.addEventListener(RedrawEvent.class, event -> redraws++);

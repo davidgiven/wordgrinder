@@ -8,7 +8,9 @@ import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
+import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
+import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -93,7 +95,7 @@ public class WrappedLabelWidgetTest
     public void sizesStretchyFormsFromWrappedLabelHeight()
     {
         Drawing drawing = new Drawing();
-        WrappedLabelWidget label = new WrappedLabelWidget(drawing.renderer, drawing.events)
+        WrappedLabelWidget label = new WrappedLabelWidget()
                 .setBounds(1, 1, -1, -1)
                 .setValue("The quick brown fox jumps over the lazy dog.");
         drawing.screen.events.add(new KeyInputEvent("KEY_ESCAPE"));
@@ -124,12 +126,14 @@ public class WrappedLabelWidgetTest
         final EventBus events = new EventBus();
         final List<Glyph> glyphs = new ArrayList<>();
         final Display display = createDisplay();
-        final Word renderer = new Word(display);
         int attributes;
 
         /* No label operation may notify spellcheckers or any other word listeners. */
         Drawing()
         {
+            Injector.bindInstance(Screen.class, screen);
+            Injector.bindInstance(Word.class, new Word(display));
+            Injector.bindInstance(EventBus.class, events);
             events.addEventListener(DrawWordEvent.class, event -> fail("Labels must suppress DrawWord"));
         }
 
@@ -162,7 +166,7 @@ public class WrappedLabelWidgetTest
         /* Attach the screen as Form.add normally does, without needing to run an input loop. */
         WrappedLabelWidget label(String text, int width)
         {
-            WrappedLabelWidget label = new WrappedLabelWidget(renderer, events).setValue(text);
+            WrappedLabelWidget label = new WrappedLabelWidget().setValue(text);
             new Ui(screen).newForm()
                     .add(label);
             label.realwidth = width;

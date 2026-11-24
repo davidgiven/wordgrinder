@@ -18,7 +18,6 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.Ui;
-import com.cowlark.wordgrinder.ui.Action;
 import com.cowlark.wordgrinder.ui.Action.ActionResult;
 import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
@@ -77,7 +76,7 @@ public class WordProcessorTest
         assertEquals(List.of(current), set.documents);
         assertSame(current, set.documentIndex.get("main"));
         assertEquals(1, current.paragraphs.size());
-        assertEquals(List.of(""), current.paragraphs.getFirst().words);
+        assertEquals(List.of(""), current.paragraphs.getFirst().words());
         assertSame(ActionResult.SUCCEEDED, new Navigation.GotoEndOfDocumentAction(fixture.processor).execute());
         assertEquals(0, current.cursorOffset);
     }
@@ -140,7 +139,7 @@ public class WordProcessorTest
         assertSame(ActionResult.SUCCEEDED, new Navigation.DeleteNextCharAction(fixture.processor).execute());
         assertEquals(1, document.paragraphs.size());
         assertEquals(List.of(bold + "first" + Word.createStyleByte(0) + "second", "third"),
-                document.paragraphs.getFirst().words);
+                document.paragraphs.getFirst().words());
         assertEquals(bold.length() + "first".length(), document.cursorOffset);
         assertTrue(fixture.processor.getDocumentSet().changed);
         assertTrue(fixture.processor.getDocumentSet().justChanged);
@@ -254,8 +253,7 @@ public class WordProcessorTest
 
         /* Record mouse dispatch independently of the unimplemented navigation command. */
         List<String> positions = new ArrayList<>();
-        var original = Action.of(Navigation.GotoXYPositionAction.class);
-        Injector.INSTANCE.bindInstance(Navigation.GotoXYPositionAction.class,
+        Injector.bindInstance(Navigation.GotoXYPositionAction.class,
                 new Navigation.GotoXYPositionAction(fixture.processor)
                 {
                     @Override
@@ -271,7 +269,7 @@ public class WordProcessorTest
         }
         finally
         {
-            Injector.INSTANCE.bindInstance(Navigation.GotoXYPositionAction.class, original);
+            Injector.removeBindingForTesting(Navigation.GotoXYPositionAction.class);
         }
 
         /* Press and drag move the cursor, and printable input still reaches the event bus. */
@@ -317,23 +315,14 @@ public class WordProcessorTest
         private final EventBus bus;
 
         /* Register the recording subclass under the type used by injected actions. */
-        RecordingProcessor(Injector injector, Ui ui, Screen screen, Word renderer, EventBus bus)
+        RecordingProcessor(Ui ui, Screen screen, EventBus bus)
         {
             /* Navigation is unused by the input-loop scenarios in this fixture. */
-            super(injector, ui, screen, renderer, bus, null, new MenuTree(ui, renderer, bus));
+            super(ui, screen, bus, null, new MenuTree(ui, bus));
             this.bus = bus;
 
-            /* Supply the fixture dependencies when actions resolve them through the injector. */
-            injector.bindInstance(Screen.class, screen);
-            injector.bindInstance(Ui.class, ui);
-            injector.bindInstance(Word.class, renderer);
-            injector.bindInstance(EventBus.class, bus);
-            injector.bindInstance(WordProcessor.class, this);
-
-            /* Replace shared actions that retain dependencies from the previous fixture. */
-            Injector.INSTANCE.bindInstance(WordProcessor.class, this);
-            Injector.INSTANCE.bindInstance(RedrawScreenAction.class, injector.create(RedrawScreenAction.class));
-            Injector.INSTANCE.bindInstance(ActivateMenuAction.class, injector.create(ActivateMenuAction.class));
+            /* Let actions resolve this fixture's editor. */
+            Injector.bindInstance(WordProcessor.class, this);
         }
 
         @Override
@@ -405,8 +394,18 @@ public class WordProcessorTest
                 (proxy, method, args) -> {
                     throw new AssertionError("Unexpected display call: " + method.getName());
                 });
-        final RecordingProcessor processor =
-                new RecordingProcessor(new Injector(), ui, screen, new Word(display), bus);
+        final RecordingProcessor processor = createProcessor();
+
+        /* Register the screen and renderer before the editor builds its initial paragraph. */
+        private RecordingProcessor createProcessor()
+        {
+            Injector.resetForTesting();
+            Injector.bindInstance(Screen.class, screen);
+            Injector.bindInstance(Ui.class, ui);
+            Injector.bindInstance(Word.class, new Word(display));
+            Injector.bindInstance(EventBus.class, bus);
+            return new RecordingProcessor(ui, screen, bus);
+        }
 
         /* Message-only assertions exclude the visible status bar's bottom row. */
         List<String> messageWrites()
@@ -417,7 +416,7 @@ public class WordProcessorTest
         /* Build model paragraphs with the same rendering environment as the editor. */
         Paragraph paragraph(String... words)
         {
-            return Paragraph.builder(screen, new Word(display), bus)
+            return Paragraph.builder()
                     .setDocumentStyle(new DocumentStyle("Paragraph", "P", 0, 0, null, null,
                             null, null, null, null))
                     .setWords(words)

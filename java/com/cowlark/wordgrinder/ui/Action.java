@@ -10,7 +10,7 @@ public interface Action
 {
     static <T extends Action> T of(Class<T> theClass)
     {
-        return Injector.INSTANCE.create(theClass);
+        return Injector.create(theClass);
     }
 
     /* Distinguish successful operations from failed ones. */

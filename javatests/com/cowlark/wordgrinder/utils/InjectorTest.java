@@ -10,22 +10,31 @@ import static org.junit.Assert.assertTrue;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.cowlark.wordgrinder.utils.Injector.Provider;
 import java.lang.reflect.InvocationTargetException;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class InjectorTest
 {
+    /* Keep the shared cache empty at the start and end of each test. */
+    @Before
+    @After
+    public void resetInjector()
+    {
+        Injector.resetForTesting();
+    }
+
     /* Defer the back reference until its target is available in the injector cache. */
     @Test
     public void providerBreaksConstructorCycle()
     {
-        Injector injector = new Injector();
-        LazyFirst first = injector.create(LazyFirst.class);
+        LazyFirst first = Injector.create(LazyFirst.class);
         LazySecond second = first.second.get();
 
         /* Both directions use the same instances as ordinary injection. */
         assertSame(first, second.first);
         assertSame(second, first.second.get());
-        assertSame(second, injector.create(LazySecond.class));
+        assertSame(second, Injector.create(LazySecond.class));
     }
 
     /* A provider called inside the constructor still participates in cycle detection. */
@@ -33,7 +42,7 @@ public class InjectorTest
     public void providerCalledTooEarlyReportsCycle()
     {
         RuntimeException failure =
-                assertThrows(RuntimeException.class, () -> new Injector().create(EagerProvider.class));
+                assertThrows(RuntimeException.class, () -> Injector.create(EagerProvider.class));
         assertTrue(failure.getCause() instanceof InvocationTargetException);
         assertTrue(failure.getCause().getCause() instanceof IllegalStateException);
     }
@@ -76,7 +85,6 @@ public class InjectorTest
     @Test
     public void rejectsRecursiveConstructorDependencies()
     {
-        Injector injector = new Injector();
         String prefix = "Recursive constructor dependency: ";
         String self = SelfDependent.class.getName();
         String first = First.class.getName();
@@ -85,49 +93,47 @@ public class InjectorTest
         /* Include the repeated type at the end of each chain. */
         assertEquals(prefix + self + " -> " + self,
                 assertThrows(IllegalStateException.class,
-                        () -> injector.create(SelfDependent.class)).getMessage());
+                        () -> Injector.create(SelfDependent.class)).getMessage());
         assertEquals(prefix + first + " -> " + second + " -> " + first,
                 assertThrows(IllegalStateException.class,
-                        () -> injector.create(First.class)).getMessage());
+                        () -> Injector.create(First.class)).getMessage());
     }
 
     /* Select the annotated constructor and resolve both direct and transitive dependencies. */
     @Test
     public void injectsConstructorParametersRecursively() throws NoSuchMethodException
     {
-        Injector injector = new Injector();
-        Service service = injector.create(Service.class);
+        Service service = Injector.create(Service.class);
 
         /* The dependency reached by both paths is shared. */
         assertSame(service.dependency, service.intermediate.dependency);
-        assertSame(service.dependency, injector.create(Dependency.class));
-        assertSame(service.intermediate, injector.create(Intermediate.class));
+        assertSame(service.dependency, Injector.create(Dependency.class));
+        assertSame(service.intermediate, Injector.create(Intermediate.class));
     }
 
-    /* Repeated requests reuse an instance within one injector. */
+    /* Repeated requests reuse an instance until the cache is reset. */
     @Test
-    public void cachesInstancesPerInjector() throws NoSuchMethodException
+    public void cachesInstancesUntilReset() throws NoSuchMethodException
     {
-        Injector injector = new Injector();
-        Dependency dependency = injector.create(Dependency.class);
-        assertSame(dependency, injector.create(Dependency.class));
-        assertNotSame(dependency, new Injector().create(Dependency.class));
+        Dependency dependency = Injector.create(Dependency.class);
+        assertSame(dependency, Injector.create(Dependency.class));
+        Injector.resetForTesting();
+        assertNotSame(dependency, Injector.create(Dependency.class));
     }
 
     /* A public no-argument constructor can be used without an annotation. */
     @Test
     public void fallsBackToNoArgumentConstructor() throws NoSuchMethodException
     {
-        assertNotNull(new Injector().create(Unannotated.class));
+        assertNotNull(Injector.create(Unannotated.class));
     }
 
     /* An unannotated constructor with parameters is ineligible. */
     @Test
     public void rejectsUnannotatedConstructorWithParameters()
     {
-        Injector injector = new Injector();
         RuntimeException failure =
-                assertThrows(RuntimeException.class, () -> injector.create(RequiresAnnotation.class));
+                assertThrows(RuntimeException.class, () -> Injector.create(RequiresAnnotation.class));
         assertTrue(failure.getCause() instanceof NoSuchMethodException);
     }
 
@@ -135,9 +141,8 @@ public class InjectorTest
     @Test
     public void preservesConstructorFailure()
     {
-        Injector injector = new Injector();
         RuntimeException failure =
-                assertThrows(RuntimeException.class, () -> injector.create(Failing.class));
+                assertThrows(RuntimeException.class, () -> Injector.create(Failing.class));
         assertTrue(failure.getCause() instanceof InvocationTargetException);
         assertSame(Failing.FAILURE, failure.getCause().getCause());
     }

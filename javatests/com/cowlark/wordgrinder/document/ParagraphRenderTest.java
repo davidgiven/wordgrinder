@@ -9,6 +9,7 @@ import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
+import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -86,7 +87,7 @@ public class ParagraphRenderTest
                         new Glyph(10, 2, 'A', Word.UNDERLINE),
                         new Glyph(12, 2, 'B', Word.UNDERLINE),
                         new Glyph(14, 2, 'c', 0)), drawing.glyphs);
-        assertEquals(List.of("a", "b", "c"), paragraph.words);
+        assertEquals(List.of("a", "b", "c"), paragraph.words());
         assertSame(layout, paragraph.wrap(80, false));
     }
 
@@ -195,8 +196,10 @@ public class ParagraphRenderTest
         {
             DocumentStyle documentStyle =
                     new DocumentStyle(style, style, 0, 0, null, null, null, null, null, null);
-            return Paragraph
-                    .builder(screen, new Word(display), events)
+            Injector.bindInstance(Screen.class, screen);
+            Injector.bindInstance(Word.class, new Word(display));
+            Injector.bindInstance(EventBus.class, events);
+            return Paragraph.builder()
                     .setDocumentStyle(documentStyle)
                     .setWords(words)
                     .build();

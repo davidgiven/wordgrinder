@@ -1,8 +1,6 @@
 package com.cowlark.wordgrinder.document;
 
-import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.fileio.Dumpable;
-import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.ui.MenuSettings;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -34,9 +32,9 @@ public class DocumentSet
     public List<Pattern> findPatterns;
 
     /** Starts with the blank main document selected and indexed by name. */
-    public DocumentSet(Screen screen, Word wordRenderer, EventBus eventBus)
+    public DocumentSet()
     {
-        current = new Document(screen, wordRenderer, eventBus);
+        current = new Document();
         current.name = "main";
         documents.add(current);
         documentIndex.put(current.name, current);
