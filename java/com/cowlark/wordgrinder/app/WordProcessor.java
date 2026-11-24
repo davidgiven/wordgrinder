@@ -176,13 +176,13 @@ public class WordProcessor
             {
                 oldMouseX = mouse.x();
                 oldMouseY = mouse.y();
-                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
+                Action.of(Navigation.GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
                 /* TODO: Cmd.UnsetMark(), Cmd.GotoXYPosition(x, y), Cmd.SetMark(). */
             }
             else
             {
 
-                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
+                Action.of(Navigation.GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
             }
         }
         if (!mouse.b() && oldMouseButton && mouse.x() == oldMouseX && mouse.y() == oldMouseY)
