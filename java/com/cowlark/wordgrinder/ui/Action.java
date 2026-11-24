@@ -1,5 +1,6 @@
 package com.cowlark.wordgrinder.ui;
 
+import com.cowlark.wordgrinder.utils.Injector;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -7,6 +8,11 @@ import org.jspecify.annotations.Nullable;
  */
 public interface Action
 {
+    static <T extends Action> T of(Class<T> theClass)
+    {
+        return Injector.INSTANCE.create(theClass);
+    }
+
     /* Distinguish successful operations from failed ones. */
     class ActionResult
     {
@@ -50,7 +56,4 @@ public interface Action
             return menu;
         }
     }
-
-    /* Execute the operation and report its result. */
-    ActionResult execute();
 }

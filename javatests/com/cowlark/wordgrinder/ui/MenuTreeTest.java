@@ -28,7 +28,7 @@ public class MenuTreeTest
         Menu child = new Menu("Child", List.of(
                 Menu.Item.command("run", "R", "Run", null,
                         () -> new Action.ActionResult("child"))));
-        Action open = () -> new Action.ActionResult(child);
+        VoidAction open = () -> new Action.ActionResult(child);
         Menu root = new Menu("Root", List.of(Menu.Item.command("open", "O", "Open", "O", open)));
 
         /* Visit the returned submenu, go back, then run its first command on the second visit. */
@@ -46,7 +46,7 @@ public class MenuTreeTest
     public void changesDocumentAcceleratorsWithoutRestoringRemovedDefaults()
     {
         Fixture fixture = new Fixture();
-        Action action = () -> Action.ActionResult.SUCCEEDED;
+        VoidAction action = () -> Action.ActionResult.SUCCEEDED;
         Menu root = new Menu("Root", List.of(Menu.Item.command("run", "R", "Run", "^R", action)));
 
         /* Bind a new key and verify the old key no longer resolves. */

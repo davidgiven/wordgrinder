@@ -183,6 +183,10 @@ public class WordProcessorTest
             injector.bindInstance(Word.class, renderer);
             injector.bindInstance(EventBus.class, bus);
             injector.bindInstance(WordProcessor.class, this);
+
+            /* Replace shared actions that retain dependencies from the previous fixture. */
+            Injector.INSTANCE.bindInstance(RedrawScreenAction.class, injector.create(RedrawScreenAction.class));
+            Injector.INSTANCE.bindInstance(ActivateMenuAction.class, injector.create(ActivateMenuAction.class));
         }
 
         @Override

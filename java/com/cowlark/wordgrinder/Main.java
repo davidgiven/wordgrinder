@@ -40,13 +40,12 @@ public class Main
     /* The entry point chooses the backend; application logic receives its interface. */
     public static void main(String[] args) throws IOException
     {
-        Injector injector = new Injector();
         Display display = new DisplayImpl();
-        injector.bindInstance(Injector.class, injector);
-        injector.bindInstance(Display.class, display);
-        injector.bindInstance(Screen.class, new ScreenImpl(display));
-        injector.bindInstance(System.class, new SystemImpl());
-        injector.create(Main.class).run(args);
+        Injector.INSTANCE.bindInstance(Injector.class, Injector.INSTANCE);
+        Injector.INSTANCE.bindInstance(Display.class, display);
+        Injector.INSTANCE.bindInstance(Screen.class, new ScreenImpl(display));
+        Injector.INSTANCE.bindInstance(System.class, new SystemImpl());
+        Injector.INSTANCE.create(Main.class).run(args);
     }
 
     /* Preserve the Lua help text, including its configuration-file placeholder. */

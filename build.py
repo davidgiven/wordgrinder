@@ -31,7 +31,7 @@ export(
         "javatests/com/cowlark/wordgrinder/ui+ui-test",
         "javatests/com/cowlark/wordgrinder/ui+form-test",
         "javatests/com/cowlark/wordgrinder/ui+menu-tree-test",
-        "javatests/com/cowlark/wordgrinder/ui+static-action-test",
+        "javatests/com/cowlark/wordgrinder/ui+action-test",
         "javatests/com/cowlark/wordgrinder/addons+settings-test",
         "javatests/com/cowlark/wordgrinder/fileio+dumper-test",
         "javatests/com/cowlark/wordgrinder/fileio+undumper-test",

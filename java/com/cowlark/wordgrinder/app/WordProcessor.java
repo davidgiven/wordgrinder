@@ -75,7 +75,7 @@ public class WordProcessor
     }
 
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
-    public static class ResizeScreenAction implements Action
+    public static class ResizeScreenAction implements VoidAction
     {
         /* Expose this constructor to the action injector. */
         @Inject
@@ -92,7 +92,7 @@ public class WordProcessor
     }
 
     /* Draw the available desktop and messages; document and status-bar rendering are pending. */
-    public static class RedrawScreenAction implements Action
+    public static class RedrawScreenAction implements VoidAction
     {
         private final WordProcessor wordProcessor;
         private final Ui ui;
@@ -131,7 +131,7 @@ public class WordProcessor
         }
     }
 
-    public static class TerminateProgramAction implements Action
+    public static class TerminateProgramAction implements VoidAction
     {
         /* Expose this constructor to the action injector. */
         @Inject
@@ -147,14 +147,14 @@ public class WordProcessor
     }
 
     /* Master bindings take precedence over printable input and future menu accelerators. */
-    private void handleKeyEvent(String key, Map<String, StaticAction> masterKeymap)
+    private void handleKeyEvent(String key, Map<String, VoidAction> masterKeymap)
     {
-        StaticAction actionClass = masterKeymap.get(key);
-        if (actionClass != null)
-            actionClass.execute(injector);
+        VoidAction action = masterKeymap.get(key);
+        if (action != null)
+            action.execute();
         else if (!key.startsWith("KEY_"))
         {
-            execute(CheckpointAction.class);
+            Action.of(CheckpointAction.class).execute();
             /* TODO: Cmd.Checkpoint() and Cmd.TypeWhileSelected(). */
             KeyTypedEvent payload = new KeyTypedEvent(key);
             eventBus.fireEvent(payload);
@@ -176,11 +176,13 @@ public class WordProcessor
             {
                 oldMouseX = mouse.x();
                 oldMouseY = mouse.y();
+                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
                 /* TODO: Cmd.UnsetMark(), Cmd.GotoXYPosition(x, y), Cmd.SetMark(). */
             }
             else
             {
-                /* TODO: Cmd.GotoXYPosition(mouse.x(), mouse.y()). */
+
+                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
             }
         }
         if (!mouse.b() && oldMouseButton && mouse.x() == oldMouseX && mouse.y() == oldMouseY)
@@ -190,13 +192,8 @@ public class WordProcessor
         oldMouseButton = mouse.b();
     }
 
-    public <T extends Action> void execute(Class<T> theClass)
-    {
-        StaticAction.of(theClass).execute(injector);
-    }
-
     /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives. */
-    private void eventLoop(Map<String, StaticAction> masterKeymap)
+    private void eventLoop(Map<String, VoidAction> masterKeymap)
     {
         while (true)
         {
@@ -235,7 +232,7 @@ public class WordProcessor
                 .setTitle(title)
                 .setHeight(2)
                 .setStretchy(true)
-                .setRedraw(() -> execute(RedrawScreenAction.class))
+                .setRedraw(() -> Action.of(RedrawScreenAction.class).execute())
                 .setHelpText("press SPACE to continue")
                 .on(" ", Widget.Action.CONFIRM)
                 .add(new WrappedLabelWidget(wordRenderer, eventBus).setBounds(1, 1, -1, -3).setValue(text))
@@ -243,7 +240,7 @@ public class WordProcessor
         eventBus.fireEvent(RedrawEvent.INSTANCE);
     }
 
-    public static class ActivateMenuAction implements Action
+    public static class ActivateMenuAction implements VoidAction
     {
         private final MenuTree menuTree;
         private final WordProcessor wordProcessor;
@@ -272,19 +269,19 @@ public class WordProcessor
      */
     public void run()
     {
-        eventBus.addEventListener(RedrawEvent.class, e -> execute(RedrawScreenAction.class));
+        eventBus.addEventListener(RedrawEvent.class, e -> Action.of(RedrawScreenAction.class).execute());
 
         /* Resolve master bindings through the injector when their keys are pressed. */
-        ImmutableMap<String, StaticAction> masterKeymap = ImmutableMap.<String, StaticAction>builder()
-                .put("KEY_RESIZE", StaticAction.of(ResizeScreenAction.class, RedrawScreenAction.class))
-                .put("KEY_REDRAW", StaticAction.of(RedrawScreenAction.class))
+        ImmutableMap<String, VoidAction> masterKeymap = ImmutableMap.<String, VoidAction>builder()
+                .put("KEY_RESIZE", Action.of(ResizeScreenAction.class).then(RedrawScreenAction.class))
+                .put("KEY_REDRAW", Action.of(RedrawScreenAction.class))
                 .put(" ",
-                        StaticAction.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
-                 */.put("KEY_RETURN", StaticAction.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
+                        Action.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
+                 */.put("KEY_RETURN", Action.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
                         SplitCurrentParagraph. */.put("KEY_ESCAPE",
-                        StaticAction.of(ActivateMenuAction.class)) /* Cmd.ActivateMenu. */.put("KEY_MENU",
-                        StaticAction.of(ActivateMenuAction.class))
-                .put("KEY_QUIT", StaticAction.of(TerminateProgramAction.class))
+                        Action.of(ActivateMenuAction.class)) /* Cmd.ActivateMenu. */.put("KEY_MENU",
+                        Action.of(ActivateMenuAction.class))
+                .put("KEY_QUIT", Action.of(TerminateProgramAction.class))
                 .build();
 
         /* Keep the welcome message and restart after reporting an internal error. */

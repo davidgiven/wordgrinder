@@ -103,7 +103,7 @@ public final class Menu
             @Nullable String id,
             @Nullable String menuKey,
             @Nullable String accelerator,
-            @Nullable Action action,
+            @Nullable VoidAction action,
             @Nullable Menu submenu)
     {
         public static final Item SEPARATOR =
@@ -114,7 +114,7 @@ public final class Menu
          */
         public static Item command(
                 String id, @Nullable String menuKey, String label,
-                @Nullable String accelerator, Action action)
+                @Nullable String accelerator, VoidAction action)
         {
             return new Item(label, id, menuKey, accelerator, action, null);
         }

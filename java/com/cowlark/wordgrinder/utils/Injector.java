@@ -14,6 +14,8 @@ import java.util.Set;
 
 public class Injector
 {
+    public static final Injector INSTANCE = new Injector();
+
     private final HashMap<Class<?>, Object> objects = new HashMap<>();
 
     /**

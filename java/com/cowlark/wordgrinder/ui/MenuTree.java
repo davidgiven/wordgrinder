@@ -71,7 +71,7 @@ public final class MenuTree
     }
 
     /** Returns the action for an editor accelerator, or null if the key is unbound. */
-    public @Nullable Action lookupAccelerator(Menu root, MenuSettings settings, String key,
+    public @Nullable VoidAction lookupAccelerator(Menu root, MenuSettings settings, String key,
             Runnable redraw, Consumer<String> message)
     {
         /* Resolve the current menu contents so dynamic replacements are visible. */
@@ -286,7 +286,7 @@ public final class MenuTree
             /* Only commands and submenu entries consume a selection. */
             if (item == null || item.isSeparator())
                 return;
-            Action action = item.action();
+            VoidAction action = item.action();
             Menu submenu = item.submenu();
             if (action != null)
                 execute(action);
@@ -294,7 +294,7 @@ public final class MenuTree
                 stack.add(new Frame(submenu));
         }
 
-        void execute(Action action)
+        void execute(VoidAction action)
         {
             /* A returned submenu keeps the stack open. Other results close the menus. */
             ActionResult result = action.execute();

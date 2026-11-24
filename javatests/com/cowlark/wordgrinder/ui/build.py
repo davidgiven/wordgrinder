@@ -1,10 +1,10 @@
 from build.junit4 import junit4
 
 junit4(
-    name="static-action-test",
+    name="action-test",
     srcitems={
         f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
-        for f in ["StaticActionTest.java"]
+        for f in ["ActionTest.java"]
     },
     deps=[
         "java/com/cowlark/wordgrinder/ui",
