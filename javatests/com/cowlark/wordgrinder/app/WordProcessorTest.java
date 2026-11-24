@@ -24,7 +24,7 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
-    /* Deferred events precede WaitingForUser; idle repeats input waiting and services redraws. */
+    /* Flush deferred events before waiting and defer idle redraws until the next loop pass. */
     @Test
     public void dispatchesEventsAndRedrawsAfterIdle()
     {
@@ -36,10 +36,12 @@ public class WordProcessorTest
                 IdleEvent.class, event -> {
                     events.add("idle");
                     fixture.idling = false;
-                    fixture.processor.queueRedraw();
+                    fixture.bus.fireAsyncEvent(RedrawEvent.INSTANCE);
+                    assertEquals(1, fixture.redraws);
                 });
         fixture.bus.addEventListener(
                 KeyTypedEvent.class, event -> {
+                    assertEquals(1, fixture.redraws);
                     events.add(event.value);
                     event.value = "replacement";
                 });
@@ -81,7 +83,12 @@ public class WordProcessorTest
         fixture.bus.addEventListener(
                 WaitingForUserEvent.class, event -> {
                     if (++waits[0] == 3)
-                        fixture.processor.queueRedraw();
+                    {
+                        /* Repaint the retained warning before the next input dismisses it. */
+                        int redraws = fixture.redraws;
+                        fixture.bus.fireEvent(RedrawEvent.INSTANCE);
+                        assertEquals(redraws + 1, fixture.redraws);
+                    }
                 });
         fixture.keys("KEY_UNKNOWN", "KEY_RESIZE", "x", "KEY_REDRAW");
         fixture.run();
@@ -157,13 +164,16 @@ public class WordProcessorTest
 
     private static class RecordingProcessor extends WordProcessor
     {
+        /* Record recovery dialogues and share the production redraw event path. */
         final List<String> dialogues = new ArrayList<>();
+        private final EventBus bus;
 
         /* Register the recording subclass under the type used by injected actions. */
         RecordingProcessor(Injector injector, Ui ui, Screen screen, Word renderer, EventBus bus)
         {
             /* Navigation is unused by the input-loop scenarios in this fixture. */
             super(injector, ui, screen, renderer, bus, null, new MenuTree(ui, renderer, bus));
+            this.bus = bus;
             injector.bindInstance(WordProcessor.class, this);
         }
 
@@ -171,7 +181,7 @@ public class WordProcessorTest
         protected void modalMessage(String title, String text)
         {
             dialogues.add(title + "\n" + text);
-            queueRedraw();
+            bus.fireEvent(RedrawEvent.INSTANCE);
         }
     }
 

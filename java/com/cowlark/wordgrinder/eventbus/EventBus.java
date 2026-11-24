@@ -111,6 +111,7 @@ public final class EventBus
         Map<EventToken, Listener<?>> registered = listeners.get(event.getClass());
         if (registered == null)
             return;
+        batched.remove(event.getClass());
         for (Listener<?> listener : new ArrayList<>(registered.values()))
         {
             if (registered.containsKey(listener.token()))

@@ -37,8 +37,6 @@ public class WordProcessor
     private final EventBus eventBus;
     private static final double IDLE_TIME = (Ui.BLINK_ON_TIME + Ui.BLINK_OFF_TIME) * 5;
 
-    /* Keep redraw requests and transient messages with the loop that consumes them. */
-    private boolean redrawPending = true;
     private final List<String> messages = new ArrayList<>();
 
     /* Mouse selection tracks the initial press across subsequent drag and release events. */
@@ -60,20 +58,12 @@ public class WordProcessor
     }
 
     /**
-     * Requests a redraw before the next input wait.
-     */
-    public void queueRedraw()
-    {
-        redrawPending = true;
-    }
-
-    /**
      * Adds a transient message and schedules its display.
      */
     public void nonmodalMessage(String text)
     {
         messages.add(text);
-        queueRedraw();
+        eventBus.fireAsyncEvent(RedrawEvent.INSTANCE);
     }
 
     /**
@@ -227,11 +217,6 @@ public class WordProcessor
             InputEvent input;
             do
             {
-                if (redrawPending)
-                {
-                    execute(RedrawScreenAction.class);
-                    redrawPending = false;
-                }
                 input = ui.getCharWithBlinkingCursor(IDLE_TIME);
                 if (input.isKey("KEY_TIMEOUT"))
                     eventBus.fireEvent(new IdleEvent());
@@ -269,7 +254,7 @@ public class WordProcessor
                              .setBounds(1, 1, -1, -3)
                              .setValue(text))
                 .run();
-        queueRedraw();
+        eventBus.fireEvent(RedrawEvent.INSTANCE);
     }
 
     /**
@@ -277,7 +262,7 @@ public class WordProcessor
      */
     public void run()
     {
-        eventBus.addEventListener(RedrawEvent.class, e -> queueRedraw());
+        eventBus.addEventListener(RedrawEvent.class, e -> execute(RedrawScreenAction.class));
 
         /* Cmd-based groups remain inert, including resize's grouped redraw callback. */
         ImmutableMap<String, Action> masterKeymap = ImmutableMap
@@ -291,7 +276,8 @@ public class WordProcessor
                         SplitCurrentParagraph. */.put(
                         "KEY_ESCAPE",
                         () -> menuTree.activate(MenuDefinitions.TOPLEVEL, menuSettings, () ->
-                                execute(RedrawScreenAction.class), s -> nonmodalMessage(s))
+                                                        eventBus.fireEvent(RedrawEvent.INSTANCE),
+                                                s -> nonmodalMessage(s))
                 ) /* Cmd.ActivateMenu. */.put(
                         "KEY_MENU",
                         callbacks()) /* Cmd.ActivateMenu. */.put(
