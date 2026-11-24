@@ -30,6 +30,41 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Render ordered add-on fields and reserve the bottom row only when the bar is shown. */
+    @Test
+    public void redrawBuildsStatusBarAndPositionsMessagesAboveIt()
+    {
+        Fixture fixture = new Fixture();
+        var set = fixture.processor.getDocumentSet();
+        set.name = "drafts\\novel.wg";
+        set.changed = true;
+
+        /* Supply fields in reverse priority order to exercise the synchronous build event. */
+        int[] builds = {0};
+        fixture.bus.addEventListener(BuildStatusBarEvent.class, event -> {
+            builds[0]++;
+            event.fields.add(new BuildStatusBarEvent.Field(200, "Words: 5"));
+            event.fields.add(new BuildStatusBarEvent.Field(100, "P: 1/1"));
+        });
+        fixture.processor.nonmodalMessage("Saved");
+        var redraw = new WordProcessor.RedrawScreenAction(fixture.processor);
+        redraw.execute();
+
+        /* Check the two alignments and the message row below the document. */
+        String details = "  │ P: 1/1 │ Words: 5";
+        assertEquals(List.of(new ScreenWrite(0, 23, "novel.wg[main] CHANGED"),
+                new ScreenWrite(80 - details.length(), 23, details),
+                new ScreenWrite(0, 22, "Saved")), fixture.writes);
+        assertEquals(1, builds[0]);
+
+        /* Hiding the status bar frees its row and skips field collection. */
+        set.statusBar = false;
+        fixture.writes.clear();
+        redraw.execute();
+        assertEquals(List.of(new ScreenWrite(0, 23, "Saved")), fixture.writes);
+        assertEquals(1, builds[0]);
+    }
+
     /* New editors can navigate immediately with the cursor on a blank word. */
     @Test
     public void startsWithOneSelectedDocumentAndOneBlankParagraph()
@@ -185,7 +220,7 @@ public class WordProcessorTest
                         "Welcome to WordGrinder! Press ESC to show the menu.",
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
-                        "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.writes);
+                        "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.messageWrites());
         assertEquals(5, fixture.redraws);
     }
 
@@ -199,7 +234,7 @@ public class WordProcessorTest
         fixture.run();
         assertEquals(
                 List.of("Welcome to WordGrinder! Press ESC to show the menu.", "second", "first"),
-                fixture.writes);
+                fixture.messageWrites());
         assertEquals(1, fixture.redraws);
     }
 
@@ -309,11 +344,16 @@ public class WordProcessorTest
         }
     }
 
+    /* Retain cell coordinates so tests can distinguish the message and status rows. */
+    private record ScreenWrite(int x, int y, String text)
+    {
+    }
+
     /* Script input independently of cursor blink periods; idle listeners end simulated timeouts. */
     private static class Fixture
     {
         final Queue<InputEvent> input = new ArrayDeque<>();
-        final List<String> writes = new ArrayList<>();
+        final List<ScreenWrite> writes = new ArrayList<>();
         final EventBus bus = new EventBus();
         int redraws;
         boolean idling;
@@ -338,7 +378,7 @@ public class WordProcessorTest
                         }
                         case "write" ->
                         {
-                            writes.add((String) args[2]);
+                            writes.add(new ScreenWrite((int) args[0], (int) args[1], (String) args[2]));
                             yield null;
                         }
                         case "getEvent" ->
@@ -367,6 +407,12 @@ public class WordProcessorTest
                 });
         final RecordingProcessor processor =
                 new RecordingProcessor(new Injector(), ui, screen, new Word(display), bus);
+
+        /* Message-only assertions exclude the visible status bar's bottom row. */
+        List<String> messageWrites()
+        {
+            return writes.stream().filter(write -> write.y() < 23).map(ScreenWrite::text).toList();
+        }
 
         /* Build model paragraphs with the same rendering environment as the editor. */
         Paragraph paragraph(String... words)

@@ -5,6 +5,7 @@ javalibrary(
     srcitems={
         f"com/cowlark/wordgrinder/eventbus/{f}": f"./{f}"
         for f in [
+            "BuildStatusBarEvent.java",
             "DrawWordEvent.java",
             "ChangedEvent.java",
             "WaitingForUserEvent.java",

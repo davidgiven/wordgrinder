@@ -17,10 +17,12 @@ import com.google.common.collect.ImmutableMap;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 import static com.cowlark.wordgrinder.ui.Action.ActionResult.SUCCEEDED;
+import static java.lang.Math.max;
 
 /**
  * The word-processor input loop, translated from main.lua.
@@ -116,7 +118,7 @@ public class WordProcessor
         }
     }
 
-    /* Draw the available desktop and messages; document and status-bar rendering are pending. */
+    /* Draw the desktop, status bar and transient messages. */
     public static class RedrawScreenAction implements VoidAction
     {
         private final WordProcessor wordProcessor;
@@ -134,25 +136,67 @@ public class WordProcessor
         @Override
         public ActionResult execute()
         {
+            /* Wait until the backend reports a usable screen before drawing. */
+            int[] size = screen.getScreenSize();
+            int width = size[0];
+            int y = size[1] - 1;
+            if (width <= 0 || y < 0)
+                return SUCCEEDED;
+
             ui.setColour(null, "Desktop");
             screen.clearScreen();
 
+            /* Reserve the bottom row for the status bar when enabled. */
+            if (wordProcessor.getDocumentSet().statusBar)
+                drawStatusBar(width, y--);
+
             /* Stack messages upwards from the bottom, with the newest message last on screen. */
-            int[] size = screen.getScreenSize();
-            int y = size[1] - 1;
             if (!wordProcessor.messages.isEmpty())
             {
                 ui.setColour("MessageFG", "MessageBG");
                 screen.setReverse();
-                for (int i = wordProcessor.messages.size() - 1; i >= 0 && y >= 0; i--, y--)
+                int i = wordProcessor.messages.size() - 1;
+                while (i >= 0 && y >= 0)
                 {
-                    screen.clearArea(0, y, size[0] - 1, y);
+                    screen.clearArea(0, y, width - 1, y);
                     screen.write(0, y, wordProcessor.messages.get(i));
+                    i--;
+                    y--;
                 }
                 screen.setNormal();
             }
 
             return SUCCEEDED;
+        }
+
+        /* Draw document names and the dirty marker before collecting add-on fields. */
+        private void drawStatusBar(int width, int y)
+        {
+            DocumentSet set = wordProcessor.getDocumentSet();
+            String filename = set.name == null ? "(unnamed)" : set.name;
+            int separator = max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
+            String name = set.current.name == null ? "" : set.current.name;
+            String label = filename.substring(separator + 1) + "[" + name + "] "
+                    + (set.changed ? "CHANGED" : "");
+            ui.setColour("StatusbarBG", "StatusbarFG");
+            screen.setReverse();
+            screen.clearArea(0, y, width - 1, y);
+            ui.lAlignInField(0, y, width, label);
+
+            /* Deliver the event now so its fields can be laid out in this redraw. */
+            BuildStatusBarEvent event = new BuildStatusBarEvent();
+            wordProcessor.eventBus.fireEvent(event);
+            event.fields.sort(Comparator.comparingInt(BuildStatusBarEvent.Field::priority));
+            if (!event.fields.isEmpty())
+            {
+                StringBuilder fields = new StringBuilder(" ");
+                for (BuildStatusBarEvent.Field field : event.fields)
+                    fields.append(" │ ").append(field.value());
+                if (fields.charAt(fields.length() - 1) == ' ')
+                    fields.setLength(fields.length() - 1);
+                ui.rAlignInField(0, y, width, fields.toString());
+            }
+            screen.setNormal();
         }
     }
 
