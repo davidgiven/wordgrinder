@@ -71,7 +71,8 @@ public class WordProcessorTest
                 "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
-        assertEquals(3, fixture.redraws);
+        assertTrue(fixture.processor.dialogues.isEmpty());
+        assertEquals(5, fixture.redraws);
     }
 
     /* Unknown keys replace dismissed messages; resizing retains the current warning. */
@@ -96,8 +97,9 @@ public class WordProcessorTest
                 List.of(
                         "Welcome to WordGrinder! Press ESC to show the menu.",
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
+                        "UNKNOWN is not bound --- try ESCAPE for a menu",
                         "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.writes);
-        assertEquals(4, fixture.redraws);
+        assertEquals(5, fixture.redraws);
     }
 
     /* Multiple queued messages appear newest first from the bottom upwards. */
@@ -174,6 +176,12 @@ public class WordProcessorTest
             /* Navigation is unused by the input-loop scenarios in this fixture. */
             super(injector, ui, screen, renderer, bus, null, new MenuTree(ui, renderer, bus));
             this.bus = bus;
+
+            /* Supply the fixture dependencies when actions resolve them through the injector. */
+            injector.bindInstance(Screen.class, screen);
+            injector.bindInstance(Ui.class, ui);
+            injector.bindInstance(Word.class, renderer);
+            injector.bindInstance(EventBus.class, bus);
             injector.bindInstance(WordProcessor.class, this);
         }
 

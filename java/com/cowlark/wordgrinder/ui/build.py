@@ -17,6 +17,7 @@ javalibrary(
         f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
         for f in [
             "Action.java",
+            "StaticAction.java",
             "BrowserWidget.java",
             "CheckboxWidget.java",
             "ClassicPalette.java",

@@ -74,17 +74,6 @@ public class WordProcessor
         messages.clear();
     }
 
-    private <T extends Action> T callback(Class<T> callback)
-    {
-        return injector.create(callback);
-    }
-
-    /* Grouped callbacks intentionally do nothing until command dispatch is ported. */
-    private Action callbacks(Action... callbacks)
-    {
-        return () -> SUCCEEDED;
-    }
-
     /* Document wrapping and viewport layout will be supplied by the document renderer. */
     public static class ResizeScreenAction implements Action
     {
@@ -105,9 +94,9 @@ public class WordProcessor
     /* Draw the available desktop and messages; document and status-bar rendering are pending. */
     public static class RedrawScreenAction implements Action
     {
-        private WordProcessor wordProcessor;
-        private Ui ui;
-        private Screen screen;
+        private final WordProcessor wordProcessor;
+        private final Ui ui;
+        private final Screen screen;
 
         @Inject
         public RedrawScreenAction(WordProcessor wp)
@@ -158,11 +147,11 @@ public class WordProcessor
     }
 
     /* Master bindings take precedence over printable input and future menu accelerators. */
-    private void handleKeyEvent(String key, Map<String, Action> masterKeymap)
+    private void handleKeyEvent(String key, Map<String, StaticAction> masterKeymap)
     {
-        Action callback = masterKeymap.get(key);
-        if (callback != null)
-            callback.execute();
+        StaticAction actionClass = masterKeymap.get(key);
+        if (actionClass != null)
+            actionClass.execute(injector);
         else if (!key.startsWith("KEY_"))
         {
             execute(CheckpointAction.class);
@@ -203,11 +192,11 @@ public class WordProcessor
 
     public <T extends Action> void execute(Class<T> theClass)
     {
-        callback(theClass).execute();
+        StaticAction.of(theClass).execute(injector);
     }
 
     /* Flush deferred events before waiting, and keep servicing idle timeouts until input arrives. */
-    private void eventLoop(Map<String, Action> masterKeymap)
+    private void eventLoop(Map<String, StaticAction> masterKeymap)
     {
         while (true)
         {
@@ -242,19 +231,40 @@ public class WordProcessor
     /* Use the existing form widgets for the recoverable internal-error dialogue. */
     protected void modalMessage(String title, String text)
     {
-        ui
-                .newForm()
+        ui.newForm()
                 .setTitle(title)
                 .setHeight(2)
                 .setStretchy(true)
                 .setRedraw(() -> execute(RedrawScreenAction.class))
                 .setHelpText("press SPACE to continue")
                 .on(" ", Widget.Action.CONFIRM)
-                .add(new WrappedLabelWidget(wordRenderer, eventBus)
-                             .setBounds(1, 1, -1, -3)
-                             .setValue(text))
+                .add(new WrappedLabelWidget(wordRenderer, eventBus).setBounds(1, 1, -1, -3).setValue(text))
                 .run();
         eventBus.fireEvent(RedrawEvent.INSTANCE);
+    }
+
+    public static class ActivateMenuAction implements Action
+    {
+        private final MenuTree menuTree;
+        private final WordProcessor wordProcessor;
+        private final EventBus eventBus;
+
+        @Inject
+        public ActivateMenuAction(MenuTree menuTree, WordProcessor wordProcessor, EventBus eventBus)
+        {
+            this.menuTree = menuTree;
+            this.wordProcessor = wordProcessor;
+            this.eventBus = eventBus;
+        }
+
+        @Override
+        public ActionResult execute()
+        {
+            return menuTree.activate(MenuDefinitions.TOPLEVEL,
+                    wordProcessor.menuSettings,
+                    () -> eventBus.fireEvent(RedrawEvent.INSTANCE),
+                    wordProcessor::nonmodalMessage);
+        }
     }
 
     /**
@@ -264,25 +274,18 @@ public class WordProcessor
     {
         eventBus.addEventListener(RedrawEvent.class, e -> execute(RedrawScreenAction.class));
 
-        /* Cmd-based groups remain inert, including resize's grouped redraw callback. */
-        ImmutableMap<String, Action> masterKeymap = ImmutableMap
-                .<String, Action>builder()
-                .put("KEY_RESIZE", callbacks(callback(ResizeScreenAction.class), callback(RedrawScreenAction.class)))
-                .put("KEY_REDRAW", callback(RedrawScreenAction.class))
-                .put(
-                        " ",
-                        callback(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
-                 */.put("KEY_RETURN", callback(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
-                        SplitCurrentParagraph. */.put(
-                        "KEY_ESCAPE",
-                        () -> menuTree.activate(MenuDefinitions.TOPLEVEL, menuSettings, () ->
-                                                        eventBus.fireEvent(RedrawEvent.INSTANCE),
-                                                s -> nonmodalMessage(s))
-                ) /* Cmd.ActivateMenu. */.put(
-                        "KEY_MENU",
-                        callbacks()) /* Cmd.ActivateMenu. */.put(
-                        "KEY_QUIT",
-                        callback(TerminateProgramAction.class)).build();
+        /* Resolve master bindings through the injector when their keys are pressed. */
+        ImmutableMap<String, StaticAction> masterKeymap = ImmutableMap.<String, StaticAction>builder()
+                .put("KEY_RESIZE", StaticAction.of(ResizeScreenAction.class, RedrawScreenAction.class))
+                .put("KEY_REDRAW", StaticAction.of(RedrawScreenAction.class))
+                .put(" ",
+                        StaticAction.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
+                 */.put("KEY_RETURN", StaticAction.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
+                        SplitCurrentParagraph. */.put("KEY_ESCAPE",
+                        StaticAction.of(ActivateMenuAction.class)) /* Cmd.ActivateMenu. */.put("KEY_MENU",
+                        StaticAction.of(ActivateMenuAction.class))
+                .put("KEY_QUIT", StaticAction.of(TerminateProgramAction.class))
+                .build();
 
         /* Keep the welcome message and restart after reporting an internal error. */
         nonmodalMessage("Welcome to WordGrinder! Press ESC to show the menu.");
@@ -297,12 +300,8 @@ public class WordProcessor
                 StringWriter traceback = new StringWriter();
                 e.printStackTrace(new PrintWriter(traceback));
                 java.lang.System.out.print(traceback);
-                modalMessage(
-                        "Internal error!",
-                        "Something went wrong inside WordGrinder! I'll try and " +
-                                "continue but you should save your work immediately (under a " +
-                                "different filename), exit, and send the following technical " +
-                                "information to the author:\n\n" + traceback);
+                modalMessage("Internal error!",
+                        "Something went wrong inside WordGrinder! I'll try and " + "continue but you should save your work immediately (under a " + "different filename), exit, and send the following technical " + "information to the author:\n\n" + traceback);
             }
         }
     }

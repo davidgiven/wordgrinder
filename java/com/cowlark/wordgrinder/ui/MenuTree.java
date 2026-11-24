@@ -21,8 +21,7 @@ import java.util.function.Consumer;
 import org.jspecify.annotations.Nullable;
 
 import static com.cowlark.wordgrinder.ui.Action.ActionResult.SUCCEEDED;
-import static java.lang.Math.clamp;
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 
 /** Runs a caller-supplied menu hierarchy against a document set's accelerator bindings. */
 public final class MenuTree
@@ -394,13 +393,13 @@ public final class MenuTree
                 return;
             }
             List<Item> items = frame.menu.items();
-            frame.x = Math.min(depth * 4, max(0, size[0] - 8));
-            frame.y = Math.min(depth * 2, max(0, size[1] - 4));
-            frame.rows = Math.min(items.size(), size[1] - frame.y - 3);
+            frame.x = clamp(size[0] - 8, 0, depth * 4);
+            frame.y = clamp(size[1] - 4, 0, depth * 2);
+            frame.rows = min(items.size(), size[1] - frame.y - 3);
             move(frame, 0);
             if (frame.rows > 0)
                 frame.top = clamp(frame.top, max(0, frame.selected - frame.rows + 1),
-                        Math.min(frame.selected, items.size() - frame.rows));
+                        min(frame.selected, items.size() - frame.rows));
 
             /* Size the box for the labels and accelerator column within the screen. */
             int acceleratorWidth = 0;
@@ -410,7 +409,7 @@ public final class MenuTree
                 if (key != null)
                     acceleratorWidth = max(acceleratorWidth, screen.getStringWidth(key) + 1);
             }
-            frame.width = Math.min(size[0] - frame.x - 2,
+            frame.width = min(size[0] - frame.x - 2,
                     frame.menu.maxWidth(screen) + 4 + acceleratorWidth);
             ui.setColour("ControlFG", "ControlBG");
             ui.drawTitledBox(frame.x, frame.y, frame.width, frame.rows, frame.menu.label());
@@ -421,7 +420,7 @@ public final class MenuTree
                 int start = frame.top * frame.rows / items.size();
                 int end = (frame.top + frame.rows) * frame.rows / items.size();
                 screen.setBright();
-                for (int row = start; row <= Math.min(end, frame.rows - 1); row++)
+                for (int row = start; row <= min(end, frame.rows - 1); row++)
                     screen.write(frame.x + frame.width + 1, frame.y + row + 1,
                             screen.useUnicode() ? "║" : "#");
                 screen.setNormal();

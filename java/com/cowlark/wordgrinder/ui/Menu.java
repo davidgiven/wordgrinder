@@ -1,14 +1,19 @@
 package com.cowlark.wordgrinder.ui;
 
 import com.cowlark.wordgrinder.nativeinterface.Screen;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.collect.ImmutableList;
 import org.jspecify.annotations.Nullable;
 
-/** An ordered menu definition, translated from the Menu type and CreateMenu in menu.lua. */
+/**
+ * An ordered menu definition, translated from the Menu type and CreateMenu in menu.lua.
+ */
 public final class Menu
 {
     /* Keep the contents replaceable so existing submenu links survive a rebuild. */
@@ -16,13 +21,25 @@ public final class Menu
     private List<Item> items;
     private Map<String, Item> menuKeys;
 
-    /** Creates a menu with the given title and ordered entries. */
+    /**
+     * Creates a menu with the given title and ordered entries.
+     */
     public Menu(String label, List<Item> items)
     {
         replace(label, items);
     }
 
-    /** Rebuilds this menu in place, as for the documents and paragraph styles menus. */
+    /**
+     * Creates a menu with the given title and ordered entries.
+     */
+    public Menu(String label, Item... items)
+    {
+        replace(label, ImmutableList.copyOf(items));
+    }
+
+    /**
+     * Rebuilds this menu in place, as for the documents and paragraph styles menus.
+     */
     public void replace(String label, List<Item> items)
     {
         /* Validate and index the replacement before changing the current contents. */
@@ -43,25 +60,33 @@ public final class Menu
         this.menuKeys = keys;
     }
 
-    /** Returns the title displayed above the entries. */
+    /**
+     * Returns the title displayed above the entries.
+     */
     public String label()
     {
         return label;
     }
 
-    /** Returns the entries in display order, including separators. */
+    /**
+     * Returns the entries in display order, including separators.
+     */
     public List<Item> items()
     {
         return items;
     }
 
-    /** Finds the entry for a menu-local key, already normalised by the caller. */
+    /**
+     * Finds the entry for a menu-local key, already normalised by the caller.
+     */
     public @Nullable Item lookupMenuKey(String key)
     {
         return menuKeys.get(key);
     }
 
-    /** Returns the width of the widest title or entry label in screen cells. */
+    /**
+     * Returns the width of the widest title or entry label in screen cells.
+     */
     public int maxWidth(Screen screen)
     {
         int width = screen.getStringWidth(label);
@@ -70,7 +95,9 @@ public final class Menu
         return width;
     }
 
-    /** A command, submenu link or separator with optional menu and accelerator keys. */
+    /**
+     * A command, submenu link or separator with optional menu and accelerator keys.
+     */
     public record Item(
             String label,
             @Nullable String id,
@@ -79,7 +106,12 @@ public final class Menu
             @Nullable Action action,
             @Nullable Menu submenu)
     {
-        /** Creates a command entry with its default accelerator. */
+        public static final Item SEPARATOR =
+                new Item("-", null, null, null, null, null);
+
+        /**
+         * Creates a command entry with its default accelerator.
+         */
         public static Item command(
                 String id, @Nullable String menuKey, String label,
                 @Nullable String accelerator, Action action)
@@ -87,7 +119,9 @@ public final class Menu
             return new Item(label, id, menuKey, accelerator, action, null);
         }
 
-        /** Creates an entry that opens another menu. */
+        /**
+         * Creates an entry that opens another menu.
+         */
         public static Item submenu(
                 String id, @Nullable String menuKey, String label,
                 @Nullable String accelerator, Menu submenu)
@@ -95,13 +129,9 @@ public final class Menu
             return new Item(label, id, menuKey, accelerator, null, submenu);
         }
 
-        /** Creates a visual separator without any bindings. */
-        public static Item separator()
-        {
-            return new Item("-", null, null, null, null, null);
-        }
-
-        /** Identifies the separator label used in the Lua menu definitions. */
+        /**
+         * Identifies the separator label used in the Lua menu definitions.
+         */
         public boolean isSeparator()
         {
             return label.equals("-");

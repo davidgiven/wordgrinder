@@ -1,6 +1,18 @@
 from build.junit4 import junit4
 
 junit4(
+    name="static-action-test",
+    srcitems={
+        f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
+        for f in ["StaticActionTest.java"]
+    },
+    deps=[
+        "java/com/cowlark/wordgrinder/ui",
+        "java/com/cowlark/wordgrinder/utils",
+    ],
+)
+
+junit4(
     name="widget-test",
     srcitems={
         f"com/cowlark/wordgrinder/ui/{f}": f"./{f}"
