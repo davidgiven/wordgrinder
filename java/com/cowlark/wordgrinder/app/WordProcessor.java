@@ -2,16 +2,12 @@ package com.cowlark.wordgrinder.app;
 
 import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
 import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.EventBus;
-import com.cowlark.wordgrinder.eventbus.Idle;
-import com.cowlark.wordgrinder.eventbus.KeyTyped;
-import com.cowlark.wordgrinder.eventbus.WaitingForUser;
+import com.cowlark.wordgrinder.eventbus.*;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.ui.Action;
-import com.cowlark.wordgrinder.ui.Action.ActionResult;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.ui.Widget;
 import com.cowlark.wordgrinder.ui.WrappedLabelWidget;
@@ -179,7 +175,7 @@ public class WordProcessor
         {
             execute(CheckpointAction.class);
             /* TODO: Cmd.Checkpoint() and Cmd.TypeWhileSelected(). */
-            KeyTyped payload = new KeyTyped(key);
+            KeyTypedEvent payload = new KeyTypedEvent(key);
             eventBus.fireEvent(payload);
             /* TODO: Cmd.InsertStringIntoWord(payload.value). */
         }
@@ -225,7 +221,7 @@ public class WordProcessor
         {
             /* Document-set change tracking is deferred until DocumentSet is ported. */
             eventBus.flushAsyncEvents();
-            eventBus.fireEvent(new WaitingForUser());
+            eventBus.fireEvent(new WaitingForUserEvent());
             InputEvent input;
             do
             {
@@ -236,7 +232,7 @@ public class WordProcessor
                 }
                 input = ui.getCharWithBlinkingCursor(IDLE_TIME);
                 if (input.isKey("KEY_TIMEOUT"))
-                    eventBus.fireEvent(new Idle());
+                    eventBus.fireEvent(new IdleEvent());
             } while (input.isKey("KEY_TIMEOUT"));
 
             /* Resizes retain transient messages; all other input dismisses them. */

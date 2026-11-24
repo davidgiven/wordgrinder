@@ -5,7 +5,7 @@
 
 package com.cowlark.wordgrinder.document;
 
-import com.cowlark.wordgrinder.eventbus.DrawWord;
+import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.google.common.collect.ImmutableList;
@@ -197,8 +197,8 @@ public final class Paragraph implements Iterable<String>
             int wordStyle = currentStyle;
             if (fireDrawWord)
             {
-                DrawWord payload =
-                        new DrawWord(word, oldStyle, currentStyle, layout.sentences().contains(wn));
+                DrawWordEvent payload =
+                        new DrawWordEvent(word, oldStyle, currentStyle, layout.sentences().contains(wn));
                 eventBus.fireEvent(payload);
                 word = payload.word;
                 oldStyle = payload.oldStyle;

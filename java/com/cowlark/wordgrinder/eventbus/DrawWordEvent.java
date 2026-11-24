@@ -10,7 +10,7 @@ package com.cowlark.wordgrinder.eventbus;
  * Fired before a word is drawn. Listeners may change the word and its rendering styles;
  * the caller uses the modified fields after synchronous delivery has finished.
  */
-public final class DrawWord extends Event
+public final class DrawWordEvent extends Event
 {
     /**
      * The word text.
@@ -32,7 +32,7 @@ public final class DrawWord extends Event
      */
     public boolean firstWord;
 
-    public DrawWord(String word, int oldStyle, int currentStyle, boolean firstWord)
+    public DrawWordEvent(String word, int oldStyle, int currentStyle, boolean firstWord)
     {
         this.word = word;
         this.oldStyle = oldStyle;

@@ -5,7 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.DrawWord;
+import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
@@ -130,7 +130,7 @@ public class WrappedLabelWidgetTest
         /* No label operation may notify spellcheckers or any other word listeners. */
         Drawing()
         {
-            events.addEventListener(DrawWord.class, event -> fail("Labels must suppress DrawWord"));
+            events.addEventListener(DrawWordEvent.class, event -> fail("Labels must suppress DrawWord"));
         }
 
         /* Keep proxy callbacks outside field initialisers so member rearrangement is harmless. */

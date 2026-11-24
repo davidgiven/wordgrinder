@@ -121,9 +121,9 @@ public final class EventBusTest
     public void drawWordListenersCanUpdateTheRenderingPayload()
     {
         EventBus bus = new EventBus();
-        DrawWord event = new DrawWord("word", 2, 8, true);
+        DrawWordEvent event = new DrawWordEvent("word", 2, 8, true);
         bus.addEventListener(
-                DrawWord.class, payload -> {
+                DrawWordEvent.class, payload -> {
                     assertEquals("word", payload.word);
                     assertEquals(2, payload.oldStyle);
                     assertEquals(8, payload.currentStyle);

@@ -6,11 +6,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.cowlark.wordgrinder.document.Word;
-import com.cowlark.wordgrinder.eventbus.Changed;
-import com.cowlark.wordgrinder.eventbus.EventBus;
-import com.cowlark.wordgrinder.eventbus.Idle;
-import com.cowlark.wordgrinder.eventbus.KeyTyped;
-import com.cowlark.wordgrinder.eventbus.WaitingForUser;
+import com.cowlark.wordgrinder.eventbus.*;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
@@ -33,20 +29,20 @@ public class WordProcessorTest
     {
         Fixture fixture = new Fixture();
         List<String> events = new ArrayList<>();
-        fixture.bus.addEventListener(Changed.class, event -> events.add("changed"));
-        fixture.bus.addEventListener(WaitingForUser.class, event -> events.add("waiting"));
+        fixture.bus.addEventListener(ChangedEvent.class, event -> events.add("changed"));
+        fixture.bus.addEventListener(WaitingForUserEvent.class, event -> events.add("waiting"));
         fixture.bus.addEventListener(
-                Idle.class, event -> {
+                IdleEvent.class, event -> {
                     events.add("idle");
                     fixture.idling = false;
                     fixture.processor.queueRedraw();
                 });
         fixture.bus.addEventListener(
-                KeyTyped.class, event -> {
+                KeyTypedEvent.class, event -> {
                     events.add(event.value);
                     event.value = "replacement";
                 });
-        fixture.bus.fireAsyncEvent(new Changed());
+        fixture.bus.fireAsyncEvent(new ChangedEvent());
         fixture.idling = true;
         fixture.keys("x");
         fixture.run();
@@ -60,7 +56,7 @@ public class WordProcessorTest
     {
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
-        fixture.bus.addEventListener(KeyTyped.class, event -> typed.add(event.value));
+        fixture.bus.addEventListener(KeyTypedEvent.class, event -> typed.add(event.value));
         fixture.keys(
                 "KEY_RESIZE",
                 " ",
@@ -81,7 +77,7 @@ public class WordProcessorTest
         Fixture fixture = new Fixture();
         int[] waits = {0};
         fixture.bus.addEventListener(
-                WaitingForUser.class, event -> {
+                WaitingForUserEvent.class, event -> {
                     if (++waits[0] == 3)
                         fixture.processor.queueRedraw();
                 });
@@ -115,7 +111,7 @@ public class WordProcessorTest
     {
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
-        fixture.bus.addEventListener(KeyTyped.class, event -> typed.add(event.value));
+        fixture.bus.addEventListener(KeyTypedEvent.class, event -> typed.add(event.value));
         fixture.input.addAll(List.of(
                 new MouseInputEvent(2, 3, true, true),
                 new MouseInputEvent(4, 5, true, false),
@@ -134,7 +130,7 @@ public class WordProcessorTest
         Fixture fixture = new Fixture();
         List<String> typed = new ArrayList<>();
         fixture.bus.addEventListener(
-                KeyTyped.class, event -> {
+                KeyTypedEvent.class, event -> {
                     if (event.value.equals("a"))
                         throw new IllegalStateException("test failure");
                     typed.add(event.value);

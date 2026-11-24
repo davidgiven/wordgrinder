@@ -19,7 +19,7 @@ package com.cowlark.wordgrinder.eventbus;
  * <li>{@code DocumentModified}: a document has been modified; carries the document.</li>
  * <li>{@code DocumentUpgrade}: a document set is being upgraded; carries the old and new
  * versions.</li>
- * <li>{@link DrawWord}: a word is being drawn; carries mutable word text, old/current styles,
+ * <li>{@link DrawWordEvent}: a word is being drawn; carries mutable word text, old/current styles,
  * and sentence-start status.</li>
  * <li>{@code KeyTyped}: the user is typing into the document; carries the typed value.</li>
  * <li>{@code Idle}: the user is not touching the keyboard.</li>

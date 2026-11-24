@@ -5,7 +5,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
 
-import com.cowlark.wordgrinder.eventbus.DrawWord;
+import com.cowlark.wordgrinder.eventbus.DrawWordEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
@@ -64,7 +64,7 @@ public class ParagraphRenderTest
         Paragraph paragraph = drawing.paragraph("P", "a", "b", "c");
         List<String> payloads = new ArrayList<>();
         drawing.events.addEventListener(
-                DrawWord.class, event -> {
+                DrawWordEvent.class, event -> {
                     payloads.add(
                             event.word + ":" + event.oldStyle + ":" + event.currentStyle + ":" +
                                     event.firstWord);
@@ -95,7 +95,7 @@ public class ParagraphRenderTest
     public void canSuppressDrawWordEvents()
     {
         Drawing drawing = new Drawing();
-        drawing.events.addEventListener(DrawWord.class, event -> fail("DrawWord is disabled"));
+        drawing.events.addEventListener(DrawWordEvent.class, event -> fail("DrawWord is disabled"));
         Paragraph paragraph = drawing.paragraph("P", "a", "b");
         paragraph.renderLine(paragraph.wrap(80, false).lines().get(0), 3, 4, false);
         assertEquals(List.of(new Glyph(3, 4, 'a', 0), new Glyph(5, 4, 'b', 0)), drawing.glyphs);
@@ -128,7 +128,7 @@ public class ParagraphRenderTest
         Paragraph paragraph = drawing.paragraph("P", "long");
         Paragraph.Line empty = new Paragraph.Line(0, com.google.common.collect.ImmutableList.of());
         assertThrows(IllegalStateException.class, () -> paragraph.renderLine(empty, 0, 0, false));
-        drawing.events.addEventListener(DrawWord.class, event -> fail("The line is empty"));
+        drawing.events.addEventListener(DrawWordEvent.class, event -> fail("The line is empty"));
         paragraph.renderLine(paragraph.wrap(2, false).lines().get(0), 0, 0, true);
         assertEquals(List.of(), drawing.glyphs);
     }
