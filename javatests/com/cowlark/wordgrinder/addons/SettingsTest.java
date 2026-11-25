@@ -72,14 +72,14 @@ public final class SettingsTest
         Addons settings = new Addons();
         read(
                 settings,
-                ".autosave.enabled: true\n.autosave.period: 2.5\n" +
+                ".autosave.enabled: true\n.autosave.period: 2\n" +
                         ".autosave.lastsaved: 1700000000\n.scrapbook.document: \"Clippings\"\n" +
                         ".smartquotes.doublequotes: true\n.spellchecker.enabled: true\n" +
                         ".pagecount.wordsperpage: 300\n");
 
         /* Missing properties retain the addon registration defaults. */
         assertTrue(settings.autosave.enabled);
-        assertEquals(2.5, settings.autosave.period, 0);
+        assertEquals(2, settings.autosave.period);
         assertEquals(Long.valueOf(1700000000L), settings.autosave.lastsaved);
         assertEquals("%F.autosave.%T.wg", settings.autosave.pattern);
         assertEquals("Clippings", settings.scrapbook.document);
@@ -88,7 +88,7 @@ public final class SettingsTest
         assertEquals("“", settings.smartquotes.leftdouble);
         assertTrue(settings.spellchecker.enabled);
         assertTrue(settings.spellchecker.usesystemdictionary);
-        assertEquals(300, settings.pagecount.wordsperpage, 0);
+        assertEquals(300, settings.pagecount.wordsperpage);
 
         /* Serialisation preserves every defined document setting. */
         Addons restored = new Addons();

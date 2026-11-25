@@ -10,7 +10,7 @@ public class AutosaveDocumentSetSettings
 {
     /* Initialise the defaults used when registering the Lua addon. */
     @Dumpable public boolean enabled = false;
-    @Dumpable public double period = 10;
+    @Dumpable public int period = 10;
     @Dumpable public String pattern = "%F.autosave.%T.wg";
     @Dumpable public @Nullable Long lastsaved;
 }

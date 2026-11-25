@@ -85,12 +85,13 @@ public final class UndumperTest
         load(
                 data,
                 ".renamed: \"a\\\"b\\\\c\\nd\\ré😀\u0011\"\n.count: 7\n.enabled: true\n" +
-                        ".character: \"é\"\n.fraction: 1.25\n.large: 9223372036854775807\n");
+                        ".character: \"é\"\n.small: -128\n.middle: 32767\n.large: 9223372036854775807\n");
         assertEquals("a\"b\\c\nd\ré😀\u0011", ((Parent) data).name);
         assertEquals(7, data.count);
         assertTrue(data.enabled);
         assertEquals('é', data.character);
-        assertEquals(1.25, data.fraction, 0);
+        assertEquals(Byte.MIN_VALUE, data.small);
+        assertEquals(Short.MAX_VALUE, data.middle);
         assertEquals(Long.valueOf(Long.MAX_VALUE), data.large);
     }
 
@@ -114,7 +115,7 @@ public final class UndumperTest
     public void unknownNestedPathsAndRawValuesSurviveRepeatedRoundTrips() throws IOException
     {
         String text = ".child.future.deep: \"a\\\\b\\n😀\"\n.child.text: \"known\"\n" +
-                ".count: 4\n.future.number: 1.200e+03\n.future.truth: false\n";
+                ".count: 4\n.future.number: -01200\n.future.truth: false\n";
         Data data = new Data();
         load(data, text);
         assertEquals(
@@ -122,14 +123,14 @@ public final class UndumperTest
                         ".child.future.deep",
                         "\"a\\\\b\\n😀\"",
                         ".future.number",
-                        "1.200e+03",
+                        "-01200",
                         ".future.truth",
                         "false"), ((Parent) data).remaining);
         String first = dump(data);
         Data copy = new Data();
         load(copy, first);
         assertEquals(first, dump(copy));
-        assertTrue(first.contains(".future.number: 1.200e+03\n"));
+        assertTrue(first.contains(".future.number: -01200\n"));
         assertTrue(first.contains(".child.future.deep: \"a\\\\b\\n😀\"\n"));
     }
 
@@ -168,6 +169,10 @@ public final class UndumperTest
                 ".x..y: 1\n",
                 ".count: 2147483648\n",
                 ".count: 1.5\n",
+                ".count: 1e3\n",
+                ".small: 128\n",
+                ".middle: -32769\n",
+                ".large: 9223372036854775808\n",
                 ".enabled: 1\n",
                 ".values.0: 1\n"))
             assertThrows(text, IllegalArgumentException.class, () -> load(new Data(), text));
@@ -229,7 +234,8 @@ public final class UndumperTest
         @Dumpable int count;
         @Dumpable boolean enabled;
         @Dumpable char character;
-        @Dumpable double fraction;
+        @Dumpable byte small;
+        @Dumpable short middle;
         @Dumpable Long large;
         @Dumpable Child child;
         @Dumpable List<Child> children = new ArrayList<>();

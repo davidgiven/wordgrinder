@@ -53,8 +53,8 @@ public final class DumperTest
     public void scalarValuesAndEmptyObjectsAreSupported()
     {
         assertEquals(": true\n", dump(true));
-        assertEquals(": 1\n", dump(1.0));
-        assertEquals(": 1.25\n", dump(1.25));
+        assertEquals(": -9223372036854775808\n", dump(Long.MIN_VALUE));
+        assertEquals(": 9223372036854775807\n", dump(Long.MAX_VALUE));
         assertEquals("", dump(new Object()));
         assertEquals("", dump(new String[0]));
     }
@@ -76,6 +76,8 @@ public final class DumperTest
     {
         assertThrows(IllegalArgumentException.class, () -> dump(Double.NaN));
         assertThrows(IllegalArgumentException.class, () -> dump(Double.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> dump(1.0));
+        assertThrows(IllegalArgumentException.class, () -> dump(1.5f));
         assertThrows(IllegalArgumentException.class, () -> dump(java.util.Map.of(1, "value")));
     }
 

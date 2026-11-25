@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,10 +64,10 @@ public class Undumper
             return text.toString();
         }
 
-        /* Keep numbers exact until the destination field's type is known. */
-        if (!raw.matches("-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?"))
+        /* Parse signed decimal integers without narrowing to the destination type yet. */
+        if (!raw.matches("-?[0-9]+"))
             throw new IllegalArgumentException("Invalid dump value " + raw);
-        return new BigDecimal(raw);
+        return Long.parseLong(raw);
     }
 
     public void undump(Object object, BufferedReader input) throws IOException
@@ -361,65 +360,55 @@ public class Undumper
     {
         /* Decode the value before checking whether the destination can hold it. */
         Object value = parse(raw);
-        try
-        {
-            /* Untyped values keep the parser's natural representation. */
-            if (type == Object.class)
-                return value;
+        /* Untyped values keep the parser's natural representation. */
+        if (type == Object.class)
+            return value;
 
-            /* Strings may also represent a single UTF-16 character. */
-            if (value instanceof String text)
+        /* Strings may also represent a single UTF-16 character. */
+        if (value instanceof String text)
+        {
+            if (type == String.class)
+                return text;
+            if ((type == char.class || type == Character.class) && text.length() == 1)
+                return text.charAt(0);
+        }
+
+        /* Booleans are only assignable to boolean fields. */
+        if (value instanceof Boolean && (type == boolean.class || type == Boolean.class))
+            return value;
+
+        /* Convert the file offset before checking the destination range. */
+        if (value instanceof Long parsed)
+        {
+            long number = parsed;
+            if (oneOffset)
             {
-                if (type == String.class)
-                    return text;
-                if ((type == char.class || type == Character.class) && text.length() == 1)
-                    return text.charAt(0);
+                if (number == Long.MIN_VALUE)
+                    throw new IllegalArgumentException("Number out of range at " + path);
+                number--;
             }
 
-            /* Booleans are only assignable to boolean fields. */
-            if (value instanceof Boolean && (type == boolean.class || type == Boolean.class))
-                return value;
-
-            /* Numeric conversions must fit exactly, except for floating-point rounding. */
-            if (value instanceof BigDecimal number)
+            /* Narrow only when the integer fits the destination type exactly. */
+            if (type == byte.class || type == Byte.class)
             {
-                if (oneOffset)
-                    number = number.subtract(BigDecimal.ONE);
-
-                /* Integral fields require an exact, in-range value. */
-                if (type == byte.class || type == Byte.class)
-                    return number.byteValueExact();
-                if (type == short.class || type == Short.class)
-                    return number.shortValueExact();
-                if (type == int.class || type == Integer.class)
-                    return number.intValueExact();
-                if (type == long.class || type == Long.class)
-                    return number.longValueExact();
-
-                /* Floating-point fields may round, but must remain finite. */
-                if (type == float.class || type == Float.class)
-                {
-                    float result = Float.parseFloat(raw);
-                    if (Float.isFinite(result))
-                        return result;
-                }
-                if (type == double.class || type == Double.class)
-                {
-                    double result = Double.parseDouble(raw);
-                    if (Double.isFinite(result))
-                        return result;
-                }
-
-                /* Arbitrary-precision fields retain the exact numeric value. */
-                if (type == BigDecimal.class || type == Number.class)
-                    return number;
-                if (type == java.math.BigInteger.class)
-                    return number.toBigIntegerExact();
+                if (number >= Byte.MIN_VALUE && number <= Byte.MAX_VALUE)
+                    return (byte) number;
+                throw new IllegalArgumentException("Number out of range at " + path);
             }
-        } catch (ArithmeticException e)
-        {
-            /* Preserve the property path when an exact numeric conversion fails. */
-            throw new IllegalArgumentException("Number out of range at " + path, e);
+            if (type == short.class || type == Short.class)
+            {
+                if (number >= Short.MIN_VALUE && number <= Short.MAX_VALUE)
+                    return (short) number;
+                throw new IllegalArgumentException("Number out of range at " + path);
+            }
+            if (type == int.class || type == Integer.class)
+            {
+                if (number >= Integer.MIN_VALUE && number <= Integer.MAX_VALUE)
+                    return (int) number;
+                throw new IllegalArgumentException("Number out of range at " + path);
+            }
+            if (type == long.class || type == Long.class || type == Number.class)
+                return number;
         }
 
         /* Reject mismatched types rather than silently discarding a known property. */

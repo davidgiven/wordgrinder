@@ -9,5 +9,5 @@ public class StatusbarPageCountDocumentSetSettings
 {
     /* Initialise the defaults used when registering the Lua addon. */
     @Dumpable public boolean enabled = false;
-    @Dumpable public double wordsperpage = 250;
+    @Dumpable public int wordsperpage = 250;
 }

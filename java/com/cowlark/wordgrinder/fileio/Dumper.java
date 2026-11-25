@@ -71,12 +71,11 @@ public class Dumper
             }
             case Number number ->
             {
-                if (!Double.isFinite(number.doubleValue()))
-                    throw new IllegalArgumentException("Non-finite number at " + path);
-                String text = number.toString();
-                if ((number instanceof Float || number instanceof Double) && text.endsWith(".0"))
-                    text = text.substring(0, text.length() - 2);
-                writeValue(path, text, values);
+                /* The dump format supports signed integers up to 64 bits. */
+                if (!(number instanceof Byte || number instanceof Short
+                        || number instanceof Integer || number instanceof Long))
+                    throw new IllegalArgumentException("Expected an integer at " + path);
+                writeValue(path, Long.toString(number.longValue()), values);
                 return;
             }
             default ->
