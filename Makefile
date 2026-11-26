@@ -31,8 +31,8 @@ else
 		export BREW := $(shell brew --prefix)/opt
 	endif
 
-	export CC = ccache gcc
-	export CXX = ccache g++ -std=c++20
+	export CC = gcc
+	export CXX = g++ -std=c++20
 	export CFLAGS
 	export CXXFLAGS
 	export LDFLAGS
