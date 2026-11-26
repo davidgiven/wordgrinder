@@ -95,46 +95,123 @@ public final class Menu
         return width;
     }
 
-    /**
-     * A command, submenu link or separator with optional menu and accelerator keys.
-     */
-    public record Item(
-            String label,
-            @Nullable String id,
-            @Nullable String menuKey,
-            @Nullable String accelerator,
-            @Nullable VoidAction action,
-            @Nullable Menu submenu)
+    /** A menu entry or the shared separator. */
+    public static final class Item
     {
-        public static final Item SEPARATOR =
-                new Item("-", null, null, null, null, null);
+        /* The separator has no key, identifier or behaviour. */
+        public static final Item SEPARATOR = new Item("-", null, null, null, null, null);
 
-        /**
-         * Creates a command entry with its default accelerator.
-         */
-        public static Item command(
-                String id, @Nullable String menuKey, String label,
-                @Nullable String accelerator, VoidAction action)
+        private final String label;
+        private final @Nullable String id;
+        private final @Nullable String menuKey;
+        private final @Nullable String accelerator;
+        private final @Nullable VoidAction action;
+        private final @Nullable Menu submenu;
+
+        /* Store the completed entry as an immutable value. */
+        private Item(String label, @Nullable String id, @Nullable String menuKey,
+                @Nullable String accelerator, @Nullable VoidAction action, @Nullable Menu submenu)
         {
-            return new Item(label, id, menuKey, accelerator, action, null);
+            this.label = label;
+            this.id = id;
+            this.menuKey = menuKey;
+            this.accelerator = accelerator;
+            this.action = action;
+            this.submenu = submenu;
         }
 
-        /**
-         * Creates an entry that opens another menu.
-         */
-        public static Item submenu(
-                String id, @Nullable String menuKey, String label,
-                @Nullable String accelerator, Menu submenu)
+        /** Starts an entry with its required identifier, menu key and label. */
+        public static Builder builder(String id, String menuKey, String label)
         {
-            return new Item(label, id, menuKey, accelerator, null, submenu);
+            return new Builder(id, menuKey, label);
         }
 
-        /**
-         * Identifies the separator label used in the Lua menu definitions.
-         */
+        /* Expose the entry's display and activation properties. */
+        public String label()
+        {
+            return label;
+        }
+
+        public @Nullable String id()
+        {
+            return id;
+        }
+
+        public @Nullable String menuKey()
+        {
+            return menuKey;
+        }
+
+        public @Nullable String accelerator()
+        {
+            return accelerator;
+        }
+
+        public @Nullable VoidAction action()
+        {
+            return action;
+        }
+
+        public @Nullable Menu submenu()
+        {
+            return submenu;
+        }
+
+        /** Identifies the shared separator entry. */
         public boolean isSeparator()
         {
-            return label.equals("-");
+            return this == SEPARATOR;
+        }
+
+        public static final class Builder
+        {
+            /* Store the required fields and any optional activation behaviour. */
+            private final String id;
+            private final String menuKey;
+            private final String label;
+            private @Nullable String accelerator;
+            private @Nullable VoidAction action;
+            private @Nullable Menu submenu;
+
+            private Builder(String id, String menuKey, String label)
+            {
+                if (id == null || menuKey == null || label == null)
+                    throw new IllegalArgumentException("A menu item requires an ID, menu key and label");
+                this.id = id;
+                this.menuKey = menuKey;
+                this.label = label;
+            }
+
+            /** Sets the default accelerator. */
+            public Builder setAccelerator(String accelerator)
+            {
+                this.accelerator = accelerator;
+                return this;
+            }
+
+            /** Sets the action invoked when the item is selected. */
+            public Builder setAction(VoidAction action)
+            {
+                if (submenu != null)
+                    throw new IllegalStateException("A menu item cannot have both an action and a submenu");
+                this.action = action;
+                return this;
+            }
+
+            /** Sets the submenu opened when the item is selected. */
+            public Builder setSubmenu(Menu submenu)
+            {
+                if (action != null)
+                    throw new IllegalStateException("A menu item cannot have both an action and a submenu");
+                this.submenu = submenu;
+                return this;
+            }
+
+            /** Creates an item with the current builder values. */
+            public Item build()
+            {
+                return new Item(label, id, menuKey, accelerator, action, submenu);
+            }
         }
     }
 }

@@ -1,13 +1,20 @@
 package com.cowlark.wordgrinder.app;
 
 import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
+import com.cowlark.wordgrinder.app.Navigation.*;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
-import com.cowlark.wordgrinder.eventbus.*;
+import com.cowlark.wordgrinder.eventbus.BuildStatusBarEvent;
+import com.cowlark.wordgrinder.eventbus.EventBus;
+import com.cowlark.wordgrinder.eventbus.IdleEvent;
+import com.cowlark.wordgrinder.eventbus.KeyTypedEvent;
+import com.cowlark.wordgrinder.eventbus.RedrawEvent;
+import com.cowlark.wordgrinder.eventbus.WaitingForUserEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.ui.*;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableMap;
@@ -60,13 +67,17 @@ public class WordProcessor
         this.documentSet = new DocumentSet();
     }
 
-    /** Returns the document set owned by this editor. */
+    /**
+     * Returns the document set owned by this editor.
+     */
     public DocumentSet getDocumentSet()
     {
         return documentSet;
     }
 
-    /** Returns the current selection in the document set. */
+    /**
+     * Returns the current selection in the document set.
+     */
     public Document getCurrentDocument()
     {
         return getDocumentSet().current;
@@ -170,8 +181,7 @@ public class WordProcessor
             String filename = set.name == null ? "(unnamed)" : set.name;
             int separator = max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
             String name = set.current.name == null ? "" : set.current.name;
-            String label = filename.substring(separator + 1) + "[" + name + "] "
-                    + (set.changed ? "CHANGED" : "");
+            String label = filename.substring(separator + 1) + "[" + name + "] " + (set.changed ? "CHANGED" : "");
             ui.setColour("StatusbarBG", "StatusbarFG");
             screen.setReverse();
             screen.clearArea(0, y, width - 1, y);
@@ -196,15 +206,19 @@ public class WordProcessor
 
     public static class TerminateProgramAction implements VoidAction
     {
-        /* Expose this constructor to the action injector. */
+        /* Use the runtime backend to terminate the process. */
+        private final System system;
+
         @Inject
-        public TerminateProgramAction()
+        public TerminateProgramAction(System system)
         {
+            this.system = system;
         }
 
         @Override
         public ActionResult execute()
         {
+            system.exit(0);
             return SUCCEEDED;
         }
     }
@@ -218,10 +232,10 @@ public class WordProcessor
         else if (!key.startsWith("KEY_"))
         {
             Action.of(CheckpointAction.class).execute();
-            /* TODO: Cmd.Checkpoint() and Cmd.TypeWhileSelected(). */
+            Action.of(TypeWhileSelectedAction.class).execute();
             KeyTypedEvent payload = new KeyTypedEvent(key);
             eventBus.fireEvent(payload);
-            /* TODO: Cmd.InsertStringIntoWord(payload.value). */
+            Action.of(InsertStringIntoWordAction.class).execute(payload.value);
         }
         else
         {
@@ -239,18 +253,18 @@ public class WordProcessor
             {
                 oldMouseX = mouse.x();
                 oldMouseY = mouse.y();
-                Action.of(Navigation.GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
-                /* TODO: Cmd.UnsetMark(), Cmd.GotoXYPosition(x, y), Cmd.SetMark(). */
+                Action.of(UnsetMarkAction.class).execute();
+                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
+                Action.of(SetMarkAction.class).execute();
             }
             else
             {
-
-                Action.of(Navigation.GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
+                Action.of(GotoXYPositionAction.class).execute(mouse.x(), mouse.y());
             }
         }
         if (!mouse.b() && oldMouseButton && mouse.x() == oldMouseX && mouse.y() == oldMouseY)
         {
-            /* TODO: Cmd.UnsetMark(). */
+            Action.of(UnsetMarkAction.class).execute();
         }
         oldMouseButton = mouse.b();
     }
@@ -339,11 +353,15 @@ public class WordProcessor
                 .put("KEY_RESIZE", Action.of(ResizeScreenAction.class).then(RedrawScreenAction.class))
                 .put("KEY_REDRAW", Action.of(RedrawScreenAction.class))
                 .put(" ",
-                        Action.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected, SplitCurrentWord.
-                 */.put("KEY_RETURN", Action.of(CheckpointAction.class)) /* Cmd.Checkpoint, TypeWhileSelected,
-                        SplitCurrentParagraph. */.put("KEY_ESCAPE",
-                        Action.of(ActivateMenuAction.class)) /* Cmd.ActivateMenu. */.put("KEY_MENU",
-                        Action.of(ActivateMenuAction.class))
+                        Action.of(CheckpointAction.class)
+                                .then(TypeWhileSelectedAction.class)
+                                .then(SplitCurrentWordAction.class))
+                .put("KEY_RETURN",
+                        Action.of(CheckpointAction.class)
+                                .then(TypeWhileSelectedAction.class)
+                                .then(SplitCurrentParagraphAction.class))
+                .put("KEY_ESCAPE", Action.of(ActivateMenuAction.class))
+                .put("KEY_MENU", Action.of(ActivateMenuAction.class))
                 .put("KEY_QUIT", Action.of(TerminateProgramAction.class))
                 .build();
 

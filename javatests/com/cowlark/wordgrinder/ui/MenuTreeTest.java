@@ -23,10 +23,11 @@ public class MenuTreeTest
     {
         Fixture fixture = new Fixture();
         Menu child = new Menu("Child", List.of(
-                Menu.Item.command("run", "R", "Run", null,
-                        () -> new Action.ActionResult("child"))));
+                Menu.Item.builder("run", "R", "Run")
+                        .setAction(() -> new Action.ActionResult("child")).build()));
         VoidAction open = () -> new Action.ActionResult(child);
-        Menu root = new Menu("Root", List.of(Menu.Item.command("open", "O", "Open", "O", open)));
+        Menu root = new Menu("Root",
+                Menu.Item.builder("open", "O", "Open").setAccelerator("O").setAction(open).build());
 
         /* Visit the returned submenu, go back, then run its first command on the second visit. */
         fixture.keys("o", "KEY_LEFT", "o", "KEY_RETURN");
@@ -44,7 +45,8 @@ public class MenuTreeTest
     {
         Fixture fixture = new Fixture();
         VoidAction action = () -> Action.ActionResult.SUCCEEDED;
-        Menu root = new Menu("Root", List.of(Menu.Item.command("run", "R", "Run", "^R", action)));
+        Menu root = new Menu("Root",
+                Menu.Item.builder("run", "R", "Run").setAccelerator("^R").setAction(action).build());
 
         /* Bind a new key and verify the old key no longer resolves. */
         fixture.keys("KEY_^V", "KEY_^B", "KEY_ESCAPE");

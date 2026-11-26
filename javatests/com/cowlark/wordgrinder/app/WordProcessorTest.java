@@ -16,8 +16,10 @@ import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
+import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.Ui;
+import com.cowlark.wordgrinder.ui.Action;
 import com.cowlark.wordgrinder.ui.Action.ActionResult;
 import com.cowlark.wordgrinder.utils.Injector;
 import org.junit.Test;
@@ -171,6 +173,7 @@ public class WordProcessorTest
         fixture.keys("x");
         fixture.run();
         assertEquals(List.of("changed", "waiting", "idle", "x", "waiting"), events);
+        assertEquals(List.of("replacement"), fixture.insertedText);
         assertEquals(2, fixture.redraws);
     }
 
@@ -192,8 +195,18 @@ public class WordProcessorTest
                 "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
+        assertEquals(List.of("word", "paragraph"), fixture.splits);
         assertTrue(fixture.processor.dialogues.isEmpty());
         assertEquals(5, fixture.redraws);
+    }
+
+    /* Verify that the injected quit action requests a successful process exit. */
+    @Test
+    public void terminateProgramRequestsSuccessfulExit()
+    {
+        Fixture fixture = new Fixture();
+        Action.of(WordProcessor.TerminateProgramAction.class).execute();
+        assertEquals(List.of(0), fixture.exitStatuses);
     }
 
     /* Unknown keys replace dismissed messages; resizing retains the current warning. */
@@ -394,6 +407,9 @@ public class WordProcessorTest
                 (proxy, method, args) -> {
                     throw new AssertionError("Unexpected display call: " + method.getName());
                 });
+        final List<Integer> exitStatuses = new ArrayList<>();
+        final List<String> insertedText = new ArrayList<>();
+        final List<String> splits = new ArrayList<>();
         final RecordingProcessor processor = createProcessor();
 
         /* Register the screen and renderer before the editor builds its initial paragraph. */
@@ -404,7 +420,58 @@ public class WordProcessorTest
             Injector.bindInstance(Ui.class, ui);
             Injector.bindInstance(Word.class, new Word(display));
             Injector.bindInstance(EventBus.class, bus);
-            return new RecordingProcessor(ui, screen, bus);
+
+            /* Record exit requests without terminating the test process. */
+            Injector.bindInstance(System.class, (System) Proxy.newProxyInstance(
+                    System.class.getClassLoader(), new Class<?>[]{System.class},
+                    (proxy, method, args) -> {
+                        if (!method.getName().equals("exit"))
+                            throw new AssertionError("Unexpected system call: " + method.getName());
+                        exitStatuses.add((Integer) args[0]);
+                        return null;
+                    }));
+            /* Substitute the editing actions that are still awaiting implementation. */
+            RecordingProcessor processor = new RecordingProcessor(ui, screen, bus);
+            Injector.bindInstance(Navigation.TypeWhileSelectedAction.class,
+                    new Navigation.TypeWhileSelectedAction(processor)
+                    {
+                        @Override
+                        public ActionResult execute()
+                        {
+                            return ActionResult.SUCCEEDED;
+                        }
+                    });
+            Injector.bindInstance(Navigation.InsertStringIntoWordAction.class,
+                    new Navigation.InsertStringIntoWordAction(processor)
+                    {
+                        @Override
+                        public ActionResult execute(String text)
+                        {
+                            insertedText.add(text);
+                            return ActionResult.SUCCEEDED;
+                        }
+                    });
+            Injector.bindInstance(Navigation.SplitCurrentWordAction.class,
+                    new Navigation.SplitCurrentWordAction(processor)
+                    {
+                        @Override
+                        public ActionResult execute()
+                        {
+                            splits.add("word");
+                            return ActionResult.SUCCEEDED;
+                        }
+                    });
+            Injector.bindInstance(Navigation.SplitCurrentParagraphAction.class,
+                    new Navigation.SplitCurrentParagraphAction(processor)
+                    {
+                        @Override
+                        public ActionResult execute()
+                        {
+                            splits.add("paragraph");
+                            return ActionResult.SUCCEEDED;
+                        }
+                    });
+            return processor;
         }
 
         /* Message-only assertions exclude the visible status bar's bottom row. */

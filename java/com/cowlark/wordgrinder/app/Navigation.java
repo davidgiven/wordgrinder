@@ -1036,23 +1036,6 @@ public class Navigation
         }
     }
 
-    /* Represent Cmd.TerminateProgram from navigate.lua. */
-    public static class TerminateProgramAction extends NavigationAction implements VoidAction
-    {
-        /* Pass the injected processor to the shared navigation action. */
-        @Inject
-        public TerminateProgramAction(WordProcessor wordProcessor)
-        {
-            super(wordProcessor);
-        }
-
-        @Override
-        public ActionResult execute()
-        {
-            throw new UnsupportedOperationException("TerminateProgram is not implemented");
-        }
-    }
-
     /* Represent Cmd.ChangeParagraphStyle from navigate.lua. */
     public static class ChangeParagraphStyleAction extends NavigationAction
     {
