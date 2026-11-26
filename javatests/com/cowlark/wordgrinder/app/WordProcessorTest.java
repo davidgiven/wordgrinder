@@ -31,6 +31,64 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Delete a backward selection across paragraphs while preserving the surviving styles. */
+    @Test
+    public void deletesAcrossParagraphs()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        String bold = Word.createStyleByte(Word.BOLD);
+        String italic = Word.createStyleByte(Word.ITALIC);
+        document.paragraphs.set(0, fixture.paragraph(bold + "abc", "discard"));
+        document.paragraphs.add(fixture.paragraph("discard"));
+        document.paragraphs.add(fixture.paragraph(italic + "xyz", "tail"));
+        document.cursorOffset = 2;
+        document.markParagraph = 2;
+        document.markWord = 0;
+        document.markOffset = 3;
+
+        var action = Action.of(Navigation.DeleteAction.class);
+        assertSame(ActionResult.SUCCEEDED, action.execute());
+        assertEquals(1, document.paragraphs.size());
+        assertEquals(List.of(bold + "a" + italic + "z", "tail"), document.paragraphs.getFirst().words());
+        assertEquals(0, document.cursorParagraph);
+        assertEquals(0, document.cursorWord);
+        assertEquals(2, document.cursorOffset);
+        assertEquals(-1, document.markParagraph);
+        assertEquals(2, document.wordCount);
+        assertTrue(fixture.processor.getDocumentSet().changed);
+        assertSame(ActionResult.FAILED, action.execute());
+    }
+
+    /* Typing replaces an ordinary selection and preserves the preceding word boundary. */
+    @Test
+    public void typingReplacesOnlyNonStickySelections()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        document.paragraphs.set(0, fixture.paragraph("one", "discard", "three"));
+        document.markParagraph = 0;
+        document.markWord = 1;
+        document.markOffset = 0;
+        document.cursorWord = 2;
+        document.cursorOffset = 2;
+
+        /* A sticky selection remains intact when the typing action runs. */
+        document.stickySelection = true;
+        assertSame(ActionResult.SUCCEEDED, Action.of(Navigation.TypeWhileSelectedAction.class).execute());
+        assertEquals(List.of("one", "discard", "three"), document.paragraphs.getFirst().words());
+        assertEquals(0, document.markParagraph);
+
+        /* The input loop deletes the ordinary selection before inserting the typed character. */
+        document.stickySelection = false;
+        fixture.keys("X");
+        fixture.run();
+        assertEquals(List.of("one", "Xree"), document.paragraphs.getFirst().words());
+        assertEquals(1, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+        assertEquals(-1, document.markParagraph);
+    }
+
     /* Splitting preserves the typing hint and the styles of the text on either side. */
     @Test
     public void splitsAndInsertsWithTheCurrentTypingStyle()
@@ -643,15 +701,6 @@ public class WordProcessorTest
                     }));
             /* Substitute the editing actions that are still awaiting implementation. */
             RecordingProcessor processor = new RecordingProcessor(ui, screen, bus);
-            Injector.bindInstance(Navigation.TypeWhileSelectedAction.class,
-                    new Navigation.TypeWhileSelectedAction(processor)
-                    {
-                        @Override
-                        public ActionResult execute()
-                        {
-                            return ActionResult.SUCCEEDED;
-                        }
-                    });
             Injector.bindInstance(Navigation.SplitCurrentParagraphAction.class,
                     new Navigation.SplitCurrentParagraphAction(processor)
                     {

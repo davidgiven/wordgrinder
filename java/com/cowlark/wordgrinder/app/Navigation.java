@@ -1335,7 +1335,11 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("TypeWhileSelected is not implemented");
+            /* Typing replaces a non-sticky selection. */
+            Document document = getCurrentDocument();
+            if (document.markParagraph >= 0 && !document.stickySelection)
+                return new DeleteAction(wordProcessor).execute();
+            return SUCCEEDED;
         }
     }
 
@@ -1470,7 +1474,41 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("Delete is not implemented");
+            Document document = getCurrentDocument();
+            if (document.markParagraph < 0)
+                return FAILED;
+
+            /* Order the selection endpoints before changing the document. */
+            var mark = new Position(document.markParagraph, document.markWord, document.markOffset);
+            var cursor = new Position(document.cursorParagraph, document.cursorWord, document.cursorOffset);
+            boolean markFirst = mark.compareTo(cursor) <= 0;
+            Position start = markFirst ? mark : cursor;
+            Position end = markFirst ? cursor : mark;
+
+            /* Split at the beginning and end of the selection, retaining the styles of both areas. */
+            Paragraph first = document.paragraphs.get(start.paragraph());
+            Paragraph last = document.paragraphs.get(end.paragraph());
+            String firstWord = first.words().get(start.word());
+            String left = Word.deleteFromWord(firstWord, start.offset(), firstWord.length());
+            String right = Word.deleteFromWord(last.words().get(end.word()), 0, end.offset());
+            var words = new ArrayList<>(first.sub(0, start.word()));
+
+            /* Merge the two areas together again. Preserve a word boundary at the start. */
+            Word.InsertResult joined = Word.insertIntoWord(right, left, 0, 0);
+            words.add(joined.word());
+            words.addAll(last.sub(end.word() + 1));
+            Paragraph replacement = first.withWords(words);
+
+            /* Delete the selected paragraphs and replace their surviving parts with the merged paragraph. */
+            document.paragraphs.set(start.paragraph(), replacement);
+            document.paragraphs.subList(start.paragraph() + 1, end.paragraph() + 1).clear();
+            document.cursorParagraph = start.paragraph();
+            document.cursorWord = start.word();
+            document.cursorOffset = joined.endOffset();
+            textChanged();
+            wordProcessor.nonmodalMessage("Selected area deleted.");
+            unsetMark(document);
+            return SUCCEEDED;
         }
     }
 
