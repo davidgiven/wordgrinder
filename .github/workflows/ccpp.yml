@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: apt
-      run: sudo apt update && sudo apt install ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev python3-pil libfmt-dev
+      run: sudo apt update && sudo apt install ccache ninja-build liblua5.1-0-dev liblua5.2-dev liblua5.3-dev libluajit-5.1-dev libncursesw5-dev zlib1g-dev libopengl-dev libglfw3-dev libcmark-dev python3-pil libfmt-dev
     - name: make
       run: |
         make -j$(nproc)
@@ -24,7 +24,7 @@ jobs:
 
     - name: brew
       run: |
-        brew install pkg-config glfw python3 cmark fmt coreutils make dylibbundler
+        brew install ccache pkg-config glfw python3 cmark fmt coreutils make dylibbundler
         brew link --overwrite python3
         brew install pillow
 
@@ -69,7 +69,7 @@ jobs:
         wsl --import fedora fedora install.tar.gz
         wsl --set-default fedora
         wsl sh -c 'dnf -y install https://github.com/rpmsphere/noarch/raw/master/r/rpmsphere-release-40-1.noarch.rpm'
-        wsl sh -c 'dnf -y install --setopt=install_weak_deps=False gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow ninja-build'
+        wsl sh -c 'dnf -y install --setopt=install_weak_deps=False ccache gcc gcc-c++ mingw32-gcc mingw32-gcc-c++ mingw32-zlib-static mingw32-nsis python3-pillow ninja-build'
 
     - name: fix line endings
       run: |
