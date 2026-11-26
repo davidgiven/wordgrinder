@@ -14,25 +14,25 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * Paragraph layout and list settings, corresponding to DocumentStyle in document.lua.
- * Optional Lua fields are represented by null, preserving the distinction between
- * an unspecified value and an explicit zero or false.
+ * A missing first-line indent inherits the ordinary indent. An explicit zero
+ * overrides it.
  *
  * @param desc        human-readable style description
  * @param name        style identifier, such as P or H1
  * @param above       number of blank lines requested above the paragraph
  * @param below       number of blank lines requested below the paragraph
- * @param indent      indentation of subsequent lines, or null for the default
+ * @param indent      indentation of subsequent lines, defaulting to zero
  * @param bullet      bullet text, or null for no bullet
- * @param list        whether the style belongs to a list, or null when unspecified
+ * @param list        whether the style belongs to a list
  * @param firstIndent first-line indentation, or null to inherit indent
- * @param numbered    whether the list is numbered, or null when unspecified
+ * @param numbered    whether the list is numbered
  * @param nextStyle   style for a following paragraph, or null to retain this style
  * @param cstyle      precomputed display attributes applied to every word
  */
 public record DocumentStyle(String desc, String name, int above, int below,
-                            @Nullable Integer indent, @Nullable String bullet,
-                            @Nullable Boolean list, @Nullable Integer firstIndent,
-                            @Nullable Boolean numbered, @Nullable String nextStyle, int cstyle)
+                            int indent, @Nullable String bullet,
+                            boolean list, @Nullable Integer firstIndent,
+                            boolean numbered, @Nullable String nextStyle, int cstyle)
 {
     /* Precompute the Lua heading markup once when constructing a named style. */
     public DocumentStyle(
@@ -40,11 +40,11 @@ public record DocumentStyle(String desc, String name, int above, int below,
             String name,
             int above,
             int below,
-            @Nullable Integer indent,
+            int indent,
             @Nullable String bullet,
-            @Nullable Boolean list,
+            boolean list,
             @Nullable Integer firstIndent,
-            @Nullable Boolean numbered,
+            boolean numbered,
             @Nullable String nextStyle)
     {
         this(

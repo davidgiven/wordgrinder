@@ -19,6 +19,31 @@ import java.util.Set;
 
 public final class ParagraphTest
 {
+    /* Unnumbered list paragraphs continue numbering, while normal text resets it. */
+    @Test
+    public void renumbersDocumentListsAndCountsWords()
+    {
+        var builder = builder();
+        var document = new Document();
+        var numbered = new DocumentStyle("Numbered", "N", 0, 0, 0, null, true, null, true, null);
+        var bulleted = new DocumentStyle("Bulleted", "B", 0, 0, 0, "*", true, null, false, null);
+        var first = builder.setDocumentStyle(numbered).setWords("one", "two").build();
+        var bullet = builder.setDocumentStyle(bulleted).setWords("three").build();
+        var second = builder.setDocumentStyle(numbered).setWords("four").build();
+        var plain = builder.setDocumentStyle(style(0, null)).setWords("five").build();
+        var restarted = builder.setDocumentStyle(numbered).setWords("six").build();
+        document.paragraphs = List.of(first, bullet, second, plain, restarted);
+
+        /* Verify the visible list numbers and the total across all paragraphs. */
+        document.renumber();
+        assertEquals(1, first.number);
+        assertEquals(0, bullet.number);
+        assertEquals(2, second.number);
+        assertEquals(0, plain.number);
+        assertEquals(1, restarted.number);
+        assertEquals(6, document.wordCount);
+    }
+
     /* Supply deterministic terminal widths; wrapping must not invoke any drawing operations. */
     private static Screen screen()
     {
@@ -61,7 +86,7 @@ public final class ParagraphTest
         return Paragraph.builder();
     }
 
-    private static DocumentStyle style(@Nullable Integer indent, @Nullable Integer firstIndent)
+    private static DocumentStyle style(int indent, @Nullable Integer firstIndent)
     {
         /* Only indentation fields matter for these paragraph queries. */
         return new DocumentStyle(
@@ -71,9 +96,9 @@ public final class ParagraphTest
                 0,
                 indent,
                 null,
-                null,
+                false,
                 firstIndent,
-                null,
+                false,
                 null);
     }
 
@@ -83,7 +108,7 @@ public final class ParagraphTest
         /* Copy the input while retaining the supplied style. */
         ImmutableList<String> input = ImmutableList.of("one", "two");
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords(input)
                 .build();
         assertEquals("P", paragraph.style().name());
@@ -97,7 +122,7 @@ public final class ParagraphTest
         assertEquals(
                 paragraph.words(),
                 builder()
-                        .setDocumentStyle(style(null, null))
+                        .setDocumentStyle(style(0, null))
                         .setWords("one", "two")
                         .build().words());
     }
@@ -133,7 +158,7 @@ public final class ParagraphTest
         /* Omitted required configuration fails before constructing an incomplete paragraph. */
         Paragraph.Builder builder = builder();
         assertThrows(IllegalStateException.class, builder::build);
-        assertEquals(List.of(), builder.setDocumentStyle(style(null, null)).build().words());
+        assertEquals(List.of(), builder.setDocumentStyle(style(0, null)).build().words());
     }
 
     @Test
@@ -141,7 +166,7 @@ public final class ParagraphTest
     {
         /* Only the four Lua separators split words; Unicode and embedded styles survive. */
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setText(" \t\u0018Héllo\n😀\r\nworld\u00a0joined\tform\ffeed  ")
                 .build();
         assertEquals(
@@ -154,7 +179,7 @@ public final class ParagraphTest
     {
         /* Text and word setters replace the same snapshot, with the last setter taking effect. */
         Paragraph.Builder builder = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("original");
         Paragraph original = builder.build();
         assertEquals(List.of("one", "two"), builder.setText("one two").build().words());
@@ -183,7 +208,7 @@ public final class ParagraphTest
         assertThrows(UnsupportedOperationException.class, () -> copy.words().set(0, "changed"));
         assertThrows(UnsupportedOperationException.class, () -> original.words().add("changed"));
         assertEquals("first", original.words().get(0));
-        assertEquals(4, original.style().indent().intValue());
+        assertEquals(4, original.style().indent());
     }
 
     @Test
@@ -192,7 +217,7 @@ public final class ParagraphTest
         /* Mutating the varargs array must not change the snapshot. */
         String[] input = {"first", "second"};
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords(input)
                 .build();
         input[0] = "changed";
@@ -213,7 +238,7 @@ public final class ParagraphTest
     {
         /* Fail on invalid indices rather than silently truncating at the start. */
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("word")
                 .build();
         assertThrows(IndexOutOfBoundsException.class, () -> paragraph.sub(-1));
@@ -227,14 +252,14 @@ public final class ParagraphTest
     {
         /* Joining words preserves Unicode and removes only the word control codes. */
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("\u0018Héllo", "😀\u0010world")
                 .build();
         assertEquals("Héllo 😀world", paragraph.toString());
         assertEquals(
                 "",
                 builder()
-                        .setDocumentStyle(style(null, null))
+                        .setDocumentStyle(style(0, null))
                         .build()
                         .toString());
     }
@@ -267,13 +292,13 @@ public final class ParagraphTest
         assertEquals(
                 0,
                 builder()
-                        .setDocumentStyle(style(null, null))
+                        .setDocumentStyle(style(0, null))
                         .build()
                         .getIndentOfLine(0));
         assertEquals(
                 0,
                 builder()
-                        .setDocumentStyle(style(null, 7))
+                        .setDocumentStyle(style(0, 7))
                         .build()
                         .getIndentOfLine(2));
     }
@@ -323,7 +348,7 @@ public final class ParagraphTest
     public void cachesBothWidthAndFullStopSpacing()
     {
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("Hi.", "there", "friend")
                 .build();
         Paragraph.WrapData single = paragraph.wrap(11, false);
@@ -349,7 +374,7 @@ public final class ParagraphTest
     public void preservesExactFitAndOversizedFirstWordBehaviour()
     {
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("abc")
                 .build();
         Paragraph.WrapData exact = paragraph.wrap(4, false);
@@ -369,7 +394,7 @@ public final class ParagraphTest
     public void wrapsUsingTerminalCellWidths()
     {
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("\u0018界", "e\u0301", "😀")
                 .build();
         Paragraph.WrapData wrapped = paragraph.wrap(6, false);
@@ -384,12 +409,12 @@ public final class ParagraphTest
     public void retainsLuaSentenceMarkersAndRawFullStopDetection()
     {
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("Hello", "world", "Stop.", "Next", "é", "tail", "")
                 .build();
         assertEquals(Set.of(0, 3, 5, 6), paragraph.wrap(80, false).sentences());
         Paragraph styled = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("One.\u0010", "two", "three")
                 .build();
         assertEquals(Set.of(0, 1, 2), styled.wrap(80, true).sentences());
@@ -401,14 +426,14 @@ public final class ParagraphTest
     public void handlesEmptyParagraphsAndKeepsLayoutsImmutable()
     {
         Paragraph.WrapData empty = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .build()
                 .wrap(20, false);
         assertEquals(List.of(), empty.lines());
         assertEquals(List.of(), empty.xs());
         assertEquals(Set.of(), empty.sentences());
         Paragraph paragraph = builder()
-                .setDocumentStyle(style(null, null))
+                .setDocumentStyle(style(0, null))
                 .setWords("")
                 .build();
         Paragraph.WrapData oneWord = paragraph.wrap(20, false);

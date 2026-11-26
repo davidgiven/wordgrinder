@@ -7,7 +7,7 @@ ifeq ($(BUILDTYPE),)
 	endif
 endif
 export BUILDTYPE
-export PATH := /usr/lib/ccache:$(PATH)
+export CCACHE_DISABLE := 1
 
 ifeq ($(BUILDTYPE),windows)
 	MINGW = i686-w64-mingw32-

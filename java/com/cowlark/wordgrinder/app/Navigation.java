@@ -154,6 +154,7 @@ public class Navigation
             DocumentSet set = getDocumentSet();
             set.changed = true;
             set.justChanged = true;
+            getCurrentDocument().renumber();
             wordProcessor.queueRedraw();
         }
 

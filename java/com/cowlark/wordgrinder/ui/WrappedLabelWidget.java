@@ -14,7 +14,7 @@ public class WrappedLabelWidget extends Widget<WrappedLabelWidget>
 {
     /* Label paragraphs have no document indentation or heading attributes. */
     private static final DocumentStyle STYLE =
-            new DocumentStyle("Paragraph", "P", 0, 0, null, null, null, null, null, null);
+            new DocumentStyle("Paragraph", "P", 0, 0, 0, null, false, null, false, null);
 
     public String value = "";
     public boolean fullStopSpaces;

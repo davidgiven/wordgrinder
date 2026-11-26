@@ -3,6 +3,7 @@ package com.cowlark.wordgrinder;
 import static java.lang.System.err;
 
 import com.cowlark.wordgrinder.app.WordProcessor;
+import com.cowlark.wordgrinder.document.GlobalSettings;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;
@@ -41,6 +42,7 @@ public class Main
         Injector.bindInstance(Display.class, display);
         Injector.bindInstance(Screen.class, new ScreenImpl(display));
         Injector.bindInstance(System.class, new SystemImpl());
+        Injector.bindInstance(GlobalSettings.class, new GlobalSettings());
         Injector.create(Main.class).run(args);
     }
 

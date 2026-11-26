@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentStyle;
+import com.cowlark.wordgrinder.document.GlobalSettings;
 import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.*;
@@ -30,6 +31,36 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Draw the document around its scroll anchor and retain the visible row positions. */
+    @Test
+    public void redrawPlacesCursorAndMarksAcrossParagraphs()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        document.paragraphs = List.of(fixture.paragraph("ab"), fixture.paragraph("cd"));
+        fixture.settings.lookandfeel.scrollmode = "Jump";
+        fixture.settings.lookandfeel.terminators = true;
+        document.redrawParagraph = 0;
+        document.redrawWord = 0;
+        document.markParagraph = 0;
+        document.markWord = 0;
+        document.markOffset = 1;
+        document.cursorParagraph = 1;
+        document.cursorOffset = 1;
+
+        /* Keep the anchor while the cursor is visible, and draw the selection between them. */
+        Action.of(WordProcessor.RedrawScreenAction.class).execute();
+        assertEquals(0, document.redrawParagraph);
+        assertEquals(new ScreenWrite(2, 12, ""), fixture.cursor);
+        assertEquals(new DocumentRedraw.LinePosition(0, 0, 1), fixture.processor.getPositionOfLine(11));
+        assertEquals(new DocumentRedraw.LinePosition(1, 0, 1), fixture.processor.getPositionOfLine(12));
+        assertEquals(0, document.topParagraph);
+        assertEquals(1, document.bottomParagraph);
+        assertEquals(List.of(new ScreenWrite(2, 11, "b"), new ScreenWrite(1, 12, "c")), fixture.reversedGlyphs);
+        assertTrue(fixture.writes.contains(new ScreenWrite(1, 10, "-".repeat(78))));
+        assertTrue(fixture.writes.contains(new ScreenWrite(1, 13, "-".repeat(78))));
+    }
+
     /* Render ordered add-on fields and reserve the bottom row only when the bar is shown. */
     @Test
     public void redrawBuildsStatusBarAndPositionsMessagesAboveIt()
@@ -47,7 +78,7 @@ public class WordProcessorTest
             event.fields.add(new BuildStatusBarEvent.Field(100, "P: 1/1"));
         });
         fixture.processor.nonmodalMessage("Saved");
-        var redraw = new WordProcessor.RedrawScreenAction(fixture.processor);
+        var redraw = new WordProcessor.RedrawScreenAction(fixture.processor, fixture.settings);
         redraw.execute();
 
         /* Check the two alignments and the message row below the document. */
@@ -197,6 +228,28 @@ public class WordProcessorTest
         assertEquals(List.of("word", "paragraph"), fixture.splits);
         assertTrue(fixture.processor.dialogues.isEmpty());
         assertEquals(5, fixture.redraws);
+    }
+
+    /* Check default, centred and visible document margins on an 80-column screen. */
+    @Test
+    public void resizeSetsDocumentWrapWidth()
+    {
+        Fixture fixture = new Fixture();
+        var resize = Action.of(WordProcessor.ResizeScreenAction.class);
+        var document = fixture.processor.getCurrentDocument();
+        resize.execute();
+        assertEquals(80, document.wrapWidth);
+
+        /* Centre the paper, rounding the margin down for an odd maximum width. */
+        fixture.settings.lookandfeel.enabled = true;
+        fixture.settings.lookandfeel.maxwidth = 61;
+        resize.execute();
+        assertEquals(62, document.wrapWidth);
+
+        /* A visible document margin gets two extra columns on each side. */
+        document.margin = 12;
+        resize.execute();
+        assertEquals(52, document.wrapWidth);
     }
 
     /* Verify that the injected quit action requests a successful process exit. */
@@ -355,6 +408,9 @@ public class WordProcessorTest
     {
         final Queue<InputEvent> input = new ArrayDeque<>();
         final List<ScreenWrite> writes = new ArrayList<>();
+        final List<ScreenWrite> reversedGlyphs = new ArrayList<>();
+        ScreenWrite cursor;
+        int attributes;
         final EventBus bus = new EventBus();
         int redraws;
         boolean idling;
@@ -365,6 +421,11 @@ public class WordProcessorTest
                     return switch (method.getName())
                     {
                         case "getScreenSize" -> new int[]{80, 24};
+                        case "gotoXY" ->
+                        {
+                            cursor = new ScreenWrite((int) args[0], (int) args[1], "");
+                            yield null;
+                        }
                         case "useUnicode" -> false;
                         case "getStringWidth" -> ((String) args[0]).length();
                         case "getBoundedString" ->
@@ -404,11 +465,28 @@ public class WordProcessorTest
                 Display.class.getClassLoader(),
                 new Class<?>[]{Display.class},
                 (proxy, method, args) -> {
-                    throw new AssertionError("Unexpected display call: " + method.getName());
+                    return switch (method.getName())
+                    {
+                        case "dpy_setattr" ->
+                        {
+                            attributes = (attributes & (int) args[0]) | (int) args[1];
+                            yield null;
+                        }
+                        case "dpy_writechar" ->
+                        {
+                            if ((attributes & Word.REVERSE) != 0)
+                                reversedGlyphs.add(new ScreenWrite((int) args[0], (int) args[1],
+                                        Character.toString((int) args[2])));
+                            yield null;
+                        }
+                        case "getCharacterWidth" -> 1;
+                        default -> throw new AssertionError("Unexpected display call: " + method.getName());
+                    };
                 });
         final List<Integer> exitStatuses = new ArrayList<>();
         final List<String> insertedText = new ArrayList<>();
         final List<String> splits = new ArrayList<>();
+        final GlobalSettings settings = new GlobalSettings();
         final RecordingProcessor processor = createProcessor();
 
         /* Register the screen and renderer before the editor builds its initial paragraph. */
@@ -419,6 +497,8 @@ public class WordProcessorTest
             Injector.bindInstance(Ui.class, ui);
             Injector.bindInstance(Word.class, new Word(display));
             Injector.bindInstance(EventBus.class, bus);
+            settings.lookandfeel.terminators = false;
+            Injector.bindInstance(GlobalSettings.class, settings);
 
             /* Record exit requests without terminating the test process. */
             Injector.bindInstance(System.class, (System) Proxy.newProxyInstance(
@@ -483,8 +563,8 @@ public class WordProcessorTest
         Paragraph paragraph(String... words)
         {
             return Paragraph.builder()
-                    .setDocumentStyle(new DocumentStyle("Paragraph", "P", 0, 0, null, null,
-                            null, null, null, null))
+                    .setDocumentStyle(new DocumentStyle("Paragraph", "P", 0, 0, 0, null,
+                            false, null, false, null))
                     .setWords(words)
                     .build();
         }

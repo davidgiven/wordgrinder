@@ -9,7 +9,7 @@ public class Document
 {
     /* Share the normal paragraph style among newly created documents. */
     private static final DocumentStyle DEFAULT_STYLE =
-            new DocumentStyle("Plain text", "P", 1, 1, null, null, null, 0, null, null);
+            new DocumentStyle("Plain text", "P", 1, 1, 0, null, false, 0, false, null);
 
     /* Store the document's paragraphs and view settings. */
     @Dumpable public List<Paragraph> paragraphs = new ArrayList<>();
@@ -50,6 +50,44 @@ public class Document
                 .setDocumentStyle(DEFAULT_STYLE)
                 .setWords("")
                 .build());
+    }
+
+    /** Stores the width used when paragraphs are wrapped on demand. */
+    public void wrap(int width)
+    {
+        wrapWidth = width;
+    }
+
+    /** Calculates the space above this paragraph. */
+    public int spaceAbove(int paragraph)
+    {
+        int belowPrevious = paragraph > 0 ? paragraphs.get(paragraph - 1).style().below() : 0;
+        return Math.max(paragraphs.get(paragraph).style().above(), belowPrevious);
+    }
+
+    /** Calculates the space below this paragraph. */
+    public int spaceBelow(int paragraph)
+    {
+        int aboveNext = paragraph + 1 < paragraphs.size() ? paragraphs.get(paragraph + 1).style().above() : 0;
+        return Math.max(paragraphs.get(paragraph).style().below(), aboveNext);
+    }
+
+    /** Updates the word count and assigns numbers to numbered list paragraphs. */
+    public void renumber()
+    {
+        /* Count every stored word and restart numbering after a non-list paragraph. */
+        int count = 0;
+        int nextNumber = 1;
+        for (Paragraph paragraph : paragraphs)
+        {
+            count += paragraph.words().size();
+            DocumentStyle style = paragraph.style();
+            if (style.numbered())
+                paragraph.number = nextNumber++;
+            else if (!style.list())
+                nextNumber = 1;
+        }
+        wordCount = count;
     }
 
     /** An undo or redo snapshot containing paragraphs and a cursor position. */

@@ -35,6 +35,41 @@ public class ParagraphRenderTest
         assertEquals(0, drawing.attributes);
     }
 
+    /* Highlight a supplementary character on a later wrapped line using UTF-16 endpoints. */
+    @Test
+    public void marksPartOfOneWordOnALaterLine()
+    {
+        Drawing drawing = new Drawing();
+        Paragraph paragraph = drawing.paragraph("P", "long", "a😀b");
+        var line = paragraph.wrap(7, false).lines().get(1);
+        List<String> events = new ArrayList<>();
+        drawing.events.addEventListener(DrawWordEvent.class, event -> events.add(event.word));
+
+        paragraph.renderMarkedLine(line, 3, 4, 0, new Paragraph.Mark(0, 1, 1),
+                new Paragraph.Mark(0, 1, 3));
+        assertEquals(List.of("a😀b"), events);
+        assertEquals(List.of(new Glyph(3, 4, 'a', 0), new Glyph(4, 4, 0x1f600, Word.REVERSE),
+                new Glyph(6, 4, 'b', 0)), drawing.glyphs);
+    }
+
+    /* Highlight a selection across the inter-word space and into the next paragraph. */
+    @Test
+    public void marksAcrossWordsAndParagraphs()
+    {
+        Drawing drawing = new Drawing();
+        Paragraph first = drawing.paragraph("P", "ab", "cd");
+        Paragraph last = drawing.paragraph("P", "ef");
+        var start = new Paragraph.Mark(0, 0, 1);
+        var end = new Paragraph.Mark(1, 0, 1);
+
+        first.renderMarkedLine(first.wrap(80, false).lines().get(0), 0, 0, 0, start, end);
+        last.renderMarkedLine(last.wrap(80, false).lines().get(0), 0, 1, 1, start, end);
+        assertEquals(List.of(new Glyph(0, 0, 'a', 0), new Glyph(1, 0, 'b', Word.REVERSE),
+                new Glyph(2, 0, 160, Word.REVERSE), new Glyph(3, 0, 'c', Word.REVERSE),
+                new Glyph(4, 0, 'd', Word.REVERSE), new Glyph(0, 1, 'e', Word.REVERSE),
+                new Glyph(1, 1, 'f', 0)), drawing.glyphs);
+    }
+
     /* Heading markup is applied afresh to every word, alongside embedded word styles. */
     @Test
     public void appliesLuaHeadingMarkup()
@@ -195,7 +230,7 @@ public class ParagraphRenderTest
         Paragraph paragraph(String style, String... words)
         {
             DocumentStyle documentStyle =
-                    new DocumentStyle(style, style, 0, 0, null, null, null, null, null, null);
+                    new DocumentStyle(style, style, 0, 0, 0, null, false, null, false, null);
             Injector.bindInstance(Screen.class, screen);
             Injector.bindInstance(Word.class, new Word(display));
             Injector.bindInstance(EventBus.class, events);

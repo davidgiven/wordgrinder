@@ -4,7 +4,9 @@ import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
 import com.cowlark.wordgrinder.app.Navigation.*;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
+import com.cowlark.wordgrinder.document.GlobalSettings;
 import com.cowlark.wordgrinder.eventbus.BuildStatusBarEvent;
+import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.IdleEvent;
 import com.cowlark.wordgrinder.eventbus.KeyTypedEvent;
@@ -18,6 +20,7 @@ import com.cowlark.wordgrinder.nativeinterface.System;
 import com.cowlark.wordgrinder.ui.*;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableMap;
+import org.jspecify.annotations.Nullable;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -28,6 +31,7 @@ import java.util.Map;
 
 import static com.cowlark.wordgrinder.ui.Action.ActionResult.SUCCEEDED;
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * The word-processor input loop, translated from main.lua.
@@ -40,6 +44,12 @@ public class WordProcessor
 
     /* Own the active document set and its per-set preferences. */
     private final DocumentSet documentSet;
+
+    /* Retain the screen dimensions and paper margin from the latest resize. */
+    private int screenWidth;
+    private int screenHeight;
+    private int paperMargin;
+    private DocumentRedraw.@Nullable LinePosition[] lineIndex = new DocumentRedraw.LinePosition[0];
 
     /* Dispatch editor events and determine when the input loop is idle. */
     private final EventBus eventBus;
@@ -104,36 +114,67 @@ public class WordProcessor
         messages.clear();
     }
 
-    /* Document wrapping and viewport layout will be supplied by the document renderer. */
+    /* Look up the closest document row at or above the supplied screen row. */
+    DocumentRedraw.@Nullable LinePosition getPositionOfLine(int y)
+    {
+        for (int row = min(y, lineIndex.length - 1); row >= 0; row--)
+            if (lineIndex[row] != null)
+                return lineIndex[row];
+        return null;
+    }
+
+    /* Centre the paper and reserve two extra columns for a visible margin. */
+    private void resize(int width, int height, GlobalSettings globalSettings)
+    {
+        screenWidth = width;
+        screenHeight = height;
+        var settings = globalSettings.lookandfeel;
+        int maximumWidth = settings.enabled ? min(width, settings.maxwidth) : width;
+        var document = getCurrentDocument();
+        int centredMargin = (width - maximumWidth) / 2;
+        paperMargin = document.margin > 0 ? max(document.margin + 2, centredMargin) : centredMargin;
+        document.wrap(width - 2 * paperMargin);
+    }
+
+    /* Resize the paper and set the current document's wrap width. */
     public static class ResizeScreenAction implements VoidAction
     {
-        /* Expose this constructor to the action injector. */
-        @Inject
-        public ResizeScreenAction()
-        {
-        }
+        /* Read the editor viewport and the user's look-and-feel settings. */
+        private final WordProcessor wordProcessor;
+        private final GlobalSettings globalSettings;
 
+        @Inject
+        public ResizeScreenAction(WordProcessor wordProcessor, GlobalSettings globalSettings)
+        {
+            this.wordProcessor = wordProcessor;
+            this.globalSettings = globalSettings;
+        }
 
         @Override
         public ActionResult execute()
         {
+            /* Refresh the screen dimensions before calculating the paper margin. */
+            int[] size = wordProcessor.screen.getScreenSize();
+            wordProcessor.resize(size[0], size[1], globalSettings);
             return SUCCEEDED;
         }
     }
 
-    /* Draw the desktop, status bar and transient messages. */
+    /* Draw the document, status bar and transient messages. */
     public static class RedrawScreenAction implements VoidAction
     {
         private final WordProcessor wordProcessor;
         private final Ui ui;
         private final Screen screen;
+        private final GlobalSettings globalSettings;
 
         @Inject
-        public RedrawScreenAction(WordProcessor wp)
+        public RedrawScreenAction(WordProcessor wp, GlobalSettings globalSettings)
         {
             wordProcessor = wp;
             ui = wp.ui;
             screen = wp.screen;
+            this.globalSettings = globalSettings;
         }
 
         @Override
@@ -141,13 +182,21 @@ public class WordProcessor
         {
             /* We can't draw until the backend reports a usable screen size. */
             int[] size = screen.getScreenSize();
-            int width = size[0];
-            int y = size[1] - 1;
+            wordProcessor.resize(size[0], size[1], globalSettings);
+            int width = wordProcessor.screenWidth;
+            int y = wordProcessor.screenHeight - 1;
+            wordProcessor.lineIndex = new DocumentRedraw.LinePosition[0];
             if (width <= 0 || y < 0)
                 return SUCCEEDED;
 
             ui.setColour(null, "Desktop");
             screen.clearScreen();
+
+            /* Draw the paper before overlaying the status bar and messages. */
+            Document document = wordProcessor.getCurrentDocument();
+            if (document.wrapWidth > 0)
+                wordProcessor.lineIndex = new DocumentRedraw(document, globalSettings.lookandfeel,
+                        screen, ui, wordProcessor.screenHeight, wordProcessor.paperMargin).draw();
 
             /* Reserve the bottom row for the status bar when enabled. */
             if (wordProcessor.getDocumentSet().statusBar)
@@ -323,11 +372,18 @@ public class WordProcessor
      */
     public void run()
     {
+        /* Establish the initial paper width before the editor's first redraw. */
+        ResizeScreenAction resize = Action.of(ResizeScreenAction.class);
+        resize.execute();
+
+        /* Update word counts and numbered paragraph styles when the document changes. */
+        getCurrentDocument().renumber();
+        eventBus.addEventListener(ChangedEvent.class, e -> getCurrentDocument().renumber());
         eventBus.addEventListener(RedrawEvent.class, e -> Action.of(RedrawScreenAction.class).execute());
 
         /* Resolve master bindings through the injector when their keys are pressed. */
         ImmutableMap<String, VoidAction> masterKeymap = ImmutableMap.<String, VoidAction>builder()
-                .put("KEY_RESIZE", Action.of(ResizeScreenAction.class).then(RedrawScreenAction.class))
+                .put("KEY_RESIZE", resize.then(RedrawScreenAction.class))
                 .put("KEY_REDRAW", Action.of(RedrawScreenAction.class))
                 .put(" ",
                         Action.of(CheckpointAction.class)

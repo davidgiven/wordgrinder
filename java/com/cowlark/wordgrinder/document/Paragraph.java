@@ -27,7 +27,9 @@ public final class Paragraph implements Iterable<String>
     /* Paragraph content and style remain fixed after construction. */
     private ImmutableList<String> words;
     private DocumentStyle style;
-    public final int number = 0;
+
+    /* Cache the list number assigned by the document. */
+    public int number;
 
     /* Screen metrics remain fixed for this paragraph; only the most recent layout is cached. */
     private final Screen screen;
@@ -102,7 +104,7 @@ public final class Paragraph implements Iterable<String>
     /**
      * Returns the indentation in character cells for a zero-based line index.
      * Uses this paragraph's style: its first-line override for line zero, then its
-     * ordinary indent, then zero.
+     * ordinary indent.
      *
      * @throws IndexOutOfBoundsException if the line index is negative
      */
@@ -113,10 +115,8 @@ public final class Paragraph implements Iterable<String>
             throw new IndexOutOfBoundsException("Negative line index: " + line);
 
         /* An explicit first-line indent of zero overrides the ordinary indent too. */
-        Integer indent = line == 0 ? style.firstIndent() : null;
-        if (indent == null)
-            indent = style.indent();
-        return indent == null ? 0 : indent;
+        Integer firstIndent = style.firstIndent();
+        return line == 0 && firstIndent != null ? firstIndent : style.indent();
     }
 
     /**
@@ -206,6 +206,26 @@ public final class Paragraph implements Iterable<String>
      */
     public void renderLine(Line line, int x, int y, boolean fireDrawWord)
     {
+        renderLine(line, x, y, fireDrawWord, 0, null, null);
+    }
+
+    /** A zero-based selection endpoint with a UTF-16 offset into its word. */
+    public record Mark(int paragraph, int word, int offset)
+    {
+    }
+
+    /**
+     * Draws a wrapped line with the selection from start (inclusive) to end (exclusive).
+     * Supply the endpoints in document order. As in Lua, each word fires DrawWord.
+     */
+    public void renderMarkedLine(Line line, int x, int y, int paragraph, Mark start, Mark end)
+    {
+        renderLine(line, x, y, true, paragraph, start, end);
+    }
+
+    private void renderLine(Line line, int x, int y, boolean fireDrawWord, int paragraph,
+            @Nullable Mark start, @Nullable Mark end)
+    {
         /* Rendering requires the cached positions and sentence markers from wrapping. */
         WrapData layout = wrapData;
         if (layout == null)
@@ -213,9 +233,22 @@ public final class Paragraph implements Iterable<String>
         int currentStyle = style.cstyle();
         int oldStyle = 0;
 
-        /* Deliver each mutable payload synchronously before drawing at its wrapped position. */
+        /* Use paragraph-relative word indices even when rendering a later wrapped line. */
         for (int wn : line.words())
         {
+            /* Select the full word unless it contains one of the selection endpoints. */
+            int reverseOn = -1;
+            int reverseOff = -1;
+            if (start != null && end != null
+                    && (paragraph > start.paragraph() || (paragraph == start.paragraph() && wn >= start.word()))
+                    && (paragraph < end.paragraph() || (paragraph == end.paragraph() && wn <= end.word())))
+            {
+                reverseOn = paragraph == start.paragraph() && wn == start.word() ? start.offset() : 0;
+                if (paragraph == end.paragraph() && wn == end.word())
+                    reverseOff = end.offset();
+            }
+
+            /* Deliver the mutable payload synchronously before drawing at its wrapped position. */
             String word = words.get(wn);
             int wordStyle = currentStyle;
             if (fireDrawWord)
@@ -223,6 +256,12 @@ public final class Paragraph implements Iterable<String>
                 DrawWordEvent payload =
                         new DrawWordEvent(word, oldStyle, currentStyle, layout.sentences().contains(wn));
                 eventBus.fireEvent(payload);
+                if (!word.equals(payload.word))
+                {
+                    /* A replacement may no longer have a character at a marked offset. */
+                    reverseOn = drawableBoundary(payload.word, reverseOn);
+                    reverseOff = drawableBoundary(payload.word, reverseOff);
+                }
                 word = payload.word;
                 oldStyle = payload.oldStyle;
                 wordStyle = payload.currentStyle;
@@ -232,10 +271,18 @@ public final class Paragraph implements Iterable<String>
                     y,
                     word,
                     oldStyle,
-                    -1,
-                    -1,
+                    reverseOn,
+                    reverseOff,
                     wordStyle);
         }
+    }
+
+    private static int drawableBoundary(String word, int offset)
+    {
+        if (offset >= word.length()
+                || (offset > 0 && Character.isSurrogatePair(word.charAt(offset - 1), word.charAt(offset))))
+            return -1;
+        return offset;
     }
 
     /**
