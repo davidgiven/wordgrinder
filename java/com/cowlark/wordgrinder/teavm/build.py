@@ -32,3 +32,16 @@ simplerule(
     ],
     label="JAR",
 )
+
+# Compile the driver separately from the reflection service.
+javalibrary(
+    name="driver",
+    srcitems={
+        f"com/cowlark/wordgrinder/teavm/{f}": f"./{f}"
+        for f in ["TeaVMCDriver.java", "ShardedCOutput.java"]
+    },
+    deps=[
+        "third_party+org_teavm_teavm_core",
+        "third_party+org_teavm_teavm_tooling",
+    ],
+)

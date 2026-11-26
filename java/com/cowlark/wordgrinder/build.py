@@ -79,13 +79,11 @@ javaprogram(
 TEAVM_SHARDS = [f"=wordgrinder-{index:02x}.c" for index in range(32)]
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[
-        ".+main",
-        "tools/shard-teavm.py",
-    ],
+    ins=[".+main"],
     deps=GUAVA_DEPS
          + [
              "./teavm",
+             "./teavm+driver",
              "./nativeinterface",
              "./nativeinterface/teavm",
              "./ui",
@@ -102,8 +100,6 @@ teavm_native = simplerule(
              "./document",
              "./fileio",
              "third_party+org_jspecify_jspecify",
-             "third_party+org_teavm_cli",
-             "third_party+org_teavm_teavm_c_incremental",
              "third_party+org_teavm_teavm_extension_apis",
              "third_party+org_teavm_teavm_extension_spi",
              "third_party+org_teavm_teavm_extension_spi_util",
@@ -117,7 +113,6 @@ teavm_native = simplerule(
              "third_party+org_teavm_teavm_core",
              "third_party+org_teavm_teavm_tooling",
              "third_party+org_teavm_teavm_classlib",
-             "third_party+commons_cli_commons_cli",
              "third_party+org_teavm_teavm_interop",
              "third_party+org_teavm_teavm_metaprogramming_api",
              "third_party+org_teavm_teavm_relocated_libs_asm_commons",
@@ -137,13 +132,8 @@ teavm_native = simplerule(
          ],
     outs=TEAVM_SHARDS,
     commands=[
-        "rm -rf $[dir]/c",
-        # TeaVM obfuscates only when passed -m or --minify.
-        "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
-        "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
-        "-O1 "
-        "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(PYTHON) $[ins[1]] $[dir]/c $[outs]",
+        "$(JAVA) -cp '$[\":\".join(filenamesof(ins[:1] + deps))]' "
+        "com.cowlark.wordgrinder.teavm.TeaVMCDriver com.cowlark.wordgrinder.Main $[outs]",
     ],
     label="TEAVM",
 )

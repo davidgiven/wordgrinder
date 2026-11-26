@@ -26,15 +26,13 @@ javalibrary(
 # Generate a self-contained C translation unit for the TeaVM probe.
 generated = simplerule(
     name="cstring-probe-generated",
-    ins=[".+cstring-probe-classes", "tools/shard-teavm.py"],
+    ins=[".+cstring-probe-classes"],
     deps=compiler_deps,
     outs=["=cstring-probe-generated.c"],
     commands=[
-        "rm -rf $[dir]/c",
-        "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
-        "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
-        "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.nativeinterface.teavm.CStringProbe",
-        "$(PYTHON) $[ins[1]] $[dir]/c $[outs[0]]",
+        "$(JAVA) -cp '$[\":\".join(filenamesof(ins[:1] + deps))]' "
+        "com.cowlark.wordgrinder.teavm.TeaVMCDriver "
+        "com.cowlark.wordgrinder.nativeinterface.teavm.CStringProbe $[outs]",
     ],
     label="TEAVM",
 )
