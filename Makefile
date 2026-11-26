@@ -7,6 +7,7 @@ ifeq ($(BUILDTYPE),)
 	endif
 endif
 export BUILDTYPE
+export PATH := /usr/lib/ccache:$(PATH)
 
 ifeq ($(BUILDTYPE),windows)
 	MINGW = i686-w64-mingw32-
@@ -40,9 +41,14 @@ else
 	export PKG_CONFIG = pkg-config
 endif
 
-CFLAGS += -g -Os -ffunction-sections -fdata-sections -fno-pie
+CFLAGS += -g -Os -ffunction-sections -fdata-sections
 CXXFLAGS = $(CFLAGS) --std=c++17
-LDFLAGS += -ffunction-sections -fdata-sections -no-pie -Wl,-z,pack-relative-relocs -Wl,--gc-sections
+LDFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
+
+ifeq ($(filter windows osx,$(BUILDTYPE)),)
+CFLAGS += -fno-pie
+LDFLAGS += -no-pie -Wl,-z,pack-relative-relocs
+endif
 
 export PREFIX = /usr/local
 
