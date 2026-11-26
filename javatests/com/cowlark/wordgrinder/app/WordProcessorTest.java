@@ -49,16 +49,24 @@ public class WordProcessorTest
         document.cursorOffset = 1;
 
         /* Keep the anchor while the cursor is visible, and draw the selection between them. */
-        Action.of(WordProcessor.RedrawScreenAction.class).execute();
+        Action.of(RedrawScreenAction.class).execute();
         assertEquals(0, document.redrawParagraph);
         assertEquals(new ScreenWrite(2, 12, ""), fixture.cursor);
-        assertEquals(new DocumentRedraw.LinePosition(0, 0, 1), fixture.processor.getPositionOfLine(11));
-        assertEquals(new DocumentRedraw.LinePosition(1, 0, 1), fixture.processor.getPositionOfLine(12));
+        assertEquals(new RedrawScreenAction.LinePosition(0, 0, 1), fixture.processor.getPositionOfLine(11));
+        assertEquals(new RedrawScreenAction.LinePosition(1, 0, 1), fixture.processor.getPositionOfLine(12));
         assertEquals(0, document.topParagraph);
         assertEquals(1, document.bottomParagraph);
         assertEquals(List.of(new ScreenWrite(2, 11, "b"), new ScreenWrite(1, 12, "c")), fixture.reversedGlyphs);
         assertTrue(fixture.writes.contains(new ScreenWrite(1, 10, "-".repeat(78))));
         assertTrue(fixture.writes.contains(new ScreenWrite(1, 13, "-".repeat(78))));
+
+        /* Use the Unicode variants when the screen supports them. */
+        fixture.unicode = true;
+        fixture.writes.clear();
+        Action.of(RedrawScreenAction.class).execute();
+        assertTrue(fixture.writes.contains(new ScreenWrite(0, 8, "₀")));
+        assertTrue(fixture.writes.contains(new ScreenWrite(1, 10, "▔".repeat(78))));
+        assertTrue(fixture.writes.contains(new ScreenWrite(1, 13, "▁".repeat(78))));
     }
 
     /* Render ordered add-on fields and reserve the bottom row only when the bar is shown. */
@@ -78,7 +86,7 @@ public class WordProcessorTest
             event.fields.add(new BuildStatusBarEvent.Field(100, "P: 1/1"));
         });
         fixture.processor.nonmodalMessage("Saved");
-        var redraw = new WordProcessor.RedrawScreenAction(fixture.processor, fixture.settings);
+        var redraw = Action.of(RedrawScreenAction.class);
         redraw.execute();
 
         /* Check the two alignments and the message row below the document. */
@@ -414,6 +422,7 @@ public class WordProcessorTest
         final EventBus bus = new EventBus();
         int redraws;
         boolean idling;
+        boolean unicode;
         final Screen screen = (Screen) Proxy.newProxyInstance(
                 Screen.class.getClassLoader(),
                 new Class<?>[]{Screen.class},
@@ -426,7 +435,7 @@ public class WordProcessorTest
                             cursor = new ScreenWrite((int) args[0], (int) args[1], "");
                             yield null;
                         }
-                        case "useUnicode" -> false;
+                        case "useUnicode" -> unicode;
                         case "getStringWidth" -> ((String) args[0]).length();
                         case "getBoundedString" ->
                         {

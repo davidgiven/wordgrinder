@@ -5,7 +5,7 @@ import com.cowlark.wordgrinder.app.Navigation.*;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.GlobalSettings;
-import com.cowlark.wordgrinder.eventbus.BuildStatusBarEvent;
+import com.cowlark.wordgrinder.app.RedrawScreenAction.LinePosition;
 import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.IdleEvent;
@@ -25,7 +25,6 @@ import org.jspecify.annotations.Nullable;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -45,11 +44,8 @@ public class WordProcessor
     /* Own the active document set and its per-set preferences. */
     private final DocumentSet documentSet;
 
-    /* Retain the screen dimensions and paper margin from the latest resize. */
-    private int screenWidth;
-    private int screenHeight;
-    private int paperMargin;
-    private DocumentRedraw.@Nullable LinePosition[] lineIndex = new DocumentRedraw.LinePosition[0];
+    /* Retain the document positions from the latest redraw. */
+    private @Nullable LinePosition[] lineIndex = new LinePosition[0];
 
     /* Dispatch editor events and determine when the input loop is idle. */
     private final EventBus eventBus;
@@ -114,8 +110,35 @@ public class WordProcessor
         messages.clear();
     }
 
+    /* Share the editor's display and pending messages with the redraw action. */
+    Ui ui()
+    {
+        return ui;
+    }
+
+    Screen screen()
+    {
+        return screen;
+    }
+
+    List<String> messages()
+    {
+        return messages;
+    }
+
+    EventBus eventBus()
+    {
+        return eventBus;
+    }
+
+    /* Publish the document positions from the latest redraw. */
+    void setLineIndex(@Nullable LinePosition[] lineIndex)
+    {
+        this.lineIndex = lineIndex;
+    }
+
     /* Look up the closest document row at or above the supplied screen row. */
-    DocumentRedraw.@Nullable LinePosition getPositionOfLine(int y)
+    @Nullable LinePosition getPositionOfLine(int y)
     {
         for (int row = min(y, lineIndex.length - 1); row >= 0; row--)
             if (lineIndex[row] != null)
@@ -124,16 +147,15 @@ public class WordProcessor
     }
 
     /* Centre the paper and reserve two extra columns for a visible margin. */
-    private void resize(int width, int height, GlobalSettings globalSettings)
+    int resize(int width, GlobalSettings globalSettings)
     {
-        screenWidth = width;
-        screenHeight = height;
         var settings = globalSettings.lookandfeel;
         int maximumWidth = settings.enabled ? min(width, settings.maxwidth) : width;
         var document = getCurrentDocument();
         int centredMargin = (width - maximumWidth) / 2;
-        paperMargin = document.margin > 0 ? max(document.margin + 2, centredMargin) : centredMargin;
+        int paperMargin = document.margin > 0 ? max(document.margin + 2, centredMargin) : centredMargin;
         document.wrap(width - 2 * paperMargin);
+        return paperMargin;
     }
 
     /* Resize the paper and set the current document's wrap width. */
@@ -155,102 +177,8 @@ public class WordProcessor
         {
             /* Refresh the screen dimensions before calculating the paper margin. */
             int[] size = wordProcessor.screen.getScreenSize();
-            wordProcessor.resize(size[0], size[1], globalSettings);
+            wordProcessor.resize(size[0], globalSettings);
             return SUCCEEDED;
-        }
-    }
-
-    /* Draw the document, status bar and transient messages. */
-    public static class RedrawScreenAction implements VoidAction
-    {
-        private final WordProcessor wordProcessor;
-        private final Ui ui;
-        private final Screen screen;
-        private final GlobalSettings globalSettings;
-
-        @Inject
-        public RedrawScreenAction(WordProcessor wp, GlobalSettings globalSettings)
-        {
-            wordProcessor = wp;
-            ui = wp.ui;
-            screen = wp.screen;
-            this.globalSettings = globalSettings;
-        }
-
-        @Override
-        public ActionResult execute()
-        {
-            /* We can't draw until the backend reports a usable screen size. */
-            int[] size = screen.getScreenSize();
-            wordProcessor.resize(size[0], size[1], globalSettings);
-            int width = wordProcessor.screenWidth;
-            int y = wordProcessor.screenHeight - 1;
-            wordProcessor.lineIndex = new DocumentRedraw.LinePosition[0];
-            if (width <= 0 || y < 0)
-                return SUCCEEDED;
-
-            ui.setColour(null, "Desktop");
-            screen.clearScreen();
-
-            /* Draw the paper before overlaying the status bar and messages. */
-            Document document = wordProcessor.getCurrentDocument();
-            if (document.wrapWidth > 0)
-                wordProcessor.lineIndex = new DocumentRedraw(document, globalSettings.lookandfeel,
-                        screen, ui, wordProcessor.screenHeight, wordProcessor.paperMargin).draw();
-
-            /* Reserve the bottom row for the status bar when enabled. */
-            if (wordProcessor.getDocumentSet().statusBar)
-                drawStatusBar(width, y--);
-
-            /* Stack messages upwards from the bottom, with the newest message last on screen. */
-            if (!wordProcessor.messages.isEmpty())
-            {
-                /* Reversed due to setReverse below. */
-                ui.setColour("MessageFG", "MessageBG");
-                screen.setReverse();
-                int i = wordProcessor.messages.size() - 1;
-                while (i >= 0 && y >= 0)
-                {
-                    screen.clearArea(0, y, width - 1, y);
-                    screen.write(0, y, wordProcessor.messages.get(i));
-                    i--;
-                    y--;
-                }
-                screen.setNormal();
-            }
-
-            return SUCCEEDED;
-        }
-
-        /* Draw document names and the dirty marker before collecting add-on fields. */
-        private void drawStatusBar(int width, int y)
-        {
-            DocumentSet set = wordProcessor.getDocumentSet();
-            String filename = set.name == null ? "(unnamed)" : set.name;
-            int separator = max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
-            String name = set.current.name == null ? "" : set.current.name;
-            String label = filename.substring(separator + 1) + "[" + name + "] " + (set.changed ? "CHANGED" : "");
-
-            /* Reversed due to setReverse below. */
-            ui.setColour("StatusbarBG", "StatusbarFG");
-            screen.setReverse();
-            screen.clearArea(0, y, width - 1, y);
-            ui.lAlignInField(0, y, width, label);
-
-            /* Deliver the event now so its fields can be laid out in this redraw. */
-            BuildStatusBarEvent event = new BuildStatusBarEvent();
-            wordProcessor.eventBus.fireEvent(event);
-            event.fields.sort(Comparator.comparingInt(BuildStatusBarEvent.Field::priority));
-            if (!event.fields.isEmpty())
-            {
-                StringBuilder fields = new StringBuilder(" ");
-                for (BuildStatusBarEvent.Field field : event.fields)
-                    fields.append(" │ ").append(field.value());
-                if (fields.charAt(fields.length() - 1) == ' ')
-                    fields.setLength(fields.length() - 1);
-                ui.rAlignInField(0, y, width, fields.toString());
-            }
-            screen.setNormal();
         }
     }
 
