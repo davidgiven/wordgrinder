@@ -1,4 +1,5 @@
 from build.ab import filenameof, simplerule
+from build.c import cprogram, cxxfile
 from build.java import javalibrary
 from build.junit4 import junit4
 
@@ -22,31 +23,46 @@ javalibrary(
     ],
 )
 
-# Compile the real bindings against assertion stubs rather than a terminal or clipboard.
-probe = simplerule(
-    name="cstring-probe",
-    ins=[
-        ".+cstring-probe-classes",
-        "./cstring-probe.c",
-        "./cstring-probe.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/display.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/clipboard.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/system.cc",
-        "java/com/cowlark/wordgrinder/teavm/impl/system.h",
-    ],
+# Generate a self-contained C translation unit for the TeaVM probe.
+generated = simplerule(
+    name="cstring-probe-generated",
+    ins=[".+cstring-probe-classes", "tools/shard-teavm.py"],
     deps=compiler_deps,
-    outs=["=cstring-probe$(EXT)"],
+    outs=["=cstring-probe-generated.c"],
     commands=[
+        "rm -rf $[dir]/c",
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.teavm.impl.CStringProbe",
-        "$(CXX) $(CXXFLAGS) -c -o $[dir]/system.o $[ins[5]]",
-        "$(CC) $(CFLAGS) -UNDEBUG -std=c11 "
-        "-Ijava/com/cowlark/wordgrinder/teavm/impl "
-        "-Ijavatests/com/cowlark/wordgrinder/teavm/impl "
-        "$[dir]/c/all.c $[ins[1]] $[dir]/system.o -lm -o $[outs[0]]",
+        "$(PYTHON) $[ins[1]] $[dir]/c $[outs[0]]",
     ],
     label="TEAVM",
+)
+
+# Build the platform adapter with the C++ toolchain.
+system = cxxfile(
+    name="cstring-probe-system",
+    srcs=["java/com/cowlark/wordgrinder/teavm/impl/system.cc"],
+    deps=["java/com/cowlark/wordgrinder/teavm/impl/system.h"],
+)
+
+# Compile the real bindings against assertion stubs using the configured flags.
+probe = cprogram(
+    name="cstring-probe",
+    srcs=[generated, "./cstring-probe.c", system],
+    deps=[
+        "./cstring-probe.h",
+        "java/com/cowlark/wordgrinder/teavm/impl/display.h",
+        "java/com/cowlark/wordgrinder/teavm/impl/clipboard.h",
+        "java/com/cowlark/wordgrinder/teavm/impl/system.h",
+    ],
+    cflags=[
+        "-UNDEBUG",
+        "-std=c11",
+        "-Ijava/com/cowlark/wordgrinder/teavm/impl",
+        "-Ijavatests/com/cowlark/wordgrinder/teavm/impl",
+    ],
+    ldflags=["-lm"],
 )
 
 # Put the executable on the JUnit classpath as a resource, independent of sandbox paths.

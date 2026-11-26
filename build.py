@@ -4,15 +4,9 @@ from config import (
     VERSION,
     BUILDTYPE,
     HAS_OSX,
-    HAS_NCURSES,
     HAS_XWORDGRINDER,
     HAS_HAIKU,
     IS_WINDOWS,
-)
-
-export(
-    name="java",
-    items={"bin/wordgrinder-java": "java/com/cowlark/wordgrinder+wordgrinder-c"},
 )
 
 export(
@@ -43,6 +37,7 @@ export(
     name="all",
     items={
         "bin/wordgrinder$(EXT)": TEST_BINARY,
+        "bin/wordgrinder-java": "java/com/cowlark/wordgrinder+wordgrinder-c",
     }
     | (
         {"bin/xwordgrinder": "src/c+wordgrinder-glfw-x11"}
@@ -83,5 +78,5 @@ export(
         if BUILDTYPE in {"unix", "osx"}
         else {}
     ),
-    deps=["tests", "src/lua+typecheck"],
+    deps=["tests", ".+javatests", "src/lua+typecheck"],
 )

@@ -1,7 +1,7 @@
 from config import VERSION
 from shlex import quote
 from build.ab import simplerule
-from build.c import cxxprogram
+from build.c import clibrary, cxxprogram
 from build.java import javalibrary, javaprogram
 
 GUAVA_DEPS = [
@@ -75,7 +75,8 @@ javaprogram(
     deps=[".+main"],
 )
 
-# Generate and compile TeaVM C, then link it with the C++ display adapter.
+# Generate self-contained TeaVM C shards for the compiler sandboxes.
+TEAVM_SHARDS = [f"=wordgrinder-{index:02x}.c" for index in range(32)]
 teavm_native = simplerule(
     name="wordgrinder-teavm",
     ins=[
@@ -83,6 +84,7 @@ teavm_native = simplerule(
         "./teavm/impl/display.h",
         "./teavm/impl/clipboard.h",
         "./teavm/impl/system.h",
+        "tools/shard-teavm.py",
     ],
     deps=GUAVA_DEPS
          + [
@@ -136,27 +138,30 @@ teavm_native = simplerule(
              "third_party+org_teavm_teavm_relocated_libs_asm_analysis",
              "third_party+org_teavm_teavm_jso",
          ],
-    outs=["=wordgrinder.o"],
+    outs=TEAVM_SHARDS,
     commands=[
+        "rm -rf $[dir]/c",
         # TeaVM obfuscates only when passed -m or --minify.
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-O1 "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(CC) $(CFLAGS) "
-        "-fno-unwind-tables "
-        "-fno-asynchronous-unwind-tables "
-        "-Ijava/com/cowlark/wordgrinder/teavm/impl "
-        "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
+        "$(PYTHON) $[ins[4]] $[dir]/c $[outs]",
     ],
     label="TEAVM",
-    traits={"clibrary"},
 )
-teavm_native.args["clibrary_deps"] = [teavm_native]
-teavm_native.args["clibrary_files"] = [teavm_native]
+
+
+# Compile each shard independently and link the archive with the native adapters.
+clibrary(
+    name="wordgrinder-teavm-c",
+    srcs=[teavm_native],
+    deps=["./teavm/impl+native"],
+    cflags=["-std=c11", "-fno-unwind-tables", "-fno-asynchronous-unwind-tables"],
+)
 
 cxxprogram(
     name="wordgrinder-c",
     srcs=[],
-    deps=[".+wordgrinder-teavm", "./teavm/impl+native"],
+    deps=[".+wordgrinder-teavm-c"],
 )
