@@ -23,46 +23,6 @@ import static java.lang.Math.min;
 /* Draw the document, status bar and transient messages. */
 public class RedrawScreenAction implements VoidAction
 {
-    /* Preserve the ruler and paper marker names from redraw.lua. */
-    private static String symbol(String name, boolean unicode)
-    {
-        if (unicode)
-            return switch (name)
-            {
-                case "0" -> "₀";
-                case "1" -> "₁";
-                case "2" -> "₂";
-                case "3" -> "₃";
-                case "4" -> "₄";
-                case "5" -> "₅";
-                case "6" -> "₆";
-                case "7" -> "₇";
-                case "8" -> "₈";
-                case "9" -> "₉";
-                case "dl" -> "◥";
-                case "dm" -> "▼";
-                case "dms" -> "▾";
-                case "dr" -> "◤";
-                case "ul" -> "◿";
-                case "um" -> "△";
-                case "ur" -> "◺";
-                case "lb" -> "▁";
-                case "lt" -> "▔";
-                default -> throw new IllegalArgumentException("Unknown redraw symbol " + name);
-            };
-
-        return switch (name)
-        {
-            case "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" -> name;
-            case "dl", "ur" -> "\\";
-            case "dm", "um" -> "+";
-            case "dms" -> ".";
-            case "dr", "ul" -> "/";
-            case "lb", "lt" -> "-";
-            default -> throw new IllegalArgumentException("Unknown redraw symbol " + name);
-        };
-    }
-
     private final WordProcessor wordProcessor;
     private final Ui ui;
     private final Screen screen;
@@ -409,19 +369,20 @@ public class RedrawScreenAction implements VoidAction
             ui.setColour("MarkerFG", "Desktop");
             if (y > 2)
             {
+                String digits = unicode ? "₀₁₂₃₄₅₆₇₈₉" : "0123456789";
                 for (int x = left, number = 0; x <= right; x += 10, number++)
-                    screen.write(x, y - 2, symbol(Integer.toString(number % 10), unicode));
+                    screen.write(x, y - 2, digits.substring(number % 10, number % 10 + 1));
             }
             if (y > 1)
             {
-                screen.write(left, y - 1, symbol("dl", unicode));
+                screen.write(left, y - 1, unicode ? "◥" : "\\");
                 for (int x = left + 5; x <= right; x += 10)
-                    screen.write(x, y - 1, symbol("dms", unicode));
+                    screen.write(x, y - 1, unicode ? "▾" : ".");
                 for (int x = left + 10; x <= right; x += 10)
-                    screen.write(x, y - 1, symbol("dm", unicode));
-                screen.write(right, y - 1, symbol("dr", unicode));
+                    screen.write(x, y - 1, unicode ? "▼" : "+");
+                screen.write(right, y - 1, unicode ? "◤" : "/");
             }
-            drawPaperEdge(y, symbol("lt", unicode));
+            drawPaperEdge(y, unicode ? "▔" : "-");
         }
 
         /* Draw the lower edge and its continuation markers. */
@@ -430,14 +391,14 @@ public class RedrawScreenAction implements VoidAction
             if (y >= height)
                 return;
             boolean unicode = screen.useUnicode();
-            drawPaperEdge(y, symbol("lb", unicode));
+            drawPaperEdge(y, unicode ? "▁" : "-");
             if (y + 1 < height)
             {
                 ui.setColour("MarkerFG", "Desktop");
-                screen.write(left, y + 1, symbol("ul", unicode));
+                screen.write(left, y + 1, unicode ? "◿" : "/");
                 for (int x = left + 10; x <= right; x += 10)
-                    screen.write(x, y + 1, symbol("um", unicode));
-                screen.write(right, y + 1, symbol("ur", unicode));
+                    screen.write(x, y + 1, unicode ? "△" : "+");
+                screen.write(right, y + 1, unicode ? "◺" : "\\");
             }
         }
 
