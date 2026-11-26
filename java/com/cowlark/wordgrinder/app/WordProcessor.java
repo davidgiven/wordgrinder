@@ -154,7 +154,7 @@ public class WordProcessor
         var document = getCurrentDocument();
         int centredMargin = (width - maximumWidth) / 2;
         int paperMargin = document.margin > 0 ? max(document.margin + 2, centredMargin) : centredMargin;
-        document.wrap(width - 2 * paperMargin);
+        document.wrap(width - 2 * paperMargin, settings.fullstopspaces);
         return paperMargin;
     }
 

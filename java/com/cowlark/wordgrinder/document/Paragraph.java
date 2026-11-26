@@ -423,5 +423,13 @@ public final class Paragraph implements Iterable<String>
     public record WrapData(int wrapWidth, boolean fullStopSpaces, ImmutableSet<Integer> sentences,
                            ImmutableList<Line> lines, ImmutableList<Integer> xs)
     {
+        /** Returns the zero-based line containing a word, or -1 if it is absent. */
+        public int lineOfWord(int word)
+        {
+            for (int line = 0; line < lines.size(); line++)
+                if (lines.get(line).words().contains(word))
+                    return line;
+            return -1;
+        }
     }
 }

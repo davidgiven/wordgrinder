@@ -262,7 +262,7 @@ public class RedrawScreenAction implements VoidAction
         /* Wrap paragraphs on demand with the current document width and sentence spacing. */
         private WrapData layout(int paragraph)
         {
-            return document.paragraphs.get(paragraph).wrap(document.wrapWidth, settings.fullstopspaces);
+            return document.wrapParagraph(paragraph);
         }
 
         private static int lineCount(WrapData layout)
@@ -272,12 +272,8 @@ public class RedrawScreenAction implements VoidAction
 
         private static int lineOfWord(WrapData layout, int word)
         {
-            for (int line = 0; line < layout.lines().size(); line++)
-            {
-                if (layout.lines().get(line).words().contains(word))
-                    return line;
-            }
-            return lineCount(layout) - 1;
+            int line = layout.lineOfWord(word);
+            return line >= 0 ? line : lineCount(layout) - 1;
         }
 
         /* Draw visible lines in the requested direction, leaving clipped rows untouched. */

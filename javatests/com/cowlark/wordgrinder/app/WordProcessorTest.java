@@ -31,6 +31,65 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Move through wrapped lines and use the actual screen row and page positions. */
+    @Test
+    public void navigatesWrappedLinesAndDisplayedPageBoundaries()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        document.paragraphs = List.of(fixture.paragraph("aa", "bb", "cc", "dd"));
+        fixture.settings.lookandfeel.enabled = true;
+        fixture.settings.lookandfeel.maxwidth = 8;
+        document.cursorWord = 1;
+        document.cursorOffset = 1;
+        Action.of(RedrawScreenAction.class).execute();
+
+        /* Preserve the visual column while moving down to the second line and back. */
+        Action.of(Navigation.GotoNextLineAction.class).execute();
+        assertEquals(3, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+        Action.of(Navigation.GotoPreviousLineAction.class).execute();
+        assertEquals(1, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+
+        /* Move through page boundaries and locate a word by its drawn screen coordinates. */
+        Action.of(Navigation.GotoNextPageAction.class).execute();
+        assertEquals(3, document.cursorWord);
+        Action.of(Navigation.GotoPreviousPageAction.class).execute();
+        assertEquals(1, document.cursorWord);
+        Action.of(Navigation.GotoXYPositionAction.class).execute(38, 12);
+        assertEquals(2, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+        Action.of(Navigation.GotoEndOfLineAction.class).execute();
+        assertEquals(3, document.cursorWord);
+        assertEquals(2, document.cursorOffset);
+        Action.of(Navigation.GotoBeginningOfLineAction.class).execute();
+        assertEquals(2, document.cursorWord);
+        assertEquals(0, document.cursorOffset);
+    }
+
+    /* Switching documents refreshes their layout and word count. */
+    @Test
+    public void switchesToAnIndexedDocument()
+    {
+        Fixture fixture = new Fixture();
+        var set = fixture.processor.getDocumentSet();
+        Document next = new Document();
+        next.name = "notes";
+        next.margin = 8;
+        next.paragraphs.set(0, fixture.paragraph("one", "two"));
+        set.documents.add(next);
+        set.documentIndex.put(next.name, next);
+
+        var action = Action.of(Navigation.ChangeDocumentAction.class);
+        assertSame(ActionResult.SUCCEEDED, action.execute("notes"));
+        assertSame(next, set.current);
+        assertEquals(2, next.wordCount);
+        assertEquals(60, next.wrapWidth);
+        assertSame(ActionResult.FAILED, action.execute("absent"));
+        assertSame(next, set.current);
+    }
+
     /* Draw the document around its scroll anchor and retain the visible row positions. */
     @Test
     public void redrawPlacesCursorAndMarksAcrossParagraphs()

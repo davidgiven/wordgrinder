@@ -36,6 +36,7 @@ public class Document
 
     /* Cache viewport positions, using -1 for an unset position. */
     public int wrapWidth;
+    private boolean fullStopSpaces;
     public int topParagraph = -1;
     public int topWord = -1;
     public int bottomParagraph = -1;
@@ -56,6 +57,19 @@ public class Document
     public void wrap(int width)
     {
         wrapWidth = width;
+    }
+
+    /** Updates the document layout with the current sentence spacing preference. */
+    public void wrap(int width, boolean fullStopSpaces)
+    {
+        wrap(width);
+        this.fullStopSpaces = fullStopSpaces;
+    }
+
+    /** Wraps a paragraph using the current document layout. */
+    public Paragraph.WrapData wrapParagraph(int paragraph)
+    {
+        return paragraphs.get(paragraph).wrap(wrapWidth, fullStopSpaces);
     }
 
     /** Calculates the space above this paragraph. */

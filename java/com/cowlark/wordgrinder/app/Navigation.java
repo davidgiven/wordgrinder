@@ -8,6 +8,7 @@ import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
+import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.RedrawEvent;
 import com.cowlark.wordgrinder.ui.Action;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 
 import static com.cowlark.wordgrinder.ui.Action.ActionResult.FAILED;
 import static com.cowlark.wordgrinder.ui.Action.ActionResult.SUCCEEDED;
+import static java.lang.Math.clamp;
 
 public class Navigation
 {
@@ -801,8 +803,112 @@ public class Navigation
         }
     }
 
+    /* Share column mapping and movement across wrapped lines. */
+    private abstract static class ViewportAction extends NavigationAction
+    {
+        ViewportAction(WordProcessor wordProcessor)
+        {
+            super(wordProcessor);
+        }
+
+        /* Find the rightmost word which starts at or before the requested column. */
+        protected ActionResult gotoX(Document document, int position)
+        {
+            var paragraph = paragraph(document);
+            var layout = document.wrapParagraph(document.cursorParagraph);
+            int lineNumber = layout.lineOfWord(document.cursorWord);
+            if (lineNumber < 0)
+                return FAILED;
+            var line = layout.lines().get(lineNumber);
+            int column = Math.max(0, position - paragraph.getIndentOfLine(lineNumber));
+            int index = line.words().size() - 1;
+            while (index > 0 && layout.xs().get(line.words().get(index)) > column)
+                index--;
+
+            /* Returns the offset into a string needed for a screen width. */
+            int wordIndex = line.words().get(index);
+            String word = paragraph.words().get(wordIndex);
+            int remaining = Math.max(0, column - layout.xs().get(wordIndex));
+            int offset = 0;
+            while (offset < word.length() && remaining > 0)
+            {
+                int end = offset + Character.charCount(word.codePointAt(offset));
+                int cells = wordProcessor.screen().getStringWidth(word.substring(offset, end));
+                if (cells > remaining)
+                    break;
+                remaining -= cells;
+                offset = end;
+            }
+            document.cursorWord = wordIndex;
+            document.cursorOffset = offset;
+            wordProcessor.queueRedraw();
+            return FAILED; /* Lua returns false even when it successfully positions the cursor. */
+        }
+
+        /* Measure the cursor column from the start of the paper's text area. */
+        private int cursorX(Document document, Paragraph.WrapData layout, int line)
+        {
+            if (line < 0)
+                return 0;
+            return paragraph(document).getIndentOfLine(line) + layout.xs().get(document.cursorWord)
+                    + wordProcessor.screen().getStringWidth(word(document).substring(0, document.cursorOffset));
+        }
+
+        /* Keep the same column on the adjacent line or paragraph. */
+        protected ActionResult moveLine(boolean forward)
+        {
+            var document = getCurrentDocument();
+            var layout = document.wrapParagraph(document.cursorParagraph);
+            int line = layout.lineOfWord(document.cursorWord);
+            int x = cursorX(document, layout, line);
+            int destination = line + (forward ? 1 : -1);
+            if (line >= 0 && destination >= 0 && destination < layout.lines().size())
+            {
+                var target = layout.lines().get(destination);
+                if (!target.words().isEmpty())
+                {
+                    document.cursorWord = target.firstWord();
+                    return gotoX(document, x);
+                }
+            }
+
+            /* At the edge of the document, move to the start or end of its text. */
+            if (!moveParagraph(document, forward ? 1 : -1))
+            {
+                if (forward && !paragraph(document).words().isEmpty())
+                    endOfParagraph(document);
+                else
+                {
+                    document.cursorWord = 0;
+                    document.cursorOffset = 0;
+                }
+                return SUCCEEDED;
+            }
+            if (!forward && !paragraph(document).words().isEmpty())
+                endOfParagraph(document);
+            return gotoX(document, x);
+        }
+
+        /* Move to the displayed page boundary while keeping the cursor column. */
+        protected ActionResult movePage(boolean forward)
+        {
+            var document = getCurrentDocument();
+            int paragraph = forward ? document.bottomParagraph : document.topParagraph;
+            int word = forward ? document.bottomWord : document.topWord;
+            if (paragraph < 0 || paragraph >= document.paragraphs.size() || word < 0)
+                return FAILED;
+
+            var layout = document.wrapParagraph(document.cursorParagraph);
+            int x = cursorX(document, layout, layout.lineOfWord(document.cursorWord));
+            document.cursorParagraph = paragraph;
+            document.cursorWord = clamp(paragraph(document).words().size() - 1, 0, word);
+            document.cursorOffset = 0;
+            return gotoX(document, x);
+        }
+    }
+
     /* Represent Cmd.GotoXPosition from navigate.lua. */
-    public static class GotoXPositionAction extends NavigationAction
+    public static class GotoXPositionAction extends ViewportAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -813,12 +919,12 @@ public class Navigation
 
         public ActionResult execute(int position)
         {
-            throw new UnsupportedOperationException("GotoXPosition is not implemented");
+            return gotoX(getCurrentDocument(), position);
         }
     }
 
     /* Represent Cmd.GotoXYPosition from navigate.lua. */
-    public static class GotoXYPositionAction extends NavigationAction
+    public static class GotoXYPositionAction extends ViewportAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -829,12 +935,23 @@ public class Navigation
 
         public ActionResult execute(int x, int y)
         {
-            throw new UnsupportedOperationException("GotoXYPosition is not implemented");
+            var position = wordProcessor.getPositionOfLine(y);
+            if (position == null)
+                return FAILED;
+
+            /* Use the paragraph and word recorded when this screen row was drawn. */
+            var document = getCurrentDocument();
+            if (position.paragraph() >= document.paragraphs.size())
+                return FAILED;
+            document.cursorParagraph = position.paragraph();
+            document.cursorWord = clamp(paragraph(document).words().size() - 1, 0, position.word());
+            document.cursorOffset = 0;
+            return gotoX(document, x - position.x());
         }
     }
 
     /* Represent Cmd.GotoNextLine from navigate.lua. */
-    public static class GotoNextLineAction extends NavigationAction implements VoidAction
+    public static class GotoNextLineAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -846,12 +963,12 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoNextLine is not implemented");
+            return moveLine(true);
         }
     }
 
     /* Represent Cmd.GotoPreviousLine from navigate.lua. */
-    public static class GotoPreviousLineAction extends NavigationAction implements VoidAction
+    public static class GotoPreviousLineAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -863,12 +980,12 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoPreviousLine is not implemented");
+            return moveLine(false);
         }
     }
 
     /* Represent Cmd.GotoBeginningOfLine from navigate.lua. */
-    public static class GotoBeginningOfLineAction extends NavigationAction implements VoidAction
+    public static class GotoBeginningOfLineAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -880,12 +997,12 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoBeginningOfLine is not implemented");
+            return gotoX(getCurrentDocument(), 0);
         }
     }
 
     /* Represent Cmd.GotoEndOfLine from navigate.lua. */
-    public static class GotoEndOfLineAction extends NavigationAction implements VoidAction
+    public static class GotoEndOfLineAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -897,12 +1014,12 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoEndOfLine is not implemented");
+            return gotoX(getCurrentDocument(), wordProcessor.screen().getScreenSize()[0]);
         }
     }
 
     /* Represent Cmd.GotoPreviousPage from navigate.lua. */
-    public static class GotoPreviousPageAction extends NavigationAction implements VoidAction
+    public static class GotoPreviousPageAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -914,12 +1031,12 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoPreviousPage is not implemented");
+            return movePage(false);
         }
     }
 
     /* Represent Cmd.GotoNextPage from navigate.lua. */
-    public static class GotoNextPageAction extends NavigationAction implements VoidAction
+    public static class GotoNextPageAction extends ViewportAction implements VoidAction
     {
         /* Pass the injected processor to the shared navigation action. */
         @Inject
@@ -931,7 +1048,7 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("GotoNextPage is not implemented");
+            return movePage(true);
         }
     }
 
@@ -1212,7 +1329,36 @@ public class Navigation
 
         public ActionResult execute(String name)
         {
-            throw new UnsupportedOperationException("ChangeDocument is not implemented");
+            var set = getDocumentSet();
+            Document next = set.documentIndex.get(name);
+            if (next == null)
+            {
+                /* Recover a document which exists in the list but is missing from the index. */
+                for (Document document : set.documents)
+                {
+                    if (name.equals(document.name))
+                    {
+                        next = document;
+                        break;
+                    }
+                }
+                if (next == null)
+                    return FAILED;
+                wordProcessor.modalMessage("Document index inconsistency corrected",
+                        "Something freaky happened to '" + name + "'.");
+                set.documentIndex.put(name, next);
+            }
+
+            /* Ensure any housekeeping on the current document gets done. */
+            if (set.current.changed)
+                wordProcessor.eventBus().fireEvent(new ChangedEvent());
+
+            /* Select, renumber and resize the requested document before repainting. */
+            set.current = next;
+            next.renumber();
+            Action.of(WordProcessor.ResizeScreenAction.class).execute();
+            wordProcessor.queueRedraw();
+            return SUCCEEDED;
         }
     }
 
