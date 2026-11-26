@@ -4,8 +4,11 @@ import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.Paragraph;
 import com.cowlark.wordgrinder.document.Word;
+import com.cowlark.wordgrinder.eventbus.EventBus;
+import com.cowlark.wordgrinder.eventbus.RedrawEvent;
 import com.cowlark.wordgrinder.ui.Action;
 import com.cowlark.wordgrinder.ui.Menu;
+import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.VoidAction;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import java.util.ArrayList;
@@ -1020,19 +1023,31 @@ public class Navigation
         }
     }
 
-    /* Represent Cmd.ActivateMenu from navigate.lua. */
-    public static class ActivateMenuAction extends NavigationAction
+    /* Open the top-level menu from a key binding or activate a supplied menu. */
+    public static class ActivateMenuAction extends NavigationAction implements VoidAction
     {
-        /* Pass the injected processor to the shared navigation action. */
+        private final MenuTree menuTree;
+        private final EventBus eventBus;
+
         @Inject
-        public ActivateMenuAction(WordProcessor wordProcessor)
+        public ActivateMenuAction(WordProcessor wordProcessor, MenuTree menuTree, EventBus eventBus)
         {
             super(wordProcessor);
+            this.menuTree = menuTree;
+            this.eventBus = eventBus;
+        }
+
+        @Override
+        public ActionResult execute()
+        {
+            return execute(MenuDefinitions.TOPLEVEL);
         }
 
         public ActionResult execute(Menu menu)
         {
-            throw new UnsupportedOperationException("ActivateMenu is not implemented");
+            return menuTree.activate(menu, getDocumentSet().menu,
+                    () -> eventBus.fireEvent(RedrawEvent.INSTANCE),
+                    wordProcessor::nonmodalMessage);
         }
     }
 

@@ -17,7 +17,6 @@ import com.cowlark.wordgrinder.nativeinterface.Screen.InputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.KeyInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen.MouseInputEvent;
 import com.cowlark.wordgrinder.nativeinterface.System;
-import com.cowlark.wordgrinder.ui.MenuTree;
 import com.cowlark.wordgrinder.ui.Ui;
 import com.cowlark.wordgrinder.ui.Action;
 import com.cowlark.wordgrinder.ui.Action.ActionResult;
@@ -331,7 +330,7 @@ public class WordProcessorTest
         RecordingProcessor(Ui ui, Screen screen, EventBus bus)
         {
             /* Navigation is unused by the input-loop scenarios in this fixture. */
-            super(ui, screen, bus, null, new MenuTree(ui, bus));
+            super(ui, screen, bus, null);
             this.bus = bus;
 
             /* Let actions resolve this fixture's editor. */

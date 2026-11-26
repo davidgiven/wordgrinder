@@ -37,7 +37,6 @@ public class WordProcessor
     private final Ui ui;
     private final Screen screen;
     private final Navigation navigation;
-    private final MenuTree menuTree;
 
     /* Own the active document set and its per-set preferences. */
     private final DocumentSet documentSet;
@@ -55,13 +54,12 @@ public class WordProcessor
 
     /* Receive the editor services and create the initial document set. */
     @Inject
-    public WordProcessor(Ui ui, Screen screen, EventBus eventBus, Navigation navigation, MenuTree menuTree)
+    public WordProcessor(Ui ui, Screen screen, EventBus eventBus, Navigation navigation)
     {
         this.ui = ui;
         this.screen = screen;
         this.eventBus = eventBus;
         this.navigation = navigation;
-        this.menuTree = menuTree;
 
         /* Create the initial document with the editor's rendering collaborators. */
         this.documentSet = new DocumentSet();
@@ -297,7 +295,7 @@ public class WordProcessor
             if (ui.isQuitting())
             {
                 ui.cancelQuit();
-                /* TODO: Cmd.TerminateProgram(). */
+                Action.of(TerminateProgramAction.class).execute();
             }
         }
     }
@@ -315,30 +313,6 @@ public class WordProcessor
                 .add(new WrappedLabelWidget().setBounds(1, 1, -1, -3).setValue(text))
                 .run();
         eventBus.fireEvent(RedrawEvent.INSTANCE);
-    }
-
-    public static class ActivateMenuAction implements VoidAction
-    {
-        private final MenuTree menuTree;
-        private final WordProcessor wordProcessor;
-        private final EventBus eventBus;
-
-        @Inject
-        public ActivateMenuAction(MenuTree menuTree, WordProcessor wordProcessor, EventBus eventBus)
-        {
-            this.menuTree = menuTree;
-            this.wordProcessor = wordProcessor;
-            this.eventBus = eventBus;
-        }
-
-        @Override
-        public ActionResult execute()
-        {
-            return menuTree.activate(MenuDefinitions.TOPLEVEL,
-                    wordProcessor.getDocumentSet().menu,
-                    () -> eventBus.fireEvent(RedrawEvent.INSTANCE),
-                    wordProcessor::nonmodalMessage);
-        }
     }
 
     /**
