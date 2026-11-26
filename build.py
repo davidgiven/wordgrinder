@@ -16,7 +16,7 @@ export(
         "javatests/com/cowlark/wordgrinder/app+word-processor-test",
         "javatests/com/cowlark/wordgrinder/utils+argument-parser-test",
         "javatests/com/cowlark/wordgrinder/utils+injector-test",
-        "javatests/com/cowlark/wordgrinder/teavm/impl+cstring-test",
+        "javatests/com/cowlark/wordgrinder/nativeinterface/teavm+cstring-test",
         "javatests/com/cowlark/wordgrinder/document+word-test",
         "javatests/com/cowlark/wordgrinder/document+paragraph-test",
         "javatests/com/cowlark/wordgrinder/document+paragraph-render-test",

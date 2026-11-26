@@ -3,7 +3,7 @@ from build.java import javalibrary
 
 # TeaVM implementations of the backend-independent native interfaces.
 javalibrary(
-    name="impl",
+    name="teavm",
     srcitems={
         f"com/cowlark/wordgrinder/teavm/impl/{f}": f"./{f}"
         for f in [

@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.teavm.impl;
+package com.cowlark.wordgrinder.nativeinterface.teavm;
 
 import com.cowlark.wordgrinder.nativeinterface.Colour;
 import com.cowlark.wordgrinder.nativeinterface.Display;

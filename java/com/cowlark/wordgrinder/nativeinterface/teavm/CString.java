@@ -1,4 +1,4 @@
-package com.cowlark.wordgrinder.teavm.impl;
+package com.cowlark.wordgrinder.nativeinterface.teavm;
 
 import org.jspecify.annotations.Nullable;
 import org.teavm.backend.c.runtime.Memory;

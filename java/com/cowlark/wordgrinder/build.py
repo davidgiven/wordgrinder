@@ -45,7 +45,7 @@ javalibrary(
          + [
              ".+build-info",
              "./nativeinterface",
-             "./teavm/impl",
+             "./nativeinterface/teavm",
              "./eventbus",
              "./document",
              "./fileio",
@@ -81,16 +81,13 @@ teavm_native = simplerule(
     name="wordgrinder-teavm",
     ins=[
         ".+main",
-        "./teavm/impl/display.h",
-        "./teavm/impl/clipboard.h",
-        "./teavm/impl/system.h",
         "tools/shard-teavm.py",
     ],
     deps=GUAVA_DEPS
          + [
              "./teavm",
              "./nativeinterface",
-             "./teavm/impl",
+             "./nativeinterface/teavm",
              "./ui",
              "./app",
              "./utils",
@@ -146,7 +143,7 @@ teavm_native = simplerule(
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
         "-O1 "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
-        "$(PYTHON) $[ins[4]] $[dir]/c $[outs]",
+        "$(PYTHON) $[ins[1]] $[dir]/c $[outs]",
     ],
     label="TEAVM",
 )
@@ -156,7 +153,7 @@ teavm_native = simplerule(
 clibrary(
     name="wordgrinder-teavm-c",
     srcs=[teavm_native],
-    deps=["./teavm/impl+native"],
+    deps=["./nativeinterface/teavm+native"],
     cflags=["-std=c11", "-fno-unwind-tables", "-fno-asynchronous-unwind-tables"],
 )
 

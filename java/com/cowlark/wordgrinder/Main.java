@@ -6,15 +6,14 @@ import com.cowlark.wordgrinder.app.WordProcessor;
 import com.cowlark.wordgrinder.nativeinterface.Display;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
 import com.cowlark.wordgrinder.nativeinterface.System;
-import com.cowlark.wordgrinder.teavm.impl.DisplayImpl;
-import com.cowlark.wordgrinder.teavm.impl.ScreenImpl;
-import com.cowlark.wordgrinder.teavm.impl.SystemImpl;
+import com.cowlark.wordgrinder.nativeinterface.teavm.DisplayImpl;
+import com.cowlark.wordgrinder.nativeinterface.teavm.ScreenImpl;
+import com.cowlark.wordgrinder.nativeinterface.teavm.SystemImpl;
 import com.cowlark.wordgrinder.utils.ArgumentParser;
 import com.cowlark.wordgrinder.utils.Injector;
 import com.cowlark.wordgrinder.utils.Injector.Inject;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.io.PrintStream;
 
 public class Main
 {

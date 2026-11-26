@@ -12,11 +12,11 @@ compiler_deps = teavm_native.deps
 javalibrary(
     name="cstring-probe-classes",
     srcitems={
-        f"com/cowlark/wordgrinder/teavm/impl/{f}": f"./{f}"
+        f"com/cowlark/wordgrinder/nativeinterface/teavm/{f}": f"./{f}"
         for f in ["CStringProbe.java"]
     },
     deps=[
-        "java/com/cowlark/wordgrinder/teavm/impl",
+        "java/com/cowlark/wordgrinder/nativeinterface/teavm",
         "java/com/cowlark/wordgrinder/nativeinterface",
         "third_party+org_teavm_teavm_interop",
         "third_party+org_jspecify_jspecify",
@@ -33,7 +33,7 @@ generated = simplerule(
         "rm -rf $[dir]/c",
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
-        "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.teavm.impl.CStringProbe",
+        "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.nativeinterface.teavm.CStringProbe",
         "$(PYTHON) $[ins[1]] $[dir]/c $[outs[0]]",
     ],
     label="TEAVM",
@@ -42,25 +42,21 @@ generated = simplerule(
 # Build the platform adapter with the C++ toolchain.
 system = cxxfile(
     name="cstring-probe-system",
-    srcs=["java/com/cowlark/wordgrinder/teavm/impl/system.cc"],
-    deps=["java/com/cowlark/wordgrinder/teavm/impl/system.h"],
+    srcs=["java/com/cowlark/wordgrinder/nativeinterface/teavm/system.cc"],
+    deps=["java/com/cowlark/wordgrinder/nativeinterface/teavm/system.h"],
 )
 
 # Compile the real bindings against assertion stubs using the configured flags.
 probe = cprogram(
     name="cstring-probe",
-    srcs=[generated, "./cstring-probe.c", system],
+    srcs=[generated, "./cstring-probe.c", "./cstring-probe.h", system],
     deps=[
         "./cstring-probe.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/display.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/clipboard.h",
-        "java/com/cowlark/wordgrinder/teavm/impl/system.h",
+        "java/com/cowlark/wordgrinder/nativeinterface/teavm+native"
     ],
     cflags=[
         "-UNDEBUG",
         "-std=c11",
-        "-Ijava/com/cowlark/wordgrinder/teavm/impl",
-        "-Ijavatests/com/cowlark/wordgrinder/teavm/impl",
     ],
     ldflags=["-lm"],
 )
@@ -84,7 +80,7 @@ resource.args["jar"] = filenameof(resource.outs[0])
 junit4(
     name="cstring-test",
     srcitems={
-        f"com/cowlark/wordgrinder/teavm/impl/{f}": f"./{f}"
+        f"com/cowlark/wordgrinder/nativeinterface/teavm/{f}": f"./{f}"
         for f in ["CStringTest.java"]
     },
     deps=[resource],
