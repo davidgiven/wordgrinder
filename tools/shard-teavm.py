@@ -12,7 +12,7 @@ QUOTED_HEADER = re.compile(r'^"([^"]+)"')
 def expand(source_dir, path, output, seen, active, unconditional=True):
     # Translate pragma once to a guard that also works inside conditional includes.
     relative = path.relative_to(source_dir).as_posix()
-    lines = path.read_text().splitlines(keepends=True)
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
     once = "#pragma once" in {line.strip() for line in lines}
     if path in seen or (once and path in active):
         return
@@ -60,14 +60,16 @@ def main(source_dir, outputs):
     source_dir = source_dir.resolve()
     # Keep TeaVM's feature macros without overriding compiler definitions.
     prologue = []
-    for line in (source_dir / "all.c").read_text().splitlines():
+    for line in (source_dir / "all.c").read_text(encoding="utf-8").splitlines():
         if line.startswith("#define "):
             name = line.split()[1]
             prologue.append(f"#ifndef {name}\n{line}\n#endif\n")
     shards = [[] for _ in outputs]
 
     # TeaVM escapes the JVM's dollar sign as @d in C filenames.
-    for filename in (source_dir / "all.txt").read_text().splitlines():
+    # Sort the manifest so TeaVM's enumeration order cannot alter a shard.
+    manifest = (source_dir / "all.txt").read_text(encoding="utf-8")
+    for filename in sorted(manifest.splitlines()):
         if not filename:
             continue
         path = PurePosixPath(filename)
@@ -81,7 +83,7 @@ def main(source_dir, outputs):
 
     # Emit every shard, including empty ones, in the order declared by the build.
     for path, sources in zip(outputs, shards):
-        with path.open("w") as output:
+        with path.open("w", encoding="utf-8", newline="\n") as output:
             output.writelines(prologue)
             seen = set()
             for source in sources:
