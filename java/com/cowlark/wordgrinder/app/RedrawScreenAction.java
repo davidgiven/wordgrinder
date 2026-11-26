@@ -5,7 +5,7 @@ import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.GlobalSettings;
 import com.cowlark.wordgrinder.document.Paragraph;
-import com.cowlark.wordgrinder.document.Paragraph.Mark;
+import com.cowlark.wordgrinder.document.Position;
 import com.cowlark.wordgrinder.document.Paragraph.WrapData;
 import com.cowlark.wordgrinder.eventbus.BuildStatusBarEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
@@ -131,8 +131,8 @@ public class RedrawScreenAction implements VoidAction
         private final int right;
         private final int textX;
         private final @Nullable LinePosition[] lineIndex;
-        private @Nullable Mark start;
-        private @Nullable Mark end;
+        private @Nullable Position start;
+        private @Nullable Position end;
 
         /* Capture the viewport geometry for this redraw. */
         DocumentRedraw(Document document, int height, int margin)
@@ -196,11 +196,9 @@ public class RedrawScreenAction implements VoidAction
             /* Cache values for mark drawing. */
             if (document.markParagraph >= 0)
             {
-                var mark = new Mark(document.markParagraph, document.markWord, document.markOffset);
-                var cursor = new Mark(cursorParagraph, cursorWord, document.cursorOffset);
-                boolean markFirst = mark.paragraph() < cursor.paragraph()
-                        || (mark.paragraph() == cursor.paragraph() && (mark.word() < cursor.word()
-                        || (mark.word() == cursor.word() && mark.offset() <= cursor.offset())));
+                var mark = new Position(document.markParagraph, document.markWord, document.markOffset);
+                var cursor = new Position(cursorParagraph, cursorWord, document.cursorOffset);
+                boolean markFirst = mark.compareTo(cursor) <= 0;
                 start = markFirst ? mark : cursor;
                 end = markFirst ? cursor : mark;
             }

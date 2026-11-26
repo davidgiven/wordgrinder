@@ -209,22 +209,17 @@ public final class Paragraph implements Iterable<String>
         renderLine(line, x, y, fireDrawWord, 0, null, null);
     }
 
-    /** A zero-based selection endpoint with a UTF-16 offset into its word. */
-    public record Mark(int paragraph, int word, int offset)
-    {
-    }
-
     /**
      * Draws a wrapped line with the selection from start (inclusive) to end (exclusive).
      * Supply the endpoints in document order. As in Lua, each word fires DrawWord.
      */
-    public void renderMarkedLine(Line line, int x, int y, int paragraph, Mark start, Mark end)
+    public void renderMarkedLine(Line line, int x, int y, int paragraph, Position start, Position end)
     {
         renderLine(line, x, y, true, paragraph, start, end);
     }
 
     private void renderLine(Line line, int x, int y, boolean fireDrawWord, int paragraph,
-            @Nullable Mark start, @Nullable Mark end)
+            @Nullable Position start, @Nullable Position end)
     {
         /* Rendering requires the cached positions and sentence markers from wrapping. */
         WrapData layout = wrapData;
@@ -239,9 +234,10 @@ public final class Paragraph implements Iterable<String>
             /* Select the full word unless it contains one of the selection endpoints. */
             int reverseOn = -1;
             int reverseOff = -1;
+            String word = words.get(wn);
             if (start != null && end != null
-                    && (paragraph > start.paragraph() || (paragraph == start.paragraph() && wn >= start.word()))
-                    && (paragraph < end.paragraph() || (paragraph == end.paragraph() && wn <= end.word())))
+                    && new Position(paragraph, wn, word.length()).compareTo(start) >= 0
+                    && new Position(paragraph, wn, 0).compareTo(end) <= 0)
             {
                 reverseOn = paragraph == start.paragraph() && wn == start.word() ? start.offset() : 0;
                 if (paragraph == end.paragraph() && wn == end.word())
@@ -249,7 +245,6 @@ public final class Paragraph implements Iterable<String>
             }
 
             /* Deliver the mutable payload synchronously before drawing at its wrapped position. */
-            String word = words.get(wn);
             int wordStyle = currentStyle;
             if (fireDrawWord)
             {

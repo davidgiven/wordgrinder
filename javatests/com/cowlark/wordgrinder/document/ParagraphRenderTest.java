@@ -45,8 +45,8 @@ public class ParagraphRenderTest
         List<String> events = new ArrayList<>();
         drawing.events.addEventListener(DrawWordEvent.class, event -> events.add(event.word));
 
-        paragraph.renderMarkedLine(line, 3, 4, 0, new Paragraph.Mark(0, 1, 1),
-                new Paragraph.Mark(0, 1, 3));
+        paragraph.renderMarkedLine(line, 3, 4, 0, new Position(0, 1, 1),
+                new Position(0, 1, 3));
         assertEquals(List.of("a😀b"), events);
         assertEquals(List.of(new Glyph(3, 4, 'a', 0), new Glyph(4, 4, 0x1f600, Word.REVERSE),
                 new Glyph(6, 4, 'b', 0)), drawing.glyphs);
@@ -59,8 +59,8 @@ public class ParagraphRenderTest
         Drawing drawing = new Drawing();
         Paragraph first = drawing.paragraph("P", "ab", "cd");
         Paragraph last = drawing.paragraph("P", "ef");
-        var start = new Paragraph.Mark(0, 0, 1);
-        var end = new Paragraph.Mark(1, 0, 1);
+        var start = new Position(0, 0, 1);
+        var end = new Position(1, 0, 1);
 
         first.renderMarkedLine(first.wrap(80, false).lines().get(0), 0, 0, 0, start, end);
         last.renderMarkedLine(last.wrap(80, false).lines().get(0), 0, 1, 1, start, end);

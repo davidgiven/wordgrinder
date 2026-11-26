@@ -7,6 +7,7 @@ package com.cowlark.wordgrinder.app;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.Paragraph;
+import com.cowlark.wordgrinder.document.Position;
 import com.cowlark.wordgrinder.document.Word;
 import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
@@ -1049,21 +1050,6 @@ public class Navigation
         public ActionResult execute()
         {
             return movePage(true);
-        }
-    }
-
-    /* Order selection endpoints in document order, including positions within a word. */
-    private record Position(int paragraph, int word, int offset) implements Comparable<Position>
-    {
-        @Override
-        public int compareTo(Position other)
-        {
-            int result = Integer.compare(paragraph, other.paragraph);
-            if (result == 0)
-                result = Integer.compare(word, other.word);
-            if (result == 0)
-                result = Integer.compare(offset, other.offset);
-            return result;
         }
     }
 

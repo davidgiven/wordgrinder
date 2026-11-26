@@ -10,6 +10,7 @@ javalibrary(
             "Document.java",
             "DocumentSet.java",
             "Paragraph.java",
+            "Position.java",
             "Word.java",
             "DocumentStyle.java",
             "GlobalSettings.java",
