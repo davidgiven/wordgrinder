@@ -31,6 +31,7 @@ simplerule(
         "META-INF/services/org.teavm.extension.spi.reflection.ReflectionPolicy",
     ],
     label="JAR",
+    traits={"javalibrary"},
 )
 
 # Compile the driver separately from the reflection service.

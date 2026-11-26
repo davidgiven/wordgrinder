@@ -75,66 +75,60 @@ javaprogram(
     deps=[".+main"],
 )
 
+# Keep external compiler JARs available to the executable's manifest and sandbox.
+TEAVM_EXTERNAL_DEPS = GUAVA_DEPS + [
+    "third_party+org_jspecify_jspecify",
+    "third_party+org_teavm_teavm_extension_apis",
+    "third_party+org_teavm_teavm_extension_spi",
+    "third_party+org_teavm_teavm_extension_spi_util",
+    "third_party+org_ow2_asm_asm",
+    "third_party+org_ow2_asm_asm_tree",
+    "third_party+org_ow2_asm_asm_analysis",
+    "third_party+org_ow2_asm_asm_commons",
+    "third_party+org_ow2_asm_asm_util",
+    "third_party+org_mozilla_rhino",
+    "third_party+com_carrotsearch_hppc",
+    "third_party+org_teavm_teavm_core",
+    "third_party+org_teavm_teavm_tooling",
+    "third_party+org_teavm_teavm_classlib",
+    "third_party+org_teavm_teavm_interop",
+    "third_party+org_teavm_teavm_metaprogramming_api",
+    "third_party+org_teavm_teavm_relocated_libs_asm_commons",
+    "third_party+org_teavm_teavm_relocated_libs_asm_util",
+    "third_party+org_teavm_teavm_relocated_libs_hppc",
+    "third_party+org_teavm_teavm_relocated_libs_rhino",
+    "third_party+org_teavm_teavm_platform",
+    "third_party+org_teavm_teavm_jso_apis",
+    "third_party+org_teavm_teavm_jso_impl",
+    "third_party+org_teavm_teavm_metaprogramming_impl",
+    "third_party+com_jcraft_jzlib",
+    "third_party+joda_time_joda_time",
+    "third_party+org_teavm_teavm_relocated_libs_asm",
+    "third_party+org_teavm_teavm_relocated_libs_asm_tree",
+    "third_party+org_teavm_teavm_relocated_libs_asm_analysis",
+    "third_party+org_teavm_teavm_jso",
+]
+TEAVM_DRIVER_DEPS = TEAVM_EXTERNAL_DEPS + [
+    "java/com/cowlark/wordgrinder/teavm",
+    "java/com/cowlark/wordgrinder/teavm+driver",
+]
+TEAVM_DRIVER_MAIN = "com.cowlark.wordgrinder.teavm.TeaVMCDriver"
+
+# Link the compiler, reflection policy and application classes into an executable.
+teavm = javaprogram(
+    name="teavm-compiler",
+    mainclass=TEAVM_DRIVER_MAIN,
+    deps=TEAVM_DRIVER_DEPS + [".+main"],
+)
+
 # Generate self-contained TeaVM C shards for the compiler sandboxes.
 TEAVM_SHARDS = [f"=wordgrinder-{index:02x}.c" for index in range(32)]
 teavm_native = simplerule(
     name="wordgrinder-teavm",
-    ins=[".+main"],
-    deps=GUAVA_DEPS
-         + [
-             "./teavm",
-             "./teavm+driver",
-             "./nativeinterface",
-             "./nativeinterface/teavm",
-             "./ui",
-             "./app",
-             "./utils",
-             "./addons/debug+settings",
-             "./addons/directories+settings",
-             "./addons/gui+settings",
-             "./addons/lookandfeel+settings",
-             "./addons/recents+settings",
-             "./addons/spillchocker+settings",
-             "./addons/undo",
-             "./eventbus",
-             "./document",
-             "./fileio",
-             "third_party+org_jspecify_jspecify",
-             "third_party+org_teavm_teavm_extension_apis",
-             "third_party+org_teavm_teavm_extension_spi",
-             "third_party+org_teavm_teavm_extension_spi_util",
-             "third_party+org_ow2_asm_asm",
-             "third_party+org_ow2_asm_asm_tree",
-             "third_party+org_ow2_asm_asm_analysis",
-             "third_party+org_ow2_asm_asm_commons",
-             "third_party+org_ow2_asm_asm_util",
-             "third_party+org_mozilla_rhino",
-             "third_party+com_carrotsearch_hppc",
-             "third_party+org_teavm_teavm_core",
-             "third_party+org_teavm_teavm_tooling",
-             "third_party+org_teavm_teavm_classlib",
-             "third_party+org_teavm_teavm_interop",
-             "third_party+org_teavm_teavm_metaprogramming_api",
-             "third_party+org_teavm_teavm_relocated_libs_asm_commons",
-             "third_party+org_teavm_teavm_relocated_libs_asm_util",
-             "third_party+org_teavm_teavm_relocated_libs_hppc",
-             "third_party+org_teavm_teavm_relocated_libs_rhino",
-             "third_party+org_teavm_teavm_platform",
-             "third_party+org_teavm_teavm_jso_apis",
-             "third_party+org_teavm_teavm_jso_impl",
-             "third_party+org_teavm_teavm_metaprogramming_impl",
-             "third_party+com_jcraft_jzlib",
-             "third_party+joda_time_joda_time",
-             "third_party+org_teavm_teavm_relocated_libs_asm",
-             "third_party+org_teavm_teavm_relocated_libs_asm_tree",
-             "third_party+org_teavm_teavm_relocated_libs_asm_analysis",
-             "third_party+org_teavm_teavm_jso",
-         ],
+    ins=[teavm],
+    deps=TEAVM_EXTERNAL_DEPS,
     outs=TEAVM_SHARDS,
-    commands=[
-        "$(JAVA) -cp '$[\":\".join(filenamesof(ins[:1] + deps))]' "
-        "com.cowlark.wordgrinder.teavm.TeaVMCDriver com.cowlark.wordgrinder.Main $[outs]",
-    ],
+    commands=["$[ins[0]] com.cowlark.wordgrinder.Main $[outs]"],
     label="TEAVM",
 )
 

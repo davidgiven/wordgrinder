@@ -1,13 +1,13 @@
 from build.ab import filenameof, simplerule
 from build.c import cprogram, cxxfile
-from build.java import javalibrary
+from build.java import javalibrary, javaprogram
 from build.junit4 import junit4
 
-from java.com.cowlark.wordgrinder.build import teavm_native
-
-# Reuse the application's compiler/runtime classpath for the native interop probe.
-teavm_native.materialise()
-compiler_deps = teavm_native.deps
+from java.com.cowlark.wordgrinder.build import (
+    TEAVM_DRIVER_DEPS,
+    TEAVM_DRIVER_MAIN,
+    TEAVM_EXTERNAL_DEPS,
+)
 
 javalibrary(
     name="cstring-probe-classes",
@@ -23,17 +23,23 @@ javalibrary(
     ],
 )
 
+# Include the application classes inspected by the shared reflection policy.
+compiler = javaprogram(
+    name="cstring-probe-compiler",
+    mainclass=TEAVM_DRIVER_MAIN,
+    deps=TEAVM_DRIVER_DEPS + [
+        ".+cstring-probe-classes",
+        "java/com/cowlark/wordgrinder+main",
+    ],
+)
+
 # Generate a self-contained C translation unit for the TeaVM probe.
 generated = simplerule(
     name="cstring-probe-generated",
-    ins=[".+cstring-probe-classes"],
-    deps=compiler_deps,
+    ins=[compiler],
+    deps=TEAVM_EXTERNAL_DEPS,
     outs=["=cstring-probe-generated.c"],
-    commands=[
-        "$(JAVA) -cp '$[\":\".join(filenamesof(ins[:1] + deps))]' "
-        "com.cowlark.wordgrinder.teavm.TeaVMCDriver "
-        "com.cowlark.wordgrinder.nativeinterface.teavm.CStringProbe $[outs]",
-    ],
+    commands=["$[ins[0]] com.cowlark.wordgrinder.nativeinterface.teavm.CStringProbe $[outs[0]]"],
     label="TEAVM",
 )
 
