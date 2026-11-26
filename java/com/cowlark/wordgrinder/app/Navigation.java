@@ -594,7 +594,21 @@ public class Navigation
 
         public ActionResult execute(String text)
         {
-            throw new UnsupportedOperationException("InsertStringIntoWord is not implemented");
+            /* Insert with the current typing style and preserve the surrounding text styles. */
+            Document document = getCurrentDocument();
+            Paragraph paragraph = paragraph(document);
+            Word.InsertResult inserted = Word.insertIntoWord(word(document), text, document.cursorOffset,
+                    wordProcessor.charStyle().getCurrentStyleHint());
+            if (inserted.endOffset() < 0)
+                return FAILED;
+
+            /* Replace the word and leave the cursor just after the inserted text. */
+            var words = new ArrayList<>(paragraph.words());
+            words.set(document.cursorWord, inserted.word());
+            document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
+            document.cursorOffset = inserted.endOffset();
+            textChanged();
+            return SUCCEEDED;
         }
     }
 
@@ -627,7 +641,37 @@ public class Navigation
         @Override
         public ActionResult execute()
         {
-            throw new UnsupportedOperationException("SplitCurrentWord is not implemented");
+            /* Keep both halves in their original styles, including the surviving right-hand text. */
+            Document document = getCurrentDocument();
+            Paragraph paragraph = paragraph(document);
+            String word = word(document);
+            int offset = document.cursorOffset;
+            String left = Word.deleteFromWord(word, offset, word.length());
+            String right = Word.deleteFromWord(word, 0, offset);
+            int newOffset = 0;
+
+            /* Prime the new word so moving the cursor doesn't lose the user's style hint. */
+            if (document.markParagraph < 0)
+            {
+                int hint = wordProcessor.charStyle().getCurrentStyleHint();
+                String prime = Word.createStyleByte(hint);
+
+                /* Follow the prime code with an unprime code to preserve the existing text style. */
+                if (hint != 0)
+                    prime += Word.createStyleByte(0);
+                right = prime + right;
+                newOffset = 1;
+            }
+
+            /* Place the cursor between the prime and unprime codes, ready for typing. */
+            var words = new ArrayList<>(paragraph.words());
+            words.set(document.cursorWord, left);
+            document.cursorWord++;
+            words.add(document.cursorWord, right);
+            document.paragraphs.set(document.cursorParagraph, paragraph.withWords(words));
+            document.cursorOffset = newOffset;
+            textChanged();
+            return SUCCEEDED;
         }
     }
 

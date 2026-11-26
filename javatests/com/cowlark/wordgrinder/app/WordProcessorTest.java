@@ -31,6 +31,37 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Splitting preserves the typing hint and the styles of the text on either side. */
+    @Test
+    public void splitsAndInsertsWithTheCurrentTypingStyle()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        String italic = Word.createStyleByte(Word.ITALIC);
+        String bold = Word.createStyleByte(Word.BOLD);
+        String normal = Word.createStyleByte(0);
+        document.paragraphs.set(0, fixture.paragraph("a" + italic + "bc", "tail"));
+        document.cursorOffset = 1;
+        fixture.processor.queueRedraw();
+        Action.of(Navigation.SetStyleAction.class).execute("b");
+
+        /* Set the cursor between the style markers before the original right-hand text. */
+        assertSame(ActionResult.SUCCEEDED, Action.of(Navigation.SplitCurrentWordAction.class).execute());
+        assertEquals(List.of("a", bold + normal + italic + "bc", "tail"),
+                document.paragraphs.getFirst().words());
+        assertEquals(1, document.cursorWord);
+        assertEquals(1, document.cursorOffset);
+        assertEquals(Word.BOLD, fixture.processor.charStyle().getCurrentStyleHint());
+
+        /* Insertion replaces the temporary markers while keeping the original text italic. */
+        assertSame(ActionResult.SUCCEEDED, Action.of(Navigation.InsertStringIntoWordAction.class).execute("😀"));
+        assertEquals(List.of("a", bold + "😀" + italic + "bc", "tail"),
+                document.paragraphs.getFirst().words());
+        assertEquals(3, document.cursorOffset);
+        assertEquals(3, document.wordCount);
+        assertTrue(fixture.processor.getDocumentSet().changed);
+    }
+
     /* Keep typing overrides until the cursor moves and report the result in the status bar. */
     @Test
     public void tracksTypingStyleThroughMovesAndOverrides()
@@ -302,7 +333,7 @@ public class WordProcessorTest
         fixture.keys("x");
         fixture.run();
         assertEquals(List.of("changed", "waiting", "idle", "x", "waiting"), events);
-        assertEquals(List.of("replacement"), fixture.insertedText);
+        assertEquals(List.of("replacement"), fixture.processor.getCurrentDocument().paragraphs.getFirst().words());
         assertEquals(2, fixture.redraws);
     }
 
@@ -324,9 +355,11 @@ public class WordProcessorTest
                 "KEY_REDRAW");
         fixture.run();
         assertTrue(typed.isEmpty());
-        assertEquals(List.of("word", "paragraph"), fixture.splits);
+        assertEquals(List.of("", Word.createStyleByte(0)),
+                fixture.processor.getCurrentDocument().paragraphs.getFirst().words());
+        assertEquals(1, fixture.paragraphSplits);
         assertTrue(fixture.processor.dialogues.isEmpty());
-        assertEquals(5, fixture.redraws);
+        assertEquals(6, fixture.redraws);
     }
 
     /* Check default, centred and visible document margins on an 80-column screen. */
@@ -384,7 +417,7 @@ public class WordProcessorTest
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
                         "UNKNOWN is not bound --- try ESCAPE for a menu",
                         "UNKNOWN is not bound --- try ESCAPE for a menu"), fixture.messageWrites());
-        assertEquals(5, fixture.redraws);
+        assertEquals(6, fixture.redraws);
     }
 
     /* Multiple queued messages appear newest first from the bottom upwards. */
@@ -464,7 +497,7 @@ public class WordProcessorTest
         assertTrue(fixture.processor.dialogues
                 .get(0)
                 .contains("IllegalStateException: test failure"));
-        assertEquals(2, fixture.redraws);
+        assertEquals(3, fixture.redraws);
     }
 
     /* An Error terminates the intentionally endless loop without entering its recovery handler. */
@@ -584,8 +617,7 @@ public class WordProcessorTest
                     };
                 });
         final List<Integer> exitStatuses = new ArrayList<>();
-        final List<String> insertedText = new ArrayList<>();
-        final List<String> splits = new ArrayList<>();
+        int paragraphSplits;
         final GlobalSettings settings = new GlobalSettings();
         final RecordingProcessor processor = createProcessor();
 
@@ -620,33 +652,13 @@ public class WordProcessorTest
                             return ActionResult.SUCCEEDED;
                         }
                     });
-            Injector.bindInstance(Navigation.InsertStringIntoWordAction.class,
-                    new Navigation.InsertStringIntoWordAction(processor)
-                    {
-                        @Override
-                        public ActionResult execute(String text)
-                        {
-                            insertedText.add(text);
-                            return ActionResult.SUCCEEDED;
-                        }
-                    });
-            Injector.bindInstance(Navigation.SplitCurrentWordAction.class,
-                    new Navigation.SplitCurrentWordAction(processor)
-                    {
-                        @Override
-                        public ActionResult execute()
-                        {
-                            splits.add("word");
-                            return ActionResult.SUCCEEDED;
-                        }
-                    });
             Injector.bindInstance(Navigation.SplitCurrentParagraphAction.class,
                     new Navigation.SplitCurrentParagraphAction(processor)
                     {
                         @Override
                         public ActionResult execute()
                         {
-                            splits.add("paragraph");
+                            paragraphSplits++;
                             return ActionResult.SUCCEEDED;
                         }
                     });
