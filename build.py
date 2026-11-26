@@ -12,7 +12,7 @@ from config import (
 
 export(
     name="java",
-    items={"bin/wordgrinder-java": "java/com/cowlark/wordgrinder+wordgrinder"},
+    items={"bin/wordgrinder-java": "java/com/cowlark/wordgrinder+wordgrinder-c"},
 )
 
 export(

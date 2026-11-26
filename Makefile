@@ -40,9 +40,9 @@ else
 	export PKG_CONFIG = pkg-config
 endif
 
-CFLAGS += -g -Os -ffunction-sections -fdata-sections
+CFLAGS += -g -Os -ffunction-sections -fdata-sections -fno-pie
 CXXFLAGS = $(CFLAGS) --std=c++17
-LDFLAGS += -ffunction-sections -fdata-sections
+LDFLAGS += -ffunction-sections -fdata-sections -no-pie -Wl,-z,pack-relative-relocs -Wl,--gc-sections
 
 export PREFIX = /usr/local
 

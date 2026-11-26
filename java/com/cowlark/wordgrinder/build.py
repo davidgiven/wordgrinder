@@ -138,10 +138,14 @@ teavm_native = simplerule(
          ],
     outs=["=wordgrinder.o"],
     commands=[
+        # TeaVM obfuscates only when passed -m or --minify.
         "$(JAVA) -cp '$[\":\".join(filenamesof(deps))]' "
         "org.teavm.cli.TeaVMRunner -t c -d $[dir]/c "
+        "-O1 "
         "-p $[ins[0]] $[deps] -- com.cowlark.wordgrinder.Main",
         "$(CC) $(CFLAGS) "
+        "-fno-unwind-tables "
+        "-fno-asynchronous-unwind-tables "
         "-Ijava/com/cowlark/wordgrinder/teavm/impl "
         "-std=c11 -c -o $[outs[0]] $[dir]/c/all.c",
     ],
