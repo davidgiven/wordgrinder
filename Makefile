@@ -43,11 +43,11 @@ endif
 
 CFLAGS += -g -Os -ffunction-sections -fdata-sections
 CXXFLAGS = $(CFLAGS) --std=c++17
-LDFLAGS += -ffunction-sections -fdata-sections -Wl,--gc-sections
+LDFLAGS += -ffunction-sections -fdata-sections
 
 ifeq ($(filter windows osx,$(BUILDTYPE)),)
 CFLAGS += -fno-pie
-LDFLAGS += -no-pie -Wl,-z,pack-relative-relocs
+LDFLAGS += -no-pie -Wl,-z,pack-relative-relocs -Wl,--gc-sections
 endif
 
 export PREFIX = /usr/local
