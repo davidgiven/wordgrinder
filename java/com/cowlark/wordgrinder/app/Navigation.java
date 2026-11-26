@@ -1,3 +1,7 @@
+/* © 2008 David Given.
+ * WordGrinder is licensed under the MIT open source licence. See the COPYING
+ * file in this distribution for the full text.
+ */
 package com.cowlark.wordgrinder.app;
 
 import com.cowlark.wordgrinder.document.Document;
@@ -106,6 +110,7 @@ public class Navigation
                 moved = insideWord || document.cursorWord > 0;
                 if (moved)
                 {
+                    /* If moving back a character worked, we weren't at the beginning of the word. */
                     if (!insideWord)
                         document.cursorWord--;
                     document.cursorOffset = 0;

@@ -139,7 +139,7 @@ public class WordProcessor
         @Override
         public ActionResult execute()
         {
-            /* Wait until the backend reports a usable screen before drawing. */
+            /* We can't draw until the backend reports a usable screen size. */
             int[] size = screen.getScreenSize();
             int width = size[0];
             int y = size[1] - 1;
@@ -156,6 +156,7 @@ public class WordProcessor
             /* Stack messages upwards from the bottom, with the newest message last on screen. */
             if (!wordProcessor.messages.isEmpty())
             {
+                /* Reversed due to setReverse below. */
                 ui.setColour("MessageFG", "MessageBG");
                 screen.setReverse();
                 int i = wordProcessor.messages.size() - 1;
@@ -180,6 +181,8 @@ public class WordProcessor
             int separator = max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
             String name = set.current.name == null ? "" : set.current.name;
             String label = filename.substring(separator + 1) + "[" + name + "] " + (set.changed ? "CHANGED" : "");
+
+            /* Reversed due to setReverse below. */
             ui.setColour("StatusbarBG", "StatusbarFG");
             screen.setReverse();
             screen.clearArea(0, y, width - 1, y);
