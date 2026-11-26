@@ -31,6 +31,38 @@ import java.util.Queue;
 
 public class WordProcessorTest
 {
+    /* Keep typing overrides until the cursor moves and report the result in the status bar. */
+    @Test
+    public void tracksTypingStyleThroughMovesAndOverrides()
+    {
+        Fixture fixture = new Fixture();
+        Document document = fixture.processor.getCurrentDocument();
+        document.paragraphs.set(0, fixture.paragraph(
+                Word.createStyleByte(Word.BOLD) + "first" + Word.createStyleByte(0), "next"));
+        var setStyle = Action.of(Navigation.SetStyleAction.class);
+
+        /* Moving to the start of the next word uses the style on the left. */
+        document.cursorWord = 1;
+        fixture.processor.queueRedraw();
+        assertEquals(Word.BOLD, fixture.processor.charStyle().getCurrentStyleHint());
+
+        /* An ordinary redraw leaves the manual override in place. */
+        assertSame(ActionResult.SUCCEEDED, setStyle.execute("i"));
+        fixture.processor.queueRedraw();
+        var statusBar = new BuildStatusBarEvent();
+        fixture.bus.fireEvent(statusBar);
+        assertEquals(List.of(new BuildStatusBarEvent.Field(110, "IB.")), statusBar.fields);
+
+        /* Another cursor move replaces the override with the document style. */
+        document.cursorOffset = 1;
+        fixture.processor.queueRedraw();
+        assertEquals(0, fixture.processor.charStyle().getCurrentStyleHint());
+        setStyle.execute("u");
+        assertEquals(Word.UNDERLINE, fixture.processor.charStyle().getCurrentStyleHint());
+        setStyle.execute("o");
+        assertEquals(0, fixture.processor.charStyle().getCurrentStyleHint());
+    }
+
     /* Move through wrapped lines and use the actual screen row and page positions. */
     @Test
     public void navigatesWrappedLinesAndDisplayedPageBoundaries()
@@ -149,7 +181,7 @@ public class WordProcessorTest
         redraw.execute();
 
         /* Check the two alignments and the message row below the document. */
-        String details = "  │ P: 1/1 │ Words: 5";
+        String details = "  │ P: 1/1 │ ... │ Words: 5";
         assertEquals(List.of(new ScreenWrite(0, 23, "novel.wg[main] CHANGED"),
                 new ScreenWrite(80 - details.length(), 23, details),
                 new ScreenWrite(0, 22, "Saved")), fixture.writes);

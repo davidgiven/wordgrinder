@@ -1053,6 +1053,19 @@ public class Navigation
         }
     }
 
+    /* Resolve the character style names shared by selection and typing commands. */
+    private static int styleMask(String style)
+    {
+        return switch (style)
+        {
+            case "b" -> Word.BOLD;
+            case "u" -> Word.UNDERLINE;
+            case "i" -> Word.ITALIC;
+            case "o" -> 0;
+            default -> -1;
+        };
+    }
+
     /* Represent Cmd.ApplyStyleToSelection from navigate.lua. */
     public static class ApplyStyleToSelectionAction extends NavigationAction
     {
@@ -1070,14 +1083,7 @@ public class Navigation
                 return FAILED;
 
             /* Resolve the Lua style masks and order the selection's endpoints. */
-            int styleOr = switch (style)
-            {
-                case "b" -> Word.BOLD;
-                case "u" -> Word.UNDERLINE;
-                case "i" -> Word.ITALIC;
-                case "o" -> 0;
-                default -> -1;
-            };
+            int styleOr = styleMask(style);
             if (styleOr < 0)
                 return FAILED;
             int styleAnd = style.equals("o") ? 0 : Word.STYLE_ALL;
@@ -1128,7 +1134,16 @@ public class Navigation
 
         public ActionResult execute(String style)
         {
-            throw new UnsupportedOperationException("SetStyle is not implemented");
+            if (getCurrentDocument().markParagraph >= 0)
+                return new ApplyStyleToSelectionAction(wordProcessor).execute(style);
+
+            /* Toggle the requested typing style, or clear all style bits for normal. */
+            int mask = styleMask(style);
+            if (mask < 0)
+                return FAILED;
+            wordProcessor.charStyle().setCurrentStyleHint(mask, mask == 0 ? 0 : Word.STYLE_ALL);
+            wordProcessor.queueRedraw();
+            return SUCCEEDED;
         }
     }
 

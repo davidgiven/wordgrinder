@@ -11,6 +11,7 @@ javalibrary(
             "WaitingForUserEvent.java",
             "IdleEvent.java",
             "KeyTypedEvent.java",
+            "MovedEvent.java",
             "RedrawEvent.java",
             "Event.java",
             "EventBus.java",

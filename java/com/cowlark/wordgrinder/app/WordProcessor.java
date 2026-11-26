@@ -1,15 +1,18 @@
 package com.cowlark.wordgrinder.app;
 
+import com.cowlark.wordgrinder.addons.statusbar_charstyle.StatusbarCharStyleAddon;
 import com.cowlark.wordgrinder.addons.undo.CheckpointAction;
 import com.cowlark.wordgrinder.app.Navigation.*;
 import com.cowlark.wordgrinder.document.Document;
 import com.cowlark.wordgrinder.document.DocumentSet;
 import com.cowlark.wordgrinder.document.GlobalSettings;
+import com.cowlark.wordgrinder.document.Position;
 import com.cowlark.wordgrinder.app.RedrawScreenAction.LinePosition;
 import com.cowlark.wordgrinder.eventbus.ChangedEvent;
 import com.cowlark.wordgrinder.eventbus.EventBus;
 import com.cowlark.wordgrinder.eventbus.IdleEvent;
 import com.cowlark.wordgrinder.eventbus.KeyTypedEvent;
+import com.cowlark.wordgrinder.eventbus.MovedEvent;
 import com.cowlark.wordgrinder.eventbus.RedrawEvent;
 import com.cowlark.wordgrinder.eventbus.WaitingForUserEvent;
 import com.cowlark.wordgrinder.nativeinterface.Screen;
@@ -44,6 +47,11 @@ public class WordProcessor
     /* Own the active document set and its per-set preferences. */
     private final DocumentSet documentSet;
 
+    /* Notify listeners only when the cursor or active document changes. */
+    private final StatusbarCharStyleAddon charStyleAddon;
+    private Document lastCursorDocument;
+    private Position lastCursorPosition = new Position(0, 0, 0);
+
     /* Retain the document positions from the latest redraw. */
     private @Nullable LinePosition[] lineIndex = new LinePosition[0];
 
@@ -69,6 +77,10 @@ public class WordProcessor
 
         /* Create the initial document with the editor's rendering collaborators. */
         this.documentSet = new DocumentSet();
+
+        /* Attach the character style add-on to this editor's events. */
+        lastCursorDocument = documentSet.current;
+        charStyleAddon = new StatusbarCharStyleAddon(eventBus, this::getCurrentDocument);
     }
 
     /**
@@ -99,7 +111,21 @@ public class WordProcessor
     /* Schedule a repaint on the next pass through the input loop. */
     void queueRedraw()
     {
+        var document = getCurrentDocument();
+        var position = new Position(document.cursorParagraph, document.cursorWord, document.cursorOffset);
+        if (document != lastCursorDocument || !position.equals(lastCursorPosition))
+        {
+            lastCursorDocument = document;
+            lastCursorPosition = position;
+            eventBus.fireEvent(new MovedEvent());
+        }
         eventBus.fireAsyncEvent(RedrawEvent.INSTANCE);
+    }
+
+    /* Allow editing commands to read or override the current typing style. */
+    StatusbarCharStyleAddon charStyle()
+    {
+        return charStyleAddon;
     }
 
     /**

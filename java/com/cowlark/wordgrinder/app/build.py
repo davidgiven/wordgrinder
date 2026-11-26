@@ -14,5 +14,6 @@ javalibrary(
         "java/com/cowlark/wordgrinder/ui",
         "java/com/cowlark/wordgrinder/utils",
         "java/com/cowlark/wordgrinder/addons/undo",
+        "java/com/cowlark/wordgrinder/addons/statusbar_charstyle",
     ],
 )
